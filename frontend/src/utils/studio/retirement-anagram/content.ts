@@ -3,7 +3,7 @@ import {
   hasUniqueAnagram,
   loadAnagramIndex,
   type AnagramIndex,
-} from '../anagram-sheet/scramble'
+} from './scramble'
 
 export type AnagramDifficulty = 'easy' | 'medium' | 'hard'
 

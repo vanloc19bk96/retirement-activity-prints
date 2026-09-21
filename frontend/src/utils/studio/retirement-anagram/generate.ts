@@ -16,8 +16,8 @@ import {
 import {
   loadAnagramIndex,
   scrambleWord,
-} from '../anagram-sheet/scramble'
-import { drawAnagramItems, type AnagramItem } from '../anagram-sheet/draw'
+} from './scramble'
+import { drawAnagramItems, type AnagramItem } from './draw'
 import {
   RETIREMENT_ANAGRAM_CONFIG_SCHEMA,
   validateRetirementAnagramConfig,

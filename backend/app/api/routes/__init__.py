@@ -12,7 +12,6 @@ from app.api.routes.emojis import router as emojis_router
 from app.api.routes.thumbnail_asset import router as thumbnail_asset_router
 from app.api.routes.downloads import router as downloads_router
 from app.api.routes.studio_crossword import router as studio_crossword_router
-from app.api.routes.studio_anagram import router as studio_anagram_router
 from app.api.routes.studio_missing_vowels import router as studio_missing_vowels_router
 from app.api.routes.studio_cryptogram import router as studio_cryptogram_router
 from app.api.routes.studio_retirement_anagram import (
@@ -40,7 +39,6 @@ router.include_router(emojis_router)
 router.include_router(thumbnail_asset_router)
 router.include_router(downloads_router)
 router.include_router(studio_crossword_router)
-router.include_router(studio_anagram_router)
 router.include_router(studio_missing_vowels_router)
 router.include_router(studio_cryptogram_router)
 router.include_router(studio_retirement_anagram_router)

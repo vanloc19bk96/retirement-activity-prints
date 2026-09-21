@@ -21,7 +21,7 @@ import type {
   StudioFabricObject,
   StudioGenerateContext,
 } from '@/types/studio-template.types'
-import { sortLetters } from '../anagram-sheet/scramble'
+import { sortLetters } from './scramble'
 import {
   LENGTH_RANGE,
   RETIREMENT_ANAGRAM_DEFAULT_TITLE,

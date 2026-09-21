@@ -12,7 +12,6 @@ import { STARTER_STUDIO_TEMPLATE_KEYS } from '@/constants/studio-plan-access'
 import { sudokuTemplate } from '@/utils/studio/sudoku/generate'
 import { wordSearchTemplate } from '@/utils/studio/retirement-word-search/generate'
 import { crosswordTemplate } from '@/utils/studio/crossword/generate'
-import { anagramSheetTemplate } from '@/utils/studio/anagram-sheet/generate'
 import { retirementAnagramTemplate } from '@/utils/studio/retirement-anagram/generate'
 import { missingVowelsTemplate } from '@/utils/studio/missing-vowels/generate'
 import { cryptogramTemplate } from '@/utils/studio/cryptogram/generate'
@@ -31,7 +30,6 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   crosswordTemplate,
   cryptogramTemplate,
   retirementAnagramTemplate,
-  anagramSheetTemplate,
   missingVowelsTemplate,
 
   // Spatial

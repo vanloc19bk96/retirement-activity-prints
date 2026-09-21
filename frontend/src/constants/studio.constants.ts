@@ -19,7 +19,6 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'sudoku',
   'word-search',
   'crossword',
-  'anagram-sheet',
   'retirement-anagram',
   'missing-vowels',
   'cryptogram',

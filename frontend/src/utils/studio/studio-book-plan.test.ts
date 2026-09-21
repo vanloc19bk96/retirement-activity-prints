@@ -31,9 +31,10 @@ describe('buildRandomBookPlan', () => {
   })
 
   it('spreads a short book across distinct games', () => {
-    const keys = keysOf(buildRandomBookPlan({ gameCount: 12, seed: 3, categories: [] }))
-    expect(keys).toHaveLength(12)
-    expect(new Set(keys).size).toBe(12)
+    const gameCount = Math.min(12, POOL_SIZE)
+    const keys = keysOf(buildRandomBookPlan({ gameCount, seed: 3, categories: [] }))
+    expect(keys).toHaveLength(gameCount)
+    expect(new Set(keys).size).toBe(gameCount)
   })
 
   it('stays deterministic for a seed', () => {

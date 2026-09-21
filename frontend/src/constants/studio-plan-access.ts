@@ -18,11 +18,10 @@ export const STARTER_STUDIO_TEMPLATE_KEYS: readonly string[] = [
   // Logic (1)
   'sudoku',
 
-  // Word (5)
+  // Word (4)
   'word-search',
   'crossword',
   'cryptogram',
-  'anagram-sheet',
   'missing-vowels',
 
   // Spatial (1)

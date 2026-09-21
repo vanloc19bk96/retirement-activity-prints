@@ -77,7 +77,7 @@ Pages: 1 · Answer key: yes · AI content: no
 
 ---
 
-## Word (6 games)
+## Word (5 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -99,11 +99,6 @@ Pages: 1 · Answer key: yes · AI content: yes
 ### Retirement Anagrams (`retirement-anagram`)
 Unscramble retirement-themed words — work, hobbies, family, travel. AI writes
 a fresh list each page so a long book does not repeat.
-Pages: 1 · Answer key: yes · AI content: yes
-
-### Anagram Sheet (`anagram-sheet`)
-Unscramble the letters to spell each word. Pick a theme and let AI choose
-fresh words, or supply your own list.
 Pages: 1 · Answer key: yes · AI content: yes
 
 ### Missing Vowels (`missing-vowels`)
@@ -133,8 +128,7 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 | crossword | Crossword | word | 1 | yes | yes |
 | cryptogram | Cryptogram | word | 1 | yes | yes |
 | retirement-anagram | Retirement Anagrams | word | 1 | yes | yes |
-| anagram-sheet | Anagram Sheet | word | 1 | yes | yes |
 | missing-vowels | Missing Vowels | word | 1 | yes | yes |
 | maze | Maze | spatial | 1 | yes | no |
 
-**Total: 8 games** (1 logic · 6 word · 1 spatial).
+**Total: 7 games** (1 logic · 5 word · 1 spatial).

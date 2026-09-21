@@ -150,8 +150,7 @@ function shouldOmitFromAnswerPage(obj: StudioFabricObject): boolean {
   }
   // Anagram sheets: keep the grid; drop puzzle write-in lines under revealed answers.
   if (
-    (obj.studioTemplateKey === 'anagram-sheet' ||
-      obj.studioTemplateKey === 'retirement-anagram') &&
+    obj.studioTemplateKey === 'retirement-anagram' &&
     obj.studioRole === 'structure' &&
     isFabricType(obj, 'line')
   ) {
