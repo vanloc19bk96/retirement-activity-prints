@@ -7,43 +7,23 @@ import type PptxGenJS from 'pptxgenjs'
 
 import { addFabricObjectToPptSlide } from '@/utils/fabric-object-to-ppt-slide'
 import { addStaticCanvasObjectsToPptSlide } from '@/utils/fabric-canvas-to-ppt'
-import { sequenceRecallTemplate } from '@/utils/studio/sequence-recall/generate'
-import { buildDefaultConfig } from '@/constants/studio-templates'
-import { resetObjectCounter } from '@/utils/studio/studio-fabric-builders'
-import type { StudioGenerateContext } from '@/types/studio-template.types'
 import { DPI } from '@/types/canvas-settings.types'
 
-const CTX: StudioGenerateContext = {
-  pageWidth: Math.round(8.5 * DPI),
-  pageHeight: Math.round(11 * DPI),
-  margin: { top: 48, right: 48, bottom: 48, left: 48 },
-  seed: 1,
-  instanceId: 'seq-line-ppt',
-}
-
-describe('sequence-recall writing lines → PPT', () => {
-  it('exports writing lines as native PPT strokes', async () => {
-    resetObjectCounter()
-    const pages = sequenceRecallTemplate.generate(
-      {
-        ...buildDefaultConfig(sequenceRecallTemplate),
-        answerFormat: 'line',
-        alphabet: 'digits',
-        startLength: 3,
-        endLength: 4,
-        fontFamily: 'Inter',
-      },
-      CTX,
-    )
+describe('writing lines → PPT', () => {
+  it('exports horizontal writing lines as native PPT strokes', async () => {
+    const line = new Line([48, 120, 400, 120], {
+      stroke: '#D1D5DB',
+      strokeWidth: 1.5,
+    })
 
     const element = document.createElement('canvas')
     const canvas = new StaticCanvas(element, {
-      width: CTX.pageWidth,
-      height: CTX.pageHeight,
+      width: Math.round(8.5 * DPI),
+      height: Math.round(11 * DPI),
       backgroundColor: '#ffffff',
       renderOnAddRemove: false,
     })
-    await canvas.loadFromJSON({ version: '6.0.0', objects: pages[0]!.objects })
+    canvas.add(line)
     canvas.requestRenderAll()
 
     const shapes: Array<Record<string, unknown>> = []

@@ -149,16 +149,6 @@ function shouldOmitFromAnswerPage(obj: StudioFabricObject): boolean {
     }
     if (isFabricType(obj, 'group') && !objectHasAnswer(obj)) return true
   }
-  // Change Detection: drop study labels when key is built from the puzzle page.
-  // Do not omit groups without answers — Lucide glyphs are prompt groups and must stay.
-  if (obj.studioTemplateKey === 'change-detection' && obj.studioRole === 'decoration') {
-    const text = String(obj.text ?? '').replace(/\u00a0/g, ' ').trim()
-    if (text === 'Study this') return true
-  }
-  if (obj.studioTemplateKey === 'story-recall') {
-    // Writing lines stay on the recall page only.
-    if (obj.studioRole === 'structure') return true
-  }
   // Missing-vowels answers sit on the same cell as prompts — hide blanks on the key.
   if (obj.studioTemplateKey === 'missing-vowels' && obj.studioRole === 'prompt') {
     return true
@@ -192,10 +182,6 @@ function shouldOmitFromAnswerPage(obj: StudioFabricObject): boolean {
       if (/^\d+\.$/.test(text)) return true
       if (/^Time:/i.test(text)) return true
     }
-  }
-  // Perfect Pairs write-in blanks sit under the revealed partner — hide on the key.
-  if (obj.studioTemplateKey === 'paired-associates' && obj.studioRole === 'structure') {
-    return true
   }
   // Anagram sheets: keep the grid; drop puzzle write-in lines under revealed answers.
   if (

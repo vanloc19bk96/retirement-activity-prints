@@ -8,7 +8,7 @@ export const STUDIO_RULE_LIGHT = '#D1D5DB'
 export const STUDIO_RULE_MEDIUM = '#9CA3AF'
 export const STUDIO_PAPER = '#FFFFFF'
 export const STUDIO_ANSWER_INK = '#1D4ED8'
-/** Monochrome answer marks (e.g. N-back ✓) — print-safe, not blue. */
+/** Monochrome answer marks — print-safe, not blue. */
 export const STUDIO_ANSWER_INK_MONO = STUDIO_INK
 
 /**
@@ -16,13 +16,9 @@ export const STUDIO_ANSWER_INK_MONO = STUDIO_INK
  * Add new monochrome worksheets here when they produce an answer key.
  */
 export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
-  'n-back-paper',
-  'story-recall',
-  'list-recall',
   'counting-streams',
   'symbol-hunt',
   'symbol-digit-coding',
-  'change-detection',
   'dual-task-grid',
   'sudoku',
   'kakuro',
@@ -53,10 +49,8 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'follow-the-route',
   'word-ladder',
   // Card Games Pack — the whole pack is black-and-white interior by design (§2.1).
-  'card-memory-spread',
   'card-sums',
   'next-card',
-  'cards-changed',
   // Procedural non-card worksheets — black-and-white interior by design.
   'find-the-pair',
   'word-fit',

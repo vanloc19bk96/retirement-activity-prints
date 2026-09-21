@@ -11,7 +11,6 @@ import {
 import { SHAPE_RING_GLYPHS, SYMBOL_SETS } from './field'
 import { SHAPE_RING_ICON_NAMES } from './icons'
 import { buildDefaultConfig } from '@/constants/studio-templates'
-import { studyRecallGridTemplate } from '../study-recall-grid/generate'
 import {
   STUDIO_ANSWER_INK,
   STUDIO_ANSWER_INK_MONO,
@@ -155,15 +154,10 @@ describe('symbol-hunt', () => {
     expect(defaults.task).toBe('cancel')
   })
 
-  it('instruction textbox is at least Study & Recall Grid width', () => {
+  it('instruction textbox hugs the copy instead of stretching full width', () => {
     resetObjectCounter()
     const [hunt] = symbolHuntTemplate.generate(
       { ...base, showInstructions: true, task: 'cancel' },
-      CTX(),
-    )
-    resetObjectCounter()
-    const studyPages = studyRecallGridTemplate.generate(
-      { ...buildDefaultConfig(studyRecallGridTemplate), seed: 42, fontFamily: 'Inter' },
       CTX(),
     )
     const huntInst = flattenObjects(hunt!.objects).find(
@@ -172,15 +166,9 @@ describe('symbol-hunt', () => {
         typeof o.text === 'string' &&
         o.text.includes('Mark every'),
     )
-    const studyInst = flattenObjects(studyPages[0]!.objects).find(
-      (o) =>
-        o.studioRole === 'decoration' &&
-        typeof o.text === 'string' &&
-        o.text.includes('Study the grid'),
-    )
     expect(huntInst).toBeDefined()
-    expect(studyInst).toBeDefined()
-    expect(Number(huntInst!.width)).toBeGreaterThanOrEqual(Number(studyInst!.width))
+    expect(Number(huntInst!.width)).toBeGreaterThan(80)
+    expect(Number(huntInst!.width)).toBeLessThan(CTX().pageWidth)
   })
 
   it('multi-target count instruction stays on two explicit lines', () => {

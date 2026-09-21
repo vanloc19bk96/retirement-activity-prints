@@ -106,7 +106,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
   const objects: StudioFabricObject[] = []
   const content = insetHorizontal(contentBox(ctx), STUDIO_CONTENT_SAFE_INSET_X)
   const instruction = buildInstruction(targetCount, task)
-  // Title only; band width ≥ Study & Recall so longer count copy does not soft-wrap.
+  // Title only; band width hugs copy so longer count text does not soft-wrap.
   const header = drawHeader(content, { ...config, showInstructions: false }, tag, '')
   objects.push(...header.objects)
 

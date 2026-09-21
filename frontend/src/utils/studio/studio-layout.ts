@@ -138,13 +138,13 @@ export function estimateWrappedLines(
 const INSTRUCTION_LINE_HEIGHT = STUDIO_INSTRUCTION_SIZE * 1.35
 
 /**
- * Study & Recall Grid study copy — longest line sets the shared instruction textbox width
- * so other templates (e.g. Symbol Hunt) match that band.
+ * Longest typical instruction line — sets the shared instruction textbox width
+ * so templates (e.g. Symbol Hunt) keep a content-hugging band.
  */
 export const STUDIO_INSTRUCTION_WIDTH_SAMPLE =
   'Study the grid. Then turn the page\nand fill in the blanks from memory'
 
-/** Content-hugging instruction width used by Study & Recall Grid. */
+/** Content-hugging instruction width used by `drawInstructionBand`. */
 export function studyStyleInstructionWidth(maxWidth: number): number {
   return estimateTextBoxWidth(
     STUDIO_INSTRUCTION_WIDTH_SAMPLE,
@@ -159,7 +159,7 @@ function instructionStripHeight(text: string, maxWidth: number): number {
 }
 
 /**
- * Centered instruction band (Study & Recall style). Equal top/bottom gaps.
+ * Centered instruction band. Equal top/bottom gaps.
  * Pass `width` to lock the textbox (e.g. studyStyleInstructionWidth).
  */
 export function drawInstructionBand(

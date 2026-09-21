@@ -133,7 +133,7 @@ export function centerObjectsInBox(
  * Header copy uses the full `STUDIO_CONTENT_SAFE_INSET_X` rail (28px). Figures
  * reclaim most of that band so a 5x8 trim can still print a legible compact
  * row (Next Card multiple-choice needs ~353px of body width). Sitting at 6–12px
- * made full-width packs (Card Sums ladders, What Changed, Next Card rows) read
+ * made full-width packs (Card Sums ladders, Next Card rows) read
  * flush with the margin guide on bulk books. Twenty-two pixels is the shared
  * pack clearance — every card template gets the same air from `drawCardPageHeader`
  * without stacking a second per-game pad.

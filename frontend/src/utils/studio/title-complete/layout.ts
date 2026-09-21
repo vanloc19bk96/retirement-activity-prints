@@ -29,7 +29,7 @@ export const AFTER_BLANK_GAP = 8
 export const COLUMN_COUNT = 2
 const BLANK_BAND = 8
 
-/** Breathing room from safe edges — matches missing-vowels / digit-span grids. */
+/** Breathing room from safe edges — matches missing-vowels grids. */
 export const STROKE_INSET = 16
 export const CELL_PAD = 12
 export const INDEX_GAP = 8

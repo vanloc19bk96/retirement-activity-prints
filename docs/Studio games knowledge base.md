@@ -5,8 +5,7 @@ This document describes every activity/puzzle template ("game") available in the
 The app is a design tool for building print-ready, low-content activity books
 (the kind sold on KDP): memory training, brain games, puzzles, and reminiscence
 worksheets for adult and senior audiences. Each game is a self-contained page
-generator that drops a fully laid-out page (or a 2-page study/recall spread)
-onto the book's canvas.
+generator that drops a fully laid-out page onto the book's canvas.
 
 Use this document to understand *what each game is, how it plays, and what
 options it exposes* — not the implementation. Source of truth in code:
@@ -29,10 +28,9 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ## Shared concepts across all games
 
-- **Category** — one of 7 buyer-facing groups (tab order below).
-- **Page count** — `1` (single page) or `2` (a *study* page followed by a
-  *recall* page; the reader studies content, then must reproduce/recognize it
-  from memory on the next page).
+- **Category** — one of 6 buyer-facing groups (tab order below).
+- **Page count** — currently `1` (a single puzzle page). Answer keys add a
+  separate solution page when the game produces one.
 - **Answer key** — when a game "produces an answer key," a solution page is
   appended automatically; this is never a manual toggle.
 - **AI-generated content** — some games call an LLM to generate fresh puzzle
@@ -63,102 +61,12 @@ options it exposes* — not the implementation. Source of truth in code:
 
 | Category | Tab label | What it covers |
 |---|---|---|
-| `memory` | Memory | Study something, then reproduce it from memory. |
 | `focus` | Focus | Scanning, speed and sustained-attention drills. |
 | `logic` | Logic | Deduction, number and pattern puzzles with one right answer. |
 | `word` | Word | Words and language. |
 | `spatial` | Spatial | Visual-spatial reasoning and drawing. |
 | `reminiscence` | Reminiscence | Life story, nostalgia and open-ended writing. |
 | `tracker` | Trackers | Logs and planners the reader fills in over time. |
-
----
-
-## Memory (15 games)
-
-### Study & Recall Grid (`study-recall-grid`)
-Study a grid of items, then fill an empty grid from memory on the next page.
-Turn back to the study page to check.
-Pages: 2 · Answer key: no (self-check via study page) · AI content: no · Canvas-edit hint: yes
-
-### Sequence Recall (`sequence-recall`)
-Read each row of digits or letters, cover it, then write the sequence back
-from memory. Rows get longer down the page; answers go in boxes or on a
-writing line.
-Pages: 1 · Answer key: no · AI content: no
-
-### Digit Span Ladder (`digit-span-ladder`)
-The classic digit span test as a worksheet. Read a row of numbers, cover it,
-then write it back from memory, forward or in reverse. Each row is one digit
-longer than the last.
-Pages: 1 · Answer key: no · AI content: no
-
-### Change Detection Pairs (`change-detection`)
-Study a grid of symbols, cover it, then find the cells that changed in the
-second grid. A cell can change its symbol or its rotation.
-Pages: 1 · Answer key: yes · AI content: no
-
-### N-Back Paper (`n-back-paper`)
-Reveal a list one row at a time and mark every item that repeats the one N
-rows earlier. A paper version of the classic N-back task.
-Pages: 1 · Answer key: yes · AI content: no · Canvas-edit hint: yes
-
-### Story Recall (`story-recall`)
-Read a short story, then answer questions about it from memory on the next
-page. Stories are written fresh by AI, so no two pages repeat.
-Pages: 2 · Answer key: yes · AI content: yes
-
-### Face–Name Association (`face-name-recall`)
-Study a set of faces with their names, then name each face from the drawing
-alone. Faces are simple black-and-white line art, cropped to head and
-shoulders, never photos. Faces are either generated for you (pick how many) or
-hand-mixed one by one in a dialog — hair, expression, beard and glasses, with a
-live preview. Hand-mixed faces take the name you type under each thumbnail
-(blank ones get a written name that matches the face), and can be dragged
-straight onto a page, where face and name land as one group.
-Pages: 2 · Answer key: no (self-check via study page) · AI content: yes
-
-### Shopping List Recall (`list-recall`)
-Memorize a shopping list, then pick those items out of a longer list padded
-with decoys. Lists are written fresh by AI.
-Pages: 2 · Answer key: yes · AI content: yes
-
-### Which Did You See? (`picture-recognition`)
-Study a set of pictures, then find them again among new ones on the next
-page. Black-and-white outline artwork throughout.
-Pages: 2 · Answer key: no (self-check via study page) · AI content: yes · Canvas-edit hint: yes
-
-### Put It In Order (`sequence-order`)
-Study a short list, then put the same items back in the order they appeared.
-Trains memory for order rather than for the items themselves.
-Pages: 2 · Answer key: no (self-check via study page) · AI content: yes
-
-### Perfect Pairs (`paired-associates`)
-Study a set of word pairs, then recall which words went together. Trains the
-memory behind names, meanings, and where you left things.
-Pages: 2 · Answer key: no (self-check via study page) · AI content: yes
-
-### Where Was It? (`where-was-it`)
-Study where a few items sit on a grid, then write each item number back into
-its own cell from memory. Icons are generated fresh.
-Pages: 2 · Answer key: no (self-check via study page) · AI content: no
-
-### Memory Palace Builder (`memory-palace`)
-A method-of-loci worksheet. Plan a numbered route through a place you know
-well, then note each stop and the vivid image you leave there. Open-ended —
-no single right answer.
-Pages: 1 · Answer key: no · AI content: no
-
-### What Changed? (`cards-changed`)
-Two spreads of playing cards labeled Before and After. A few cards have
-changed rank, changed suit, or swapped places — circle every change. Rank
-changes are always on; suit changes and swaps are optional extras.
-Pages: 1 · Answer key: yes · AI content: no · Tag: `card`
-
-### Card Memory Spread (`card-memory-spread`)
-Study a spread of playing cards, turn the page, and write each one back as
-rank + suit (e.g. A♠). No redrawing — check yourself by turning back a page.
-Optional study-time cue under the spread.
-Pages: 2 · Answer key: no (self-check via study page) · AI content: no · Canvas-edit hint: yes · Tag: `card`
 
 ---
 
@@ -442,21 +350,6 @@ Pages: 1 · Answer key: no · AI content: no · Fixed default title (key: `brain
 
 | Key | Label | Category | Pages | Answer key | AI content |
 |---|---|---|---|---|---|
-| study-recall-grid | Study & Recall Grid | memory | 2 | – | no |
-| sequence-recall | Sequence Recall | memory | 1 | – | no |
-| digit-span-ladder | Digit Span Ladder | memory | 1 | – | no |
-| change-detection | Change Detection Pairs | memory | 1 | yes | no |
-| n-back-paper | N-Back Paper | memory | 1 | yes | no |
-| story-recall | Story Recall | memory | 2 | yes | yes |
-| face-name-recall | Face–Name Association | memory | 2 | – | yes |
-| list-recall | Shopping List Recall | memory | 2 | yes | yes |
-| picture-recognition | Which Did You See? | memory | 2 | – | yes |
-| sequence-order | Put It In Order | memory | 2 | – | yes |
-| paired-associates | Perfect Pairs | memory | 2 | – | yes |
-| where-was-it | Where Was It? | memory | 2 | – | no |
-| memory-palace | Memory Palace Builder | memory | 1 | – | no |
-| cards-changed | What Changed? | memory | 1 | yes | no |
-| card-memory-spread | Card Memory Spread | memory | 2 | – | no |
 | symbol-hunt | Symbol Hunt | focus | 1 | yes | no |
 | counting-streams | Counting Streams | focus | 1 | yes | no |
 | symbol-digit-coding | Symbol–Digit Coding | focus | 1 | yes | no |
@@ -501,8 +394,8 @@ Pages: 1 · Answer key: no · AI content: no · Fixed default title (key: `brain
 | spaced-repetition-log | Spaced Repetition Log | tracker | 1 | – | no |
 | brain-training-tracker | Puzzle Log | tracker | 1 | – | no |
 
-*"Answer key = –" means the game is self-checking (a study page, an
-open-ended prompt, or a model that doubles as its own key) rather than
-producing a separate solution page.*
+*"Answer key = –" means the game is self-checking (an open-ended prompt,
+or a model that doubles as its own key) rather than producing a separate
+solution page.*
 
-**Total: 58 games** (15 memory · 7 focus · 14 logic · 9 word · 6 spatial · 5 reminiscence · 2 tracker).
+**Total: 43 games** (7 focus · 14 logic · 9 word · 6 spatial · 5 reminiscence · 2 tracker).

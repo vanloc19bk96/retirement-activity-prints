@@ -4,7 +4,7 @@
 import { describe, it, expect } from 'vitest'
 import { StaticCanvas } from 'fabric'
 import { omitFabricCanvasJsonSurfaceFields } from '@/utils/canvas-template'
-import { studyRecallGridTemplate } from '@/utils/studio/study-recall-grid/generate'
+import { sudokuTemplate } from '@/utils/studio/sudoku/generate'
 import { buildDefaultConfig } from '@/constants/studio-templates'
 import { resetObjectCounter } from '@/utils/studio/studio-fabric-builders'
 import type { StudioGenerateContext } from '@/types/studio-template.types'
@@ -35,15 +35,13 @@ describe('canvas export surface size', () => {
     })
   })
 
-  it('keeps Study & Recall Grid inside the page when JSON has zoom-scaled size', async () => {
+  it('keeps a studio grid inside the page when JSON has zoom-scaled size', async () => {
     resetObjectCounter()
-    const [study] = studyRecallGridTemplate.generate(
+    const [page] = sudokuTemplate.generate(
       {
-        ...buildDefaultConfig(studyRecallGridTemplate),
+        ...buildDefaultConfig(sudokuTemplate),
         seed: 42,
         fontFamily: 'Inter',
-        gridRows: 3,
-        gridCols: 3,
       },
       CTX,
     )
@@ -51,7 +49,7 @@ describe('canvas export surface size', () => {
     const zoom = 0.5
     const canvasJson = {
       version: '6.0.0',
-      objects: study!.objects,
+      objects: page!.objects,
       background: '#ffffff',
       width: Math.round(CTX.pageWidth * zoom),
       height: Math.round(CTX.pageHeight * zoom),

@@ -1,5 +1,5 @@
 export const STARTER_PLAN_FEATURES = [
-  '25 ready-to-use Studio games, covering all 7 categories: memory, focus, logic, word, spatial, reminiscence and trackers',
+  '19 ready-to-use Studio games, covering all 6 categories: focus, logic, word, spatial, reminiscence and trackers',
   'Canva-style drag-and-drop canvas: add and reposition images, text, and shapes',
   'WYSIWYG: what you see in the app is exactly what you get',
   'Export as JPG, 300 DPI PNG, or PDF',
@@ -24,7 +24,7 @@ export const STARTER_PLAN_FEATURES = [
 
 export const STANDARD_PLAN_FEATURES = [
   'Everything in Starter',
-  'All 50 Studio games unlocked',
+  'All 43 Studio games unlocked',
   'Grid mode for tighter, more precise layouts',
   '1,700+ icons unlocked in-app',
   'Book Cover Editor unlocked: design covers in-app with dedicated cover-design tools',

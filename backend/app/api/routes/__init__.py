@@ -11,10 +11,6 @@ from app.api.routes.outlines import router as outlines_router
 from app.api.routes.emojis import router as emojis_router
 from app.api.routes.thumbnail_asset import router as thumbnail_asset_router
 from app.api.routes.downloads import router as downloads_router
-from app.api.routes.studio_story import router as studio_story_router
-from app.api.routes.studio_list import router as studio_list_router
-from app.api.routes.studio_sequence import router as studio_sequence_router
-from app.api.routes.studio_pairs import router as studio_pairs_router
 from app.api.routes.studio_crossword import router as studio_crossword_router
 from app.api.routes.studio_category_fluency import (
     router as studio_category_fluency_router,
@@ -22,13 +18,11 @@ from app.api.routes.studio_category_fluency import (
 from app.api.routes.studio_first_letter_recall import (
     router as studio_first_letter_recall_router,
 )
-from app.api.routes.studio_face_names import router as studio_face_names_router
 from app.api.routes.studio_anagram import router as studio_anagram_router
 from app.api.routes.studio_missing_vowels import router as studio_missing_vowels_router
 from app.api.routes.studio_decade_trivia import router as studio_decade_trivia_router
 from app.api.routes.studio_life_timeline import router as studio_life_timeline_router
 from app.api.routes.studio_title_complete import router as studio_title_complete_router
-from app.api.routes.studio_pictures import router as studio_pictures_router
 from app.api.routes.studio_cryptogram import router as studio_cryptogram_router
 from app.api.routes.studio_retirement_anagram import (
     router as studio_retirement_anagram_router,
@@ -55,20 +49,14 @@ router.include_router(outlines_router)
 router.include_router(emojis_router)
 router.include_router(thumbnail_asset_router)
 router.include_router(downloads_router)
-router.include_router(studio_story_router)
-router.include_router(studio_list_router)
-router.include_router(studio_sequence_router)
-router.include_router(studio_pairs_router)
 router.include_router(studio_crossword_router)
 router.include_router(studio_category_fluency_router)
 router.include_router(studio_first_letter_recall_router)
-router.include_router(studio_face_names_router)
 router.include_router(studio_anagram_router)
 router.include_router(studio_missing_vowels_router)
 router.include_router(studio_decade_trivia_router)
 router.include_router(studio_life_timeline_router)
 router.include_router(studio_title_complete_router)
-router.include_router(studio_pictures_router)
 router.include_router(studio_cryptogram_router)
 router.include_router(studio_retirement_anagram_router)
 router.include_router(studio_theme_words_router)

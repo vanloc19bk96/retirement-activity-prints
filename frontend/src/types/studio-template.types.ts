@@ -16,8 +16,6 @@ export type StudioFabricType =
  * `constants/studio-categories.ts` so code and UI never drift apart.
  */
 export type StudioCategory =
-  /** Study something, then reproduce it from memory. */
-  | 'memory'
   /** Scanning, speed and sustained-attention drills. */
   | 'focus'
   /** Deduction, number and pattern puzzles with one right answer. */
@@ -45,7 +43,6 @@ export type StudioFieldType =
   | 'wordList'
   | 'numberList'
   | 'seed'
-  | 'faceMix'
 
 /** Axis-aligned inset matching the editor safe-area overlay (canvas px). */
 export interface StudioMargin {
@@ -226,7 +223,7 @@ export interface StudioPageOutput {
   objects: StudioFabricObject[]
   /**
    * Optional object tree used to build the solution page instead of `objects`.
-   * Use when the key should omit study/reference content (e.g. Change Detection).
+   * Use when the key should omit study/reference content.
    */
   answerSourceObjects?: StudioFabricObject[]
 }
@@ -246,9 +243,9 @@ export interface StudioTemplateDefinition {
   /**
    * Cross-cutting labels for search and filter chips, e.g. `['card']`.
    *
-   * A tag is not a category: the Card Games Pack registers in `logic` and
-   * `memory` so the Build-a-book planner keeps an honest cognitive taxonomy,
-   * while the tag still gives sellers a one-click way to see the pack.
+   * A tag is not a category: the Card Games Pack registers in `logic` so the
+   * Build-a-book planner keeps an honest cognitive taxonomy, while the tag
+   * still gives sellers a one-click way to see the pack.
    */
   tags?: readonly string[]
   /**

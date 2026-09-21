@@ -466,7 +466,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 
   // Multiple choice rings one option — ring clearance on top of the shared
   // figure-edge inset. Draw/write use the shared inset alone (same air as
-  // Card Sums / What Changed / Memory Spread).
+  // Card Sums).
   const ringRoom =
     resolved.answerStyle === 'multipleChoice'
       ? ringInset(MIN_COMPACT_CARD_WIDTH * 1.6)

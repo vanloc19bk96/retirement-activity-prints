@@ -37,35 +37,6 @@ describe('getCanvasSelectionSnapshot studio shape groups', () => {
     group.dispose()
   })
 
-  it('treats a legacy study-recall glyph group as an editable shape', () => {
-    const el = document.createElement('canvas')
-    const canvas = new Canvas(el)
-    const group = new Group(
-      [
-        new Circle({
-          radius: 20,
-          fill: 'transparent',
-          stroke: '#4a4a4a',
-          strokeWidth: 2,
-        }),
-      ],
-      { selectable: true },
-    )
-    ;(group as unknown as { set: (key: string, value: unknown) => void }).set(
-      'studioTemplateKey',
-      'study-recall-grid',
-    )
-    canvas.add(group)
-    canvas.setActiveObject(group)
-
-    const snapshot = getCanvasSelectionSnapshot(canvas)
-    expect(snapshot.selectionInfo.isShape).toBe(true)
-    expect(snapshot.selectionInfo.strokeWidth).toBe(2)
-
-    canvas.dispose()
-    group.dispose()
-  })
-
   it('does not treat a plain group as an editable shape', () => {
     const el = document.createElement('canvas')
     const canvas = new Canvas(el)

@@ -49,7 +49,7 @@ export type { StroopItem, StroopVariant, StroopCondition } from './items'
 const EXAMPLE_H = 34
 /**
  * Breathing room from safe edges + hairline clearance.
- * Matches grid-copy / list-recall so outer bars never sit flush on the margin.
+ * Matches grid-copy so outer bars never sit flush on the margin.
  */
 const STROKE_INSET = 16
 

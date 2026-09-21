@@ -48,8 +48,7 @@ function walkFabricLeafObjects(
 ): void {
   for (const object of objects) {
     // Skip hidden answer groups entirely — flattening would otherwise emit their
-    // visible decoration children (Study & Recall Grid recall page looked like a
-    // duplicate of the study page in PPT).
+    // visible decoration children onto the exported slide.
     if (object.visible === false) continue
 
     const absoluteMatrix = util.multiplyTransformMatrices(parentMatrix, object.calcOwnMatrix())

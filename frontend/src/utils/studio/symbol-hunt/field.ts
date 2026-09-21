@@ -264,7 +264,7 @@ export function buildField(options: {
   return { targets, cells: shuffled, counts, rows, cols }
 }
 
-/** Explicit two-line breaks; band width grows if a line exceeds Study & Recall. */
+/** Explicit two-line breaks; band width grows if a line exceeds the sample. */
 export function buildInstruction(targetCount: number, task: HuntTask): string {
   if (task === 'cancel') {
     return targetCount > 1

@@ -6,7 +6,6 @@ import { StaticCanvas } from 'fabric'
 import type PptxGenJS from 'pptxgenjs'
 
 import { addStaticCanvasObjectsToPptSlide } from '@/utils/fabric-canvas-to-ppt'
-import { buildCellContent } from '@/utils/studio/study-recall-grid/draw'
 import {
   FOLLOW_THE_ROUTE_ARROW_SOURCE,
   buildArrowGlyph,
@@ -14,9 +13,9 @@ import {
 import { buildGroup, buildRect, resetObjectCounter, type StudioTag } from '@/utils/studio/studio-fabric-builders'
 
 const TAG: StudioTag = {
-  templateKey: 'study-recall-grid',
+  templateKey: 'symbol-hunt',
   instanceId: 'ppt-vis',
-  pageRole: 'recall',
+  pageRole: 'single',
 }
 
 const ROUTE_TAG: StudioTag = {
@@ -28,23 +27,27 @@ const ROUTE_TAG: StudioTag = {
 describe('PPT export visibility', () => {
   it('does not flatten visible children out of a hidden answer group', async () => {
     resetObjectCounter()
-    // Same pattern as Study & Recall Grid recall cells: answer group (visible:false)
-    // wrapping decoration leaves (visible:true). Flattening without checking the
-    // group would duplicate study shapes onto the blank recall slide.
-    const [symbol] = buildCellContent({
-      item: { kind: 'shape', id: 'square' },
-      cell: { left: 40, top: 40, width: 80, height: 80 },
-      cellSize: 80,
-      tag: TAG,
-      role: 'answer',
-    })
-    expect(symbol?.visible).toBe(false)
-    expect(symbol?.objects?.every((o) => o.visible !== false)).toBe(true)
+    // Answer groups stay hidden on the puzzle page while their children stay
+    // visible:true. Flattening without checking the group would leak ink onto
+    // the exported slide.
+    const inner = buildRect(
+      { left: 40, top: 40, width: 80, height: 80, fill: '#000000' },
+      TAG,
+      'decoration',
+    )
+    const hidden = buildGroup(
+      [inner],
+      { left: 40, top: 40, width: 80, height: 80 },
+      TAG,
+      'answer',
+    )
+    expect(hidden.visible).toBe(false)
+    expect(hidden.objects?.every((o) => o.visible !== false)).toBe(true)
 
     const grid = buildGroup(
       [
         buildRect({ left: 20, top: 20, width: 120, height: 120 }, TAG, 'structure'),
-        symbol!,
+        hidden,
       ],
       { left: 20, top: 20, width: 120, height: 120 },
       TAG,

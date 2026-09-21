@@ -170,7 +170,7 @@ async function inlineOneFabricImageForVectorExport(image: FabricImage): Promise<
  * Replace remote / oversized Fabric bitmaps with compact JPEG data URIs sized for print.
  *
  * svg2pdf re-fetches every `xlink:href` via XHR and builds binary strings — hundreds of
- * full-res outline PNGs (Which Did You See? grids) OOM or abort PDF export around ~40 pages.
+ * full-res outline PNGs OOM or abort PDF export around ~40 pages.
  * Inlining after Fabric already loaded the pixels avoids the second fetch and bounds RAM.
  */
 export async function inlineFabricImagesForVectorExport(canvas: StaticCanvas): Promise<void> {

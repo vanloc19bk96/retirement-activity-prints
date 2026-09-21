@@ -7,22 +7,14 @@
  * - every category is represented, so no tab is ever empty;
  * - the classics that actually sell activity books are in (Word Search,
  *   Crossword, Sudoku, Maze, Cryptogram, Trail Making…);
- * - the mix spans study/recall, scanning, deduction, words, drawing, life
- *   story and a log page, which is enough page variety for a full book.
+ * - the mix spans scanning, deduction, words, drawing, life story and a
+ *   log page, which is enough page variety for a full book.
  *
  * Listed in `STUDIO_TEMPLATES` order (grouped by category) so this file reads
  * like the panel. Keys must exist in the registry, and every category must
  * keep at least one entry — both enforced in DEV by `studio-templates.ts`.
  */
 export const STARTER_STUDIO_TEMPLATE_KEYS: readonly string[] = [
-  // Memory (6)
-  'study-recall-grid',
-  'sequence-recall',
-  'digit-span-ladder',
-  'change-detection',
-  'story-recall',
-  'list-recall',
-
   // Focus (3)
   'symbol-hunt',
   'symbol-digit-coding',

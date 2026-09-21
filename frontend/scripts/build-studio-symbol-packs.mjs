@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 /**
- * Study & Recall Grid symbol packs.
+ * Curated BMP glyph packs.
  * Rule: only glyphs built from basic shapes (circle, square/rect, triangle,
  * diamond, straight line, cross/plus) or clear composites of those.
  * Easy to memorize + hand-redraw; KDP/print-safe BMP; unique across packs.

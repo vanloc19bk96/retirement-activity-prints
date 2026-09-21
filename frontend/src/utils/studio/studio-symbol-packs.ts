@@ -4,7 +4,6 @@ import symbolPacksJson from '@/data/studio/symbols/index.json'
  * Curated BMP glyph packs (print-safe).
  * Source: `data/studio/symbols/index.json` — regenerate via
  * `node scripts/build-studio-symbol-packs.mjs` after curation edits.
- * Study & Recall Grid uses stroked geometric paths instead (uniform stroke).
  */
 export const DEFAULT_SYMBOL_PACK_KEY = 'mixed'
 

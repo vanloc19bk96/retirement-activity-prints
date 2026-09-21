@@ -5,7 +5,7 @@ import {
   listSymbolPacks,
 } from './studio-symbol-packs'
 
-/** Max Study & Recall grid is 5×5 — mixed pool must cover it without repeats. */
+/** Mixed pool must cover a unique 5×5 grid without repeats. */
 const MIN_MIXED_POOL = 25
 
 describe('studio-symbol-packs', () => {

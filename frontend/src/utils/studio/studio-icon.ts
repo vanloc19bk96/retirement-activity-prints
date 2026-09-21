@@ -113,7 +113,7 @@ export function buildIconPath(
     top: number
     size: number
     strokeWidth?: number
-    /** Degrees — Fabric group angle (Change Detection rotations). */
+    /** Degrees — Fabric group angle. */
     angle?: number
     /** Outline (default) or solid fill for closed Lucide paths. */
     fillMode?: StudioIconFillMode

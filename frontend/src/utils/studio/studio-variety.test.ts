@@ -13,44 +13,44 @@ beforeEach(() => {
 
 describe('studioVarietyKey', () => {
   it('buckets by template and the fields that decide the content', () => {
-    expect(studioVarietyKey('list-recall', 'Picnic At The Park', 'standard')).toBe(
-      'list-recall|picnic at the park|standard',
+    expect(studioVarietyKey('crossword', 'Kitchen', 'easy')).toBe(
+      'crossword|kitchen|easy',
     )
   })
 
   it('drops empty parts instead of leaving gaps in the key', () => {
     expect(studioVarietyKey('crossword', '', undefined, 'easy')).toBe('crossword|easy')
-    expect(studioVarietyKey('face-name-recall')).toBe('face-name-recall|default')
+    expect(studioVarietyKey('word-search')).toBe('word-search|default')
   })
 })
 
 describe('rememberStudioContent', () => {
   it('returns nothing for a key that has never generated', () => {
-    expect(studioAvoidList(studioVarietyKey('list-recall', 'picnic'))).toEqual([])
+    expect(studioAvoidList(studioVarietyKey('word-search', 'picnic'))).toEqual([])
   })
 
   it('hands back what was printed, newest first', () => {
-    const key = studioVarietyKey('list-recall', 'picnic')
+    const key = studioVarietyKey('word-search', 'picnic')
     rememberStudioContent(key, ['Milk', 'Bread'])
     rememberStudioContent(key, ['Apples'])
     expect(studioAvoidList(key)).toEqual(['Apples', 'Bread', 'Milk'])
   })
 
   it('keeps buckets apart so one theme does not starve another', () => {
-    const picnic = studioVarietyKey('list-recall', 'picnic')
-    const camping = studioVarietyKey('list-recall', 'camping')
+    const picnic = studioVarietyKey('word-search', 'picnic')
+    const camping = studioVarietyKey('word-search', 'camping')
     rememberStudioContent(picnic, ['Milk'])
     expect(studioAvoidList(camping)).toEqual([])
   })
 
   it('treats the same label in another case as already known', () => {
-    const key = studioVarietyKey('list-recall', 'picnic')
+    const key = studioVarietyKey('word-search', 'picnic')
     rememberStudioContent(key, ['Milk', 'milk', '  MILK '])
     expect(studioAvoidList(key)).toEqual(['Milk'])
   })
 
   it('trims surrounding punctuation and collapsed whitespace', () => {
-    const key = studioVarietyKey('list-recall', 'picnic')
+    const key = studioVarietyKey('word-search', 'picnic')
     rememberStudioContent(key, ['  Whole   milk , ', '', '   '])
     expect(studioAvoidList(key)).toEqual(['Whole milk'])
   })

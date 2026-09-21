@@ -8,7 +8,6 @@ import { ColorField } from './fields/ColorField'
 import { WordListField } from './fields/WordListField'
 import { NumberListField } from './fields/NumberListField'
 import { SeedField } from './fields/SeedField'
-import { FaceMixField } from './fields/FaceMixField'
 
 export interface StudioFieldProps<T = unknown> {
   field: FieldDef
@@ -94,10 +93,6 @@ export function StudioConfigField({ field, value, onChange, error }: StudioField
           onChange={onChange}
           error={error}
         />
-      )
-    case 'faceMix':
-      return (
-        <FaceMixField field={field} value={value} onChange={onChange} error={error} />
       )
     default: {
       const exhaustive: never = field.type

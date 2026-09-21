@@ -44,9 +44,9 @@ describe('buildRandomBookPlan', () => {
   })
 
   it('honours a category filter', () => {
-    const plan = buildRandomBookPlan({ gameCount: 6, seed: 5, categories: ['memory'] })
+    const plan = buildRandomBookPlan({ gameCount: 6, seed: 5, categories: ['word'] })
     const allowed = new Set(
-      getEligibleBookTemplates({ categories: ['memory'] }).map((def) => def.key),
+      getEligibleBookTemplates({ categories: ['word'] }).map((def) => def.key),
     )
     expect(plan.length).toBe(6)
     for (const item of plan) expect(allowed.has(item.templateKey)).toBe(true)

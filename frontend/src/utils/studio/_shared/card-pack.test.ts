@@ -42,12 +42,7 @@ const CARD_TEMPLATES: StudioTemplateDefinition[] = STUDIO_TEMPLATES.filter((t) =
   t.tags?.includes('card'),
 )
 
-const CARD_TEMPLATE_KEYS = [
-  'card-memory-spread',
-  'card-sums',
-  'next-card',
-  'cards-changed',
-]
+const CARD_TEMPLATE_KEYS = ['card-sums', 'next-card']
 
 /**
  * Trims the pack must survive, smallest first.
@@ -100,7 +95,6 @@ function defaults(template: StudioTemplateDefinition): StudioConfig {
 
 /** Config variants worth sweeping per template, beyond its defaults. */
 const SWEEPS: Record<string, StudioConfig[]> = {
-  'card-memory-spread': [{ tier: 'medium' }, { tier: 'hard' }],
   'card-sums': [
     { mode: 'targetHunt' },
     { mode: 'runningLadder' },
@@ -108,14 +102,10 @@ const SWEEPS: Record<string, StudioConfig[]> = {
     { courtValue: 'ten' },
   ],
   'next-card': [{ answerStyle: 'write' }, { answerStyle: 'multipleChoice' }, { tier: 'hard' }],
-  'cards-changed': [
-    { tier: 'medium' },
-    { changeTypes: ['rank', 'suit', 'swap'] },
-  ],
 }
 
 describe('card pack registry', () => {
-  it('registers all five templates, tagged for the Cards filter', () => {
+  it('registers the remaining card templates, tagged for the Cards filter', () => {
     expect(CARD_TEMPLATES.map((t) => t.key).sort()).toEqual([...CARD_TEMPLATE_KEYS].sort())
   })
 
@@ -174,7 +164,7 @@ describe('vocabulary lint (§9.7)', () => {
   })
 
   it('lints something — the sweep is not silently empty', () => {
-    expect(allStrings().length).toBeGreaterThan(150)
+    expect(allStrings().length).toBeGreaterThan(100)
   })
 
   it('ships at least ten hand-written instruction variants per mode (§4.7)', () => {

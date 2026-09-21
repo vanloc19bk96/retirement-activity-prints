@@ -26,7 +26,7 @@ export const DOCUMENT_CHUNK_PAGE_SIZE = 32
 
 /**
  * Smaller PDF chunks for medium+ books — limits jsPDF/svg2pdf peak RAM per chunk.
- * Image-dense templates (e.g. Which Did You See?) need splits well below 40 pages.
+ * Image-dense pages need splits well below 40 pages.
  */
 export function getPdfChunkPageSize(interiorPageCount: number): number {
   if (interiorPageCount > 200) return 8

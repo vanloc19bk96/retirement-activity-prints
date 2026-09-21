@@ -5,8 +5,8 @@ import json
 
 import pytest
 
-from app.schemas.studio_list import ListRecallRequest
-from app.services.studio_list_service import generate_list_recall
+from app.schemas.studio_category_fluency import CategoryFluencyRequest
+from app.services.studio_category_fluency_service import generate_category_fluency
 from app.services.studio_variety import (
     VarietyScope,
     bucket_key,
@@ -28,7 +28,7 @@ def _clean_memory() -> None:
 
 
 def _scope(seed: int = 1, user_id: str = "user-1", bucket: str = "picnic") -> VarietyScope:
-    return VarietyScope(game="list-recall", user_id=user_id, bucket=bucket, seed=seed)
+    return VarietyScope(game="category-fluency", user_id=user_id, bucket=bucket, seed=seed)
 
 
 def test_normalize_label_trims_case_punctuation_and_spacing() -> None:
@@ -108,10 +108,8 @@ def test_at_seed_keeps_the_bucket_and_changes_the_draw() -> None:
 
 # ------------------------------------------------- end-to-end through a service
 
-_PAYLOAD = {
-    "targets": ["Whole milk", "Bread", "Apples", "Carrots", "Eggs", "Cheese"],
-    "distractors": [{"label": "Onions", "tier": "plain"}],
-}
+_EXAMPLES = [f"Example {i}" for i in range(15)]
+_PAYLOAD = {"category": "Zither tuners", "examples": _EXAMPLES}
 
 
 def test_a_second_generation_is_told_what_the_first_one_printed(
@@ -123,17 +121,24 @@ def test_a_second_generation_is_told_what_the_first_one_printed(
         prompts.append(prompt)
         return json.dumps(_PAYLOAD)
 
-    monkeypatch.setattr("app.services.studio_list_service._call_gemini", fake_gemini)
     monkeypatch.setattr(
-        "app.services.studio_list_service._check_rate_limit", lambda _uid: None
+        "app.services.studio_category_fluency_service._call_gemini", fake_gemini
+    )
+    monkeypatch.setattr(
+        "app.services.studio_category_fluency_service._check_rate_limit",
+        lambda _uid: None,
     )
 
-    req = ListRecallRequest(listLength=6, distractorCount=4, theme="picnic", seed=1)
-    asyncio.run(generate_list_recall(req, user_id="user-1"))
-    assert "Whole milk" not in prompts[0]
+    req = CategoryFluencyRequest(lineCount=15, seed=1)
+    asyncio.run(generate_category_fluency(req, user_id="user-1"))
+    assert "Zither tuners" not in prompts[0]
 
-    asyncio.run(generate_list_recall(req.model_copy(update={"seed": 2}), user_id="user-1"))
-    assert "Whole milk" in prompts[1]
+    asyncio.run(
+        generate_category_fluency(
+            req.model_copy(update={"seed": 2}), user_id="user-1"
+        )
+    )
+    assert "Zither tuners" in prompts[1]
 
 
 def test_another_user_does_not_inherit_the_first_users_list(
@@ -145,15 +150,18 @@ def test_another_user_does_not_inherit_the_first_users_list(
         prompts.append(prompt)
         return json.dumps(_PAYLOAD)
 
-    monkeypatch.setattr("app.services.studio_list_service._call_gemini", fake_gemini)
     monkeypatch.setattr(
-        "app.services.studio_list_service._check_rate_limit", lambda _uid: None
+        "app.services.studio_category_fluency_service._call_gemini", fake_gemini
+    )
+    monkeypatch.setattr(
+        "app.services.studio_category_fluency_service._check_rate_limit",
+        lambda _uid: None,
     )
 
-    req = ListRecallRequest(listLength=6, distractorCount=4, theme="picnic", seed=1)
-    asyncio.run(generate_list_recall(req, user_id="user-1"))
-    asyncio.run(generate_list_recall(req, user_id="user-2"))
-    assert "Whole milk" not in prompts[1]
+    req = CategoryFluencyRequest(lineCount=15, seed=1)
+    asyncio.run(generate_category_fluency(req, user_id="user-1"))
+    asyncio.run(generate_category_fluency(req, user_id="user-2"))
+    assert "Zither tuners" not in prompts[1]
 
 
 def test_the_client_avoid_list_reaches_the_prompt(
@@ -165,13 +173,16 @@ def test_the_client_avoid_list_reaches_the_prompt(
         prompts.append(prompt)
         return json.dumps(_PAYLOAD)
 
-    monkeypatch.setattr("app.services.studio_list_service._call_gemini", fake_gemini)
     monkeypatch.setattr(
-        "app.services.studio_list_service._check_rate_limit", lambda _uid: None
+        "app.services.studio_category_fluency_service._call_gemini", fake_gemini
+    )
+    monkeypatch.setattr(
+        "app.services.studio_category_fluency_service._check_rate_limit",
+        lambda _uid: None,
     )
 
-    req = ListRecallRequest(
-        listLength=6, distractorCount=4, theme="picnic", seed=1, avoid=["Picnic blanket"]
+    req = CategoryFluencyRequest(
+        lineCount=15, seed=1, avoid=["Boats"]
     )
-    asyncio.run(generate_list_recall(req, user_id="user-1"))
-    assert "Picnic blanket" in prompts[0]
+    asyncio.run(generate_category_fluency(req, user_id="user-1"))
+    assert "Boats" in prompts[0]

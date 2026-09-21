@@ -287,8 +287,8 @@ describe('card-sums page', () => {
   }, 60_000)
 
   it('keeps the hard running ladder clear of the safe-area guides', () => {
-    // Shared CARD_FIGURE_EDGE_INSET — same air as What Changed / Next Card /
-    // Memory Spread. Full-width ladders must not sit flush on the guide.
+    // Shared CARD_FIGURE_EDGE_INSET — same air as Next Card.
+    // Full-width ladders must not sit flush on the guide.
     const minClearance = 18
     for (const seed of [1, 7, 42, 99]) {
       clearStudioRecentContent()

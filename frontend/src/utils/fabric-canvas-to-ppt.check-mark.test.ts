@@ -10,7 +10,7 @@ import { buildCheckMark } from '@/utils/studio/studio-check-mark'
 import { resetObjectCounter, type StudioTag } from '@/utils/studio/studio-fabric-builders'
 
 const TAG: StudioTag = {
-  templateKey: 'list-recall',
+  templateKey: 'symbol-hunt',
   instanceId: 'check-ppt',
   pageRole: 'answers',
 }

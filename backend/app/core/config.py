@@ -38,10 +38,6 @@ class Settings(BaseSettings):
     STUDIO_GEMINI_MODEL: str = "gemini-flash-lite-latest"
     # Upstream call timeout; without it a stalled Gemini call pins a worker.
     STUDIO_GEMINI_TIMEOUT_SECONDS: int = 90
-    # Pin a GA id for sequence-order; falls back to STUDIO_GEMINI_MODEL when empty.
-    STUDIO_SEQUENCE_MODEL: str = ""
-    # Pin a GA id for paired-associates; falls back to STUDIO_GEMINI_MODEL when empty.
-    STUDIO_PAIRS_MODEL: str = ""
 
     REDIS_URL: str = "redis://localhost:6379/0"
     AI_IMAGE_JOB_TIMEOUT_SECONDS: int = 900

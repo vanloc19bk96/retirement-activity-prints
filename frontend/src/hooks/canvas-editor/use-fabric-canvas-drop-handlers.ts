@@ -20,8 +20,6 @@ import { addEmojiToFabricCanvasAtClientPoint } from '@/utils/canvas-emoji'
 import { getDroppedShapePayload, SHAPE_DND_MIME } from '@/utils/shape-dnd'
 import { getDroppedIconPayload, ICON_DND_MIME } from '@/utils/icon-dnd'
 import { getDroppedEmojiPayload, EMOJI_DND_MIME } from '@/utils/emoji-dnd'
-import { getDroppedFaceCardPayload, FACE_CARD_DND_MIME } from '@/utils/face-card-dnd'
-import { addFaceCardToFabricCanvasAtClientPoint } from '@/utils/canvas-face-card'
 import {
   fetchTemplateCanvasJson,
   scaleTemplateObjectsToCanvas,
@@ -73,7 +71,6 @@ function isSupportedDrag(dataTransfer: DataTransfer): boolean {
     types.includes(IMAGE_DND_MIME) ||
     types.includes(ICON_DND_MIME) ||
     types.includes(EMOJI_DND_MIME) ||
-    types.includes(FACE_CARD_DND_MIME) ||
     types.includes('text/uri-list') ||
     types.includes('text/plain') ||
     types.includes('Files')
@@ -179,19 +176,6 @@ export function useFabricCanvasDropHandlers({
         await addEmojiToFabricCanvasAtClientPoint({
           canvas: fabricCanvas,
           src: droppedEmoji.publicUrl,
-          clientX: event.clientX,
-          clientY: event.clientY,
-        })
-        onActiveCanvasChangeRef.current?.(canvasIndex)
-        dispatchCanvasThumbnailInvalidated(canvasIndex)
-        return
-      }
-
-      const droppedFaceCard = getDroppedFaceCardPayload(event.dataTransfer)
-      if (droppedFaceCard) {
-        await addFaceCardToFabricCanvasAtClientPoint({
-          canvas: fabricCanvas,
-          entry: droppedFaceCard.entry,
           clientX: event.clientX,
           clientY: event.clientY,
         })

@@ -10,23 +10,8 @@ import {
 import { STUDIO_CATEGORIES } from '@/constants/studio-categories'
 import { STARTER_STUDIO_TEMPLATE_KEYS } from '@/constants/studio-plan-access'
 import { gridCopyTemplate } from '@/utils/studio/grid-copy/generate'
-import { studyRecallGridTemplate } from '@/utils/studio/study-recall-grid/generate'
-import { sequenceRecallTemplate } from '@/utils/studio/sequence-recall/generate'
 import { symbolHuntTemplate } from '@/utils/studio/symbol-hunt/generate'
 import { symbolDigitCodingTemplate } from '@/utils/studio/symbol-digit-coding/generate'
-import { memoryPalaceTemplate } from '@/utils/studio/memory-palace/generate'
-import { nBackPaperTemplate } from '@/utils/studio/n-back-paper/generate'
-import { changeDetectionTemplate } from '@/utils/studio/change-detection/generate'
-import { cardsChangedTemplate } from '@/utils/studio/cards-changed/generate'
-import { cardMemorySpreadTemplate } from '@/utils/studio/card-memory-spread/generate'
-import { storyRecallTemplate } from '@/utils/studio/story-recall/generate'
-import { faceNameTemplate } from '@/utils/studio/face-name-recall/generate'
-import { listRecallTemplate } from '@/utils/studio/list-recall/generate'
-import { pictureRecognitionTemplate } from '@/utils/studio/picture-recognition/generate'
-import { sequenceOrderTemplate } from '@/utils/studio/sequence-order/generate'
-import { pairedAssociatesTemplate } from '@/utils/studio/paired-associates/generate'
-import { whereWasItTemplate } from '@/utils/studio/where-was-it/generate'
-import { digitSpanLadderTemplate } from '@/utils/studio/digit-span-ladder/generate'
 import { trailMakingTemplate } from '@/utils/studio/trail-making/generate'
 import { stroopSheetTemplate } from '@/utils/studio/stroop-sheet/generate'
 import { countingStreamsTemplate } from '@/utils/studio/counting-streams/generate'
@@ -74,23 +59,6 @@ import { brainTrainingTrackerTemplate } from '@/utils/studio/brain-training-trac
  * `STUDIO_CATEGORIES`, so the "All" grid reads like the tabs above it.
  */
 const RAW_TEMPLATES: StudioTemplateDefinition[] = [
-  // Memory
-  studyRecallGridTemplate,
-  sequenceRecallTemplate,
-  digitSpanLadderTemplate,
-  changeDetectionTemplate,
-  nBackPaperTemplate,
-  storyRecallTemplate,
-  faceNameTemplate,
-  listRecallTemplate,
-  pictureRecognitionTemplate,
-  sequenceOrderTemplate,
-  pairedAssociatesTemplate,
-  whereWasItTemplate,
-  memoryPalaceTemplate,
-  cardsChangedTemplate,
-  cardMemorySpreadTemplate,
-
   // Focus
   symbolHuntTemplate,
   countingStreamsTemplate,

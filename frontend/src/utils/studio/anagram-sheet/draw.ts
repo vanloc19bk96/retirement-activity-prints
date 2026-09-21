@@ -28,7 +28,7 @@ export interface AnagramItem {
   scrambled: string
 }
 
-/** Breathing room from safe edges — matches digit-span-ladder / list-recall. */
+/** Breathing room from safe edges — matches other dense studio grids. */
 const STROKE_INSET = 16
 const HEADER_ROWS = 1
 const CELL_PAD = 12

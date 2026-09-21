@@ -16,7 +16,7 @@ const PHOSPHOR_DUOTONE_OUTLINE = '#4B4B4B'
 
 /**
  * Full Phosphor duotone catalog (all icons in @phosphor-icons/core).
- * Eager sync load — keep Change Detection generate synchronous.
+ * Eager sync load — keep worksheet generate synchronous.
  */
 const PHOSPHOR_SVG_MODULES = import.meta.glob<string>(
   '../../../node_modules/@phosphor-icons/core/assets/duotone/*-duotone.svg',
@@ -92,7 +92,7 @@ export function buildPhosphorIconPath(
     left: number
     top: number
     size: number
-    /** Degrees — Fabric group angle (Change Detection rotations). */
+    /** Degrees — Fabric group angle. */
     angle?: number
   },
   tag: StudioTag,
