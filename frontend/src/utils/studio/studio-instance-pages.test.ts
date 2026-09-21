@@ -40,8 +40,8 @@ function studioObj(
 describe('resolveStudioReplaceStartPageIndex', () => {
   it('keeps start when viewport is on the puzzle page', () => {
     const store = makeStore({
-      0: [studioObj('hitori-1', 'single')],
-      1: [studioObj('hitori-1', 'answers')],
+      0: [studioObj('puzzle-1', 'single')],
+      1: [studioObj('puzzle-1', 'answers')],
     })
     expect(
       resolveStudioReplaceStartPageIndex({

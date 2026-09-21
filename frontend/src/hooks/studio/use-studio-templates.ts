@@ -27,7 +27,7 @@ export function useStudioTemplates(user: { plan: string | null } | null) {
       if (category !== 'all' && t.category !== category) return false
       if (tag && !t.tags?.includes(tag)) return false
       if (!q) return true
-      // Match user-facing copy only — not registry keys (e.g. kenken → Math Cage).
+      // Match user-facing copy only — not registry keys (e.g. word-search → Word Search).
       const tagLabels = STUDIO_TAG_FILTERS.filter((filter) =>
         t.tags?.includes(filter.value),
       ).map((filter) => filter.label.toLowerCase())

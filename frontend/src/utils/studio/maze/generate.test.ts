@@ -223,7 +223,7 @@ describe('maze', () => {
         'Do not cross any walls. There is exactly one way through',
     ).body
 
-    // FIELD_INSET (16) breathing room — same as Grid Copy / Hitori / Number Snake.
+    // FIELD_INSET (16) breathing room — same as Grid Copy.
     expect(maze.top! + maze.height!).toBeLessThanOrEqual(field.top + field.height - 8)
   })
 

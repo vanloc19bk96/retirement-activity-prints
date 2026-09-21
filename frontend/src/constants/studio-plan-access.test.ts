@@ -12,9 +12,9 @@ const STARTER_TEMPLATES = STUDIO_TEMPLATES.filter((t) =>
 )
 
 describe('starter studio template selection', () => {
-  it('unlocks exactly 16 templates', () => {
-    expect(STARTER_STUDIO_TEMPLATE_COUNT).toBe(16)
-    expect(STARTER_TEMPLATES).toHaveLength(16)
+  it('unlocks exactly 11 templates', () => {
+    expect(STARTER_STUDIO_TEMPLATE_COUNT).toBe(11)
+    expect(STARTER_TEMPLATES).toHaveLength(11)
   })
 
   it('has no duplicate or unknown keys', () => {

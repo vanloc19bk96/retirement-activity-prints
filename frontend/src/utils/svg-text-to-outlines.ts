@@ -77,7 +77,7 @@ const MISSING_GLYPH_FALLBACKS: Record<string, string> = {
   '\u25A0': '#', // ■
   '\u25C6': '*', // ◆
   '\u2605': '*', // ★
-  '\u2227': '^', // ∧ (legacy Futoshiki vertical signs)
+  '\u2227': '^', // ∧ (logical AND)
   '\u2228': 'v', // ∨
 }
 

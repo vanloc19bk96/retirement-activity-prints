@@ -33,7 +33,7 @@ describe('sanitizeTextForOutlineFont', () => {
     expect(sanitizeTextForOutlineFont('1→A', font)).toBe('1→A')
   })
 
-  it('replaces missing Futoshiki logical ∧/∨ with ASCII stand-ins', () => {
+  it('replaces missing logical ∧/∨ with ASCII stand-ins', () => {
     const font = stubFont('123')
     expect(sanitizeTextForOutlineFont('1∧2∨3', font)).toBe('1^2v3')
   })

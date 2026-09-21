@@ -1282,7 +1282,7 @@ describe('grid-copy', () => {
 })
 ```
 
-Add a **uniqueness** test for any constraint puzzle (`sudoku`, `futoshiki`, `kenken`): the solver must find exactly one solution.
+Add a **uniqueness** test for any constraint puzzle (`sudoku`): the solver must find exactly one solution.
 
 ---
 

@@ -129,7 +129,7 @@ export function runGeneratorContractTests(
       clearStudioRecentContent()
       resetObjectCounter()
       const a = template.generate(config, ctx)
-      // Templates that record variety (AI avoid-lists, magic-square banks) must
+      // Templates that record variety (AI avoid-lists) must
       // start each draw from a clean ledger or the second call avoids the first.
       clearStudioRecentContent()
       resetObjectCounter()

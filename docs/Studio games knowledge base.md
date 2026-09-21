@@ -69,73 +69,12 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ---
 
-## Logic (12 games)
+## Logic (1 game)
 
 ### Sudoku (`sudoku`)
 The classic number placement puzzle. Fill every row, column and box so each
 digit appears once. Sizes 9×9, 6×6, 4×4, each verified to have exactly one
 solution.
-Pages: 1 · Answer key: yes · AI content: no
-
-### Cross Sums (`kakuro`)
-A number crossword puzzle. Fill each run with digits that
-add up to its clue, never repeating a digit inside a run. One solution,
-reachable by logic.
-Pages: 1 · Answer key: yes · AI content: no
-
-### Math Cage (`kenken`)
-A math grid puzzle, also called Calcudoku. Fill rows and columns 1–N with no
-repeats so each bold cage hits its target using +, −, ×, ÷.
-Pages: 1 · Answer key: yes · AI content: no
-
-### Futoshiki (`futoshiki`)
-Fill the grid 1–N with no repeats in any row or column, while every
-greater-than sign between cells stays true. One solution, reachable by logic
-alone.
-Pages: 1 · Answer key: yes · AI content: no
-
-### Nonogram (`nonogram`)
-A grid logic puzzle, also called Picross. Use the number clues beside each
-row and column to work out which squares are filled. Solvable by logic
-alone, no guessing.
-Pages: 1 · Answer key: yes · AI content: no
-
-### Hitori (`hitori`)
-A Japanese elimination puzzle. Shade cells until no number repeats in any row
-or column, keeping shaded cells apart and unshaded cells connected.
-Pages: 1 · Answer key: yes · AI content: no
-
-### Shikaku (`shikaku`)
-A Japanese dividing puzzle, also sold as Rectangles. Cut the grid into
-rectangles so each one holds a single number equal to its area. Exactly one
-solution.
-Pages: 1 · Answer key: yes · AI content: no
-
-### Number Snake (`number-snake`)
-Fill the grid 1–N so consecutive numbers always touch, tracing one
-continuous path. Diagonal moves (Hidato) or straight moves only (Numbrix).
-Pages: 1 · Answer key: yes · AI content: no
-
-### Magic Square (`magic-square`)
-Fill in the missing numbers so every row, column and diagonal adds up to the
-same total. Grids 3×3 to 7×7, with number banks going beyond the usual 1–n².
-Pages: 1 · Answer key: yes · AI content: no
-
-### Pattern Continuation (`pattern-continuation`)
-Work out the rule behind each row of numbers or letters, then fill in the
-missing term. Rules cover adding, multiplying, squares, Fibonacci,
-alternating series, and more.
-Pages: 1 · Answer key: yes · AI content: no
-
-### Matrix Reasoning (`matrix-reasoning`)
-The classic non-verbal reasoning puzzle, also printed as "Find the Missing
-Piece." Figures in a 3×3 grid follow hidden rules across rows and columns;
-the reader picks the piece that fits the blank square.
-Pages: 1 · Answer key: yes · AI content: no
-
-### Mental Math Ladder (`mental-math-ladder`)
-Hold a running total in your head down a ladder of steps, then write only
-the final answer. Whole numbers throughout, never negative.
 Pages: 1 · Answer key: yes · AI content: no
 
 ---
@@ -292,17 +231,6 @@ Pages: 1 · Answer key: no · AI content: no · Fixed default title (key: `brain
 | Key | Label | Category | Pages | Answer key | AI content |
 |---|---|---|---|---|---|
 | sudoku | Sudoku | logic | 1 | yes | no |
-| kakuro | Cross Sums | logic | 1 | yes | no |
-| kenken | Math Cage | logic | 1 | yes | no |
-| futoshiki | Futoshiki | logic | 1 | yes | no |
-| nonogram | Nonogram | logic | 1 | yes | no |
-| hitori | Hitori | logic | 1 | yes | no |
-| shikaku | Shikaku | logic | 1 | yes | no |
-| number-snake | Number Snake | logic | 1 | yes | no |
-| magic-square | Magic Square | logic | 1 | yes | no |
-| pattern-continuation | Pattern Continuation | logic | 1 | yes | no |
-| matrix-reasoning | Matrix Reasoning | logic | 1 | yes | no |
-| mental-math-ladder | Mental Math Ladder | logic | 1 | yes | no |
 | word-search | Word Search | word | 1 | yes | yes |
 | crossword | Crossword | word | 1 | yes | yes |
 | cryptogram | Cryptogram | word | 1 | yes | yes |
@@ -330,4 +258,4 @@ Pages: 1 · Answer key: no · AI content: no · Fixed default title (key: `brain
 or a model that doubles as its own key) rather than producing a separate
 solution page.*
 
-**Total: 34 games** (12 logic · 9 word · 6 spatial · 5 reminiscence · 2 tracker).
+**Total: 23 games** (1 logic · 9 word · 6 spatial · 5 reminiscence · 2 tracker).

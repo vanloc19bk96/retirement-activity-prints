@@ -21,7 +21,7 @@ import {
 } from '@/constants/studio.constants'
 import type { MazeCell, MazePuzzle } from './generator'
 
-/** Breathing room from safe edges — same as Grid Copy / Number Snake / Hitori. */
+/** Breathing room from safe edges — same as Grid Copy. */
 const FIELD_INSET = 16
 
 /** Start / Finish caption size. Small enough to sit outside the maze frame. */

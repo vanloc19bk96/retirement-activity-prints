@@ -15,13 +15,8 @@
  * keep at least one entry — both enforced in DEV by `studio-templates.ts`.
  */
 export const STARTER_STUDIO_TEMPLATE_KEYS: readonly string[] = [
-  // Logic (6)
+  // Logic (1)
   'sudoku',
-  'kakuro',
-  'kenken',
-  'nonogram',
-  'magic-square',
-  'mental-math-ladder',
 
   // Word (4)
   'word-search',

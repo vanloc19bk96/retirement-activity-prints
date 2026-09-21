@@ -10,17 +10,7 @@ import {
 import { STUDIO_CATEGORIES } from '@/constants/studio-categories'
 import { STARTER_STUDIO_TEMPLATE_KEYS } from '@/constants/studio-plan-access'
 import { gridCopyTemplate } from '@/utils/studio/grid-copy/generate'
-import { mentalMathLadderTemplate } from '@/utils/studio/mental-math-ladder/generate'
 import { sudokuTemplate } from '@/utils/studio/sudoku/generate'
-import { kakuroTemplate } from '@/utils/studio/kakuro/generate'
-import { futoshikiTemplate } from '@/utils/studio/futoshiki/generate'
-import { kenkenTemplate } from '@/utils/studio/kenken/generate'
-import { nonogramTemplate } from '@/utils/studio/nonogram/generate'
-import { hitoriTemplate } from '@/utils/studio/hitori/generate'
-import { shikakuTemplate } from '@/utils/studio/shikaku/generate'
-import { patternContinuationTemplate } from '@/utils/studio/pattern-continuation/generate'
-import { magicSquareTemplate } from '@/utils/studio/magic-square/generate'
-import { numberSnakeTemplate } from '@/utils/studio/number-snake/generate'
 import { wordSearchTemplate } from '@/utils/studio/retirement-word-search/generate'
 import { crosswordTemplate } from '@/utils/studio/crossword/generate'
 import { categoryFluencyTemplate } from '@/utils/studio/category-fluency/generate'
@@ -32,7 +22,6 @@ import { wordLadderTemplate } from '@/utils/studio/word-ladder/generate'
 import { wordFitTemplate } from '@/utils/studio/word-fit/generate'
 import { cryptogramTemplate } from '@/utils/studio/cryptogram/generate'
 import { shapeRotationMatchTemplate } from '@/utils/studio/shape-rotation-match/generate'
-import { matrixReasoningTemplate } from '@/utils/studio/matrix-reasoning/generate'
 import { mirrorDrawTemplate } from '@/utils/studio/mirror-draw/generate'
 import { paperFoldingTemplate } from '@/utils/studio/paper-folding/generate'
 import { mazeTemplate } from '@/utils/studio/maze/generate'
@@ -52,17 +41,6 @@ import { brainTrainingTrackerTemplate } from '@/utils/studio/brain-training-trac
 const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   // Logic
   sudokuTemplate,
-  kakuroTemplate,
-  kenkenTemplate,
-  futoshikiTemplate,
-  nonogramTemplate,
-  hitoriTemplate,
-  shikakuTemplate,
-  numberSnakeTemplate,
-  magicSquareTemplate,
-  patternContinuationTemplate,
-  matrixReasoningTemplate,
-  mentalMathLadderTemplate,
 
   // Word
   wordSearchTemplate,
