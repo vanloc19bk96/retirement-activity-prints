@@ -132,8 +132,11 @@ function shouldOmitFromAnswerPage(obj: StudioFabricObject): boolean {
   if (obj.studioTemplateKey === 'cancellation' && obj.studioRole === 'key') {
     return true
   }
-  // Word Search: solution shows circled words only — drop the word bank + label.
-  if (obj.studioTemplateKey === 'word-search') {
+  // Word Search / hidden-message: solution shows circled words only — drop the word bank + label.
+  if (
+    obj.studioTemplateKey === 'word-search' ||
+    obj.studioTemplateKey === 'hidden-message-word-search'
+  ) {
     if (obj.studioRole === 'decoration') {
       const text = String(obj.text ?? '').replace(/\u00a0/g, ' ').trim()
       if (/^Words to find:/i.test(text)) return true
@@ -153,6 +156,15 @@ function shouldOmitFromAnswerPage(obj: StudioFabricObject): boolean {
     obj.studioTemplateKey === 'retirement-anagram' &&
     obj.studioRole === 'structure' &&
     isFabricType(obj, 'line')
+  ) {
+    return true
+  }
+  // Hidden-message write-in boxes live on the puzzle; the key prints the saying.
+  if (
+    obj.studioTemplateKey === 'hidden-message-word-search' &&
+    obj.studioRole === 'structure' &&
+    isFabricType(obj, 'rect') &&
+    (!obj.fill || obj.fill === 'transparent')
   ) {
     return true
   }

@@ -1,0 +1,39 @@
+{
+  "_comment": "Hidden Message Word Search. Pool is always 40. listedWords+8 is the minimum after filters. Message letter count excludes spaces and punctuation.",
+  "limits": {
+    "rateLimitPerWindow": 60,
+    "maxOutputTokens": 4096,
+    "maxAttempts": 3,
+    "poolSize": 40,
+    "minWordLetters": 3,
+    "maxWordLetters": 11,
+    "minMessageLetters": 15,
+    "maxMessageLetters": 35
+  },
+  "listedWordsByDifficulty": {
+    "easy": 18,
+    "medium": 22,
+    "hard": 28
+  },
+  "tones": {
+    "funny": "light, witty retirement humor — playful, never mean",
+    "heartfelt": "warm, sincere, and kind",
+    "classy": "elegant, dignified, quietly proud",
+    "sassy": "cheeky and playful, still kind"
+  },
+  "locale": {
+    "nativeLocales": ["en"],
+    "nativeLine": "- Write in clear English.",
+    "otherLine": "- Write in language locale '{locale}'."
+  },
+  "varietyAngles": [
+    "everyday life after work",
+    "weekends with no alarm clock",
+    "garden, porch, and neighbourhood days",
+    "travel and unhurried outings",
+    "family and grandchildren moments",
+    "quiet hobbies and slow mornings",
+    "friendship and coffee catch-ups",
+    "home comforts and favourite chairs"
+  ]
+}

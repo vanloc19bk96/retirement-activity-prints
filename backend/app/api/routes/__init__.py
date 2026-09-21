@@ -18,6 +18,7 @@ from app.api.routes.studio_retirement_anagram import (
     router as studio_retirement_anagram_router,
 )
 from app.api.routes.studio_theme_words import router as studio_theme_words_router
+from app.api.routes.studio_hidden_message import router as studio_hidden_message_router
 
 router = APIRouter()
 
@@ -43,5 +44,6 @@ router.include_router(studio_missing_vowels_router)
 router.include_router(studio_cryptogram_router)
 router.include_router(studio_retirement_anagram_router)
 router.include_router(studio_theme_words_router)
+router.include_router(studio_hidden_message_router)
 
 __all__ = ["router"]

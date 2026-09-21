@@ -77,13 +77,21 @@ Pages: 1 · Answer key: yes · AI content: no
 
 ---
 
-## Word (5 games)
+## Word (6 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
 in a letter grid to find and circle. (Supports mixing puzzle shapes — see
 recent "puzzle mix" work in this repo.)
 Pages: 1 · Answer key: yes (marks every word) · AI content: yes
+
+### Hidden Message Word Search (`hidden-message-word-search`)
+A large-print word search whose leftover letters, read left to right and top to bottom,
+spell an original retirement saying. Find every listed word, then write the
+saying on the writing lines under the grid (one line per letter). Pick a theme
+and tone, or type your own saying and let AI write only the words. Print style
+defaults to large print (smaller grid / fewer words) for Amazon KDP readability.
+Pages: 1 · Answer key: yes (marks every word, shades leftover cells, prints the saying) · AI content: yes
 
 ### Crossword (`crossword`)
 A classic crossword. Solve the clues to fill interlocking words. Pick a
@@ -125,10 +133,11 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 |---|---|---|---|---|---|
 | sudoku | Sudoku | logic | 1 | yes | no |
 | word-search | Word Search | word | 1 | yes | yes |
+| hidden-message-word-search | Hidden Message Word Search | word | 1 | yes | yes |
 | crossword | Crossword | word | 1 | yes | yes |
 | cryptogram | Cryptogram | word | 1 | yes | yes |
 | retirement-anagram | Retirement Anagrams | word | 1 | yes | yes |
 | missing-vowels | Missing Vowels | word | 1 | yes | yes |
 | maze | Maze | spatial | 1 | yes | no |
 
-**Total: 7 games** (1 logic · 5 word · 1 spatial).
+**Total: 8 games** (1 logic · 6 word · 1 spatial).

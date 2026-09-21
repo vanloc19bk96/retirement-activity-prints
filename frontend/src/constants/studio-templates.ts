@@ -16,6 +16,7 @@ import { retirementAnagramTemplate } from '@/utils/studio/retirement-anagram/gen
 import { missingVowelsTemplate } from '@/utils/studio/missing-vowels/generate'
 import { cryptogramTemplate } from '@/utils/studio/cryptogram/generate'
 import { mazeTemplate } from '@/utils/studio/maze/generate'
+import { hiddenMessageWordSearchTemplate } from '@/utils/studio/hidden-message-word-search/generate'
 
 /**
  * Card order in the Studio panel. Grouped by category in the same order as
@@ -27,6 +28,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
 
   // Word
   wordSearchTemplate,
+  hiddenMessageWordSearchTemplate,
   crosswordTemplate,
   cryptogramTemplate,
   retirementAnagramTemplate,

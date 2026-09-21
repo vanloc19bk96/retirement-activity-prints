@@ -19,6 +19,7 @@ import {
 } from '../studio-fabric-builders'
 import {
   STUDIO_INK,
+  STUDIO_RULE_LIGHT,
   STUDIO_STROKE_NORMAL,
   STUDIO_BODY_SIZE,
 } from '@/constants/studio.constants'
@@ -109,18 +110,22 @@ function answerCapsuleThroughWord(
   )
 }
 
-function drawLetterGrid(
+export function drawLetterGrid(
   puzzle: WordSearchPuzzle,
   field: Box,
   font: string,
   tag: StudioTag,
   verticalAlign: 'top' | 'center' = 'top',
+  shadedCells?: ReadonlySet<string>,
+  letterStyle?: { letterScale?: number; minLetterSize?: number },
 ): StudioFabricObject {
   // Inset so answer stroke pads stay inside the safe field.
   const gridField = insetBox(field, ANSWER_STROKE_PAD)
   const floated = fitSquareGrid(gridField, puzzle.size, puzzle.size)
   const g = snapGridInField(gridField, floated.cell, puzzle.size, verticalAlign)
-  const fontSize = Math.max(14, Math.floor(g.cell * 0.55))
+  const letterScale = letterStyle?.letterScale ?? 0.55
+  const minLetterSize = letterStyle?.minLetterSize ?? 14
+  const fontSize = Math.max(minLetterSize, Math.floor(g.cell * letterScale))
   const parts: StudioFabricObject[] = []
 
   for (const placement of puzzle.placements) {
@@ -130,6 +135,23 @@ function drawLetterGrid(
   for (let r = 0; r < puzzle.size; r++) {
     for (let c = 0; c < puzzle.size; c++) {
       const cell = g.cellBox(r, c)
+      if (shadedCells?.has(`${r},${c}`)) {
+        parts.push(
+          buildRect(
+            {
+              left: cell.left + 1,
+              top: cell.top + 1,
+              width: cell.width - 2,
+              height: cell.height - 2,
+              fill: STUDIO_RULE_LIGHT,
+              stroke: 'transparent',
+              strokeWidth: 0,
+            },
+            tag,
+            'structure',
+          ),
+        )
+      }
       const letter = puzzle.grid[r]![c]!
       parts.push(
         buildText(
@@ -164,13 +186,15 @@ function drawLetterGrid(
   return buildGroup(parts, groupBounds, tag)
 }
 
-function drawWordList(
+export function drawWordList(
   words: string[],
   area: Box,
   font: string,
   tag: StudioTag,
+  options?: { minFontSize?: number },
 ): StudioFabricObject[] {
   const objects: StudioFabricObject[] = []
+  const minFontSize = options?.minFontSize ?? 11
   const safe: Box = {
     left: area.left + LIST_EDGE_PAD,
     top: area.top + LIST_EDGE_PAD,
@@ -179,7 +203,10 @@ function drawWordList(
   }
   if (safe.width < 24 || safe.height < 24) return objects
 
-  const labelSize = Math.max(14, Math.min(STUDIO_BODY_SIZE - 4, Math.floor(safe.height * 0.22)))
+  const labelSize = Math.max(
+    Math.max(14, minFontSize),
+    Math.min(STUDIO_BODY_SIZE - 4, Math.floor(safe.height * 0.22)),
+  )
   // Label stays ungrouped so it can be edited/moved independently.
   objects.push(
     buildText(
@@ -219,7 +246,7 @@ function drawWordList(
   const rowInnerH = Math.max(8, rowBoxes[0]!.height)
   // Font must leave room for Fabric’s taller-than-fontSize textbox metrics.
   const rowFitSize = Math.max(
-    10,
+    minFontSize,
     Math.min(
       STUDIO_BODY_SIZE - 2,
       Math.floor(rowInnerH / WORD_BANK_TEXT_HEIGHT_RATIO),
@@ -227,7 +254,7 @@ function drawWordList(
   )
   // Longest bank word must fit its column on one line — never wrap or clip.
   const wordSize = displayWords.reduce(
-    (size, word) => Math.min(size, fitFontSizeToWidth(word, colInnerW, rowFitSize, 9)),
+    (size, word) => Math.min(size, fitFontSizeToWidth(word, colInnerW, rowFitSize, minFontSize)),
     rowFitSize,
   )
   const wordBoxHeight = Math.ceil(wordSize * WORD_BANK_TEXT_HEIGHT_RATIO)
