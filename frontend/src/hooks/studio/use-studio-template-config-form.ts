@@ -29,7 +29,6 @@ const CONTENT_PHASE_LABEL: Record<StudioCategory, string> = {
   logic: 'Working out the puzzle…',
   word: 'Picking the words…',
   spatial: 'Sketching the puzzle…',
-  reminiscence: 'Writing your prompts…',
 }
 
 export function useStudioTemplateConfigForm(template: StudioTemplateDefinition) {

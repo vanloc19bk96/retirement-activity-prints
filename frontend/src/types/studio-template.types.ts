@@ -22,8 +22,6 @@ export type StudioCategory =
   | 'word'
   /** Visual-spatial reasoning and drawing. */
   | 'spatial'
-  /** Life story, nostalgia and open-ended writing. */
-  | 'reminiscence'
 
 export type StudioRole = 'prompt' | 'answer' | 'key' | 'decoration' | 'structure'
 

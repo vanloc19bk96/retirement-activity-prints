@@ -7,8 +7,8 @@
  * - every category is represented, so no tab is ever empty;
  * - the classics that actually sell activity books are in (Word Search,
  *   Crossword, Sudoku, Maze, Cryptogram…);
- * - the mix spans deduction, words, mazes and nostalgia trivia,
- *   which is enough page variety for a full book.
+ * - the mix spans deduction, words and mazes, which is enough page
+ *   variety for a full book.
  *
  * Listed in `STUDIO_TEMPLATES` order (grouped by category) so this file reads
  * like the panel. Keys must exist in the registry, and every category must
@@ -18,19 +18,15 @@ export const STARTER_STUDIO_TEMPLATE_KEYS: readonly string[] = [
   // Logic (1)
   'sudoku',
 
-  // Word (6)
+  // Word (5)
   'word-search',
   'crossword',
   'cryptogram',
   'anagram-sheet',
   'missing-vowels',
-  'word-ladder',
 
   // Spatial (1)
   'maze',
-
-  // Reminiscence (1)
-  'decade-trivia',
 ]
 
 /** How many templates Starter can use (marketing copy reads this too). */

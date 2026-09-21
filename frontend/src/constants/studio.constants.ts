@@ -22,12 +22,8 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'anagram-sheet',
   'retirement-anagram',
   'missing-vowels',
-  'decade-trivia',
   'cryptogram',
   'maze',
-  'word-ladder',
-  // Procedural worksheets — black-and-white interior by design.
-  'word-fit',
 ])
 
 export const STUDIO_STROKE_HAIRLINE = 1.5

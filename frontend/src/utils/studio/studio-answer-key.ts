@@ -144,14 +144,6 @@ function shouldOmitFromAnswerPage(obj: StudioFabricObject): boolean {
   if (obj.studioTemplateKey === 'missing-vowels' && obj.studioRole === 'prompt') {
     return true
   }
-  // Decade trivia solution mirrors the puzzle (questions + options) with rings —
-  // drop write-in lines; fill-blank prompts are replaced by in-blank answer text.
-  if (obj.studioTemplateKey === 'decade-trivia') {
-    if (obj.studioRole === 'structure') return true
-    if (obj.studioRole === 'prompt' && /_{2,}/.test(String(obj.text ?? ''))) {
-      return true
-    }
-  }
   // Anagram sheets: keep the grid; drop puzzle write-in lines under revealed answers.
   if (
     (obj.studioTemplateKey === 'anagram-sheet' ||

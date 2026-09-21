@@ -13,7 +13,6 @@ export const STUDIO_CATEGORIES: { value: StudioCategoryFilter; label: string }[]
   { value: 'logic', label: 'Logic' },
   { value: 'word', label: 'Word' },
   { value: 'spatial', label: 'Spatial' },
-  { value: 'reminiscence', label: 'Reminiscence' },
 ]
 
 /**
@@ -29,5 +28,4 @@ export const STUDIO_CATEGORY_LABELS: Record<StudioCategory, string> = {
   logic: 'Logic',
   word: 'Word',
   spatial: 'Spatial',
-  reminiscence: 'Reminiscence',
 }

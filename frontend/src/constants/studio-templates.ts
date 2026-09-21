@@ -15,11 +15,8 @@ import { crosswordTemplate } from '@/utils/studio/crossword/generate'
 import { anagramSheetTemplate } from '@/utils/studio/anagram-sheet/generate'
 import { retirementAnagramTemplate } from '@/utils/studio/retirement-anagram/generate'
 import { missingVowelsTemplate } from '@/utils/studio/missing-vowels/generate'
-import { wordLadderTemplate } from '@/utils/studio/word-ladder/generate'
-import { wordFitTemplate } from '@/utils/studio/word-fit/generate'
 import { cryptogramTemplate } from '@/utils/studio/cryptogram/generate'
 import { mazeTemplate } from '@/utils/studio/maze/generate'
-import { decadeTriviaTemplate } from '@/utils/studio/decade-trivia/generate'
 
 /**
  * Card order in the Studio panel. Grouped by category in the same order as
@@ -36,14 +33,9 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   retirementAnagramTemplate,
   anagramSheetTemplate,
   missingVowelsTemplate,
-  wordLadderTemplate,
-  wordFitTemplate,
 
   // Spatial
   mazeTemplate,
-
-  // Reminiscence
-  decadeTriviaTemplate,
 ]
 
 function withCommonFields(def: StudioTemplateDefinition): StudioTemplateDefinition {

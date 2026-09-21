@@ -44,7 +44,7 @@ class PromptDataError(RuntimeError):
 
 @lru_cache(maxsize=None)
 def load_text(relative: str, *, root: str = DEFAULT_ROOT) -> str:
-    """Read a data file (e.g. ``"decade-trivia/prompt.md"``) as text."""
+    """Read a data file (e.g. ``"crossword/prompt.json"``) as text."""
     path = APP_DATA_ROOT / root / relative
     try:
         return path.read_text(encoding="utf-8")

@@ -54,20 +54,6 @@ export {
   resolveAiThemePrompt,
   validateRetirementCrosswordConfig,
 } from './config'
-/** Kept for word-fit and legacy imports. */
-export {
-  resolveWordsAndClues,
-  mergeClues,
-  sanitizeCustomPairs,
-  validateCustomWordLines,
-  loadThemeEntries,
-  listCrosswordThemeMeta,
-  crosswordThemeLabel,
-  isCustomWords,
-  isCustomAiTheme,
-  customThemeTitle,
-  resolveCustomThemeText,
-} from './words'
 
 function withThemeTitle(config: StudioConfig): StudioConfig {
   if (String(config.title ?? '').trim()) return config

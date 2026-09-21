@@ -18,8 +18,8 @@ const LAYOUT = {
   },
 }
 
-const template = getStudioTemplate('word-fit')!
-const wordCountField = template.configSchema.find((f) => f.key === 'wordCount')!
+const template = getStudioTemplate('cryptogram')!
+const puzzleCountField = template.configSchema.find((f) => f.key === 'puzzleCount')!
 
 describe('withStudioPageHeader', () => {
   it('stands in a heading when the run auto-numbers a blank title', () => {
@@ -52,11 +52,11 @@ describe('page header and layout-aware max', () => {
   })
 
   it('reports the same max to the form as it clamps to', () => {
-    const draft = { ...base, wordCount: 24 }
+    const draft = { ...base, puzzleCount: 8 }
     const bounds = withStudioPageHeader(draft, { showTitle: true })
-    const shown = resolveStudioConfigField(wordCountField, bounds, LAYOUT).max
+    const shown = resolveStudioConfigField(puzzleCountField, bounds, LAYOUT).max
     expect(
-      clampStudioConfigToSchema(template.configSchema, draft, LAYOUT, bounds).wordCount,
+      clampStudioConfigToSchema(template.configSchema, draft, LAYOUT, bounds).puzzleCount,
     ).toBe(shown)
   })
 })

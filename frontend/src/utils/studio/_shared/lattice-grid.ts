@@ -7,8 +7,8 @@
  * internal edge gets painted twice and prints heavier than the outer frame,
  * which is exactly the kind of uneven rule that reads as "cheap" in POD.
  *
- * Extracted from `crossword/draw.ts` so `word-fit` draws the identical lattice
- * rather than a second implementation of it that drifts.
+ * Extracted from `crossword/draw.ts` so crossword pages share one lattice
+ * helper rather than a second implementation that drifts.
  */
 
 import type { StudioFabricObject } from '@/types/studio-template.types'

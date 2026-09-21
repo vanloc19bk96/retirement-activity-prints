@@ -433,7 +433,7 @@ describe('retirement crossword', () => {
     expect(selected.every((p) => p.clue.length > 0)).toBe(true)
   })
 
-  it('keeps bundled theme pools for word-fit offline fallback', () => {
+  it('keeps bundled theme pools for offline fallback', () => {
     const meta = listCrosswordThemeMeta()
     expect(meta).toHaveLength(10)
     expect(loadThemeEntries('animals').length).toBeGreaterThanOrEqual(500)

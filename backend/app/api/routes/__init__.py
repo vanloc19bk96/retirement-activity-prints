@@ -14,13 +14,11 @@ from app.api.routes.downloads import router as downloads_router
 from app.api.routes.studio_crossword import router as studio_crossword_router
 from app.api.routes.studio_anagram import router as studio_anagram_router
 from app.api.routes.studio_missing_vowels import router as studio_missing_vowels_router
-from app.api.routes.studio_decade_trivia import router as studio_decade_trivia_router
 from app.api.routes.studio_cryptogram import router as studio_cryptogram_router
 from app.api.routes.studio_retirement_anagram import (
     router as studio_retirement_anagram_router,
 )
 from app.api.routes.studio_theme_words import router as studio_theme_words_router
-from app.api.routes.studio_word_ladder import router as studio_word_ladder_router
 
 router = APIRouter()
 
@@ -44,10 +42,8 @@ router.include_router(downloads_router)
 router.include_router(studio_crossword_router)
 router.include_router(studio_anagram_router)
 router.include_router(studio_missing_vowels_router)
-router.include_router(studio_decade_trivia_router)
 router.include_router(studio_cryptogram_router)
 router.include_router(studio_retirement_anagram_router)
 router.include_router(studio_theme_words_router)
-router.include_router(studio_word_ladder_router)
 
 __all__ = ["router"]
