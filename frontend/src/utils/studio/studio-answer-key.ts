@@ -197,9 +197,10 @@ function shouldOmitFromAnswerPage(obj: StudioFabricObject): boolean {
   if (obj.studioTemplateKey === 'paired-associates' && obj.studioRole === 'structure') {
     return true
   }
-  // Anagram Sheet: keep the grid; drop puzzle write-in lines under revealed answers.
+  // Anagram sheets: keep the grid; drop puzzle write-in lines under revealed answers.
   if (
-    obj.studioTemplateKey === 'anagram-sheet' &&
+    (obj.studioTemplateKey === 'anagram-sheet' ||
+      obj.studioTemplateKey === 'retirement-anagram') &&
     obj.studioRole === 'structure' &&
     isFabricType(obj, 'line')
   ) {

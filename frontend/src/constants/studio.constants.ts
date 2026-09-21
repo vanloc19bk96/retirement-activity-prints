@@ -37,6 +37,7 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'word-search',
   'crossword',
   'anagram-sheet',
+  'retirement-anagram',
   'missing-vowels',
   'shape-rotation-match',
   'matrix-reasoning',

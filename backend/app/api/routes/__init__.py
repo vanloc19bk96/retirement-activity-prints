@@ -30,6 +30,9 @@ from app.api.routes.studio_life_timeline import router as studio_life_timeline_r
 from app.api.routes.studio_title_complete import router as studio_title_complete_router
 from app.api.routes.studio_pictures import router as studio_pictures_router
 from app.api.routes.studio_cryptogram import router as studio_cryptogram_router
+from app.api.routes.studio_retirement_anagram import (
+    router as studio_retirement_anagram_router,
+)
 from app.api.routes.studio_theme_words import router as studio_theme_words_router
 from app.api.routes.studio_word_ladder import router as studio_word_ladder_router
 
@@ -67,6 +70,7 @@ router.include_router(studio_life_timeline_router)
 router.include_router(studio_title_complete_router)
 router.include_router(studio_pictures_router)
 router.include_router(studio_cryptogram_router)
+router.include_router(studio_retirement_anagram_router)
 router.include_router(studio_theme_words_router)
 router.include_router(studio_word_ladder_router)
 

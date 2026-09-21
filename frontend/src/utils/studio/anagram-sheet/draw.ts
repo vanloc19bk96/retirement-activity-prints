@@ -242,6 +242,16 @@ function pushAnswerText(
   )
 }
 
+export interface DrawAnagramOptions {
+  forAnswerKey?: boolean
+  /** Left column header. Default: Letters */
+  scrambleHeader?: string
+  /** Right column header on the puzzle page. Default: Your answer */
+  answerHeader?: string
+  /** Right column header on the answer-key page. Default: Answer */
+  answerKeyHeader?: string
+}
+
 /** Digit-span-style 2-col table: Letters | Your answer (Answer on the key). */
 export function drawAnagramItems(
   objects: StudioFabricObject[],
@@ -249,11 +259,14 @@ export function drawAnagramItems(
   items: AnagramItem[],
   font: string,
   tag: StudioTag,
-  options?: { forAnswerKey?: boolean },
+  options?: DrawAnagramOptions,
 ): void {
   if (items.length === 0) return
 
   const forAnswerKey = options?.forAnswerKey === true
+  const scrambleHeader = options?.scrambleHeader ?? 'Letters'
+  const answerHeader = options?.answerHeader ?? 'Your answer'
+  const answerKeyHeader = options?.answerKeyHeader ?? 'Answer'
   const tableField = insetBox(field, STROKE_INSET)
   const table = fitAnagramTable(tableField, items.length)
   const promptMaxW = Math.max(24, table.cellW - CELL_PAD * 2 - INDEX_W - INDEX_GAP)
@@ -261,11 +274,11 @@ export function drawAnagramItems(
   const labelSize = fitFontSizeToWidth(`${items.length}.`, INDEX_W, scrambleSize * 0.9, 10)
   const gridObjects: StudioFabricObject[] = []
 
-  pushHeaderLabel(gridObjects, table.cellBox(0, 0), 'Letters', font, tag)
+  pushHeaderLabel(gridObjects, table.cellBox(0, 0), scrambleHeader, font, tag)
   pushHeaderLabel(
     gridObjects,
     table.cellBox(0, 1),
-    forAnswerKey ? 'Answer' : 'Your answer',
+    forAnswerKey ? answerKeyHeader : answerHeader,
     font,
     tag,
   )

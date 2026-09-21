@@ -1,0 +1,32 @@
+{
+  "_comment": "Retirement Anagram word generation. lengthByDifficulty mirrors frontend content.ts. overRequest=5 so we ask itemCount+5. varietyAngles rotate by seed for the one retry.",
+  "limits": {
+    "overRequest": 5,
+    "rateLimitPerWindow": 60,
+    "maxOutputTokens": 4096,
+    "minWordLetters": 4,
+    "maxWordLetters": 11
+  },
+  "lengthByDifficulty": {
+    "easy": [4, 6],
+    "medium": [5, 8],
+    "hard": [7, 11]
+  },
+  "locale": {
+    "nativeLocales": ["en"],
+    "nativeLine": "- Write in clear English.",
+    "otherLine": "- Write words in language locale '{locale}'."
+  },
+  "varietyAngles": [
+    "everyday retirement lifestyle words",
+    "weekend and leisure vocabulary",
+    "home and garden words seniors know",
+    "travel and outing vocabulary",
+    "family and grandchildren words",
+    "health and gentle wellness words",
+    "bucket-list and volunteering words",
+    "quiet hobbies and relaxation words",
+    "nostalgic but upbeat memory words",
+    "house and neighbourhood lifestyle words"
+  ]
+}

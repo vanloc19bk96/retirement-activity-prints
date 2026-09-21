@@ -50,6 +50,7 @@ import { crosswordTemplate } from '@/utils/studio/crossword/generate'
 import { categoryFluencyTemplate } from '@/utils/studio/category-fluency/generate'
 import { firstLetterRecallTemplate } from '@/utils/studio/first-letter-recall/generate'
 import { anagramSheetTemplate } from '@/utils/studio/anagram-sheet/generate'
+import { retirementAnagramTemplate } from '@/utils/studio/retirement-anagram/generate'
 import { missingVowelsTemplate } from '@/utils/studio/missing-vowels/generate'
 import { wordLadderTemplate } from '@/utils/studio/word-ladder/generate'
 import { wordFitTemplate } from '@/utils/studio/word-fit/generate'
@@ -119,6 +120,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   wordSearchTemplate,
   crosswordTemplate,
   cryptogramTemplate,
+  retirementAnagramTemplate,
   anagramSheetTemplate,
   missingVowelsTemplate,
   categoryFluencyTemplate,
