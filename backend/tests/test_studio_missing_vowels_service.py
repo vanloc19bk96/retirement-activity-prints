@@ -8,72 +8,91 @@ import pytest
 from app.schemas.studio_missing_vowels import MissingVowelsRequest
 from app.services.studio_missing_vowels_service import (
     MissingVowelsGenerationError,
+    build_prompt_for_tests,
     generate_missing_vowels,
+    mask_vowels_for_tests,
     normalize_items_for_tests,
     parse_mv_json_for_tests,
-    validate_mv_shape_for_tests,
 )
 
 
 VALID_WORDS = {
-    "items": ["tiger", "eagle", "ocean", "bread", "river", "apple"]
-}
-
-VALID_PHRASES = {
     "items": [
-        "practice makes perfect",
-        "better late than never",
-        "knowledge is power",
-        "slow and steady",
-        "time heals wounds",
-        "actions speak louder",
+        "Gardening",
+        "Travel",
+        "Cruise",
+        "Garden",
+        "Picnic",
+        "Sunset",
+        "Family",
+        "Hobby",
+        "Relax",
+        "Memory",
+        "Friends",
+        "Nature",
     ]
 }
 
 
 def test_parse_valid_json() -> None:
-    data = parse_mv_json_for_tests(json.dumps(VALID_WORDS))
-    assert len(data["items"]) == 6
+    items = parse_mv_json_for_tests(json.dumps(VALID_WORDS))
+    assert len(items) == 12
 
 
 def test_parse_markdown_fenced_json() -> None:
     raw = "```json\n" + json.dumps(VALID_WORDS) + "\n```"
-    data = parse_mv_json_for_tests(raw)
-    assert len(data["items"]) == 6
+    items = parse_mv_json_for_tests(raw)
+    assert len(items) == 12
 
 
 def test_missing_items_raises() -> None:
     with pytest.raises(ValueError, match="missing items"):
-        validate_mv_shape_for_tests({})
+        parse_mv_json_for_tests(json.dumps({}))
 
 
-def test_normalize_words_drops_bad_entries() -> None:
+def test_mask_vowels_keeps_y_and_spaces() -> None:
+    assert mask_vowels_for_tests("RETIREMENT") == "R_T_R_M_NT"
+    assert mask_vowels_for_tests("ROAD TRIP") == "R__D TR_P"
+    assert mask_vowels_for_tests("HAPPY") == "H_PPY"
+
+
+def test_normalize_drops_bad_entries() -> None:
     items = normalize_items_for_tests(
-        ["tiger", "ab", "eagle!", "ocean", "bread", "river", "apple", "toolongwordxyz"],
-        kind="words",
-        min_len=3,
-        max_len=7,
-        min_words=2,
-        max_words=6,
+        ["tiger", "ab", "eagle!", "ocean", "rhythm", "bread", "river", "apple", "toolongwordxyz"],
+        min_len=4,
+        max_len=8,
         want=10,
     )
     assert "TIGER" in items
     assert "AB" not in items
-    assert all(i.isalpha() and i.isupper() for i in items)
+    assert "RHYTHM" not in items
+    assert all("A" <= ch <= "Z" or ch == " " for text in items for ch in text)
 
 
-def test_normalize_phrases() -> None:
+def test_normalize_allows_two_word_phrases() -> None:
     items = normalize_items_for_tests(
-        VALID_PHRASES["items"] + ["x", "one two three four five six seven eight nine"],
-        kind="phrases",
-        min_len=3,
-        max_len=12,
-        min_words=2,
-        max_words=6,
+        ["road trip", "free time", "x", "one two three", {"answer": "tea time"}],
+        min_len=4,
+        max_len=10,
         want=10,
     )
-    assert len(items) >= 5
-    assert all(" " in i for i in items)
+    assert "ROAD TRIP" in items
+    assert "FREE TIME" in items
+    assert "TEA TIME" in items
+    assert all(len(i.split(" ")) <= 2 for i in items)
+
+
+def test_prompt_mentions_theme_and_length() -> None:
+    req = MissingVowelsRequest(
+        theme="Travel Dreams",
+        itemCount=12,
+        difficulty="classic",
+        seed=7,
+    )
+    prompt = build_prompt_for_tests(req)
+    assert "Travel Dreams" in prompt
+    assert "5-10" in prompt
+    assert "24" in prompt
 
 
 def test_generate_strips_and_uppercases(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -87,6 +106,12 @@ def test_generate_strips_and_uppercases(monkeypatch: pytest.MonkeyPatch) -> None
                     "bread",
                     "river",
                     "apple",
+                    "picnic",
+                    "sunset",
+                    "family",
+                    "hobby",
+                    "relax",
+                    "memory",
                 ]
             }
         )
@@ -101,10 +126,10 @@ def test_generate_strips_and_uppercases(monkeypatch: pytest.MonkeyPatch) -> None
     )
 
     req = MissingVowelsRequest(
-        theme="animals", itemCount=6, difficulty="easy", seed=7, kind="words"
+        theme="Hobbies & Leisure", itemCount=12, difficulty="classic", seed=7
     )
     result = asyncio.run(generate_missing_vowels(req, user_id="user-1"))
-    assert len(result.items) == 6
+    assert len(result.items) >= 8
     assert result.items[0] == "TIGER"
 
 

@@ -5,43 +5,96 @@ import {
   studioVarietyKey,
 } from '../studio-variety'
 import type { StudioConfig } from '@/types/studio-template.types'
-import type {
-  MissingVowelsRequest,
-  MissingVowelsResponse,
-} from '@/types/studio-missing-vowels.types'
-import { resolveMissingVowelsFallback } from './fallback'
-import { clampItemCount, parseDifficulty, resolveThemePrompt } from './content'
+import type { MissingVowelsResponse } from '@/types/studio-missing-vowels.types'
+import {
+  AI_THEME_MAX_LENGTH,
+  aiThemeLabel,
+  categoryLabel,
+  parseWriteOwnTheme,
+  resolveAiThemePrompt,
+} from '../crossword/config'
+import { filterUnsafeThemeCopy } from '../crossword/content-quality'
+import { parseRetirementCategory } from '../retirement-word-search/retirement-themes'
+import {
+  CANDIDATE_MULTIPLIER,
+  MISSING_VOWELS_AI_EMPTY_MESSAGE,
+  clampItemCount,
+  parseDifficulty,
+  selectAiItems,
+} from './content'
 
-const THEME_MAX_LENGTH = 120
-/** AI mode is words-only — no phrase generation. */
-const AI_KIND = 'words' as const
+const MAX_AI_ATTEMPTS = 3
 
+function varietyParts(config: StudioConfig): { category: string; theme: string } {
+  const theme = aiThemeLabel(config)
+  if (parseWriteOwnTheme(config.writeOwnTheme)) {
+    return { category: 'custom', theme }
+  }
+  return {
+    category: categoryLabel(parseRetirementCategory(config.retirementCategory)),
+    theme,
+  }
+}
+
+/**
+ * AI-only prefetch — no bundled theme fallback.
+ * Retries up to 3 times with avoid lists, then fails visibly.
+ */
 export async function missingVowelsPrefetch(
   config: StudioConfig,
   signal: AbortSignal,
 ): Promise<MissingVowelsResponse> {
-  const itemCount = clampItemCount(config.itemCount)
+  const need = clampItemCount(config.itemCount)
   const difficulty = parseDifficulty(config.difficulty)
-  const theme = resolveThemePrompt(config).slice(0, THEME_MAX_LENGTH)
+  const themeRaw = resolveAiThemePrompt(config).slice(0, AI_THEME_MAX_LENGTH)
+  const theme = filterUnsafeThemeCopy(themeRaw) ?? themeRaw
+  const { category, theme: themeLabel } = varietyParts(config)
+  const varietyKey = studioVarietyKey(
+    'missing-vowels',
+    category,
+    themeLabel || theme,
+    difficulty,
+  )
   const seed = Number(config.seed ?? 1)
 
-  const varietyKey = studioVarietyKey('missing-vowels', theme, AI_KIND, difficulty)
-  const req: MissingVowelsRequest = {
-    theme,
-    kind: AI_KIND,
-    itemCount,
-    difficulty,
-    seed,
-    avoid: studioAvoidList(varietyKey),
+  const rejected: string[] = []
+  let lastError: unknown
+
+  for (let attempt = 0; attempt < MAX_AI_ATTEMPTS; attempt++) {
+    try {
+      const remote = await generateMissingVowels(
+        {
+          theme,
+          itemCount: need,
+          difficulty,
+          seed: seed + attempt * 97,
+          avoid: [...studioAvoidList(varietyKey), ...rejected],
+        },
+        signal,
+      )
+      const items = selectAiItems(remote.items, { count: need, difficulty })
+      if (items.length >= need) {
+        rememberStudioContent(
+          varietyKey,
+          items.map((item) => item.display),
+        )
+        return { items: items.map((item) => item.display) }
+      }
+      rejected.push(...items.map((item) => item.display))
+    } catch (error) {
+      if (signal.aborted) throw error
+      lastError = error
+      console.warn(`[missing-vowels] AI attempt ${attempt + 1} failed`, error)
+    }
   }
 
-  try {
-    const remote = await generateMissingVowels(req, signal)
-    rememberStudioContent(varietyKey, remote.items)
-    return remote
-  } catch (error) {
-    if (signal.aborted) throw error
-    console.warn('[missing-vowels] API failed; using bundled fallback', error)
-    return resolveMissingVowelsFallback(itemCount, AI_KIND, difficulty, seed)
+  if (lastError instanceof Error && lastError.message.trim()) {
+    throw new Error(lastError.message.trim())
   }
+  throw new Error(MISSING_VOWELS_AI_EMPTY_MESSAGE)
+}
+
+/** Spec: ask AI for about itemCount × 2 candidates (backend applies the multiplier). */
+export function candidateRequestCount(itemCount: number): number {
+  return itemCount * CANDIDATE_MULTIPLIER
 }

@@ -3,6 +3,7 @@ import { missingVowelsTemplate } from './generate'
 import { buildDefaultConfig } from '@/constants/studio-templates'
 import { resetObjectCounter } from '../studio-fabric-builders'
 import {
+  assertGeneratorEntropy,
   assertObjectsInSafeMargin,
   runGeneratorContractTests,
   STUDIO_TEST_CTX,
@@ -10,7 +11,6 @@ import {
 import {
   STUDIO_ANSWER_INK_MONO,
   STUDIO_ANSWER_INK_MONO_TEMPLATES,
-  STUDIO_BODY_SIZE,
   STUDIO_CONTENT_SAFE_INSET_X,
 } from '@/constants/studio.constants'
 import { buildAnswerPage, harvestAnswers } from '../studio-answer-key'
@@ -21,122 +21,91 @@ import type {
   StudioFabricObject,
   StudioGenerateContext,
 } from '@/types/studio-template.types'
-import { promptWithBlanks } from './disemvowel'
-import { resolveMissingVowelsFallback } from './fallback'
+import { maskVowels } from './mask'
+import {
+  LETTER_RANGE,
+  MISSING_VOWELS_DEFAULT_TITLE,
+  MISSING_VOWELS_INSTRUCTION,
+  clampItemCount,
+  defaultTitleFor,
+  isNearDuplicate,
+  parseDifficulty,
+  selectAiItems,
+} from './content'
+import { candidateRequestCount } from './prefetch'
+import { validateMissingVowelsConfig } from './config'
 
 function flattenObjects(objects: StudioFabricObject[]): StudioFabricObject[] {
   return objects.flatMap((obj) => [obj, ...flattenObjects(obj.objects ?? [])])
 }
 
+const AI_ITEMS = [
+  'TRAVEL',
+  'GARDEN',
+  'PENSION',
+  'LEISURE',
+  'CRUISE',
+  'FAMILY',
+  'MEMORY',
+  'HOBBY',
+  'RELAX',
+  'PICNIC',
+  'SUNSET',
+  'FRIENDS',
+  'NATURE',
+  'READING',
+  'SAILING',
+  'FREEDOM',
+  'JOURNEY',
+  'WEEKEND',
+  'BUCKET',
+  'SOCIAL',
+  'OUTING',
+  'COMFORT',
+]
+
+const remote = { items: AI_ITEMS }
+
 const CTX = (): StudioGenerateContext => ({
-  pageWidth: 2550,
-  pageHeight: 3300,
-  margin: { top: 150, right: 150, bottom: 150, left: 225 },
-  seed: 42,
-  instanceId: 'test-run',
+  ...STUDIO_TEST_CTX,
+  remoteData: remote,
 })
 
 const base: StudioConfig = {
   ...buildDefaultConfig(missingVowelsTemplate),
   seed: 42,
-  fontFamily: 'Inter',
+  fontFamily: 'PT Serif',
+  itemCount: 12,
+  difficulty: 'classic',
 }
 
-function withRemoteWords(words: string[]): StudioGenerateContext {
-  return { ...CTX(), remoteData: { items: words } }
-}
-
-runGeneratorContractTests(missingVowelsTemplate)
+runGeneratorContractTests(missingVowelsTemplate, {
+  contextOverrides: { remoteData: remote },
+})
+assertGeneratorEntropy(missingVowelsTemplate, {
+  contextOverrides: { remoteData: remote },
+})
 
 describe('missing-vowels', () => {
   it('is registered as monochrome answer ink', () => {
     expect(STUDIO_ANSWER_INK_MONO_TEMPLATES.has('missing-vowels')).toBe(true)
   })
 
-  it('groups words into one stroked grid', () => {
-    resetObjectCounter()
-    const [page] = missingVowelsTemplate.generate(base, CTX())
-    const groups = page!.objects.filter((o) => o.type === 'group')
-    expect(groups.length).toBe(1)
-    const nested = flattenObjects(page!.objects)
-    expect(nested.some((o) => o.text === 'Your answer')).toBe(false)
-    expect(nested.some((o) => o.text === 'Word')).toBe(false)
-    expect(nested.filter((o) => o.type === 'line')).toHaveLength(0)
-    expect(nested.filter((o) => o.type === 'rect' && o.studioRole === 'structure').length).toBeGreaterThan(
-      0,
-    )
-  })
-
-  it('lays words out in two columns', () => {
-    resetObjectCounter()
-    const [page] = missingVowelsTemplate.generate({ ...base, itemCount: 12 }, CTX())
-    const prompts = flattenObjects(page!.objects).filter((o) => o.studioRole === 'prompt')
-    expect(prompts.length).toBe(12)
-    const lefts = prompts.map((o) => Number(o.left ?? 0))
-    const mid = (Math.min(...lefts) + Math.max(...lefts)) / 2
-    const leftCol = lefts.filter((x) => x < mid).length
-    const rightCol = lefts.filter((x) => x >= mid).length
-    expect(leftCol).toBe(6)
-    expect(rightCol).toBe(6)
-  })
-
-  it('aligns index numbers on a shared right-aligned gutter', () => {
-    resetObjectCounter()
-    const words = [
-      'FINGER',
-      'SHOULDER',
-      'HEART',
-      'STOMACH',
-      'ANKLE',
-      'ELBOW',
-      'MUSCLE',
-      'TONGUE',
-      'CHEST',
-      'PALM',
-    ]
-    const [page] = missingVowelsTemplate.generate(
-      { ...base, itemCount: words.length },
-      withRemoteWords(words),
-    )
-    const indexes = flattenObjects(page!.objects).filter(
-      (o) => o.studioRole === 'decoration' && /^\d+\.$/.test(String(o.text ?? '')),
-    )
-    expect(indexes).toHaveLength(10)
-    expect(indexes.every((o) => o.textAlign === 'right')).toBe(true)
-    expect(new Set(indexes.map((o) => Number(o.width ?? 0))).size).toBe(1)
-    const lefts = indexes.map((o) => Number(o.left ?? 0))
-    const mid = (Math.min(...lefts) + Math.max(...lefts)) / 2
-    const leftCol = indexes.filter((o) => Number(o.left ?? 0) < mid)
-    const rightCol = indexes.filter((o) => Number(o.left ?? 0) >= mid)
-    expect(new Set(leftCol.map((o) => Number(o.left ?? 0))).size).toBe(1)
-    expect(new Set(rightCol.map((o) => Number(o.left ?? 0))).size).toBe(1)
-  })
-
-  it('uses one shared prompt font size for every row', () => {
-    resetObjectCounter()
-    const words = ['CAT', 'ELEPHANT', 'DOG', 'HIPPOPOTAMUS', 'FOX', 'CROCODILE']
-    const [page] = missingVowelsTemplate.generate(
-      { ...base, itemCount: words.length },
-      withRemoteWords(words),
-    )
-    const sizes = flattenObjects(page!.objects)
-      .filter((o) => o.studioRole === 'prompt')
-      .map((o) => Number(o.fontSize ?? 0))
-    expect(sizes.length).toBe(6)
-    expect(new Set(sizes).size).toBe(1)
-  })
-
-  it('emits one hidden answer per item', () => {
+  it('emits exact itemCount hidden answers', () => {
     resetObjectCounter()
     const [page] = missingVowelsTemplate.generate(base, CTX())
     const answers = harvestAnswers(page!.objects)
-    expect(answers.length).toBe(Number(base.itemCount ?? 12))
+    expect(answers.length).toBe(12)
     expect(missingVowelsTemplate.producesAnswerKey).toBe(true)
   })
 
-  it('prompt has __ blanks in vowel slots', () => {
+  it('masks every A/E/I/O/U and keeps Y visible', () => {
     resetObjectCounter()
-    const [page] = missingVowelsTemplate.generate(base, CTX())
+    const words = ['HAPPY', 'CRUISE', 'GARDEN', 'FAMILY', 'PICNIC', 'SUNSET', 'TRAVEL', 'MEMORY']
+    const [page] = missingVowelsTemplate.generate(
+      { ...base, itemCount: words.length },
+      { ...CTX(), remoteData: { items: words } },
+    )
     const nested = flattenObjects(page!.objects)
     const prompts = nested.filter((o) => o.studioRole === 'prompt')
     const answers = harvestAnswers(page!.objects)
@@ -144,139 +113,142 @@ describe('missing-vowels', () => {
     for (let i = 0; i < prompts.length; i++) {
       const prompt = String(prompts[i]!.text ?? '').replace(/\u00A0/g, ' ')
       const answer = String(answers[i]!.text ?? '').replace(/\u00A0/g, ' ').trim()
-      expect(prompt).toBe(promptWithBlanks(answer, false))
-      if (/[AEIOU]/.test(answer)) {
-        expect(prompt.includes('__')).toBe(true)
-      }
+      expect(prompt).toBe(maskVowels(answer))
+      expect(prompt.includes('Y') || !answer.includes('Y')).toBe(true)
     }
+    const happy = prompts.map((o) => String(o.text ?? '').replace(/\u00A0/g, ' '))
+    expect(happy).toContain('H_PPY')
   })
 
-  it('does not expose Show letter counts', () => {
-    const keys = missingVowelsTemplate.configSchema.map((f) => f.key)
-    expect(keys).not.toContain('showLengthHint')
-  })
-
-  it('AI remote items are used when provided', () => {
+  it('allows short two-word phrases', () => {
     resetObjectCounter()
-    const remote = ['TIGER', 'OCEAN', 'APPLE', 'CHAIR', 'STONE', 'BRIDGE']
+    const items = [
+      'ROAD TRIP',
+      'FREE TIME',
+      'TEA TIME',
+      'CRUISE',
+      'GARDEN',
+      'FAMILY',
+      'PICNIC',
+      'SUNSET',
+    ]
     const [page] = missingVowelsTemplate.generate(
-      { ...base, itemCount: 6 },
-      withRemoteWords(remote),
+      { ...base, itemCount: 8 },
+      { ...CTX(), remoteData: { items } },
     )
     const answers = harvestAnswers(page!.objects).map((o) =>
       String(o.text ?? '').replace(/\u00A0/g, ' ').trim(),
     )
-    expect(answers).toEqual(remote)
-  })
-
-  it('AI mode rejects phrase lines from remote data', () => {
-    resetObjectCounter()
-    const [page] = missingVowelsTemplate.generate(
-      { ...base, itemCount: 6 },
-      {
-        ...CTX(),
-        remoteData: {
-          items: [
-            'TIGER',
-            'BETTER LATE THAN NEVER',
-            'OCEAN',
-            'PRACTICE MAKES PERFECT',
-            'APPLE',
-            'CHAIR',
-            'STONE',
-            'BRIDGE',
-          ],
-        },
-      },
-    )
-    const answers = harvestAnswers(page!.objects).map((o) =>
-      String(o.text ?? '').replace(/\u00A0/g, ' ').trim(),
-    )
-    expect(answers).toEqual(['TIGER', 'OCEAN', 'APPLE', 'CHAIR', 'STONE', 'BRIDGE'])
-    expect(answers.every((a) => !a.includes(' '))).toBe(true)
-  })
-
-  it('hard mode blanks Y as a vowel', () => {
-    resetObjectCounter()
-    const words = ['RHYTHM', 'GYM', 'MYTH', 'LYNX', 'NYMPH']
-    const [page] = missingVowelsTemplate.generate(
-      { ...base, difficulty: 'hard', itemCount: words.length },
-      withRemoteWords(words),
-    )
+    expect(answers).toEqual(expect.arrayContaining(['ROAD TRIP', 'FREE TIME']))
     const prompts = flattenObjects(page!.objects)
       .filter((o) => o.studioRole === 'prompt')
       .map((o) => String(o.text ?? '').replace(/\u00A0/g, ' '))
-    expect(prompts).toContain('R H __ T H M')
-    expect(prompts).toContain('G __ M')
+    expect(prompts).toContain('R__D TR_P')
   })
 
-  it('sizes each prompt textbox to its glyph run (not the column width)', () => {
-    resetObjectCounter()
-    const words = ['CAT', 'ELEPHANT', 'DOG', 'FOX', 'WOLF', 'BEAR']
-    const [page] = missingVowelsTemplate.generate(
-      { ...base, itemCount: words.length },
-      withRemoteWords(words),
+  it('drops duplicate masked forms and near-duplicate stems', () => {
+    const selected = selectAiItems(
+      [
+        'BOAT',
+        'BEAT',
+        'BAIT',
+        'GARDEN',
+        'GARDENER',
+        'CRUISE',
+        'FAMILY',
+        'PICNIC',
+        'SUNSET',
+        'TRAVEL',
+        'MEMORY',
+        'RELAX',
+      ],
+      { count: 8, difficulty: 'relaxed' },
     )
-    const prompts = flattenObjects(page!.objects).filter((o) => o.studioRole === 'prompt')
-    expect(prompts.length).toBe(6)
-    for (const p of prompts) {
-      const text = String(p.text ?? '')
-      const fontSize = Number(p.fontSize ?? 14)
-      const width = Number(p.width ?? 0)
-      const spaces = (text.match(/[ \u00A0]/g) ?? []).length
-      const units = (text.length - spaces) * 0.7 + spaces * 0.32 + 0.35
-      expect(width).toBe(Math.ceil(units * fontSize))
-      expect(width).toBeLessThan(text.length * fontSize * 0.9)
+    const tokens = selected.map((item) => item.token)
+    expect(tokens).toContain('BOAT')
+    expect(tokens).not.toContain('BEAT')
+    expect(tokens.filter((t) => t.startsWith('GARDEN')).length).toBe(1)
+    const masks = new Set(selected.map((item) => item.masked))
+    expect(masks.size).toBe(selected.length)
+  })
+
+  it('fits the max 18-item layout inside the safe area', () => {
+    resetObjectCounter()
+    const config = { ...base, itemCount: 18 }
+    const ctx = CTX()
+    const [page] = missingVowelsTemplate.generate(config, ctx)
+    expect(harvestAnswers(page!.objects).length).toBe(18)
+    assertObjectsInSafeMargin(page!.objects, ctx)
+    if (page!.answerSourceObjects) {
+      assertObjectsInSafeMargin(page!.answerSourceObjects, ctx)
     }
   })
 
-  it('requires custom theme text when Custom theme is on', () => {
-    expect(
-      missingVowelsTemplate.validateConfig?.({
-        ...base,
-        customTheme: true,
-        customThemeText: '   ',
-      }),
-    ).toMatchObject({ field: 'customThemeText' })
+  it('puts index and masked prompt on a shared baseline', () => {
+    resetObjectCounter()
+    const [page] = missingVowelsTemplate.generate({ ...base, itemCount: 18 }, CTX())
+    const nested = flattenObjects(page!.objects)
+    const prompts = nested.filter((o) => o.studioRole === 'prompt')
+    const indexes = nested.filter(
+      (o) => o.studioRole === 'decoration' && /^\d+\.$/.test(String(o.text ?? '')),
+    )
+    expect(indexes.length).toBe(prompts.length)
+    expect(prompts.length).toBe(18)
+    for (let i = 0; i < prompts.length; i++) {
+      expect(prompts[i]!.originY).toBe('bottom')
+      expect(indexes[i]!.originY).toBe('bottom')
+      expect(indexes[i]!.top).toBe(prompts[i]!.top)
+    }
   })
 
-  it('uses a smaller shared font on the solution page', () => {
+  it('keeps 18-item write-in lines off the cell floor', () => {
+    resetObjectCounter()
+    const [page] = missingVowelsTemplate.generate({ ...base, itemCount: 18 }, CTX())
+    const grid = page!.objects.find(
+      (o) => o.type === 'group' && (o.objects ?? []).some((c) => c.studioRole === 'prompt'),
+    )!
+    const rows = 9
+    const cellH = grid.height! / rows
+    const lines = flattenObjects([grid]).filter((o) => o.type === 'line' && o.studioRole === 'structure')
+    expect(lines.length).toBe(18)
+    for (const line of lines) {
+      // Group children are stored relative to the group center.
+      const localY = Number(line.y1) + grid.height! / 2
+      const row = Math.min(rows - 1, Math.max(0, Math.floor(localY / cellH)))
+      const cellBottom = (row + 1) * cellH
+      expect(cellBottom - localY).toBeGreaterThanOrEqual(12)
+      expect(localY - row * cellH).toBeGreaterThan(cellH * 0.4)
+    }
+  })
+
+  it('puzzle and answer key share the same answers in order', () => {
     resetObjectCounter()
     const [page] = missingVowelsTemplate.generate(base, CTX())
-    const keyObjects = buildAnswerPage(
+    const puzzleAnswers = harvestAnswers(page!.objects).map((o) =>
+      String(o.text ?? '').trim(),
+    )
+    const keyAnswers = harvestAnswers(page!.answerSourceObjects ?? []).map((o) =>
+      String(o.text ?? '').trim(),
+    )
+    expect(keyAnswers).toEqual(puzzleAnswers)
+
+    const answerPage = buildAnswerPage(
       page!.answerSourceObjects ?? page!.objects,
       STUDIO_ANSWER_INK_MONO,
     )
-    const sizes = flattenObjects(keyObjects)
-      .filter((o) => o.studioRole === 'answer')
-      .map((o) => Number(o.fontSize ?? 0))
-    expect(sizes.length).toBeGreaterThan(0)
-    expect(new Set(sizes).size).toBe(1)
-    expect(sizes[0]).toBeLessThanOrEqual(STUDIO_BODY_SIZE * 0.78)
-  })
-
-  it('answer key shows full words only (no overlapping prompts)', () => {
-    resetObjectCounter()
-    const [page] = missingVowelsTemplate.generate(base, CTX())
-    expect(page!.answerSourceObjects?.length).toBeGreaterThan(0)
-    const keyObjects = buildAnswerPage(
-      page!.answerSourceObjects ?? page!.objects,
-      STUDIO_ANSWER_INK_MONO,
-    )
-    const nested = flattenObjects(keyObjects)
+    const nested = flattenObjects(answerPage)
     expect(nested.filter((o) => o.studioRole === 'prompt')).toHaveLength(0)
-    const answers = nested.filter((o) => o.studioRole === 'answer')
-    expect(answers.length).toBe(Number(base.itemCount ?? 12))
-    expect(answers.every((o) => o.visible !== false)).toBe(true)
-    expect(answers.every((o) => o.fill === STUDIO_ANSWER_INK_MONO)).toBe(true)
+    expect(nested.filter((o) => o.type === 'line')).toHaveLength(0)
+    expect(harvestAnswers(answerPage).every((o) => o.fill === STUDIO_ANSWER_INK_MONO)).toBe(
+      true,
+    )
   })
 
   it('centers the solution grid in the answer-key body', () => {
     resetObjectCounter()
     const ctx = CTX()
-    const config = { ...base, showTitle: true, title: 'Missing Vowels: Animals' }
+    const config = { ...base, showTitle: true, title: 'Missing Vowels: Travel Dreams' }
     const [page] = missingVowelsTemplate.generate(config, ctx)
-    expect(page!.answerSourceObjects?.length).toBeGreaterThan(0)
     const keyObjects = buildAnswerPage(
       page!.answerSourceObjects ?? page!.objects,
       STUDIO_ANSWER_INK_MONO,
@@ -286,7 +258,7 @@ describe('missing-vowels', () => {
     )!
     const tag: StudioTag = {
       templateKey: 'missing-vowels',
-      instanceId: 'test-run',
+      instanceId: ctx.instanceId,
       pageRole: 'single',
     }
     const field = drawHeader(
@@ -301,22 +273,54 @@ describe('missing-vowels', () => {
     expect(Math.abs(gridCenterY - (field.top + field.height / 2))).toBeLessThanOrEqual(2)
   })
 
-  it('keeps max itemCount inside the safe margin', () => {
+  it('shows an error page instead of bundled words when AI content is missing', () => {
     resetObjectCounter()
-    const pages = missingVowelsTemplate.generate({ ...base, itemCount: 24 }, STUDIO_TEST_CTX)
-    for (const page of pages) {
-      assertObjectsInSafeMargin(page.objects, STUDIO_TEST_CTX)
-      if (page.answerSourceObjects) {
-        assertObjectsInSafeMargin(page.answerSourceObjects, STUDIO_TEST_CTX)
-      }
-    }
+    const [page] = missingVowelsTemplate.generate(base, { ...STUDIO_TEST_CTX })
+    expect(harvestAnswers(page!.objects)).toHaveLength(0)
+    const texts = flattenObjects(page!.objects).map((o) => String(o.text ?? ''))
+    expect(texts.some((t) => /unable to create/i.test(t))).toBe(true)
   })
-})
 
-describe('missing-vowels fallback', () => {
-  it('fills itemCount for hard words from the theme catalog', () => {
-    const data = resolveMissingVowelsFallback(24, 'words', 'hard', 4)
-    expect(data.items.length).toBe(24)
-    expect(data.items.every((word) => !word.includes(' '))).toBe(true)
+  it('requires custom theme text when Write my own theme is on', () => {
+    expect(
+      validateMissingVowelsConfig({
+        ...base,
+        writeOwnTheme: true,
+        customTheme: '',
+      }),
+    ).toMatchObject({ field: 'customTheme' })
+  })
+
+  it('defaults title from the retirement theme', () => {
+    expect(defaultTitleFor({ ...base, title: '' })).toBe(
+      `${MISSING_VOWELS_DEFAULT_TITLE}: Life After Work`,
+    )
+    expect(MISSING_VOWELS_INSTRUCTION).toMatch(/missing vowels/i)
+  })
+
+  it('clamps itemCount and asks for itemCount×2 candidates', () => {
+    expect(clampItemCount(3)).toBe(8)
+    expect(clampItemCount(99)).toBe(18)
+    expect(candidateRequestCount(12)).toBe(24)
+  })
+
+  it('difficulty letter ranges match the spec', () => {
+    expect(LETTER_RANGE[parseDifficulty('relaxed')]).toEqual({ min: 4, max: 8 })
+    expect(LETTER_RANGE.classic).toEqual({ min: 5, max: 10 })
+    expect(LETTER_RANGE.challenge).toEqual({ min: 6, max: 14 })
+    expect(isNearDuplicate('GARDEN', 'GARDENING')).toBe(true)
+    expect(isNearDuplicate('CRUISE', 'GARDEN')).toBe(false)
+  })
+
+  it('exposes retirement theme fields and no custom word list', () => {
+    const keys = missingVowelsTemplate.configSchema.map((f) => f.key)
+    expect(keys).toContain('presetThemeId')
+    expect(keys).toContain('retirementCategory')
+    expect(keys).toContain('printStyle')
+    expect(keys).not.toContain('showLengthHint')
+    expect(keys).not.toContain('wordList')
+    expect(buildDefaultConfig(missingVowelsTemplate).presetThemeId).toBe('life-after-work')
+    expect(buildDefaultConfig(missingVowelsTemplate).difficulty).toBe('classic')
+    expect(buildDefaultConfig(missingVowelsTemplate).printStyle).toBe('large-print')
   })
 })

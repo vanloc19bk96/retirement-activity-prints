@@ -106,8 +106,10 @@ fresh words, or supply your own list.
 Pages: 1 · Answer key: yes · AI content: yes
 
 ### Missing Vowels (`missing-vowels`)
-Every vowel has been taken out. Put them back to reveal each word. Pick a
-theme and AI chooses fresh words.
+Restore the missing vowels in retirement-themed words and short phrases
+(A/E/I/O/U become blanks; Y stays visible). Pick a retirement category and
+theme, or type your own — AI writes a fresh list each page, with no bundled
+word bank. Large-print by default, with an automatic answer key.
 Pages: 1 · Answer key: yes · AI content: yes
 
 ### Word Fit-In (`word-fit`)

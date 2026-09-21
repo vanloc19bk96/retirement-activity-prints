@@ -1,185 +1,160 @@
 import type { StudioConfig } from '@/types/studio-template.types'
 import type { StudioRng } from '../studio-rng'
 import {
-  listThemeMeta,
-  loadThemeWords,
-  themeLabel,
-} from '../word-search/wordlists'
+  aiThemeLabel,
+  parseRetirementDifficulty,
+  type RetirementPrintStyle,
+} from '../crossword/config'
 import {
-  loadSkeletonIndex,
-  skeletonKey,
-  type SkeletonIndex,
-} from './disemvowel'
+  hasAgeStereotype,
+  hasMedicalClaim,
+  hasTrademarkHint,
+} from '../crossword/content-quality'
+import {
+  isPlayableMask,
+  letterToken,
+  maskVowels,
+  type MissingVowelItem,
+} from './mask'
 
-export type MvDifficulty = 'easy' | 'medium' | 'hard'
+export type MvDifficulty = 'relaxed' | 'classic' | 'challenge'
+export type { RetirementPrintStyle }
 
-const MIN_WORD_LEN = 3
-const MAX_WORD_LEN = 12
-export const CUSTOM_THEME_MAX_LENGTH = 120
+export const MISSING_VOWELS_DEFAULT_TITLE = 'Missing Vowels'
+export const MISSING_VOWELS_INSTRUCTION =
+  'Add the missing vowels to complete each word or phrase.'
+export const MISSING_VOWELS_INSTRUCTION_GENERIC =
+  'Add the missing vowels to complete each retirement-themed word or phrase.'
+export const MISSING_VOWELS_AI_EMPTY_MESSAGE =
+  'Unable to create enough high-quality retirement words. Try again or choose a broader theme.'
 
-const LENGTH_BY_DIFFICULTY: Record<MvDifficulty, { min: number; max: number }> = {
-  easy: { min: 3, max: 5 },
-  medium: { min: 4, max: 8 },
-  hard: { min: 6, max: 12 },
+export const MIN_ITEM_COUNT = 8
+export const MAX_ITEM_COUNT = 18
+export const DEFAULT_ITEM_COUNT = 12
+export const CANDIDATE_MULTIPLIER = 2
+
+export const LETTER_RANGE: Record<MvDifficulty, { min: number; max: number }> = {
+  relaxed: { min: 4, max: 8 },
+  classic: { min: 5, max: 10 },
+  challenge: { min: 6, max: 14 },
 }
 
-const THEME_KEYS = new Set(listThemeMeta().map((entry) => entry.key))
-
-export function themeSelectOptions(): { label: string; value: string }[] {
-  return listThemeMeta().map((entry) => ({
-    label: entry.label,
-    value: entry.key,
-  }))
-}
+const MAX_WORDS = 2
 
 export function parseDifficulty(raw: unknown): MvDifficulty {
-  const v = String(raw ?? 'medium')
-  if (v === 'easy' || v === 'medium' || v === 'hard') return v
-  return 'medium'
+  return parseRetirementDifficulty(raw)
 }
 
 export function clampItemCount(raw: unknown): number {
-  const n = Math.round(Number(raw ?? 12))
-  if (!Number.isFinite(n)) return 12
-  return Math.min(24, Math.max(5, n))
+  const n = Math.round(Number(raw ?? DEFAULT_ITEM_COUNT))
+  if (!Number.isFinite(n)) return DEFAULT_ITEM_COUNT
+  return Math.min(MAX_ITEM_COUNT, Math.max(MIN_ITEM_COUNT, n))
 }
 
-export function resolveThemeKey(config: StudioConfig): string {
-  const key = String(config.theme ?? 'animals')
-  return THEME_KEYS.has(key) ? key : 'animals'
-}
-
-/** Preset theme off → AI generates words from a typed theme phrase. */
-export function isCustomAiTheme(config: StudioConfig): boolean {
-  return config.customTheme === true
-}
-
-export function resolveCustomThemeText(config: StudioConfig): string {
-  return String(config.customThemeText ?? '')
-    .trim()
-    .slice(0, CUSTOM_THEME_MAX_LENGTH)
-}
-
-function customThemeTitle(config: StudioConfig): string {
-  const raw = resolveCustomThemeText(config)
-  if (!raw) return ''
-  return raw.charAt(0).toUpperCase() + raw.slice(1)
-}
-
-/** Human-readable theme label for AI requests / default titles. */
-export function resolveThemePrompt(config: StudioConfig): string {
-  if (isCustomAiTheme(config)) {
-    return resolveCustomThemeText(config) || 'everyday objects'
-  }
-  return themeLabel(resolveThemeKey(config))
-}
-
-/** Uppercase A–Z (+ spaces for phrases), length-gated, deduped. */
-export function sanitizeMvItems(raw: unknown, allowPhrases: boolean): string[] {
-  const lines: string[] = Array.isArray(raw)
-    ? raw.map((w) => String(w))
-    : String(raw ?? '')
-        .split(/\n+/)
-        .map((w) => w.trim())
-
-  const seen = new Set<string>()
-  const out: string[] = []
-  for (const line of lines) {
-    const cleaned = line
-      .toUpperCase()
-      .replace(/[^A-Z\s]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-    if (!cleaned) continue
-    const isPhrase = cleaned.includes(' ')
-    if (isPhrase && !allowPhrases) continue
-    if (isPhrase) {
-      const words = cleaned.split(' ')
-      if (words.length < 2 || words.length > 8) continue
-      if (words.some((w) => w.length < 1)) continue
-    } else if (cleaned.length < MIN_WORD_LEN || cleaned.length > MAX_WORD_LEN) {
-      continue
-    }
-    if (seen.has(cleaned)) continue
-    seen.add(cleaned)
-    out.push(cleaned)
-  }
-  return out
-}
-
-export function lengthRangeFor(difficulty: MvDifficulty): { min: number; max: number } {
-  return LENGTH_BY_DIFFICULTY[difficulty]
-}
-
-function filterWordsByLength(pool: readonly string[], difficulty: MvDifficulty): string[] {
-  const { min, max } = lengthRangeFor(difficulty)
-  return pool
-    .map((w) => w.toUpperCase().replace(/[^A-Z]/g, ''))
-    .filter((w) => w.length >= min && w.length <= max)
-}
-
-/**
- * Prefer low-ambiguity skeletons (few co-skeleton words).
- * Soft preference — still fills the sheet if the pool is thin.
- */
-export function sampleLowAmbiguityWords(
-  pool: readonly string[],
-  count: number,
-  rng: StudioRng,
-  includeY: boolean,
-): string[] {
-  const index = loadSkeletonIndex(includeY)
-  const normalized = pool
-    .map((w) => w.toUpperCase().replace(/[^A-Z]/g, ''))
-    .filter((w) => w.length >= MIN_WORD_LEN && w.length <= MAX_WORD_LEN)
-
-  const unique = [...new Set(normalized)]
-  const scored = unique.map((word) => ({
-    word,
-    collisions: collisionCount(word, index, includeY),
-  }))
-  scored.sort((a, b) => a.collisions - b.collisions)
-
-  const low = scored.filter((s) => s.collisions <= 2).map((s) => s.word)
-  const rest = scored.filter((s) => s.collisions > 2).map((s) => s.word)
-
-  if (low.length >= count) {
-    return rng.sample(low, count)
-  }
-
-  const ordered = [...rng.shuffle(low), ...rng.shuffle(rest)]
-  return ordered.slice(0, Math.min(count, ordered.length))
-}
-
-function collisionCount(word: string, index: SkeletonIndex, includeY: boolean): number {
-  return (index.get(skeletonKey(word, includeY)) ?? []).length
+export function instructionFor(config: StudioConfig): string {
+  return config.showTitle === false
+    ? MISSING_VOWELS_INSTRUCTION_GENERIC
+    : MISSING_VOWELS_INSTRUCTION
 }
 
 export function defaultTitleFor(config: StudioConfig): string | undefined {
   if (String(config.title ?? '').trim()) return undefined
-  if (isCustomAiTheme(config)) {
-    const label = customThemeTitle(config)
-    return label ? `Missing Vowels: ${label}` : 'Missing Vowels'
-  }
-  return `Missing Vowels: ${themeLabel(resolveThemeKey(config))}`
+  const theme = aiThemeLabel(config)
+  return theme ? `${MISSING_VOWELS_DEFAULT_TITLE}: ${theme}` : MISSING_VOWELS_DEFAULT_TITLE
 }
 
-export function themeDisplayLabel(config: StudioConfig): string {
-  if (isCustomAiTheme(config)) {
-    return resolveCustomThemeText(config) || 'this theme'
-  }
-  return themeLabel(resolveThemeKey(config))
+export function isValidLetterCount(token: string, difficulty: MvDifficulty): boolean {
+  const { min, max } = LETTER_RANGE[difficulty]
+  return token.length >= min && token.length <= max
 }
 
-/** Bundled theme words — used when AI remote data is missing. */
-export function resolveContent(
-  config: StudioConfig,
-  itemCount: number,
-  rng: StudioRng,
-): string[] {
-  const difficulty = parseDifficulty(config.difficulty)
-  const includeY = difficulty === 'hard'
-  const themeKey = resolveThemeKey(config)
-  const pool = filterWordsByLength(loadThemeWords(themeKey), difficulty)
-  return sampleLowAmbiguityWords(pool, itemCount, rng, includeY)
+function titleCaseWord(word: string): string {
+  return word.charAt(0) + word.slice(1).toLowerCase()
+}
+
+function toDisplay(raw: string, words: string[]): string {
+  const trimmed = raw.trim()
+  if (/[a-z]/.test(trimmed) && /[A-Z]/.test(trimmed)) {
+    return trimmed.replace(/\s+/g, ' ')
+  }
+  return words.map(titleCaseWord).join(' ')
+}
+
+function isUnsafeAnswer(display: string): boolean {
+  return hasMedicalClaim(display) || hasTrademarkHint(display) || hasAgeStereotype(display)
+}
+
+/** GARDEN / GARDENER / GARDENING — skip inflected copies of a shorter answer. */
+export function isNearDuplicate(a: string, b: string): boolean {
+  if (a === b) return true
+  const shorter = a.length <= b.length ? a : b
+  const longer = a.length > b.length ? a : b
+  if (shorter.length < 4) return false
+  return longer.startsWith(shorter)
+}
+
+export function normalizeCandidate(raw: unknown): MissingVowelItem | null {
+  if (raw && typeof raw === 'object' && 'answer' in raw) {
+    return normalizeCandidate(String((raw as { answer: unknown }).answer))
+  }
+  const text = String(raw ?? '').trim()
+  if (!text) return null
+  const words = text
+    .toUpperCase()
+    .replace(/[^A-Z\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(' ')
+    .filter(Boolean)
+  if (words.length < 1 || words.length > MAX_WORDS) return null
+  if (words.some((word) => word.length < 1)) return null
+  const token = letterToken(words.join(''))
+  if (!token) return null
+  const display = toDisplay(text, words)
+  if (isUnsafeAnswer(display)) return null
+  const masked = maskVowels(words.join(' '))
+  const item: MissingVowelItem = { display, token, masked }
+  if (!isPlayableMask(item)) return null
+  return item
+}
+
+function prefersSingleWord(difficulty: MvDifficulty, item: MissingVowelItem): boolean {
+  if (difficulty !== 'relaxed') return true
+  return !item.display.includes(' ')
+}
+
+/**
+ * Normalize → length → safety → unique token → unique mask → near-dupe → take count.
+ */
+export function selectAiItems(
+  remote: readonly unknown[] | undefined,
+  options: { count: number; difficulty: MvDifficulty },
+): MissingVowelItem[] {
+  const { count, difficulty } = options
+  const accepted: MissingVowelItem[] = []
+  const tokens = new Set<string>()
+  const masks = new Set<string>()
+
+  for (const raw of remote ?? []) {
+    const item = normalizeCandidate(raw)
+    if (!item) continue
+    if (!isValidLetterCount(item.token, difficulty)) continue
+    if (tokens.has(item.token) || masks.has(item.masked)) continue
+    if (accepted.some((prev) => isNearDuplicate(prev.token, item.token))) continue
+    tokens.add(item.token)
+    masks.add(item.masked)
+    accepted.push(item)
+  }
+
+  const preferred = accepted.filter((item) => prefersSingleWord(difficulty, item))
+  const pool = preferred.length >= count ? preferred : accepted
+  return pool.slice(0, count)
+}
+
+export function shuffleItems(items: MissingVowelItem[], rng: StudioRng): MissingVowelItem[] {
+  return rng.shuffle(items)
+}
+
+export function minPuzzleFont(printStyle: RetirementPrintStyle): number {
+  return printStyle === 'standard' ? 12 : 16
 }

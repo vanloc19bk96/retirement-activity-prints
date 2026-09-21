@@ -1,26 +1,34 @@
 {
-  "_comment": "Missing-vowels generation. lengthByDifficulty is the letter budget per word; phraseWordsByDifficulty is the word count for phrase mode.",
+  "_comment": "Retirement missing-vowels. candidateMultiplier=2 so we ask ~itemCount×2. lengthByDifficulty is letter count excluding spaces. Y is not a vowel.",
   "limits": {
-    "overRequest": 4,
+    "candidateMultiplier": 2,
     "rateLimitPerWindow": 60,
-    "maxOutputTokens": 2048,
-    "minWordLetters": 3,
-    "maxWordLetters": 12,
-    "maxPhraseWords": 8
+    "maxOutputTokens": 4096,
+    "minWordLetters": 4,
+    "maxWordLetters": 14,
+    "maxPhraseWords": 2,
+    "minConsonants": 2
+  },
+  "lengthByDifficulty": {
+    "relaxed": [4, 8],
+    "classic": [5, 10],
+    "challenge": [6, 14]
   },
   "locale": {
     "nativeLocales": ["en"],
     "nativeLine": "- Write in clear English.",
     "otherLine": "- Write in language locale '{locale}'."
   },
-  "lengthByDifficulty": {
-    "easy": [3, 5],
-    "medium": [4, 8],
-    "hard": [6, 12]
-  },
-  "phraseWordsByDifficulty": {
-    "easy": [2, 4],
-    "medium": [3, 6],
-    "hard": [4, 8]
-  }
+  "varietyAngles": [
+    "everyday retirement lifestyle words",
+    "weekend and leisure vocabulary",
+    "home and garden words seniors know",
+    "travel and outing vocabulary",
+    "family and grandchildren words",
+    "quiet hobbies and relaxation words",
+    "nostalgic but upbeat memory words",
+    "house and neighbourhood lifestyle words",
+    "celebration and gathering words",
+    "outdoor and walking vocabulary"
+  ]
 }

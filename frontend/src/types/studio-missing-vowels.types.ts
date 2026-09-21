@@ -1,8 +1,9 @@
+export type MissingVowelsDifficulty = 'relaxed' | 'classic' | 'challenge'
+
 export interface MissingVowelsRequest {
   theme: string
-  kind: 'words' | 'phrases'
   itemCount: number
-  difficulty: 'easy' | 'medium' | 'hard'
+  difficulty: MissingVowelsDifficulty
   seed: number
   /** Recently printed labels for this template + theme; the model is told not to reuse them. */
   avoid?: string[]
