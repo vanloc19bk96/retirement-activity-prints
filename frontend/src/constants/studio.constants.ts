@@ -16,10 +16,6 @@ export const STUDIO_ANSWER_INK_MONO = STUDIO_INK
  * Add new monochrome worksheets here when they produce an answer key.
  */
 export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
-  'counting-streams',
-  'symbol-hunt',
-  'symbol-digit-coding',
-  'dual-task-grid',
   'sudoku',
   'kakuro',
   'futoshiki',
@@ -52,7 +48,6 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'card-sums',
   'next-card',
   // Procedural non-card worksheets — black-and-white interior by design.
-  'find-the-pair',
   'word-fit',
 ])
 

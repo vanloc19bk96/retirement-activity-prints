@@ -141,7 +141,7 @@ export interface StudioFabricObject {
 /* ---------- Taxonomy ---------- */
 
 export type StudioCategory =
-  | 'memory' | 'focus' | 'logic' | 'word'
+  | 'memory' | 'logic' | 'word'
   | 'spatial' | 'reminiscence' | 'tracker'
 
 export type StudioRole = 'prompt' | 'answer' | 'key' | 'decoration' | 'structure'
@@ -1417,7 +1417,6 @@ export type StudioCategoryFilter = StudioCategory | 'all'
 export const STUDIO_CATEGORIES: { value: StudioCategoryFilter; label: string }[] = [
   { value: 'all', label: 'All' },
   { value: 'memory', label: 'Memory' },
-  { value: 'focus', label: 'Focus' },
   { value: 'logic', label: 'Logic' },
   { value: 'word', label: 'Word' },
   { value: 'spatial', label: 'Spatial' },

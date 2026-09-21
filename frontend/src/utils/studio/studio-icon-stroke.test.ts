@@ -3,7 +3,7 @@ import { LUCIDE_VIEWBOX_SIZE } from '@/utils/lucide-fabric'
 import { buildIconPath } from './studio-icon'
 
 const TAG = {
-  templateKey: 'symbol-hunt',
+  templateKey: 'sudoku',
   instanceId: 'test',
   pageRole: 'single' as const,
 }
@@ -28,7 +28,7 @@ function collectStrokeWidths(node: NestedStroke): number[] {
 describe('buildIconPath stroke uniformity', () => {
   it('keeps icon visual size near the requested size (no giant square)', () => {
     const size = 16
-    for (const name of ['square', 'wine', 'flag', 'cone', 'birdhouse'] as const) {
+    for (const name of ['star', 'wine', 'flag', 'heart', 'birdhouse'] as const) {
       const icon = buildIconPath(
         name,
         { left: 0, top: 0, size, strokeWidth: 1.5 },
@@ -80,12 +80,12 @@ describe('buildIconPath stroke uniformity', () => {
   it('keeps the same absolute stroke at medium and dense icon sizes', () => {
     const visualStroke = 1
     const medium = buildIconPath(
-      'square',
+      'star',
       { left: 0, top: 0, size: 24, strokeWidth: visualStroke },
       TAG,
     )
     const dense = buildIconPath(
-      'square',
+      'star',
       { left: 0, top: 0, size: 12, strokeWidth: visualStroke },
       TAG,
     )

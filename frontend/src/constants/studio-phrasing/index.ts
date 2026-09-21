@@ -16,12 +16,10 @@ import {
   CARD_SUMS_VALUE_HINTS,
 } from './card-sums.phrasing'
 import { NEXT_CARD_CHOICE_LABELS, NEXT_CARD_INSTRUCTIONS } from './next-card.phrasing'
-import { FIND_THE_PAIR_INSTRUCTIONS } from './find-the-pair.phrasing'
 import { WORD_FIT_INSTRUCTIONS } from './word-fit.phrasing'
 
 export * from './card-sums.phrasing'
 export * from './next-card.phrasing'
-export * from './find-the-pair.phrasing'
 export * from './word-fit.phrasing'
 
 /** Every instruction pool, keyed by template. Used by the phrasing tests. */
@@ -36,7 +34,6 @@ export const CARD_INSTRUCTION_POOLS: Readonly<Record<string, PhrasingPool>> = {
  * pack's ship gate keeps testing the card pack.
  */
 export const STUDIO_INSTRUCTION_POOLS: Readonly<Record<string, PhrasingPool>> = {
-  'find-the-pair': FIND_THE_PAIR_INSTRUCTIONS,
   'word-fit': WORD_FIT_INSTRUCTIONS,
 }
 

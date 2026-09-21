@@ -13,7 +13,7 @@ import {
 import { buildGroup, buildRect, resetObjectCounter, type StudioTag } from '@/utils/studio/studio-fabric-builders'
 
 const TAG: StudioTag = {
-  templateKey: 'symbol-hunt',
+  templateKey: 'sudoku',
   instanceId: 'ppt-vis',
   pageRole: 'single',
 }

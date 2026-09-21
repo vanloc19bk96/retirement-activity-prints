@@ -10,7 +10,6 @@ export type StudioCategoryFilter = StudioCategory | 'all'
  */
 export const STUDIO_CATEGORIES: { value: StudioCategoryFilter; label: string }[] = [
   { value: 'all', label: 'All' },
-  { value: 'focus', label: 'Focus' },
   { value: 'logic', label: 'Logic' },
   { value: 'word', label: 'Word' },
   { value: 'spatial', label: 'Spatial' },
@@ -32,7 +31,6 @@ export const STUDIO_TAG_FILTERS: { value: string; label: string }[] = [
 
 /** Category label lookup (used by search so "memory" matches memory games). */
 export const STUDIO_CATEGORY_LABELS: Record<StudioCategory, string> = {
-  focus: 'Focus',
   logic: 'Logic',
   word: 'Word',
   spatial: 'Spatial',

@@ -19,15 +19,6 @@ const OBJECT_ICON_MODULES = import.meta.glob<{ __iconNode: LucideIconNode }>(
   { eager: true },
 )
 
-/**
- * Extra nodes for Symbol Hunt (geometrics + arrows) — keep in sync with
- * `symbol-hunt/icons.ts` pools that are not already in objects.json.
- */
-const HUNT_ICON_MODULES = import.meta.glob<{ __iconNode: LucideIconNode }>(
-  '../../../node_modules/lucide-react/dist/esm/icons/{activity,arrow-big-down,arrow-big-left,arrow-big-right,arrow-big-up,arrow-down,arrow-down-left,arrow-down-right,arrow-left,arrow-left-right,arrow-right,arrow-up,arrow-up-down,arrow-up-left,arrow-up-right,asterisk,award,binary,bluetooth,bookmark,box,check,chevron-down,chevron-left,chevron-right,chevron-up,chevrons-down,chevrons-up,code,coins,cone,corner-down-left,corner-down-right,corner-up-left,corner-up-right,crown,cylinder,database,diamond,ear,equal,eye,gem,hand,hard-drive,hash,hexagon,infinity,lock-open,minus,move-down,move-horizontal,move-left,move-right,move-up,move-vertical,octagon,package,pentagon,percent,plus,pyramid,rectangle-horizontal,rectangle-vertical,redo-2,refresh-ccw,refresh-cw,rotate-ccw,rotate-cw,server,shopping-bag,slash,smile,square,square-dashed,terminal,thumbs-up,triangle,triangle-right,undo-2,wifi,x,zap}.js',
-  { eager: true },
-)
-
 const ICON_NODES = new Map<string, LucideIconNode>()
 
 function ingestIconModules(
@@ -41,7 +32,6 @@ function ingestIconModules(
 }
 
 ingestIconModules(OBJECT_ICON_MODULES)
-ingestIconModules(HUNT_ICON_MODULES)
 
 export function hasLucideIconNode(iconName: string): boolean {
   return ICON_NODES.has(iconName)

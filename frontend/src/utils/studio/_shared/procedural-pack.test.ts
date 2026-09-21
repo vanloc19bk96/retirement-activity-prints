@@ -31,7 +31,7 @@ import { MIN_PHRASING_VARIANTS, findBannedTerm, sha256Hex } from './uniqueness'
 import { parseWordFitMode } from '../word-fit/types'
 
 /** Templates this gate covers. */
-const PACK_KEYS = ['find-the-pair', 'word-fit'] as const
+const PACK_KEYS = ['word-fit'] as const
 
 const PACK: StudioTemplateDefinition[] = STUDIO_TEMPLATES.filter((t) =>
   (PACK_KEYS as readonly string[]).includes(t.key),
@@ -73,11 +73,6 @@ const TRIMS: { label: string; ctx: Omit<StudioGenerateContext, 'seed' | 'instanc
 
 /** Settings worth sweeping per template, beyond its defaults. */
 const SWEEPS: Record<string, StudioConfig[]> = {
-  'find-the-pair': [
-    { tier: 'warmup' },
-    { tier: 'medium', pairCount: 2 },
-    { tier: 'hard', pairCount: 3 },
-  ],
   'word-fit': [
     { mode: 'numbers' },
     { customTheme: true, customThemeText: 'tools in a garden shed' },
@@ -103,26 +98,17 @@ function defaults(template: StudioTemplateDefinition): StudioConfig {
 }
 
 describe('procedural pack registry', () => {
-  it('registers both templates', () => {
+  it('registers the pack templates', () => {
     expect(PACK.map((t) => t.key).sort()).toEqual([...PACK_KEYS].sort())
   })
 
   /**
-   * The §5.4 claim is now per-mode, not per-template, so the gate is too.
-   *
-   * Find the Pair reaches no model at all. Word Fit's themed mode asks for a
-   * word list written for that page — those pages carry the disclosure, and the
-   * form tells the seller so. The numbers mode must still be provably free of
-   * it, because that is the half of the claim still being sold, and a fetch
-   * quietly added to it would kill that silently.
+   * Word Fit's themed mode asks for a word list written for that page — those
+   * pages carry the disclosure, and the form tells the seller so. The numbers
+   * mode must still be provably free of it, because that is the half of the
+   * claim still being sold, and a fetch quietly added to it would kill that
+   * silently.
    */
-  it('never reaches a model from a template that claims to be procedural (§5.4)', () => {
-    for (const template of PACK) {
-      if (template.key === 'word-fit') continue
-      expect(template.prefetch, template.key).toBeUndefined()
-    }
-  })
-
   it('makes no model call for the Word Fit modes still sold as procedural (§5.4)', async () => {
     const wordFit = PACK.find((t) => t.key === 'word-fit')!
     const offline: StudioConfig[] = [{ mode: 'numbers' }]
@@ -186,7 +172,7 @@ describe('phrasing lint (§9.7)', () => {
   }
 
   it('lints something — the sweep is not silently empty', () => {
-    expect(allStrings().length).toBeGreaterThan(80)
+    expect(allStrings().length).toBeGreaterThan(40)
   })
 
   it('prints no gambling vocabulary and no deck brand name', () => {

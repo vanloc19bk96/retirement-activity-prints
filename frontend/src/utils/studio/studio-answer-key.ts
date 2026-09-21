@@ -129,16 +129,7 @@ function shouldOmitFromAnswerPage(obj: StudioFabricObject): boolean {
     if (/^Example\s*:/i.test(String(obj.text ?? '').trim())) return true
   }
   // Legacy cancellation only: older sheets tagged the Targets legend as `key`.
-  // Symbol Hunt keeps Targets on the solution page (rings + legend).
   if (obj.studioTemplateKey === 'cancellation' && obj.studioRole === 'key') {
-    return true
-  }
-  // Symbol–Digit Coding: solution shows the filled grid only — drop the key table.
-  if (
-    obj.studioTemplateKey === 'symbol-digit-coding' &&
-    isFabricType(obj, 'group') &&
-    !objectHasAnswer(obj)
-  ) {
     return true
   }
   // Word Search: solution shows circled words only — drop the word bank + label.

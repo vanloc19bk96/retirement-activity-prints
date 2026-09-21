@@ -17,7 +17,7 @@ export interface MvItem {
   prompt: string
 }
 
-/** Breathing room from safe edges — matches stroop grids. */
+/** Breathing room from safe edges. */
 const STROKE_INSET = 16
 const CELL_PAD = 12
 const INDEX_GAP = 8

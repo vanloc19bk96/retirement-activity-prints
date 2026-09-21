@@ -23,7 +23,7 @@ DEV assert in `studio-templates.ts` throws if a template still exposes those fie
 
 Answer-key pages tint revealed `studioRole: 'answer'` objects with `answerInk`. Blue (`STUDIO_ANSWER_INK = #1D4ED8`) is for color UI templates only.
 
-For **black-and-white / print-first** worksheets (attention drills, dual-task, stroop, counting, trails, etc.), answer-key ink must be **black**:
+For **black-and-white / print-first** worksheets, answer-key ink must be **black**:
 
 - Use `STUDIO_ANSWER_INK_MONO` (`STUDIO_INK` / `#000000`)
 - Register the template key in `STUDIO_ANSWER_INK_MONO_TEMPLATES` in `studio.constants.ts`

@@ -16,8 +16,6 @@ export type StudioFabricType =
  * `constants/studio-categories.ts` so code and UI never drift apart.
  */
 export type StudioCategory =
-  /** Scanning, speed and sustained-attention drills. */
-  | 'focus'
   /** Deduction, number and pattern puzzles with one right answer. */
   | 'logic'
   /** Words and language. */
@@ -124,7 +122,7 @@ export interface StudioFabricObject {
    */
   studioContentHash?: string
   studioPageRole?: StudioPageRole
-  /** Fabric custom data (e.g. lucide `iconName` for Symbol Hunt cells). */
+  /** Fabric custom data (e.g. lucide `iconName` for icon cells). */
   data?: Record<string, unknown>
 }
 

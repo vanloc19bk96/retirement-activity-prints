@@ -139,7 +139,7 @@ const INSTRUCTION_LINE_HEIGHT = STUDIO_INSTRUCTION_SIZE * 1.35
 
 /**
  * Longest typical instruction line — sets the shared instruction textbox width
- * so templates (e.g. Symbol Hunt) keep a content-hugging band.
+ * so templates keep a content-hugging band.
  */
 export const STUDIO_INSTRUCTION_WIDTH_SAMPLE =
   'Study the grid. Then turn the page\nand fill in the blanks from memory'

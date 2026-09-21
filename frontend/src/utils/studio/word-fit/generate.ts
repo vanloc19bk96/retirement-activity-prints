@@ -81,7 +81,7 @@ import {
 
 const TEMPLATE_KEY = 'word-fit'
 
-/** Pinned, for the same layout reason as Find the Pair: see that file's note. */
+/** Pinned so the instruction band stays under the title and does not steal body height from the grid. */
 const INSTRUCTION_PLACEMENT = 'underTitle' as const
 
 /**

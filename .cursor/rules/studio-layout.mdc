@@ -68,7 +68,7 @@ const optBoxes = columns(optionArea, n, 10).map(squareInset)
 
 After `drawHeader` (+ optional banner), the puzzle field **and** answer-key content must sit in the **center** of the remaining body — not stuck under the header or flush to one margin.
 
-1. **Vertical:** `top = field.top + (field.height - blockH) / 2` (or `fitSquareGrid` / `centerNodesInBox`).
+1. **Vertical:** `top = field.top + (field.height - blockH) / 2` (or `fitSquareGrid`).
 2. **Horizontal:** when the block is narrower than the body, shrink-wrap then center (`left = field.left + (field.width - blockW) / 2`). Full-width two-column tables still center each cell’s content band.
 3. **Answer keys:** revealed `studioRole: 'answer'` text/marks stay centered in their cell/band. If prompts are omitted on the key, do **not** leave answers left-aligned under the missing prompt — re-center them.
 4. **Titles / instructions:** already centered by `drawHeader` — keep that; do not left-align the main puzzle against a centered title.
@@ -119,24 +119,11 @@ When size or box geometry is configurable, instruction text must be **generated 
 `Fill this ${size}×${size} grid so every row, column, and ${boxW}×${boxH} box contains the numbers 1–${size} exactly once.`
 ```
 
-## Scattered / freeform clusters (trail-making, etc.)
+## Scattered / freeform clusters
 
 1. Place points inside a padded scatter box.
-2. Compute the cluster bounds (include circle radius + endpoint markers).
-3. **Translate** so the cluster center matches the body center (`field` below header/banner).
-
-```typescript
-// ❌ BAD — scatter fills from the top of `field`; looks top-heavy on the page
-const nodes = buildNodes(part, count, field, radius, rng)
-
-// ✅ GOOD — scatter, then center in the remaining body
-const nodes = centerNodesInBox(
-  buildNodes(part, count, scatterBox, radius, rng),
-  field,
-  radius,
-  markerClearance,
-)
-```
+2. Compute the cluster bounds (include circle radius and any endpoint markers).
+3. **Translate** so the cluster center matches the body center (`field` below header/banner). Do not leave random scatter top-left biased.
 
 ## Checklist
 

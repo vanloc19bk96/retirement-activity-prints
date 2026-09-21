@@ -7,7 +7,7 @@ import {
 } from './studio-check-mark'
 
 const TAG: StudioTag = {
-  templateKey: 'symbol-hunt',
+  templateKey: 'sudoku',
   instanceId: 'check-mark-test',
   pageRole: 'single',
 }

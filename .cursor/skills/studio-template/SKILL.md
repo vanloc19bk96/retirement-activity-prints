@@ -57,7 +57,6 @@ Wire once in `constants/studio-templates.ts` (`RAW_TEMPLATES`). `StudioPanel` di
 - B&W / print-first templates: add key to `STUDIO_ANSWER_INK_MONO_TEMPLATES` (`studio-answer-ink.mdc`).
 - When answers share anchors with prompts, omit prompts on the key (`shouldOmitFromAnswerPage`) so they do not overlap — and **center** the revealed answers in the content band.
 - Answer text = intended solution only (no “also fits” / alternate clutter unless the spec requires it).
-- **Symbol Hunt `shapes` pool:** never include ring/disc glyphs (`○` `●` `⊗` `⊕` … in `SHAPE_RING_GLYPHS`) — cancel answer circles would double-halo. Prefer 1–2 path basic shapes (square, triangle, diamond, cross, star). Keep the generate.test exclusion green when editing the pool.
 
 ## Tests
 

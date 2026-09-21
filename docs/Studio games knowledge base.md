@@ -28,7 +28,7 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ## Shared concepts across all games
 
-- **Category** — one of 6 buyer-facing groups (tab order below).
+- **Category** — one of 5 buyer-facing groups (tab order below).
 - **Page count** — currently `1` (a single puzzle page). Answer keys add a
   separate solution page when the game produces one.
 - **Answer key** — when a game "produces an answer key," a solution page is
@@ -61,56 +61,11 @@ options it exposes* — not the implementation. Source of truth in code:
 
 | Category | Tab label | What it covers |
 |---|---|---|
-| `focus` | Focus | Scanning, speed and sustained-attention drills. |
 | `logic` | Logic | Deduction, number and pattern puzzles with one right answer. |
 | `word` | Word | Words and language. |
 | `spatial` | Spatial | Visual-spatial reasoning and drawing. |
 | `reminiscence` | Reminiscence | Life story, nostalgia and open-ended writing. |
 | `tracker` | Trackers | Logs and planners the reader fills in over time. |
-
----
-
-## Focus (7 games)
-
-### Symbol Hunt (`symbol-hunt`)
-Find and mark every target symbol in a dense field of symbols, or count them
-instead of marking. Trains visual scanning and sustained attention.
-Pages: 1 · Answer key: yes · AI content: no
-
-### Counting Streams (`counting-streams`)
-Scan long rows of symbols and write down how many times each target appears.
-Counting only, nothing to mark.
-Pages: 1 · Answer key: yes · AI content: no
-
-### Symbol–Digit Coding (`symbol-digit-coding`)
-Learn the symbol-to-digit key at the top of the page, then write the matching
-digit under every symbol in the grid. Trains processing speed.
-Pages: 1 · Answer key: yes · AI content: no · Canvas-edit hint: yes
-
-### Trail Making A/B (`trail-making`)
-Connect scattered circles in one continuous line: numbers only for Part A,
-alternating numbers and letters for Part B. The classic Trail Making Test.
-Pages: 1 · Answer key: no · AI content: no
-
-### Stroop Sheet (`stroop-sheet`)
-A black-and-white Stroop test. Answer what each item shows instead of the
-word you can't help reading: count the digits, follow the arrow, or count the
-repeats. Time yourself and compare runs.
-Pages: 1 · Answer key: no · AI content: no
-
-### Dual Task Grid (`dual-task-grid`)
-Work down a grid that mixes two jobs — squares for Task A, circles for Task
-B — holding both running totals in mind. Trains divided attention.
-Pages: 1 · Answer key: yes · AI content: no
-
-### Find the Pair (`find-the-pair`)
-A field of small figures in which every picture appears once — except one,
-which appears twice. Find the repeat and circle both copies. Unlike the rest of
-the Focus tab, no target is given, so the reader has to hold a whole
-description in working memory while scanning. Difficulty is how close the other
-pictures sit to the pair, not how many there are; shape, shading, inner mark
-and quantity always vary.
-Pages: 1 · Answer key: yes · AI content: no
 
 ---
 
@@ -350,13 +305,6 @@ Pages: 1 · Answer key: no · AI content: no · Fixed default title (key: `brain
 
 | Key | Label | Category | Pages | Answer key | AI content |
 |---|---|---|---|---|---|
-| symbol-hunt | Symbol Hunt | focus | 1 | yes | no |
-| counting-streams | Counting Streams | focus | 1 | yes | no |
-| symbol-digit-coding | Symbol–Digit Coding | focus | 1 | yes | no |
-| trail-making | Trail Making A/B | focus | 1 | – | no |
-| stroop-sheet | Stroop Sheet | focus | 1 | – | no |
-| dual-task-grid | Dual Task Grid | focus | 1 | yes | no |
-| find-the-pair | Find the Pair | focus | 1 | yes | no |
 | sudoku | Sudoku | logic | 1 | yes | no |
 | kakuro | Cross Sums | logic | 1 | yes | no |
 | kenken | Math Cage | logic | 1 | yes | no |
@@ -398,4 +346,4 @@ Pages: 1 · Answer key: no · AI content: no · Fixed default title (key: `brain
 or a model that doubles as its own key) rather than producing a separate
 solution page.*
 
-**Total: 43 games** (7 focus · 14 logic · 9 word · 6 spatial · 5 reminiscence · 2 tracker).
+**Total: 36 games** (14 logic · 9 word · 6 spatial · 5 reminiscence · 2 tracker).

@@ -26,7 +26,6 @@ import type {
  * crossword never claims to be “writing your story”.
  */
 const CONTENT_PHASE_LABEL: Record<StudioCategory, string> = {
-  focus: 'Building the puzzle…',
   logic: 'Working out the puzzle…',
   word: 'Picking the words…',
   spatial: 'Sketching the puzzle…',

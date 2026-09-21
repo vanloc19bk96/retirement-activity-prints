@@ -10,13 +10,6 @@ import {
 import { STUDIO_CATEGORIES } from '@/constants/studio-categories'
 import { STARTER_STUDIO_TEMPLATE_KEYS } from '@/constants/studio-plan-access'
 import { gridCopyTemplate } from '@/utils/studio/grid-copy/generate'
-import { symbolHuntTemplate } from '@/utils/studio/symbol-hunt/generate'
-import { symbolDigitCodingTemplate } from '@/utils/studio/symbol-digit-coding/generate'
-import { trailMakingTemplate } from '@/utils/studio/trail-making/generate'
-import { stroopSheetTemplate } from '@/utils/studio/stroop-sheet/generate'
-import { countingStreamsTemplate } from '@/utils/studio/counting-streams/generate'
-import { dualTaskGridTemplate } from '@/utils/studio/dual-task-grid/generate'
-import { findThePairTemplate } from '@/utils/studio/find-the-pair/generate'
 import { mentalMathLadderTemplate } from '@/utils/studio/mental-math-ladder/generate'
 import { cardSumsTemplate } from '@/utils/studio/card-sums/generate'
 import { nextCardTemplate } from '@/utils/studio/next-card/generate'
@@ -59,15 +52,6 @@ import { brainTrainingTrackerTemplate } from '@/utils/studio/brain-training-trac
  * `STUDIO_CATEGORIES`, so the "All" grid reads like the tabs above it.
  */
 const RAW_TEMPLATES: StudioTemplateDefinition[] = [
-  // Focus
-  symbolHuntTemplate,
-  countingStreamsTemplate,
-  symbolDigitCodingTemplate,
-  trailMakingTemplate,
-  stroopSheetTemplate,
-  dualTaskGridTemplate,
-  findThePairTemplate,
-
   // Logic
   sudokuTemplate,
   kakuroTemplate,
