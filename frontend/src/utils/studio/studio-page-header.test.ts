@@ -5,7 +5,6 @@ import {
 } from './studio-page-header'
 import { clampStudioConfigToSchema, resolveStudioConfigField } from './studio-config-fields'
 import { getStudioTemplate, buildDefaultConfig } from '@/constants/studio-templates'
-import { pickStudioVariantConfig, splitStudioConfigFields } from './studio-bulk'
 import { DPI } from '@/types/canvas-settings.types'
 
 const LAYOUT = {
@@ -19,8 +18,8 @@ const LAYOUT = {
   },
 }
 
-const template = getStudioTemplate('shape-rotation-match')!
-const itemCountField = template.configSchema.find((f) => f.key === 'itemCount')!
+const template = getStudioTemplate('word-fit')!
+const wordCountField = template.configSchema.find((f) => f.key === 'wordCount')!
 
 describe('withStudioPageHeader', () => {
   it('stands in a heading when the run auto-numbers a blank title', () => {
@@ -45,55 +44,19 @@ describe('withStudioPageHeader', () => {
   })
 })
 
-describe('page header shrinks the layout-aware max', () => {
-  const base = { ...buildDefaultConfig(template), fontFamily: 'Inter', format: 'same-different' }
+describe('page header and layout-aware max', () => {
+  const base = { ...buildDefaultConfig(template), fontFamily: 'Inter' }
 
   it('enables Page title by default', () => {
     expect(buildDefaultConfig(template).showTitle).toBe(true)
   })
 
-  it('costs an item once "Game N" numbering is on', () => {
-    const withoutTitle = itemCountField.maxWhen!(
-      withStudioPageHeader(base, { showTitle: false }),
-      LAYOUT,
-    )
-    const withTitle = itemCountField.maxWhen!(
-      withStudioPageHeader(base, { showTitle: true }),
-      LAYOUT,
-    )
-    expect(withTitle).toBe(withoutTitle - 1)
-  })
-
-  it('clamps a variant-only draft against the header the run will stamp', () => {
-    // What a book game / bulk variation carries: no showTitle, no title.
-    const { variantFields } = splitStudioConfigFields(template.configSchema)
-    const draft = {
-      ...pickStudioVariantConfig(base, variantFields),
-      itemCount: 12,
-      format: 'same-different',
-    }
-    const header = { showTitle: true }
-    const max = itemCountField.maxWhen!(withStudioPageHeader(draft, header), LAYOUT)
-
-    // Without boundsConfig the draft measures no heading and keeps an item too many.
-    const unaware = clampStudioConfigToSchema(variantFields, draft, LAYOUT).itemCount
-    expect(unaware).toBe(max + 1)
-    expect(
-      clampStudioConfigToSchema(
-        variantFields,
-        draft,
-        LAYOUT,
-        withStudioPageHeader(draft, header),
-      ).itemCount,
-    ).toBe(max)
-  })
-
   it('reports the same max to the form as it clamps to', () => {
-    const draft = { ...base, itemCount: 12 }
+    const draft = { ...base, wordCount: 24 }
     const bounds = withStudioPageHeader(draft, { showTitle: true })
-    const shown = resolveStudioConfigField(itemCountField, bounds, LAYOUT).max
+    const shown = resolveStudioConfigField(wordCountField, bounds, LAYOUT).max
     expect(
-      clampStudioConfigToSchema(template.configSchema, draft, LAYOUT, bounds).itemCount,
+      clampStudioConfigToSchema(template.configSchema, draft, LAYOUT, bounds).wordCount,
     ).toBe(shown)
   })
 })

@@ -152,19 +152,6 @@ function shouldOmitFromAnswerPage(obj: StudioFabricObject): boolean {
       return true
     }
   }
-  // Category Fluency / First Letter Recall: sample list only — drop banner, write-in lines, score.
-  if (
-    obj.studioTemplateKey === 'category-fluency' ||
-    obj.studioTemplateKey === 'first-letter-recall'
-  ) {
-    if (obj.studioRole === 'prompt') return true
-    if (obj.studioRole === 'structure') return true
-    if (obj.studioRole === 'decoration') {
-      const text = String(obj.text ?? '').replace(/\u00a0/g, ' ').trim()
-      if (/^\d+\.$/.test(text)) return true
-      if (/^Time:/i.test(text)) return true
-    }
-  }
   // Anagram sheets: keep the grid; drop puzzle write-in lines under revealed answers.
   if (
     (obj.studioTemplateKey === 'anagram-sheet' ||

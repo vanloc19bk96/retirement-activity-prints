@@ -13,14 +13,10 @@ import {
   omitFabricCanvasJsonSurfaceFields,
 } from '@/utils/canvas-template'
 import { ensureFontFamilyLoaded } from '@/utils/font-loader'
-import { FOLLOW_THE_ROUTE_ARROW_SOURCE } from '@/utils/studio/follow-the-route/render'
 import { STUDIO_CHECK_MARK_SOURCE } from '@/utils/studio/studio-check-mark'
 
 /** Groups that must rasterize as one unit — leaf Lines lose round caps in PPT. */
-const PPT_INTACT_GROUP_SOURCES = new Set<string>([
-  STUDIO_CHECK_MARK_SOURCE,
-  FOLLOW_THE_ROUTE_ARROW_SOURCE,
-])
+const PPT_INTACT_GROUP_SOURCES = new Set<string>([STUDIO_CHECK_MARK_SOURCE])
 
 const EDITABLE_TEXT_OBJECT_TYPES = new Set(['textbox', 'i-text', 'text'])
 
@@ -35,7 +31,7 @@ function setCoordsDeep(object: FabricObject): void {
   object.setCoords()
 }
 
-/** Checkmarks / stroke arrows must stay one unit — leaf Lines get butt caps in PPT. */
+/** Checkmarks must stay one unit — leaf Lines get butt caps in PPT. */
 function shouldKeepFabricGroupIntactForPpt(object: FabricObject): boolean {
   const data = (object as FabricObject & { data?: { source?: unknown } }).data
   return typeof data?.source === 'string' && PPT_INTACT_GROUP_SOURCES.has(data.source)

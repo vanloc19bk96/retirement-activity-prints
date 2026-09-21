@@ -7,7 +7,7 @@
  * - every category is represented, so no tab is ever empty;
  * - the classics that actually sell activity books are in (Word Search,
  *   Crossword, Sudoku, Maze, Cryptogram…);
- * - the mix spans deduction, words, drawing and nostalgia trivia,
+ * - the mix spans deduction, words, mazes and nostalgia trivia,
  *   which is enough page variety for a full book.
  *
  * Listed in `STUDIO_TEMPLATES` order (grouped by category) so this file reads
@@ -18,16 +18,16 @@ export const STARTER_STUDIO_TEMPLATE_KEYS: readonly string[] = [
   // Logic (1)
   'sudoku',
 
-  // Word (4)
+  // Word (6)
   'word-search',
   'crossword',
   'cryptogram',
   'anagram-sheet',
+  'missing-vowels',
+  'word-ladder',
 
-  // Spatial (3)
+  // Spatial (1)
   'maze',
-  'mirror-draw',
-  'shape-rotation-match',
 
   // Reminiscence (1)
   'decade-trivia',

@@ -12,12 +12,6 @@ from app.api.routes.emojis import router as emojis_router
 from app.api.routes.thumbnail_asset import router as thumbnail_asset_router
 from app.api.routes.downloads import router as downloads_router
 from app.api.routes.studio_crossword import router as studio_crossword_router
-from app.api.routes.studio_category_fluency import (
-    router as studio_category_fluency_router,
-)
-from app.api.routes.studio_first_letter_recall import (
-    router as studio_first_letter_recall_router,
-)
 from app.api.routes.studio_anagram import router as studio_anagram_router
 from app.api.routes.studio_missing_vowels import router as studio_missing_vowels_router
 from app.api.routes.studio_decade_trivia import router as studio_decade_trivia_router
@@ -48,8 +42,6 @@ router.include_router(emojis_router)
 router.include_router(thumbnail_asset_router)
 router.include_router(downloads_router)
 router.include_router(studio_crossword_router)
-router.include_router(studio_category_fluency_router)
-router.include_router(studio_first_letter_recall_router)
 router.include_router(studio_anagram_router)
 router.include_router(studio_missing_vowels_router)
 router.include_router(studio_decade_trivia_router)

@@ -24,7 +24,7 @@ export const STARTER_PLAN_FEATURES = [
 
 export const STANDARD_PLAN_FEATURES = [
   'Everything in Starter',
-  'All 36 Studio games unlocked',
+  'All Studio games unlocked',
   'Grid mode for tighter, more precise layouts',
   '1,700+ icons unlocked in-app',
   'Book Cover Editor unlocked: design covers in-app with dedicated cover-design tools',

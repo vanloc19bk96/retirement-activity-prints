@@ -6,21 +6,12 @@ import { StaticCanvas } from 'fabric'
 import type PptxGenJS from 'pptxgenjs'
 
 import { addStaticCanvasObjectsToPptSlide } from '@/utils/fabric-canvas-to-ppt'
-import {
-  FOLLOW_THE_ROUTE_ARROW_SOURCE,
-  buildArrowGlyph,
-} from '@/utils/studio/follow-the-route/render'
+import { STUDIO_CHECK_MARK_SOURCE, buildCheckMark } from '@/utils/studio/studio-check-mark'
 import { buildGroup, buildRect, resetObjectCounter, type StudioTag } from '@/utils/studio/studio-fabric-builders'
 
 const TAG: StudioTag = {
   templateKey: 'sudoku',
   instanceId: 'ppt-vis',
-  pageRole: 'single',
-}
-
-const ROUTE_TAG: StudioTag = {
-  templateKey: 'follow-the-route',
-  instanceId: 'ppt-arrow',
   pageRole: 'single',
 }
 
@@ -84,17 +75,11 @@ describe('PPT export visibility', () => {
     canvas.dispose()
   })
 
-  it('rasterizes Follow the Route arrows as one image (not three native lines)', async () => {
+  it('rasterizes checkmarks as one image (not flattened native strokes)', async () => {
     resetObjectCounter()
-    const arrow = buildArrowGlyph({
-      center: { x: 80, y: 80 },
-      size: 24,
-      dir: 'R',
-      tag: ROUTE_TAG,
-    })
-    expect(arrow.data?.source).toBe(FOLLOW_THE_ROUTE_ARROW_SOURCE)
-    expect(arrow.type).toBe('group')
-    expect(arrow.objects).toHaveLength(3)
+    const mark = buildCheckMark({ left: 40, top: 40, size: 24 }, TAG, 'decoration')
+    expect(mark.data?.source).toBe(STUDIO_CHECK_MARK_SOURCE)
+    expect(mark.type).toBe('group')
 
     const element = document.createElement('canvas')
     const canvas = new StaticCanvas(element, {
@@ -103,7 +88,7 @@ describe('PPT export visibility', () => {
       backgroundColor: '#ffffff',
       renderOnAddRemove: false,
     })
-    await canvas.loadFromJSON({ version: '6.0.0', objects: [arrow] })
+    await canvas.loadFromJSON({ version: '6.0.0', objects: [mark] })
     canvas.requestRenderAll()
 
     const slide = {
@@ -114,7 +99,7 @@ describe('PPT export visibility', () => {
 
     await addStaticCanvasObjectsToPptSlide(slide, canvas)
 
-    // Intact group → raster. Flattened leaf Lines would emit three addShape('line').
+    // Intact group → raster. Flattened leaf strokes would emit native addShape calls.
     expect(slide.addImage).toHaveBeenCalledTimes(1)
     expect(slide.addShape).not.toHaveBeenCalled()
 

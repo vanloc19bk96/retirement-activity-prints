@@ -5,8 +5,8 @@ import json
 
 import pytest
 
-from app.schemas.studio_category_fluency import CategoryFluencyRequest
-from app.services.studio_category_fluency_service import generate_category_fluency
+from app.schemas.studio_missing_vowels import MissingVowelsRequest
+from app.services.studio_missing_vowels_service import generate_missing_vowels
 from app.services.studio_variety import (
     VarietyScope,
     bucket_key,
@@ -28,7 +28,7 @@ def _clean_memory() -> None:
 
 
 def _scope(seed: int = 1, user_id: str = "user-1", bucket: str = "picnic") -> VarietyScope:
-    return VarietyScope(game="category-fluency", user_id=user_id, bucket=bucket, seed=seed)
+    return VarietyScope(game="missing-vowels", user_id=user_id, bucket=bucket, seed=seed)
 
 
 def test_normalize_label_trims_case_punctuation_and_spacing() -> None:
@@ -108,8 +108,21 @@ def test_at_seed_keeps_the_bucket_and_changes_the_draw() -> None:
 
 # ------------------------------------------------- end-to-end through a service
 
-_EXAMPLES = [f"Example {i}" for i in range(15)]
-_PAYLOAD = {"category": "Zither tuners", "examples": _EXAMPLES}
+_ITEMS = [
+    "tiger",
+    "eagle",
+    "ocean",
+    "bread",
+    "river",
+    "apple",
+    "zither",
+    "melon",
+    "chair",
+    "table",
+    "plant",
+    "cloud",
+]
+_PAYLOAD = {"items": _ITEMS}
 
 
 def test_a_second_generation_is_told_what_the_first_one_printed(
@@ -122,23 +135,23 @@ def test_a_second_generation_is_told_what_the_first_one_printed(
         return json.dumps(_PAYLOAD)
 
     monkeypatch.setattr(
-        "app.services.studio_category_fluency_service._call_gemini", fake_gemini
+        "app.services.studio_missing_vowels_service._call_gemini", fake_gemini
     )
     monkeypatch.setattr(
-        "app.services.studio_category_fluency_service._check_rate_limit",
+        "app.services.studio_missing_vowels_service._check_rate_limit",
         lambda _uid: None,
     )
 
-    req = CategoryFluencyRequest(lineCount=15, seed=1)
-    asyncio.run(generate_category_fluency(req, user_id="user-1"))
-    assert "Zither tuners" not in prompts[0]
+    req = MissingVowelsRequest(itemCount=12, seed=1)
+    asyncio.run(generate_missing_vowels(req, user_id="user-1"))
+    assert "ZITHER" not in prompts[0]
 
     asyncio.run(
-        generate_category_fluency(
+        generate_missing_vowels(
             req.model_copy(update={"seed": 2}), user_id="user-1"
         )
     )
-    assert "Zither tuners" in prompts[1]
+    assert "ZITHER" in prompts[1]
 
 
 def test_another_user_does_not_inherit_the_first_users_list(
@@ -151,17 +164,17 @@ def test_another_user_does_not_inherit_the_first_users_list(
         return json.dumps(_PAYLOAD)
 
     monkeypatch.setattr(
-        "app.services.studio_category_fluency_service._call_gemini", fake_gemini
+        "app.services.studio_missing_vowels_service._call_gemini", fake_gemini
     )
     monkeypatch.setattr(
-        "app.services.studio_category_fluency_service._check_rate_limit",
+        "app.services.studio_missing_vowels_service._check_rate_limit",
         lambda _uid: None,
     )
 
-    req = CategoryFluencyRequest(lineCount=15, seed=1)
-    asyncio.run(generate_category_fluency(req, user_id="user-1"))
-    asyncio.run(generate_category_fluency(req, user_id="user-2"))
-    assert "Zither tuners" not in prompts[1]
+    req = MissingVowelsRequest(itemCount=12, seed=1)
+    asyncio.run(generate_missing_vowels(req, user_id="user-1"))
+    asyncio.run(generate_missing_vowels(req, user_id="user-2"))
+    assert "ZITHER" not in prompts[1]
 
 
 def test_the_client_avoid_list_reaches_the_prompt(
@@ -174,15 +187,13 @@ def test_the_client_avoid_list_reaches_the_prompt(
         return json.dumps(_PAYLOAD)
 
     monkeypatch.setattr(
-        "app.services.studio_category_fluency_service._call_gemini", fake_gemini
+        "app.services.studio_missing_vowels_service._call_gemini", fake_gemini
     )
     monkeypatch.setattr(
-        "app.services.studio_category_fluency_service._check_rate_limit",
+        "app.services.studio_missing_vowels_service._check_rate_limit",
         lambda _uid: None,
     )
 
-    req = CategoryFluencyRequest(
-        lineCount=15, seed=1, avoid=["Boats"]
-    )
-    asyncio.run(generate_category_fluency(req, user_id="user-1"))
+    req = MissingVowelsRequest(itemCount=12, seed=1, avoid=["Boats"])
+    asyncio.run(generate_missing_vowels(req, user_id="user-1"))
     assert "Boats" in prompts[0]

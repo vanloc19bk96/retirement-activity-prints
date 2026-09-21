@@ -9,23 +9,16 @@ import {
 } from '@/constants/studio.constants'
 import { STUDIO_CATEGORIES } from '@/constants/studio-categories'
 import { STARTER_STUDIO_TEMPLATE_KEYS } from '@/constants/studio-plan-access'
-import { gridCopyTemplate } from '@/utils/studio/grid-copy/generate'
 import { sudokuTemplate } from '@/utils/studio/sudoku/generate'
 import { wordSearchTemplate } from '@/utils/studio/retirement-word-search/generate'
 import { crosswordTemplate } from '@/utils/studio/crossword/generate'
-import { categoryFluencyTemplate } from '@/utils/studio/category-fluency/generate'
-import { firstLetterRecallTemplate } from '@/utils/studio/first-letter-recall/generate'
 import { anagramSheetTemplate } from '@/utils/studio/anagram-sheet/generate'
 import { retirementAnagramTemplate } from '@/utils/studio/retirement-anagram/generate'
 import { missingVowelsTemplate } from '@/utils/studio/missing-vowels/generate'
 import { wordLadderTemplate } from '@/utils/studio/word-ladder/generate'
 import { wordFitTemplate } from '@/utils/studio/word-fit/generate'
 import { cryptogramTemplate } from '@/utils/studio/cryptogram/generate'
-import { shapeRotationMatchTemplate } from '@/utils/studio/shape-rotation-match/generate'
-import { mirrorDrawTemplate } from '@/utils/studio/mirror-draw/generate'
-import { paperFoldingTemplate } from '@/utils/studio/paper-folding/generate'
 import { mazeTemplate } from '@/utils/studio/maze/generate'
-import { followTheRouteTemplate } from '@/utils/studio/follow-the-route/generate'
 import { decadeTriviaTemplate } from '@/utils/studio/decade-trivia/generate'
 
 /**
@@ -43,18 +36,11 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   retirementAnagramTemplate,
   anagramSheetTemplate,
   missingVowelsTemplate,
-  categoryFluencyTemplate,
-  firstLetterRecallTemplate,
   wordLadderTemplate,
   wordFitTemplate,
 
   // Spatial
   mazeTemplate,
-  followTheRouteTemplate,
-  mirrorDrawTemplate,
-  paperFoldingTemplate,
-  shapeRotationMatchTemplate,
-  gridCopyTemplate,
 
   // Reminiscence
   decadeTriviaTemplate,

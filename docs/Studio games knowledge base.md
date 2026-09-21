@@ -76,7 +76,7 @@ Pages: 1 · Answer key: yes · AI content: no
 
 ---
 
-## Word (9 games)
+## Word (8 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -95,6 +95,11 @@ no letter ever stands for itself. Pick a theme for AI-written sayings or
 bring your own.
 Pages: 1 · Answer key: yes · AI content: yes
 
+### Retirement Anagrams (`retirement-anagram`)
+Unscramble retirement-themed words — work, hobbies, family, travel. AI writes
+a fresh list each page so a long book does not repeat.
+Pages: 1 · Answer key: yes · AI content: yes
+
 ### Anagram Sheet (`anagram-sheet`)
 Unscramble the letters to spell each word. Pick a theme and let AI choose
 fresh words, or supply your own list.
@@ -104,17 +109,6 @@ Pages: 1 · Answer key: yes · AI content: yes
 Every vowel has been taken out. Put them back to reveal each word. Pick a
 theme and AI chooses fresh words.
 Pages: 1 · Answer key: yes · AI content: yes
-
-### Category Fluency (`category-fluency`)
-Write as many things from a category as you can before time runs out.
-Categories are fresh every time; the answer key lists sample answers for
-self-checking.
-Pages: 1 · Answer key: yes (sample answers) · AI content: yes
-
-### First Letter Recall (`first-letter-recall`)
-Write as many words as you can that start with a given letter before time
-runs out. The answer key lists sample words for self-checking.
-Pages: 1 · Answer key: yes (sample answers) · AI content: yes
 
 ### Word Fit-In (`word-fit`)
 A crossword grid with no clues. Every word on the list beside it fits one place
@@ -138,42 +132,12 @@ Pages: 1 · Answer key: yes · AI content: yes
 
 ---
 
-## Spatial (6 games)
+## Spatial (1 game)
 
 ### Maze (`maze`)
 A pencil maze with one entrance, one exit, and exactly one way through.
 Difficulty sets how twisty the route is and how long the solution runs.
 Pages: 1 · Answer key: yes (traces the path) · AI content: no
-
-### Follow the Route (`follow-the-route`)
-Start on the dot and follow a list of moves across the grid — up 2,
-right 3, down 1 — then shade the square you land on, or write its coordinate.
-An advanced mode prints both markers (dot start, square end) and asks the reader
-to write a route that connects them. Difficulty sets the grid, the number of
-moves and how far each one goes; moves can be shown as arrows or words,
-and Expert can add diagonals. Every route stays inside the grid.
-Pages: 1 · Answer key: yes · AI content: no
-
-### Mirror Draw (`mirror-draw`)
-Complete the picture by drawing its mirror image across the line of
-symmetry. Grid squares make every mark easy to count and place.
-Pages: 1 · Answer key: yes (finished picture) · AI content: no
-
-### Paper Folding (`paper-folding`)
-Follow a sheet as it's folded and punched, then picture it opened out and
-pick the matching hole pattern. A visual-reasoning classic.
-Pages: 1 · Answer key: yes · AI content: no
-
-### Shape Rotation Match (`shape-rotation-match`)
-Decide whether each pair of blocks is the same shape turned around or a
-mirror image. Solid black-and-white silhouettes.
-Pages: 1 · Answer key: yes · AI content: no
-
-### Grid Copy (`grid-copy`)
-Copy a shaded pattern from the model grid into the empty grid beside it.
-Grid size and shaded-cell count set the difficulty; the model stays on the
-page as its own answer key.
-Pages: 1 · Answer key: no (model doubles as key) · AI content: no
 
 ---
 
@@ -195,22 +159,12 @@ Pages: 1 · Answer key: yes · AI content: yes
 | word-search | Word Search | word | 1 | yes | yes |
 | crossword | Crossword | word | 1 | yes | yes |
 | cryptogram | Cryptogram | word | 1 | yes | yes |
+| retirement-anagram | Retirement Anagrams | word | 1 | yes | yes |
 | anagram-sheet | Anagram Sheet | word | 1 | yes | yes |
 | missing-vowels | Missing Vowels | word | 1 | yes | yes |
-| category-fluency | Category Fluency | word | 1 | yes | yes |
-| first-letter-recall | First Letter Recall | word | 1 | yes | yes |
 | word-fit | Word Fit-In | word | 1 | yes | no |
 | word-ladder | Word Ladder | word | 1 | yes | yes |
 | maze | Maze | spatial | 1 | yes | no |
-| follow-the-route | Follow the Route | spatial | 1 | yes | no |
-| mirror-draw | Mirror Draw | spatial | 1 | yes | no |
-| paper-folding | Paper Folding | spatial | 1 | yes | no |
-| shape-rotation-match | Shape Rotation Match | spatial | 1 | yes | no |
-| grid-copy | Grid Copy | spatial | 1 | – | no |
 | decade-trivia | Decade Trivia | reminiscence | 1 | yes | yes |
 
-*"Answer key = –" means the game is self-checking (an open-ended prompt,
-or a model that doubles as its own key) rather than producing a separate
-solution page.*
-
-**Total: 17 games** (1 logic · 9 word · 6 spatial · 1 reminiscence).
+**Total: 11 games** (1 logic · 8 word · 1 spatial · 1 reminiscence).
