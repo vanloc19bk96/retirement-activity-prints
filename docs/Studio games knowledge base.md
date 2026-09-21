@@ -68,9 +68,11 @@ options it exposes* — not the implementation. Source of truth in code:
 ## Logic (1 game)
 
 ### Sudoku (`sudoku`)
-The classic number placement puzzle. Fill every row, column and box so each
-digit appears once. Sizes 9×9, 6×6, 4×4, each verified to have exactly one
-solution.
+Classic number Sudoku for a large-print retirement book. Fill every row, column
+and box so each digit appears once. Sizes 9×9 and 6×6 (2×3 boxes). Difficulty is
+Relaxed / Classic / Challenge based on logical techniques, not clue count — every
+puzzle has exactly one solution and needs no guessing. Large print is the default
+(one 9×9 per page); two puzzles fit on a page for 6×6 or standard-print 9×9.
 Pages: 1 · Answer key: yes · AI content: no
 
 ---

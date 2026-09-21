@@ -1,12 +1,11 @@
 import type { StudioRng } from '../studio-rng'
 
-export type SudokuSize = 4 | 6 | 9
+export type SudokuSize = 6 | 9
 
 /** [boxWidth, boxHeight] in cells. */
 export const BOX_DIMS: Record<SudokuSize, [number, number]> = {
   9: [3, 3],
   6: [2, 3],
-  4: [2, 2],
 }
 
 export function emptyGrid(size: number): number[][] {
@@ -91,7 +90,7 @@ function fillCell(
 /**
  * Backtracking fill with randomized candidates.
  * 9×9 prefills independent diagonal boxes (always completable) for speed.
- * Smaller sizes start empty — diagonal prefill is not always completable on 4×4.
+ * 6×6 starts empty — rectangular 2×3 boxes are not independently completable.
  */
 export function generateSolvedGrid(size: SudokuSize, rng: StudioRng): number[][] {
   const grid = emptyGrid(size)
@@ -187,6 +186,23 @@ export function isFullyValid(grid: number[][], size: number): boolean {
       }
       vals.sort((a, b) => a - b)
       if (vals.join() !== expected.join()) return false
+    }
+  }
+  return true
+}
+
+/** Every given matches the stored solution; empties are 0. */
+export function givensMatchSolution(
+  puzzle: number[][],
+  solved: number[][],
+  size: number,
+): boolean {
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      const given = puzzle[r][c]
+      const answer = solved[r][c]
+      if (answer < 1 || answer > size) return false
+      if (given !== 0 && given !== answer) return false
     }
   }
   return true

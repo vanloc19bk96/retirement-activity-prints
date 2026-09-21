@@ -144,6 +144,10 @@ function shouldOmitFromAnswerPage(obj: StudioFabricObject): boolean {
   if (obj.studioTemplateKey === 'missing-vowels' && obj.studioRole === 'prompt') {
     return true
   }
+  // Sudoku answers share cell anchors with givens — omit givens so ink does not double.
+  if (obj.studioTemplateKey === 'sudoku' && obj.studioRole === 'prompt') {
+    return true
+  }
   // Anagram sheets: keep the grid; drop puzzle write-in lines under revealed answers.
   if (
     (obj.studioTemplateKey === 'anagram-sheet' ||

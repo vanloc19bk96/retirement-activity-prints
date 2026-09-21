@@ -10,23 +10,30 @@ import {
   contentBox,
   insetHorizontal,
   drawHeader,
-  unionObjectBounds,
+  rows,
+  boxCenterX,
   estimateTextBoxWidth,
   type Box,
 } from '../studio-layout'
-import { buildText, buildGroup, type StudioTag } from '../studio-fabric-builders'
-import { drawGridLines, snapGridInField } from '../studio-grid-rules'
+import { buildText, type StudioTag } from '../studio-fabric-builders'
 import {
   STUDIO_CONTENT_SAFE_INSET_X,
+  STUDIO_DEFAULT_FONT,
   STUDIO_DIGIT_FONT,
+  STUDIO_INK_MUTED,
+  STUDIO_SECTION_GAP,
 } from '@/constants/studio.constants'
 import { kickOffFontFamilyLoading } from '@/utils/font-loader'
+import { parsePrintStyle } from '../crossword/config'
 import {
-  BOX_DIMS,
-  type SudokuSize,
-  generateSolvedGrid,
-  carvePuzzle,
-} from './solver'
+  instructionFor,
+  parseDifficulty,
+  parsePuzzlesPerPage,
+  parseSize,
+  SUDOKU_CONFIG_SCHEMA,
+} from './config'
+import { generateRatedPuzzles, type RetirementSudokuPuzzle } from './puzzle'
+import { drawSudokuGrid } from './draw'
 
 export {
   BOX_DIMS,
@@ -35,127 +42,118 @@ export {
   countSolutions,
   isFullyValid,
   isValidPlacement,
+  givensMatchSolution,
 } from './solver'
 export type { SudokuSize } from './solver'
+export { ratePuzzle, isSolvableWith } from './rate'
+export type { SudokuDifficulty } from './rate'
+export {
+  generateRatedPuzzle,
+  generateRatedPuzzles,
+  hashSudokuGrid,
+  preflightSudoku,
+  clueCount,
+  matchesRequestedDifficulty,
+} from './puzzle'
+export type { RetirementSudokuPuzzle } from './puzzle'
+export {
+  parseSize,
+  parseDifficulty,
+  parsePuzzlesPerPage,
+  instructionFor,
+  minDigitPx,
+} from './config'
 
-const CLUE_TARGETS: Record<SudokuSize, Record<string, number>> = {
-  9: { easy: 42, medium: 34, hard: 28, expert: 24 },
-  6: { easy: 20, medium: 16, hard: 13, expert: 11 },
-  4: { easy: 10, medium: 8, hard: 7, expert: 6 },
-}
+const PUZZLE_INDEX_SIZE = 22
+const PUZZLE_INDEX_GAP = 8
 
-function parseSize(raw: unknown): SudokuSize {
-  if (raw === 4 || raw === 6 || raw === 9) return raw
-  if (raw === '4' || raw === '6' || raw === '9') return Number(raw) as SudokuSize
-  return 9
-}
-
-function drawSudokuGrid(options: {
+function drawIndexedGrid(options: {
   field: Box
-  size: number
-  boxW: number
-  boxH: number
-  puzzle: number[][]
-  solved: number[][]
+  index: number
+  count: number
+  puzzle: RetirementSudokuPuzzle
   tag: StudioTag
-}): StudioFabricObject {
-  const { field, size, boxW, boxH, puzzle, solved, tag } = options
-  const g = snapGridInField(field, size, size)
-  // Same mid-gray hairlines as Grid Copy; bold only on Sudoku box bands.
-  const parts: StudioFabricObject[] = [
-    ...drawGridLines(g.bounds, g.cell, size, size, tag, {
-      boxCols: boxW,
-      boxRows: boxH,
-    }),
-  ]
-
-  const fontSize = Math.round(g.cell * 0.55)
-  for (let r = 0; r < size; r++) {
-    for (let c = 0; c < size; c++) {
-      const cell = g.cellBox(r, c)
-      const digitOpts = {
-        left: Math.round(cell.left + cell.width / 2),
-        top: Math.round(cell.top + cell.height / 2),
-        fontFamily: STUDIO_DIGIT_FONT,
-        fontSize,
-        fontWeight: 'normal' as const,
-        textAlign: 'center' as const,
-        originX: 'center' as const,
-        originY: 'center' as const,
-      }
-      if (puzzle[r][c] !== 0) {
-        const text = String(puzzle[r][c])
-        parts.push(
-          buildText(
-            {
-              ...digitOpts,
-              text,
-              width: estimateTextBoxWidth(text, fontSize, cell.width),
-            },
-            tag,
-            'prompt',
-          ),
-        )
-      }
-      // Every cell gets a hidden answer so the key is a full solved grid.
-      const answer = String(solved[r][c])
-      parts.push(
-        buildText(
-          {
-            ...digitOpts,
-            text: answer,
-            width: estimateTextBoxWidth(answer, fontSize, cell.width),
-          },
-          tag,
-          'answer',
-        ),
-      )
+  printStyle: ReturnType<typeof parsePrintStyle>
+  pageWidth: number
+  font: string
+}): StudioFabricObject[] {
+  const { field, index, count, puzzle, tag, printStyle, pageWidth, font } = options
+  let gridField = field
+  const objects: StudioFabricObject[] = []
+  if (count > 1) {
+    const stripH = PUZZLE_INDEX_SIZE + PUZZLE_INDEX_GAP
+    const label = String(index + 1)
+    objects.push(
+      buildText(
+        {
+          left: boxCenterX(field),
+          top: field.top,
+          text: label,
+          fontFamily: font,
+          fontSize: PUZZLE_INDEX_SIZE,
+          fontWeight: 'normal',
+          fill: STUDIO_INK_MUTED,
+          width: estimateTextBoxWidth(label, PUZZLE_INDEX_SIZE, field.width),
+          textAlign: 'center',
+          originX: 'center',
+        },
+        tag,
+        'decoration',
+      ),
+    )
+    gridField = {
+      ...field,
+      top: field.top + stripH,
+      height: Math.max(1, field.height - stripH),
     }
   }
-
-  const groupBounds = unionObjectBounds(parts) ?? g.bounds
-  return buildGroup(parts, groupBounds, tag)
+  objects.push(
+    drawSudokuGrid({
+      field: gridField,
+      puzzle,
+      tag,
+      printStyle,
+      pageWidth,
+    }),
+  )
+  return objects
 }
 
 function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageOutput[] {
   const size = parseSize(config.size)
-  const difficulty = String(config.difficulty ?? 'medium')
+  const difficulty = parseDifficulty(config.difficulty)
+  const printStyle = parsePrintStyle(config.printStyle)
+  const count = parsePuzzlesPerPage(config.puzzlesPerPage, size, printStyle)
   const rng = createRng(ctx.seed)
   void kickOffFontFamilyLoading(STUDIO_DIGIT_FONT)
 
-  const [boxW, boxH] = BOX_DIMS[size]
-  const solved = generateSolvedGrid(size, rng)
-  const targetClues = CLUE_TARGETS[size][difficulty] ?? CLUE_TARGETS[size].medium
-  const puzzle = carvePuzzle(solved, targetClues, size, rng)
-
+  const puzzles = generateRatedPuzzles(count, size, difficulty, rng)
   const tag: StudioTag = {
     templateKey: 'sudoku',
     instanceId: ctx.instanceId,
     pageRole: 'single',
   }
 
-  const objects: StudioFabricObject[] = []
   const content = insetHorizontal(contentBox(ctx), STUDIO_CONTENT_SAFE_INSET_X)
-  const header = drawHeader(
-    content,
-    config,
-    tag,
-    `Fill this ${size}×${size} grid so every row, column, and ${boxW}×${boxH} box contains the numbers 1–${size} exactly once`,
-  )
-  objects.push(...header.objects)
+  const header = drawHeader(content, config, tag, instructionFor(size))
+  const fields = count === 2 ? rows(header.body, 2, STUDIO_SECTION_GAP) : [header.body]
+  const font = String(config.fontFamily ?? STUDIO_DEFAULT_FONT)
 
-  // Center the square grid in the full remaining body below the header.
-  objects.push(
-    drawSudokuGrid({
-      field: header.body,
-      size,
-      boxW,
-      boxH,
-      puzzle,
-      solved,
-      tag,
-    }),
-  )
+  const objects: StudioFabricObject[] = [...header.objects]
+  puzzles.forEach((puzzle, index) => {
+    objects.push(
+      ...drawIndexedGrid({
+        field: fields[index] ?? header.body,
+        index,
+        count,
+        puzzle,
+        tag,
+        printStyle,
+        pageWidth: ctx.pageWidth,
+        font,
+      }),
+    )
+  })
 
   return [{ pageRole: 'single', objects }]
 }
@@ -165,10 +163,9 @@ export const sudokuTemplate: StudioTemplateDefinition = {
   label: 'Sudoku',
   category: 'logic',
   description:
-    'The classic number placement puzzle. Fill every row, column and box so each digit appears once. Sizes 9×9, 6×6 and 4×4, each verified to have exactly one solution. Includes an answer key.',
+    'Classic number Sudoku in large print. Fill every row, column and box so each digit appears once. 6×6 or 9×9, Relaxed / Classic / Challenge, each with exactly one solution and an answer key.',
   pageCount: 1,
   producesAnswerKey: true,
-  // 3×3 only — readable at card size; digits centered in cells.
   thumbnail: `<svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg">
     <g fill="none" stroke="currentColor" transform="translate(17 5)">
       <rect x="0" y="0" width="30" height="30" stroke-width="1.6"/>
@@ -180,30 +177,6 @@ export const sudokuTemplate: StudioTemplateDefinition = {
       <text x="42" y="30">2</text>
     </g>
   </svg>`,
-  configSchema: [
-    {
-      key: 'size',
-      label: 'Grid size',
-      type: 'select',
-      default: 9,
-      options: [
-        { label: '9×9 (classic)', value: 9 },
-        { label: '6×6 (easier, 2×3 boxes)', value: 6 },
-        { label: '4×4 (beginner, 2×2 boxes)', value: 4 },
-      ],
-    },
-    {
-      key: 'difficulty',
-      label: 'Difficulty',
-      type: 'select',
-      default: 'medium',
-      options: [
-        { label: 'Easy', value: 'easy' },
-        { label: 'Medium', value: 'medium' },
-        { label: 'Hard', value: 'hard' },
-        { label: 'Expert', value: 'expert' },
-      ],
-    },
-  ],
+  configSchema: SUDOKU_CONFIG_SCHEMA,
   generate,
 }
