@@ -14,18 +14,18 @@ from app.services.studio_cryptogram_service import (
     parse_cryptogram_json_for_tests,
 )
 
-MEDIUM = {"min_letters": 28, "max_letters": 52}
+MEDIUM = {"min_letters": 30, "max_letters": 52}
 
 KIND_WORD = "a kind word costs nothing and warms much"
 KIND_WORD_UPPER = "A KIND WORD COSTS NOTHING AND WARMS MUCH"
 
 VALID_SAYINGS = [
     KIND_WORD,
-    "small steps still carry you forward",
-    "the slowest walker knows the road",
-    "good soup takes its own sweet time",
-    "a shared meal tastes twice as good",
-    "quiet hands finish the longest work",
+    "small steps still carry you forward now",
+    "good friends make the longest days feel light",
+    "quiet mornings in the garden restore the heart",
+    "a shared meal tastes twice as good at home",
+    "free time is best spent with people you love",
 ]
 
 
@@ -70,6 +70,14 @@ def test_prompt_rotates_angle_with_seed() -> None:
 def test_prompt_forbids_attributed_quotes() -> None:
     prompt = build_prompt_for_tests(CryptogramRequest(theme="kindness", seed=3))
     assert "No attributions" in prompt
+    assert "original retirement sayings" in prompt
+
+
+def test_prompt_oversamples_candidates_for_two_puzzles() -> None:
+    prompt = build_prompt_for_tests(
+        CryptogramRequest(theme="travel dreams", itemCount=2, seed=3)
+    )
+    assert "Write 8 original retirement sayings" in prompt
 
 
 def test_generate_returns_uppercase_items(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -85,7 +93,7 @@ def test_generate_returns_uppercase_items(monkeypatch: pytest.MonkeyPatch) -> No
 
     req = CryptogramRequest(theme="patience", itemCount=2, length="medium", seed=11)
     result = asyncio.run(generate_cryptogram(req, user_id="user-1"))
-    assert len(result.items) == 2
+    assert len(result.items) >= 2
     assert all(item.replace(" ", "").isalpha() for item in result.items)
     assert all(item.isupper() for item in result.items)
 

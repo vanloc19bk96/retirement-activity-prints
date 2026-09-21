@@ -102,12 +102,20 @@ def _scope(req: CryptogramRequest, user_id: str) -> VarietyScope:
     )
 
 
+def _candidate_count(need: int) -> int:
+    mapping = section(_config(), "candidateCounts")
+    keyed = mapping.get(str(need))
+    if keyed is not None:
+        return int(keyed)
+    return need + int_value(_limits(), "overRequest")
+
+
 def _build_prompt(req: CryptogramRequest) -> str:
     min_letters, max_letters = _letter_range(req.length)
     limits = _limits()
     angle = rotate(_angles(), req.seed)
     language_line = locale_line(section(_config(), "locale"), req.locale)
-    want = req.item_count + int_value(limits, "overRequest")
+    want = _candidate_count(req.item_count)
     # Letter budgets are what the sheet actually enforces; word counts are the
     # handle a model can steer by, so give both.
     min_words = max(
@@ -119,7 +127,7 @@ def _build_prompt(req: CryptogramRequest) -> str:
         max(min_words + 1, round(max_letters / int_value(limits, "maxWordsLettersPerWord"))),
     )
 
-    return f"""Write {want} short sayings about: {req.theme.strip()}.
+    return f"""Write {want} original retirement sayings about: {req.theme.strip()}.
 Each one is enciphered letter-by-letter on a puzzle page, so its length matters.
 Seed for variety: {req.seed}. Lean towards {angle} where it suits the theme.
 
@@ -129,10 +137,10 @@ Length (hard constraint — count before writing):
   {int_value(limits, "maxWordLetters")} letters.
 
 Rules:
-- Traditional proverbs, folk sayings, or plain original lines only.
-- Never quote a book, film, song, speech, or a named person. No attributions.
+- Original wording only. Retirement-related, positive, warm, adult-friendly.
+- Never quote a book, film, song, speech, slogan, or a named person. No attributions.
+- No famous quotes, lyrics, brands, franchises, politics, medical claims, or adult content.
 - Letters A-Z and single spaces only: no digits, punctuation, apostrophes, or quotes.
-- Wholesome and encouraging, readable by an older adult, no politics or religion.
 - Each saying must make sense on its own and must not repeat another one.
 {language_line}
 
@@ -198,7 +206,7 @@ async def generate_cryptogram(
         items_raw,
         min_letters=min_letters,
         max_letters=max_letters,
-        want=req.item_count,
+        want=_candidate_count(req.item_count),
     )
     if len(items) < req.item_count:
         logger.warning(

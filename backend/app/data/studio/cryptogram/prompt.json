@@ -1,18 +1,26 @@
 {
-  "_comment": "Cryptogram saying generation. letterRange mirrors LENGTH_RANGE in frontend/src/utils/studio/cryptogram/content.ts. varietyAngles are rotated by seed so two users on the same theme get different sayings.",
+  "_comment": "Retirement Cryptogram saying generation. letterRange mirrors LENGTH_RANGE in frontend content.ts. candidateCounts: need 1→5, 2→8, 3→10, 4→12, 5→14, 6→16. varietyAngles rotate by seed.",
   "limits": {
-    "minWords": 2,
-    "maxWords": 14,
-    "maxWordLetters": 14,
-    "overRequest": 6,
+    "minWords": 4,
+    "maxWords": 12,
+    "maxWordLetters": 12,
+    "overRequest": 7,
     "rateLimitPerWindow": 60,
     "minWordsLettersPerWord": 6,
     "maxWordsLettersPerWord": 4
   },
+  "candidateCounts": {
+    "1": 5,
+    "2": 8,
+    "3": 10,
+    "4": 12,
+    "5": 14,
+    "6": 16
+  },
   "letterRange": {
-    "short": [12, 32],
-    "medium": [28, 52],
-    "long": [46, 78]
+    "short": [18, 32],
+    "medium": [30, 52],
+    "long": [46, 68]
   },
   "locale": {
     "nativeLocales": ["en"],
@@ -20,21 +28,21 @@
     "otherLine": "- Write in language locale '{locale}'."
   },
   "varietyAngles": [
-    "patience and waiting",
-    "hard work and effort",
-    "friendship and neighbours",
-    "kindness and giving",
-    "honesty and plain speaking",
-    "learning from mistakes",
-    "small steps and steady habits",
-    "gratitude for simple things",
-    "weather and the seasons",
-    "home and the kitchen table",
-    "courage in hard times",
-    "listening before speaking",
-    "sharing a meal",
-    "time passing",
-    "keeping good company",
-    "starting again"
+    "free time after work",
+    "slow mornings at home",
+    "travel still to take",
+    "garden days and quiet hobbies",
+    "friendship that lasted past the job",
+    "family around the table",
+    "a new chapter without hurry",
+    "road trips and weekend getaways",
+    "reading in a favourite chair",
+    "cooking for pleasure not the clock",
+    "farewell to the office",
+    "memory lane without sadness",
+    "celebrations with people you love",
+    "walking outside with no commute",
+    "creative time that is finally yours",
+    "rest that is earned and welcome"
   ]
 }

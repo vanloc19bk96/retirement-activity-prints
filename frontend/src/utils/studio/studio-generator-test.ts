@@ -70,6 +70,8 @@ export function assertGeneratorEntropy(
     /** Minimum share of sampled seeds that must yield unique content. Default 1. */
     minDistinctRatio?: number
     configOverrides?: Record<string, unknown>
+    /** Extra generate-context fields (e.g. AI `remoteData` fixtures). */
+    contextOverrides?: Partial<StudioGenerateContext>
   },
 ): void {
   const seedCount = options?.seeds ?? 60
@@ -89,7 +91,7 @@ export function assertGeneratorEntropy(
         resetObjectCounter()
         const pages = template.generate(
           { ...config, seed },
-          { ...STUDIO_TEST_CTX, seed },
+          { ...STUDIO_TEST_CTX, ...options?.contextOverrides, seed },
         )
         seen.add(pages.map((page) => contentFingerprint(page.objects)).join('#'))
       }

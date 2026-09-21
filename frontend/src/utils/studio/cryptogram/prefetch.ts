@@ -5,44 +5,66 @@ import {
   studioVarietyKey,
 } from '../studio-variety'
 import type { StudioConfig } from '@/types/studio-template.types'
-import type {
-  CryptogramRequest,
-  CryptogramResponse,
-} from '@/types/studio-cryptogram.types'
+import type { CryptogramResponse } from '@/types/studio-cryptogram.types'
 import {
-  clampPuzzleCount,
-  CUSTOM_THEME_MAX_LENGTH,
+  AI_THEME_MAX_LENGTH,
+  CRYPTOGRAM_AI_EMPTY_MESSAGE,
   parseLength,
-  resolveThemePrompt,
+  puzzleCountFor,
+  resolveAiThemePrompt,
+  selectAiSayings,
+  aiThemeLabel,
 } from './content'
+import { filterUnsafeThemeCopy } from './content-quality'
+
+const MAX_AI_ATTEMPTS = 3
 
 /**
- * Fresh sayings for one page. A failed call is swallowed so the generator can
- * fall back to the bundled bank instead of blocking the user.
+ * AI-only prefetch — no bundled saying bank.
+ * Retries up to 3 times with avoid lists, then fails visibly.
  */
 export async function cryptogramPrefetch(
   config: StudioConfig,
   signal: AbortSignal,
-): Promise<CryptogramResponse | undefined> {
-  const theme = resolveThemePrompt(config).slice(0, CUSTOM_THEME_MAX_LENGTH)
-
+): Promise<CryptogramResponse> {
+  const need = puzzleCountFor(config)
   const length = parseLength(config.length)
-  const varietyKey = studioVarietyKey('cryptogram', theme, length)
-  const req: CryptogramRequest = {
-    theme,
-    itemCount: clampPuzzleCount(config.puzzleCount),
-    length,
-    seed: Number(config.seed ?? 1),
-    avoid: studioAvoidList(varietyKey),
+  const themeRaw = resolveAiThemePrompt(config).slice(0, AI_THEME_MAX_LENGTH)
+  const theme = filterUnsafeThemeCopy(themeRaw) ?? themeRaw
+  const label = aiThemeLabel(config) || theme
+  const varietyKey = studioVarietyKey('cryptogram', label, length)
+  const seed = Number(config.seed ?? 1)
+
+  const rejected: string[] = []
+  let lastError: unknown
+
+  for (let attempt = 0; attempt < MAX_AI_ATTEMPTS; attempt++) {
+    try {
+      const remote = await generateCryptogram(
+        {
+          theme,
+          itemCount: need,
+          length,
+          seed: seed + attempt * 97,
+          avoid: [...studioAvoidList(varietyKey), ...rejected],
+        },
+        signal,
+      )
+      const items = selectAiSayings(remote.items, { count: need, length })
+      if (items.length >= need) {
+        rememberStudioContent(varietyKey, items)
+        return { items }
+      }
+      rejected.push(...items)
+    } catch (error) {
+      if (signal.aborted) throw error
+      lastError = error
+      console.warn(`[cryptogram] AI attempt ${attempt + 1} failed`, error)
+    }
   }
 
-  try {
-    const remote = await generateCryptogram(req, signal)
-    rememberStudioContent(varietyKey, remote.items)
-    return remote
-  } catch (error) {
-    if (signal.aborted) throw error
-    console.warn('[cryptogram] API failed; using bundled sayings', error)
-    return undefined
+  if (lastError instanceof Error && lastError.message.trim()) {
+    throw new Error(lastError.message.trim())
   }
+  throw new Error(CRYPTOGRAM_AI_EMPTY_MESSAGE)
 }

@@ -1,100 +1,80 @@
 import type {
   StudioTemplateDefinition,
   StudioConfig,
-  StudioConfigValidationError,
   StudioGenerateContext,
   StudioPageOutput,
   StudioFabricObject,
 } from '@/types/studio-template.types'
 import { createRng, deriveSeed } from '../studio-rng'
-import { contentBox, insetHorizontal, drawHeader } from '../studio-layout'
-import type { StudioTag } from '../studio-fabric-builders'
+import { boxCenterX, contentBox, insetHorizontal, drawHeader } from '../studio-layout'
+import { buildText, type StudioTag } from '../studio-fabric-builders'
 import {
+  STUDIO_BODY_SIZE,
   STUDIO_CONTENT_SAFE_INSET_X,
   STUDIO_DIGIT_FONT,
 } from '@/constants/studio.constants'
 import { kickOffFontFamilyLoading } from '@/utils/font-loader'
 import type { CryptogramResponse } from '@/types/studio-cryptogram.types'
-import { buildCipher } from './cipher'
+import { SLOT_WIDTH_EM, buildCipher } from './cipher'
+import { CRYPTOGRAM_CONFIG_SCHEMA } from './config'
 import {
-  CUSTOM_THEME_MAX_LENGTH,
+  CRYPTOGRAM_AI_EMPTY_MESSAGE,
+  CRYPTOGRAM_DEFAULT_TITLE,
+  CRYPTOGRAM_INSTRUCTION,
+  MAX_SLOT_FONT,
   defaultTitleFor,
-  isCustomAiTheme,
-  MAX_PUZZLES,
-  MIN_PUZZLES,
-  minCustomQuotes,
-  parseSource,
+  minSlotFont,
+  parseLength,
+  parsePrintStyle,
   puzzleCountFor,
-  resolveAiQuotes,
-  resolveCustomThemeText,
-  resolveQuotes,
-  sanitizeQuotes,
-  themeSelectOptions,
+  selectAiSayings,
+  validateCryptogramConfig,
 } from './content'
 import { drawCryptograms, type CryptogramPuzzle } from './draw'
+import { runCryptogramKdpPreflight } from './kdp-preflight'
+import {
+  CRYPTOGRAM_BAND_GUTTER,
+  CRYPTOGRAM_INDEX_W,
+  countFittingSayings,
+} from './layout'
 import { cryptogramPrefetch } from './prefetch'
 
-const INSTRUCTION =
-  'Every letter below stands for one letter of the alphabet, the same letter ' +
-  'for the same letter each time. Write the letters on the lines to uncover the saying. ' +
-  'No letter stands for itself'
-
-export function validateCryptogramConfig(
-  config: StudioConfig,
-): StudioConfigValidationError | null {
-  if (parseSource(config.source) === 'custom') {
-    const lines = Array.isArray(config.quotes)
-      ? config.quotes.map((line) => String(line).trim()).filter(Boolean)
-      : String(config.quotes ?? '')
-          .split(/\n/)
-          .map((line) => line.trim())
-          .filter(Boolean)
-    if (lines.length > MAX_PUZZLES) {
-      return {
-        field: 'quotes',
-        message: `Use at most ${MAX_PUZZLES} sayings (one per line).`,
-      }
-    }
-    if (sanitizeQuotes(config.quotes).length >= minCustomQuotes()) return null
-    return {
-      field: 'quotes',
-      message: 'Enter at least one saying of 12–78 letters (A–Z only).',
-    }
-  }
-
-  if (!isCustomAiTheme(config)) return null
-  if (!resolveCustomThemeText(config)) {
-    return {
-      field: 'customThemeText',
-      message: 'Enter a custom theme, or turn off Custom theme.',
-    }
-  }
-  if (String(config.customThemeText ?? '').trim().length > CUSTOM_THEME_MAX_LENGTH) {
-    return {
-      field: 'customThemeText',
-      message: `Keep the custom theme under ${CUSTOM_THEME_MAX_LENGTH} characters.`,
-    }
-  }
-  return null
-}
+export { validateCryptogramConfig }
 
 function withDefaultTitle(config: StudioConfig): StudioConfig {
   const title = defaultTitleFor(config)
   return title ? { ...config, title } : config
 }
 
-function quotesFor(
-  config: StudioConfig,
+function errorPage(
   ctx: StudioGenerateContext,
-  count: number,
-): string[] {
-  const rng = createRng(ctx.seed)
-  if (parseSource(config.source) === 'custom') {
-    return resolveQuotes(config, count, rng)
+  config: StudioConfig,
+  tag: StudioTag,
+  message: string,
+): StudioPageOutput {
+  const content = insetHorizontal(contentBox(ctx), STUDIO_CONTENT_SAFE_INSET_X)
+  const header = drawHeader(content, config, tag, CRYPTOGRAM_INSTRUCTION)
+  const fontSize = STUDIO_BODY_SIZE - 4
+  return {
+    pageRole: 'single',
+    objects: [
+      ...header.objects,
+      buildText(
+        {
+          left: boxCenterX(header.body),
+          top: header.body.top + header.body.height * 0.35,
+          text: message,
+          fontFamily: String(config.fontFamily),
+          fontSize,
+          width: header.body.width * 0.85,
+          textAlign: 'center',
+          originX: 'center',
+        },
+        tag,
+        'prompt',
+      ),
+    ],
   }
-
-  const remote = ctx.remoteData as CryptogramResponse | undefined
-  return resolveAiQuotes({ remote: remote?.items, config, count, rng })
 }
 
 function layoutPage(options: {
@@ -104,41 +84,67 @@ function layoutPage(options: {
   puzzles: CryptogramPuzzle[]
   font: string
   instruction: string
-}): StudioFabricObject[] {
-  const { config, ctx, tag, puzzles, font, instruction } = options
+  minFont: number
+  maxFont: number
+}): { objects: StudioFabricObject[]; fontSizes: number[] } {
+  const { config, ctx, tag, puzzles, font, instruction, minFont, maxFont } = options
   const content = insetHorizontal(contentBox(ctx), STUDIO_CONTENT_SAFE_INSET_X)
   const header = drawHeader(content, config, tag, instruction)
   const objects = [...header.objects]
-  drawCryptograms(objects, {
+  const fontSizes = drawCryptograms(objects, {
     field: header.body,
     puzzles,
     font,
     codeFont: STUDIO_DIGIT_FONT,
     tag,
+    minFont,
+    maxFont,
   })
-  return objects
+  return { objects, fontSizes }
+}
+
+function puzzlesFromRemote(
+  config: StudioConfig,
+  ctx: StudioGenerateContext,
+): CryptogramPuzzle[] {
+  const length = parseLength(config.length)
+  const need = puzzleCountFor(config)
+  const remote = ctx.remoteData as CryptogramResponse | undefined
+  const quotes = selectAiSayings(remote?.items, { count: need, length }).slice(0, need)
+  return quotes.map((plain, i) => {
+    const rng = createRng(deriveSeed(ctx.seed, `cipher:${i}`))
+    return { plain, cipher: buildCipher(rng) }
+  })
+}
+
+function fitPuzzles(
+  puzzles: CryptogramPuzzle[],
+  ctx: StudioGenerateContext,
+  config: StudioConfig,
+  tag: StudioTag,
+  minFont: number,
+): CryptogramPuzzle[] {
+  const content = insetHorizontal(contentBox(ctx), STUDIO_CONTENT_SAFE_INSET_X)
+  const header = drawHeader(content, config, tag, CRYPTOGRAM_INSTRUCTION)
+  const n = countFittingSayings({
+    sayings: puzzles.map((p) => p.plain),
+    bandWidth: header.body.width - CRYPTOGRAM_INDEX_W,
+    fieldHeight: header.body.height,
+    slotEm: SLOT_WIDTH_EM,
+    minFont,
+    maxFont: MAX_SLOT_FONT,
+    bandGutter: CRYPTOGRAM_BAND_GUTTER,
+  })
+  return puzzles.slice(0, n)
 }
 
 function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageOutput[] {
-  const puzzleCount = puzzleCountFor(config)
   const font = String(config.fontFamily)
-  // Codes and written letters must share one even advance width.
   void kickOffFontFamilyLoading(STUDIO_DIGIT_FONT)
 
-  const quotes = quotesFor(config, ctx, puzzleCount)
-  if (quotes.length === 0) {
-    throw new Error('cryptogram: no usable sayings for this configuration')
-  }
-
-  const puzzles: CryptogramPuzzle[] = quotes.map((plain, i) => {
-    // Per-puzzle sub-seed: each saying gets its own alphabet, as in a real book.
-    const rng = createRng(deriveSeed(ctx.seed, `cipher:${i}`))
-    return {
-      plain,
-      cipher: buildCipher(rng),
-    }
-  })
-
+  const length = parseLength(config.length)
+  const printStyle = parsePrintStyle(config.printStyle)
+  const minFont = minSlotFont(printStyle)
   const pageConfig = withDefaultTitle(config)
   const tag: StudioTag = {
     templateKey: 'cryptogram',
@@ -146,12 +152,47 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
     pageRole: 'single',
   }
 
-  const layout = { config: pageConfig, ctx, tag, puzzles, font }
-  const objects = layoutPage({ ...layout, instruction: INSTRUCTION })
-  // No how-to on the key — taller body, puzzle groups re-centered.
-  const answerSourceObjects = layoutPage({ ...layout, instruction: '' })
+  const built = puzzlesFromRemote(config, ctx)
+  if (built.length === 0) {
+    return [errorPage(ctx, pageConfig, tag, CRYPTOGRAM_AI_EMPTY_MESSAGE)]
+  }
 
-  return [{ pageRole: 'single', objects, answerSourceObjects }]
+  const puzzles = fitPuzzles(built, ctx, pageConfig, tag, minFont)
+  if (puzzles.length === 0) {
+    return [errorPage(ctx, pageConfig, tag, CRYPTOGRAM_AI_EMPTY_MESSAGE)]
+  }
+
+  const showInstructions = config.showInstructions !== false
+  const instruction = showInstructions ? CRYPTOGRAM_INSTRUCTION : ''
+  const layout = {
+    config: pageConfig,
+    ctx,
+    tag,
+    puzzles,
+    font,
+    minFont,
+    maxFont: MAX_SLOT_FONT,
+  }
+  const puzzlePage = layoutPage({ ...layout, instruction })
+  const answerPage = layoutPage({ ...layout, instruction: '' })
+
+  const preflight = runCryptogramKdpPreflight({
+    puzzles,
+    length,
+    minFont,
+    fontSizes: puzzlePage.fontSizes,
+  })
+  if (!preflight.ok) {
+    return [errorPage(ctx, pageConfig, tag, preflight.errors[0] ?? CRYPTOGRAM_AI_EMPTY_MESSAGE)]
+  }
+
+  return [
+    {
+      pageRole: 'single',
+      objects: puzzlePage.objects,
+      answerSourceObjects: answerPage.objects,
+    },
+  ]
 }
 
 export const cryptogramTemplate: StudioTemplateDefinition = {
@@ -159,14 +200,12 @@ export const cryptogramTemplate: StudioTemplateDefinition = {
   label: 'Cryptogram',
   category: 'word',
   description:
-    'Crack a coded saying in which every letter stands for a different one, and no letter ever stands for itself. Pick a theme for AI-written sayings or bring your own. Includes an answer key.',
+    'Large-print retirement cryptogram. AI writes original coded sayings for any retirement theme. Includes an answer key.',
   pageCount: 1,
   producesAnswerKey: true,
+  defaultPageTitle: CRYPTOGRAM_DEFAULT_TITLE,
   validateConfig: validateCryptogramConfig,
-  prefetch: async (config, signal) => {
-    if (parseSource(config.source) !== 'theme') return undefined
-    return cryptogramPrefetch(config, signal)
-  },
+  prefetch: cryptogramPrefetch,
   thumbnail: `<svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg">
     <g stroke="currentColor" stroke-width="1">
       <path d="M6 16h7M16 16h7M26 16h7M40 16h7M50 16h7"/>
@@ -177,75 +216,6 @@ export const cryptogramTemplate: StudioTemplateDefinition = {
       <text x="43.5" y="24">X</text><text x="53.5" y="24">K</text>
     </g>
   </svg>`,
-  configSchema: [
-    {
-      key: 'source',
-      label: 'Content',
-      type: 'select',
-      default: 'theme',
-      options: [
-        { label: 'A theme', value: 'theme' },
-        { label: 'My own sayings', value: 'custom' },
-      ],
-    },
-    {
-      key: 'customTheme',
-      label: 'Custom theme',
-      type: 'toggle',
-      default: false,
-      visibleWhen: (c) => c.source === 'theme',
-      help: 'Turn on to type a theme; AI invents fresh sayings for it.',
-    },
-    {
-      key: 'theme',
-      label: 'Theme',
-      type: 'select',
-      default: 'proverbs',
-      options: themeSelectOptions(),
-      visibleWhen: (c) => c.source === 'theme' && c.customTheme !== true,
-      help: 'AI generates sayings for this theme so each sheet stays fresh.',
-    },
-    {
-      key: 'customThemeText',
-      label: 'Your theme',
-      type: 'text',
-      default: 'everyday wisdom',
-      max: CUSTOM_THEME_MAX_LENGTH,
-      visibleWhen: (c) => c.source === 'theme' && c.customTheme === true,
-      help: 'Short phrase for AI sayings (e.g. patience, country garden). Max 120 characters.',
-    },
-    {
-      key: 'quotes',
-      label: 'Your sayings (one per line)',
-      type: 'wordList',
-      default: [],
-      visibleWhen: (c) => c.source === 'custom',
-      placeholder:
-        'PRACTICE MAKES PERFECT\nKNOWLEDGE IS POWER\nA KIND WORD GOES A LONG WAY',
-      help: 'One puzzle per line, in the order you type them. Letters and spaces only, 12 to 78 letters per line, up to 4 sayings.',
-    },
-    {
-      key: 'length',
-      label: 'Saying length',
-      type: 'select',
-      default: 'medium',
-      options: [
-        { label: 'Short (quick win)', value: 'short' },
-        { label: 'Medium', value: 'medium' },
-        { label: 'Long (more letters to crack)', value: 'long' },
-      ],
-      visibleWhen: (c) => c.source !== 'custom',
-    },
-    {
-      key: 'puzzleCount',
-      label: 'Puzzles per page',
-      type: 'number',
-      default: 2,
-      min: MIN_PUZZLES,
-      max: MAX_PUZZLES,
-      step: 1,
-      visibleWhen: (c) => c.source !== 'custom',
-    },
-  ],
+  configSchema: CRYPTOGRAM_CONFIG_SCHEMA,
   generate,
 }

@@ -9,9 +9,11 @@ export interface CryptogramLayout {
   height: number
 }
 
+export const CRYPTOGRAM_INDEX_W = 24
+export const CRYPTOGRAM_BAND_GUTTER = 18
+
 const LINE_RATIO = 2.5
 const WORD_GAP_RATIO = 0.55
-const MIN_FONT = 9
 
 export function wrapWords(options: {
   words: readonly string[]
@@ -51,48 +53,66 @@ export function lineWidth(options: {
 }
 
 /**
- * Largest font whose wrapped slot rows still fit the band. Shrinking the type is
- * the only lever — a cryptogram cannot drop letters to make room.
+ * Largest font whose wrapped slot rows still fit the band.
+ * Returns null when even minFont would split a word or overflow.
  */
 export function layoutCryptogram(options: {
   words: readonly string[]
   bandWidth: number
   bandHeight: number
   slotEm: number
+  minFont: number
   maxFont: number
-}): CryptogramLayout {
-  const { words, bandWidth, bandHeight, slotEm, maxFont } = options
-  let fallback: CryptogramLayout | null = null
+}): CryptogramLayout | null {
+  const { words, bandWidth, bandHeight, slotEm, minFont, maxFont } = options
+  if (words.length === 0 || bandWidth <= 0 || bandHeight <= 0) return null
 
-  for (let fontSize = Math.floor(maxFont); fontSize >= MIN_FONT; fontSize--) {
+  const floor = Math.max(1, Math.floor(minFont))
+  const ceiling = Math.max(floor, Math.floor(maxFont))
+
+  for (let fontSize = ceiling; fontSize >= floor; fontSize--) {
     const slotW = fontSize * slotEm
     const wordGap = slotW * WORD_GAP_RATIO
     const lineH = fontSize * LINE_RATIO
     const lines = wrapWords({ words, slotW, wordGap, bandWidth })
-    const layout: CryptogramLayout = {
-      fontSize,
-      slotW,
-      wordGap,
-      lineH,
-      lines,
-      height: lines.length * lineH,
-    }
-    fallback ??= layout
-    if (layout.height <= bandHeight) return layout
+    const overflow = lines.some(
+      (line) => lineWidth({ words: line, slotW, wordGap }) > bandWidth + 0.5,
+    )
+    if (overflow) continue
+    const height = lines.length * lineH
+    if (height > bandHeight) continue
+    return { fontSize, slotW, wordGap, lineH, lines, height }
   }
 
-  // Only reachable when the band is shorter than one row at the minimum size.
-  return fallback ?? emptyLayout(MIN_FONT, slotEm)
+  return null
 }
 
-function emptyLayout(fontSize: number, slotEm: number): CryptogramLayout {
-  const slotW = fontSize * slotEm
-  return {
-    fontSize,
-    slotW,
-    wordGap: slotW * WORD_GAP_RATIO,
-    lineH: fontSize * LINE_RATIO,
-    lines: [],
-    height: 0,
+/** Largest prefix of `sayings` that still fits the field at minFont. */
+export function countFittingSayings(options: {
+  sayings: readonly string[]
+  bandWidth: number
+  fieldHeight: number
+  slotEm: number
+  minFont: number
+  maxFont: number
+  bandGutter: number
+}): number {
+  const { sayings, bandWidth, fieldHeight, slotEm, minFont, maxFont, bandGutter } = options
+  for (let n = sayings.length; n >= 1; n--) {
+    const gutters = bandGutter * (n - 1)
+    const bandHeight = Math.max(0, (fieldHeight - gutters) / n)
+    const allFit = sayings.slice(0, n).every((saying) => {
+      const layout = layoutCryptogram({
+        words: saying.split(' ').filter(Boolean),
+        bandWidth,
+        bandHeight,
+        slotEm,
+        minFont,
+        maxFont,
+      })
+      return layout != null
+    })
+    if (allFit) return n
   }
+  return 0
 }

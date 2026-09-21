@@ -12,7 +12,7 @@ SayingLength = Literal["short", "medium", "long"]
 class CryptogramRequest(StudioVarietyRequest):
     model_config = ConfigDict(populate_by_name=True)
 
-    theme: str = Field(default="everyday wisdom", min_length=1, max_length=120)
+    theme: str = Field(default="retirement lifestyle hobbies", min_length=1, max_length=120)
     item_count: int = Field(default=2, ge=1, le=6, alias="itemCount")
     length: SayingLength = "medium"
     seed: int = Field(default=1, ge=0)

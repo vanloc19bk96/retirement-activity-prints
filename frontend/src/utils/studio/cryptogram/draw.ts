@@ -13,7 +13,13 @@ import {
   type Box,
 } from '../studio-layout'
 import { encodeLetter, SLOT_WIDTH_EM } from './cipher'
-import { layoutCryptogram, lineWidth, type CryptogramLayout } from './layout'
+import {
+  CRYPTOGRAM_BAND_GUTTER,
+  CRYPTOGRAM_INDEX_W,
+  layoutCryptogram,
+  lineWidth,
+  type CryptogramLayout,
+} from './layout'
 
 export interface CryptogramPuzzle {
   /** Uppercase A–Z with single spaces. */
@@ -27,13 +33,11 @@ export interface CryptogramDrawOptions {
   font: string
   codeFont: string
   tag: StudioTag
+  minFont: number
+  maxFont: number
 }
 
-const INDEX_W = 24
-const BAND_GUTTER = 18
-const MAX_FONT = 20
 const RULE_RATIO = 0.8
-const MIN_FONT = 8
 
 interface SlotOptions {
   centerX: number
@@ -43,10 +47,11 @@ interface SlotOptions {
   puzzle: CryptogramPuzzle
   codeFont: string
   tag: StudioTag
+  minFont: number
 }
 
 function drawSlot(objects: StudioFabricObject[], options: SlotOptions): void {
-  const { centerX, lineTop, layout, letter, puzzle, codeFont, tag } = options
+  const { centerX, lineTop, layout, letter, puzzle, codeFont, tag, minFont } = options
   const { fontSize, slotW, lineH } = layout
   const ruleW = slotW * RULE_RATIO
 
@@ -67,7 +72,7 @@ function drawSlot(objects: StudioFabricObject[], options: SlotOptions): void {
   )
 
   const code = encodeLetter(letter, puzzle.cipher)
-  const codeSize = fitFontSizeToWidth(code, slotW, fontSize, MIN_FONT)
+  const codeSize = fitFontSizeToWidth(code, slotW, fontSize, minFont)
   objects.push(
     buildText(
       {
@@ -115,9 +120,10 @@ function drawPuzzleLines(
     puzzle: CryptogramPuzzle
     codeFont: string
     tag: StudioTag
+    minFont: number
   },
 ): void {
-  const { content, blockTop, layout, puzzle, codeFont, tag } = options
+  const { content, blockTop, layout, puzzle, codeFont, tag, minFont } = options
   layout.lines.forEach((words, row) => {
     const width = lineWidth({ words, slotW: layout.slotW, wordGap: layout.wordGap })
     const lineTop = blockTop + row * layout.lineH
@@ -132,6 +138,7 @@ function drawPuzzleLines(
           puzzle,
           codeFont,
           tag,
+          minFont,
         })
         cursor += layout.slotW
       }
@@ -148,12 +155,15 @@ function buildPuzzleGroup(options: {
   font: string
   codeFont: string
   tag: StudioTag
+  minFont: number
+  maxFont: number
 }): StudioFabricObject | null {
-  const { puzzle, index, field, bandHeight, font, codeFont, tag } = options
+  const { puzzle, index, field, bandHeight, font, codeFont, tag, minFont, maxFont } =
+    options
   const content: Box = {
-    left: field.left + INDEX_W,
+    left: field.left + CRYPTOGRAM_INDEX_W,
     top: field.top,
-    width: field.width - INDEX_W,
+    width: field.width - CRYPTOGRAM_INDEX_W,
     height: bandHeight,
   }
   const layout = layoutCryptogram({
@@ -161,20 +171,22 @@ function buildPuzzleGroup(options: {
     bandWidth: content.width,
     bandHeight: content.height,
     slotEm: SLOT_WIDTH_EM,
-    maxFont: MAX_FONT,
+    minFont,
+    maxFont,
   })
+  if (!layout) return null
 
   const parts: StudioFabricObject[] = []
   const blockTop = field.top
   const label = `${index + 1})`
-  const labelSize = Math.max(MIN_FONT, Math.min(layout.fontSize, INDEX_W * 0.55))
+  const labelSize = Math.max(minFont, Math.min(layout.fontSize, CRYPTOGRAM_INDEX_W * 0.55))
   parts.push(
     buildText(
       {
         left: field.left,
         top: blockTop + layout.lineH * 0.4,
         text: label,
-        width: estimateTextBoxWidth(label, labelSize, INDEX_W),
+        width: estimateTextBoxWidth(label, labelSize, CRYPTOGRAM_INDEX_W),
         fontFamily: font,
         fontSize: labelSize,
         fill: STUDIO_INK_MUTED,
@@ -184,7 +196,7 @@ function buildPuzzleGroup(options: {
       'decoration',
     ),
   )
-  drawPuzzleLines(parts, { content, blockTop, layout, puzzle, codeFont, tag })
+  drawPuzzleLines(parts, { content, blockTop, layout, puzzle, codeFont, tag, minFont })
 
   const bounds = unionObjectBounds(parts)
   if (!bounds) return null
@@ -194,12 +206,12 @@ function buildPuzzleGroup(options: {
 export function drawCryptograms(
   objects: StudioFabricObject[],
   options: CryptogramDrawOptions,
-): void {
-  const { field, puzzles, font, codeFont, tag } = options
-  if (puzzles.length === 0) return
+): number[] {
+  const { field, puzzles, font, codeFont, tag, minFont, maxFont } = options
+  if (puzzles.length === 0) return []
 
-  const gutters = BAND_GUTTER * Math.max(0, puzzles.length - 1)
-  const bandHeight = Math.max(MIN_FONT * 4, (field.height - gutters) / puzzles.length)
+  const gutters = CRYPTOGRAM_BAND_GUTTER * Math.max(0, puzzles.length - 1)
+  const bandHeight = Math.max(minFont * 4, (field.height - gutters) / puzzles.length)
 
   const groups = puzzles
     .map((puzzle, i) =>
@@ -211,16 +223,19 @@ export function drawCryptograms(
         font,
         codeFont,
         tag,
+        minFont,
+        maxFont,
       }),
     )
     .filter((g): g is StudioFabricObject => g != null)
 
-  if (groups.length === 0) return
+  if (groups.length === 0) return []
 
   const stackH =
     groups.reduce((sum, g) => sum + (g.height ?? 0), 0) +
-    BAND_GUTTER * Math.max(0, groups.length - 1)
+    CRYPTOGRAM_BAND_GUTTER * Math.max(0, groups.length - 1)
   let cursorTop = field.top + Math.max(0, (field.height - stackH) / 2)
+  const fontSizes: number[] = []
 
   for (const group of groups) {
     const width = group.width ?? 0
@@ -232,6 +247,10 @@ export function drawCryptograms(
       left: targetLeft,
       top: targetTop,
     })
-    cursorTop = targetTop + height + BAND_GUTTER
+    cursorTop = targetTop + height + CRYPTOGRAM_BAND_GUTTER
+    const answer = (group.objects ?? []).find((o) => o.studioRole === 'answer')
+    if (typeof answer?.fontSize === 'number') fontSizes.push(answer.fontSize)
   }
+
+  return fontSizes
 }
