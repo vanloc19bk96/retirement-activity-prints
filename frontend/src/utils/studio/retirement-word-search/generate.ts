@@ -20,10 +20,9 @@ import {
   AI_THEME_MAX_LENGTH,
   CUSTOM_MIN_WORD_LETTERS,
   MAX_GRID,
-  MAX_WORDS,
   MIN_GRID,
   MIN_WORD_LETTERS,
-  MIN_WORDS,
+  balancedWordCounts,
   buildInstruction,
   categorySelectOptions,
   parseGridSize,
@@ -347,13 +346,10 @@ export const wordSearchTemplate: StudioTemplateDefinition = {
       default: 'auto',
       options: [
         { label: 'Auto (from difficulty)', value: 'auto' },
-        ...Array.from({ length: MAX_WORDS - MIN_WORDS + 1 }, (_, i) => {
-          const n = MIN_WORDS + i
-          return { label: String(n), value: n }
-        }),
+        ...balancedWordCounts().map((n) => ({ label: String(n), value: n })),
       ],
       visibleWhen: (c) => parseSource(c.source) !== 'custom',
-      help: 'Relaxed 8 · Classic 12 · Challenge 14 (capped by grid packing).',
+      help: 'Only even word-bank fills (Relaxed 8 · Classic 12 · Challenge 16). Capped by grid packing.',
     },
   ],
 }

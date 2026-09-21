@@ -18,7 +18,8 @@ export type RetirementPrintStyle = 'large-print' | 'standard'
 
 export const MIN_GRID = 8
 export const MAX_GRID = 15
-export const MIN_WORDS = 5
+/** Smallest count that fills the word-bank columns evenly (2×3). */
+export const MIN_WORDS = 6
 /** Retirement sheets prefer readability over density (challenge tops ~16). */
 export const MAX_WORDS = 16
 export const MIN_WORD_LETTERS = 4
@@ -26,6 +27,55 @@ export const CUSTOM_MIN_WORD_LETTERS = 3
 export const AI_THEME_MAX_LENGTH = 120
 /** Never fall back to Memory's “everyday objects”. */
 export const RETIREMENT_DEFAULT_AI_THEME = 'retirement lifestyle hobbies'
+
+/**
+ * Word-bank column count — must stay in sync with draw so select options
+ * only offer counts that fill every column (no 3+2 leftover rows).
+ */
+export function wordBankColumnCount(wordCount: number): number {
+  if (wordCount <= 8) return 2
+  if (wordCount <= 14) return 3
+  return 4
+}
+
+export function isBalancedWordBankCount(wordCount: number): boolean {
+  if (!Number.isFinite(wordCount) || wordCount < MIN_WORDS || wordCount > MAX_WORDS) {
+    return false
+  }
+  const n = Math.round(wordCount)
+  return n % wordBankColumnCount(n) === 0
+}
+
+/** Selectable word counts that fill the word-bank grid evenly. */
+export function balancedWordCounts(maxAllowed = MAX_WORDS): number[] {
+  const cap = Math.min(MAX_WORDS, Math.max(0, Math.floor(maxAllowed)))
+  const out: number[] = []
+  for (let n = MIN_WORDS; n <= cap; n++) {
+    if (isBalancedWordBankCount(n)) out.push(n)
+  }
+  return out
+}
+
+/** Snap to the nearest balanced count that still fits the packing budget. */
+export function snapToBalancedWordCount(requested: number, maxAllowed: number): number {
+  const candidates = balancedWordCounts(maxAllowed)
+  if (candidates.length === 0) {
+    return Math.max(1, Math.min(MAX_WORDS, Math.floor(maxAllowed)))
+  }
+  const target = Math.round(requested)
+  let best = candidates[0]!
+  let bestDist = Math.abs(best - target)
+  for (let i = 1; i < candidates.length; i++) {
+    const n = candidates[i]!
+    const dist = Math.abs(n - target)
+    // Prefer denser on a tie so challenge stays packed when budget allows.
+    if (dist < bestDist || (dist === bestDist && n > best)) {
+      best = n
+      bestDist = dist
+    }
+  }
+  return best
+}
 
 export function parseSource(raw: unknown): RetirementWordSearchSource {
   if (raw === 'custom') return 'custom'
@@ -68,7 +118,8 @@ export function retirementGridSize(
 }
 
 export function retirementWordCount(difficulty: RetirementDifficulty): number {
-  return { relaxed: 8, classic: 12, challenge: 14 }[difficulty]
+  // All defaults must be balanced word-bank fills (2/3/4 columns).
+  return { relaxed: 8, classic: 12, challenge: 16 }[difficulty]
 }
 
 export function retirementMaxLetters(
@@ -99,11 +150,11 @@ export function parseWordCount(
   gridSize: number,
 ): number {
   const budget = packingBudget(gridSize)
-  const auto = Math.min(budget, retirementWordCount(difficulty))
+  const auto = snapToBalancedWordCount(retirementWordCount(difficulty), budget)
   if (raw === 'auto' || raw === '' || raw == null) return auto
   const n = Number(raw)
   if (!Number.isFinite(n)) return auto
-  return Math.min(MAX_WORDS, Math.max(MIN_WORDS, Math.min(budget, Math.round(n))))
+  return snapToBalancedWordCount(n, budget)
 }
 
 export function resolvePresetThemeId(config: StudioConfig): string {

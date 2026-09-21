@@ -23,6 +23,7 @@ import {
   STUDIO_BODY_SIZE,
 } from '@/constants/studio.constants'
 import type { Placement, WordSearchPuzzle } from '@/utils/puzzles/word-search-core'
+import { wordBankColumnCount } from './config'
 
 /** Room for capsule stroke past cell edges (esp. diagonals). */
 const ANSWER_STROKE_PAD = 10
@@ -163,12 +164,6 @@ function drawLetterGrid(
   return buildGroup(parts, groupBounds, tag)
 }
 
-function colCountForWords(wordCount: number): number {
-  if (wordCount <= 8) return 2
-  if (wordCount <= 14) return 3
-  return 4
-}
-
 function drawWordList(
   words: string[],
   area: Box,
@@ -215,7 +210,7 @@ function drawWordList(
   const displayWords = words
   if (displayWords.length === 0 || listBox.height < 12) return objects
 
-  const colCount = Math.min(colCountForWords(displayWords.length), displayWords.length)
+  const colCount = Math.min(wordBankColumnCount(displayWords.length), displayWords.length)
   const rowsPerCol = Math.ceil(displayWords.length / colCount)
   // Equal columns across the safe band — no shrink-wrap past the edges.
   const colBoxes = columns(listBox, colCount, LIST_GUTTER)

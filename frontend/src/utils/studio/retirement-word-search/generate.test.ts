@@ -24,6 +24,7 @@ import { contentBox, insetHorizontal, drawHeader } from '../studio-layout'
 import { runGeneratorContractTests } from '../studio-generator-test'
 import { buildAnswerPage, harvestAnswers } from '../studio-answer-key'
 import type { StudioFabricObject, StudioGenerateContext } from '@/types/studio-template.types'
+import { parseWordCount, wordBankColumnCount } from './config'
 
 const AI_WORDS = [
   'TIGER',
@@ -491,15 +492,32 @@ describe('retirement-word-search', () => {
 
   it('prints AI words with display casing', () => {
     resetObjectCounter()
-    const items = ['TROWEL', 'RAKE', 'HOSE', 'SPADE', 'SEEDS']
+    const items = ['TROWEL', 'RAKE', 'HOSE', 'SPADE', 'SEEDS', 'MULCH']
     const [page] = wordSearchTemplate.generate(
-      { ...base, source: 'ai', wordCount: 5 },
+      { ...base, source: 'ai', wordCount: 6 },
       CTX({ items }),
     )
     const printed = flatten(page!.objects)
       .filter((o) => o.type === 'textbox')
       .map((o) => String(o.text ?? ''))
     expect(items.every((word) => printed.includes(word))).toBe(true)
+  })
+
+  it('only offers balanced word-bank counts in the select', () => {
+    const field = wordSearchTemplate.configSchema.find((f) => f.key === 'wordCount')
+    const numeric = (field?.options ?? [])
+      .map((o) => o.value)
+      .filter((v): v is number => typeof v === 'number')
+    expect(numeric).toEqual([6, 8, 9, 12, 16])
+    for (const n of numeric) {
+      expect(n % wordBankColumnCount(n)).toBe(0)
+    }
+  })
+
+  it('snaps legacy unbalanced wordCount to a balanced fill', () => {
+    expect(parseWordCount(5, 'classic', 12)).toBe(6)
+    expect(parseWordCount(14, 'challenge', 15)).toBe(16)
+    expect(parseWordCount(10, 'classic', 12)).toBe(9)
   })
 
   it('omits the word bank from the solution page', () => {
