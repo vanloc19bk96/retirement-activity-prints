@@ -1,0 +1,412 @@
+{
+  "topologies": [
+    {
+      "id": "small-01",
+      "size": 8,
+      "difficulty": "small",
+      "rows": [
+        "BBBBBBBB",
+        "BWWBWWBB",
+        "BWWWWWWB",
+        "BBWWBWWB",
+        "BWWBWWBB",
+        "BWWWWWWB",
+        "BBWWBWWB",
+        "BBBBBBBB"
+      ]
+    },
+    {
+      "id": "small-02",
+      "size": 8,
+      "difficulty": "small",
+      "rows": [
+        "BBBBBBBB",
+        "BBWWBWWB",
+        "BWWWWWWB",
+        "BWWBWWBB",
+        "BBWWBWWB",
+        "BWWWWWWB",
+        "BWWBWWBB",
+        "BBBBBBBB"
+      ]
+    },
+    {
+      "id": "small-03",
+      "size": 8,
+      "difficulty": "small",
+      "rows": [
+        "BBBBBBBB",
+        "BBWWBWWB",
+        "BWWWWWWB",
+        "BWWBWWBB",
+        "BBWWBWWB",
+        "BWWWWWWB",
+        "BWWBWWBB",
+        "BBBBBBBB"
+      ]
+    },
+    {
+      "id": "small-04",
+      "size": 8,
+      "difficulty": "small",
+      "rows": [
+        "BBBBBBBB",
+        "BBWWBWWB",
+        "BWWWWWWB",
+        "BWWBWWBB",
+        "BBWWBWWB",
+        "BWWWWWWB",
+        "BWWBWWBB",
+        "BBBBBBBB"
+      ]
+    },
+    {
+      "id": "small-05",
+      "size": 8,
+      "difficulty": "small",
+      "rows": [
+        "BBBBBBBB",
+        "BBWWWWBB",
+        "BWWWWWWB",
+        "BWWBBWWB",
+        "BWWBBWWB",
+        "BWWWWWWB",
+        "BBWWWWBB",
+        "BBBBBBBB"
+      ]
+    },
+    {
+      "id": "small-06",
+      "size": 8,
+      "difficulty": "small",
+      "rows": [
+        "BBBBBBBB",
+        "BBWWWWBB",
+        "BWWWWWWB",
+        "BWWBBWWB",
+        "BWWBBWWB",
+        "BWWWWWWB",
+        "BBWWWWBB",
+        "BBBBBBBB"
+      ]
+    },
+    {
+      "id": "small-07",
+      "size": 8,
+      "difficulty": "small",
+      "rows": [
+        "BBBBBBBB",
+        "BBWWWWBB",
+        "BWWWWWWB",
+        "BWWBBWWB",
+        "BWWBBWWB",
+        "BWWWWWWB",
+        "BBWWWWBB",
+        "BBBBBBBB"
+      ]
+    },
+    {
+      "id": "small-08",
+      "size": 8,
+      "difficulty": "small",
+      "rows": [
+        "BBBBBBBB",
+        "BBWWWWBB",
+        "BWWWWWWB",
+        "BWWBBWWB",
+        "BWWBBWWB",
+        "BWWWWWWB",
+        "BBWWWWBB",
+        "BBBBBBBB"
+      ]
+    },
+    {
+      "id": "medium-01",
+      "size": 10,
+      "difficulty": "medium",
+      "rows": [
+        "BBBBBBBBBB",
+        "BBWWWWWWBB",
+        "BWWWWWWWWB",
+        "BWWBBBBWWB",
+        "BWWBWWBWWB",
+        "BWWBWWBWWB",
+        "BWWBBBBWWB",
+        "BWWWWWWWWB",
+        "BBWWWWWWBB",
+        "BBBBBBBBBB"
+      ]
+    },
+    {
+      "id": "medium-02",
+      "size": 10,
+      "difficulty": "medium",
+      "rows": [
+        "BBBBBBBBBB",
+        "BBWWWWWWBB",
+        "BWWWWWWWWB",
+        "BWWBBBBWWB",
+        "BWWBWWBWWB",
+        "BWWBWWBWWB",
+        "BWWBBBBWWB",
+        "BWWWWWWWWB",
+        "BBWWWWWWBB",
+        "BBBBBBBBBB"
+      ]
+    },
+    {
+      "id": "medium-03",
+      "size": 10,
+      "difficulty": "medium",
+      "rows": [
+        "BBBBBBBBBB",
+        "BBWWWWWWBB",
+        "BWWWWWWWWB",
+        "BWWBBBBWWB",
+        "BWWBWWBWWB",
+        "BWWBWWBWWB",
+        "BWWBBBBWWB",
+        "BWWWWWWWWB",
+        "BBWWWWWWBB",
+        "BBBBBBBBBB"
+      ]
+    },
+    {
+      "id": "medium-04",
+      "size": 10,
+      "difficulty": "medium",
+      "rows": [
+        "BBBBBBBBBB",
+        "BBWWWWWWBB",
+        "BWWWWWWWWB",
+        "BWWBBBBWWB",
+        "BWWBWWBWWB",
+        "BWWBWWBWWB",
+        "BWWBBBBWWB",
+        "BWWWWWWWWB",
+        "BBWWWWWWBB",
+        "BBBBBBBBBB"
+      ]
+    },
+    {
+      "id": "medium-05",
+      "size": 10,
+      "difficulty": "medium",
+      "rows": [
+        "BBBBBBBBBB",
+        "BWWWWBWWBB",
+        "BWWWWBWWBB",
+        "BWWWWBWWBB",
+        "BBBBBBBBBB",
+        "BBWWBWWWWB",
+        "BBWWBWWWWB",
+        "BBWWBWWWWB",
+        "BBBBBBBBBB",
+        "BBBBBBBBBB"
+      ]
+    },
+    {
+      "id": "medium-06",
+      "size": 10,
+      "difficulty": "medium",
+      "rows": [
+        "BBBBBBBBBB",
+        "BBBBBBWWWB",
+        "BBWWWBWWWB",
+        "BBWWWBWWWB",
+        "BBBBBBWWWB",
+        "BBWWWBBBBB",
+        "BBWWWBWWWB",
+        "BBWWWBWWWB",
+        "BBWWWBBBBB",
+        "BBBBBBBBBB"
+      ]
+    },
+    {
+      "id": "medium-07",
+      "size": 10,
+      "difficulty": "medium",
+      "rows": [
+        "BBBBBBBBBB",
+        "BBWWBWWWWB",
+        "BBWWBWWWWB",
+        "BBWWBWWWWB",
+        "BBBBBBBBBB",
+        "BWWWWBWWBB",
+        "BWWWWBWWBB",
+        "BWWWWBWWBB",
+        "BBBBBBBBBB",
+        "BBBBBBBBBB"
+      ]
+    },
+    {
+      "id": "medium-08",
+      "size": 10,
+      "difficulty": "medium",
+      "rows": [
+        "BBBBBBBBBB",
+        "BBBBBBBBBB",
+        "BBWWBWWWWB",
+        "BBWWBWWWWB",
+        "BBWWBWWWWB",
+        "BBBBBBBBBB",
+        "BWWWWBWWBB",
+        "BWWWWBWWBB",
+        "BWWWWBWWBB",
+        "BBBBBBBBBB"
+      ]
+    },
+    {
+      "id": "large-01",
+      "size": 12,
+      "difficulty": "large",
+      "rows": [
+        "BBBBBBBBBBBB",
+        "BWWWWBWWWWBB",
+        "BWWWWBWWWWBB",
+        "BWWWWBWWWWBB",
+        "BBBBBBBBBBBB",
+        "BBWWBWWWWWWB",
+        "BBWWBWWWWWWB",
+        "BBWWBWWWWWWB",
+        "BBBBBBBBBBBB",
+        "BWWBWWBWWBWW",
+        "BWWBWWBWWBWW",
+        "BBBBBBBBBBBB"
+      ]
+    },
+    {
+      "id": "large-02",
+      "size": 12,
+      "difficulty": "large",
+      "rows": [
+        "BBBBBBBBBBBB",
+        "BBWWWWWWBBBB",
+        "BWWWWWWWWBBB",
+        "BWWBBBBWWBBB",
+        "BWWBWWBWWBBB",
+        "BWWBWWBWWBBB",
+        "BWWBBBBWWBBB",
+        "BWWWWWWWWBBB",
+        "BBWWWWWWBBBB",
+        "BBBBBBBBBBBB",
+        "BBBBBBBBBBBB",
+        "BBBBBBBBBBBB"
+      ]
+    },
+    {
+      "id": "large-03",
+      "size": 12,
+      "difficulty": "large",
+      "rows": [
+        "BBBBBBBBBBBB",
+        "BBWWWWWWBBBB",
+        "BWWWWWWWWBBB",
+        "BWWBBBBWWBBB",
+        "BWWBWWBWWBBB",
+        "BWWBWWBWWBBB",
+        "BWWBBBBWWBBB",
+        "BWWWWWWWWBBB",
+        "BBWWWWWWBBBB",
+        "BBBBBBBBBBBB",
+        "BBBBBBBBBBBB",
+        "BBBBBBBBBBBB"
+      ]
+    },
+    {
+      "id": "large-04",
+      "size": 12,
+      "difficulty": "large",
+      "rows": [
+        "BBBBBBBBBBBB",
+        "BBWWWWWWBBBB",
+        "BWWWWWWWWBBB",
+        "BWWBBBBWWBBB",
+        "BWWBWWBWWBBB",
+        "BWWBWWBWWBBB",
+        "BWWBBBBWWBBB",
+        "BWWWWWWWWBBB",
+        "BBWWWWWWBBBB",
+        "BBBBBBBBBBBB",
+        "BBBBBBBBBBBB",
+        "BBBBBBBBBBBB"
+      ]
+    },
+    {
+      "id": "large-05",
+      "size": 12,
+      "difficulty": "large",
+      "rows": [
+        "BBBBBBBBBBBB",
+        "BBWWWWWWBBBB",
+        "BWWWWWWWWBBB",
+        "BWWBBBBWWBBB",
+        "BWWBWWBWWBBB",
+        "BWWBWWBWWBBB",
+        "BWWBBBBWWBBB",
+        "BWWWWWWWWBBB",
+        "BBWWWWWWBBBB",
+        "BBBBBBBBBBBB",
+        "BBBBBBBBBBBB",
+        "BBBBBBBBBBBB"
+      ]
+    },
+    {
+      "id": "large-06",
+      "size": 12,
+      "difficulty": "large",
+      "rows": [
+        "BBBBBBBBBBBB",
+        "BWWWWBWWBBBB",
+        "BWWWWBWWBBBB",
+        "BWWWWBWWBBBB",
+        "BBBBBBBBBBBB",
+        "BBWWBWWWWBBB",
+        "BBWWBWWWWBBB",
+        "BBWWBWWWWBBB",
+        "BBBBBBBBBBBB",
+        "BBBBBBBBBBBB",
+        "BBBBBBBBBBBB",
+        "BBBBBBBBBBBB"
+      ]
+    },
+    {
+      "id": "large-07",
+      "size": 12,
+      "difficulty": "large",
+      "rows": [
+        "BBBBBBBBBBBB",
+        "BBBBBBWWWBBB",
+        "BBWWWBWWWBBB",
+        "BBWWWBWWWBBB",
+        "BBBBBBWWWBBB",
+        "BBWWWBBBBBBB",
+        "BBWWWBWWWBBB",
+        "BBWWWBWWWBBB",
+        "BBWWWBBBBBBB",
+        "BBBBBBBBBBBB",
+        "BBBBBBBBBBBB",
+        "BBBBBBBBBBBB"
+      ]
+    },
+    {
+      "id": "large-08",
+      "size": 12,
+      "difficulty": "large",
+      "rows": [
+        "BBBBBBBBBBBB",
+        "BBWWBWWWWBBB",
+        "BBWWBWWWWBBB",
+        "BBWWBWWWWBBB",
+        "BBBBBBBBBBBB",
+        "BWWWWBWWBBBB",
+        "BWWWWBWWBBBB",
+        "BWWWWBWWBBBB",
+        "BBBBBBBBBBBB",
+        "BBBBBBBBBBBB",
+        "BBBBBBBBBBBB",
+        "BBBBBBBBBBBB"
+      ]
+    }
+  ]
+}

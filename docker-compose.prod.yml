@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: ./frontend
+    container_name: retirement-activity-prints-frontend
+    restart: unless-stopped
+    networks:
+      - appnet
+      - supabase_default
+
+networks:
+  appnet:
+    external: true
+  supabase_default:
+    external: true

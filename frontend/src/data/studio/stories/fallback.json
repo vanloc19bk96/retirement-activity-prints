@@ -1,0 +1,92 @@
+[
+  {
+    "theme": "everyday life",
+    "title": "The Lost Umbrella",
+    "passage": "On Tuesday morning, Mara left her blue umbrella on the number 12 bus. She noticed it was missing when she reached the library on Oak Street. The librarian, Mr. Chen, called the transit office. By noon, a driver returned the umbrella to the front desk. Mara thanked him with a warm smile and a cup of tea from the corner shop.",
+    "questions": [
+      { "wh": "when", "question": "What day did Mara ride the bus?", "answer": "Tuesday" },
+      { "wh": "what", "question": "What color was her umbrella?", "answer": "Blue" },
+      { "wh": "where", "question": "Where did Mara go after the bus?", "answer": "The library on Oak Street" },
+      { "wh": "who", "question": "Who called the transit office?", "answer": "Mr. Chen" },
+      { "wh": "howmany", "question": "What bus number did Mara take?", "answer": "12" },
+      { "wh": "who", "question": "Who returned the umbrella?", "answer": "A driver" },
+      { "wh": "what", "question": "What did Mara thank him with?", "answer": "A cup of tea" },
+      { "wh": "where", "question": "Where was the tea from?", "answer": "The corner shop" }
+    ]
+  },
+  {
+    "theme": "nature and animals",
+    "title": "The Garden Fox",
+    "passage": "Every dawn in May, a small red fox visited Mrs. Patel's vegetable garden. It never touched the tomatoes. Instead it hunted beetles near the compost heap. One Friday, Mrs. Patel left a shallow dish of water by the fence. The fox drank quietly, then slipped back into the woods behind the hill.",
+    "questions": [
+      { "wh": "when", "question": "In which month did the fox visit?", "answer": "May" },
+      { "wh": "what", "question": "What color was the fox?", "answer": "Red" },
+      { "wh": "who", "question": "Whose garden did the fox visit?", "answer": "Mrs. Patel's" },
+      { "wh": "where", "question": "Where did the fox hunt beetles?", "answer": "Near the compost heap" },
+      { "wh": "what", "question": "What did Mrs. Patel leave by the fence?", "answer": "A shallow dish of water" },
+      { "wh": "what", "question": "What did the fox never touch?", "answer": "The tomatoes" },
+      { "wh": "when", "question": "When did the fox visit the garden?", "answer": "Every dawn" },
+      { "wh": "where", "question": "Where did the fox go after drinking?", "answer": "The woods behind the hill" }
+    ]
+  },
+  {
+    "theme": "travel and places",
+    "title": "Ferry to the Island",
+    "passage": "At 8:15 a.m., Leo boarded the green ferry from Harbor Point to Willow Island. The crossing took forty minutes. On the island he rented a yellow bicycle and rode to the lighthouse museum. He bought a postcard stamped with a tiny sailboat and mailed it to his sister in Denver before the last ferry home at 4 p.m.",
+    "questions": [
+      { "wh": "when", "question": "What time did Leo board the ferry?", "answer": "8:15 a.m." },
+      { "wh": "what", "question": "What color was the ferry?", "answer": "Green" },
+      { "wh": "where", "question": "Where did the ferry leave from?", "answer": "Harbor Point" },
+      { "wh": "howmany", "question": "How long was the crossing?", "answer": "Forty minutes" },
+      { "wh": "who", "question": "Who received Leo's postcard?", "answer": "His sister in Denver" },
+      { "wh": "what", "question": "What color was the bicycle?", "answer": "Yellow" },
+      { "wh": "where", "question": "Where did Leo ride on the island?", "answer": "The lighthouse museum" },
+      { "wh": "when", "question": "When was the last ferry home?", "answer": "4 p.m." }
+    ]
+  },
+  {
+    "theme": "a gentle historical anecdote",
+    "title": "The Clockmaker",
+    "passage": "In 1892, a clockmaker named Elise opened a small shop on Market Lane. She repaired church clocks for three nearby villages. Her finest work was a brass pocket watch engraved with an oak leaf. When the town hall burned that winter, Elise donated the watch to raise funds for a new bell.",
+    "questions": [
+      { "wh": "when", "question": "In what year did Elise open her shop?", "answer": "1892" },
+      { "wh": "who", "question": "Who was the clockmaker?", "answer": "Elise" },
+      { "wh": "where", "question": "Where was her shop?", "answer": "Market Lane" },
+      { "wh": "what", "question": "What was engraved on the pocket watch?", "answer": "An oak leaf" },
+      { "wh": "why", "question": "Why did Elise donate the watch?", "answer": "To raise funds for a new bell" },
+      { "wh": "howmany", "question": "How many villages did she repair clocks for?", "answer": "Three" },
+      { "wh": "what", "question": "What did Elise repair for the villages?", "answer": "Church clocks" },
+      { "wh": "what", "question": "What burned that winter?", "answer": "The town hall" }
+    ]
+  },
+  {
+    "theme": "a light mystery",
+    "title": "The Missing Keys",
+    "passage": "Detective Nora found a silver key ring under the café table on Friday. It held three keys and a red tag labeled 'Studio B'. The café owner said a pianist had rehearsed upstairs until noon. Nora returned the keys to Studio B, where the pianist laughed — he had searched his coat pockets twice and missed the café chair.",
+    "questions": [
+      { "wh": "who", "question": "Who found the key ring?", "answer": "Detective Nora" },
+      { "wh": "what", "question": "What color was the tag?", "answer": "Red" },
+      { "wh": "where", "question": "Where were the keys found?", "answer": "Under the café table" },
+      { "wh": "when", "question": "On which day were the keys found?", "answer": "Friday" },
+      { "wh": "howmany", "question": "How many keys were on the ring?", "answer": "Three" },
+      { "wh": "what", "question": "What was the red tag labeled?", "answer": "Studio B" },
+      { "wh": "who", "question": "Who had rehearsed upstairs?", "answer": "A pianist" },
+      { "wh": "when", "question": "Until when had the pianist rehearsed?", "answer": "Noon" }
+    ]
+  },
+  {
+    "theme": "family and warm memories",
+    "title": "Sunday Soup",
+    "passage": "Every Sunday, Grandfather Tomas cooked tomato soup with fresh basil from the windowsill. His granddaughter Ana set six bowls on the blue tablecloth. After lunch they walked to the park and fed breadcrumbs to the ducks by the pond. Ana always saved the largest crust for the mottled duck she named Pepper.",
+    "questions": [
+      { "wh": "when", "question": "On which day did they cook soup?", "answer": "Sunday" },
+      { "wh": "who", "question": "Who cooked the tomato soup?", "answer": "Grandfather Tomas" },
+      { "wh": "what", "question": "What herb did he use?", "answer": "Basil" },
+      { "wh": "howmany", "question": "How many bowls did Ana set?", "answer": "Six" },
+      { "wh": "where", "question": "Where did they feed the ducks?", "answer": "By the pond in the park" },
+      { "wh": "what", "question": "What soup did Grandfather cook?", "answer": "Tomato soup" },
+      { "wh": "what", "question": "What color was the tablecloth?", "answer": "Blue" },
+      { "wh": "who", "question": "What did Ana name the mottled duck?", "answer": "Pepper" }
+    ]
+  }
+]

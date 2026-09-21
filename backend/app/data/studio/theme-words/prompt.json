@@ -1,0 +1,22 @@
+{
+  "_comment": "Themed word-list generation (word search and other grid puzzles). varietyHints are rotated by seed and are always subordinate to the user's theme.",
+  "limits": {
+    "overRequest": 6,
+    "rateLimitPerWindow": 60
+  },
+  "locale": {
+    "nativeLocales": ["en"],
+    "nativeLine": "- Write in clear English.",
+    "otherLine": "- Write in language locale '{locale}'."
+  },
+  "varietyHints": [
+    "favour the most typical everyday examples first",
+    "include a mix of living things and objects when the theme allows both",
+    "favour things you would physically see or touch in that setting",
+    "include a few slightly less obvious but still clearly on-theme examples",
+    "favour concrete nouns over abstract ideas",
+    "lean toward items an older adult would know from daily life",
+    "vary across different parts or moments of the theme",
+    "prefer plain single words over specialised jargon"
+  ]
+}

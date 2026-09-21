@@ -1,0 +1,26 @@
+{
+  "_comment": "Missing-vowels generation. lengthByDifficulty is the letter budget per word; phraseWordsByDifficulty is the word count for phrase mode.",
+  "limits": {
+    "overRequest": 4,
+    "rateLimitPerWindow": 60,
+    "maxOutputTokens": 2048,
+    "minWordLetters": 3,
+    "maxWordLetters": 12,
+    "maxPhraseWords": 8
+  },
+  "locale": {
+    "nativeLocales": ["en"],
+    "nativeLine": "- Write in clear English.",
+    "otherLine": "- Write in language locale '{locale}'."
+  },
+  "lengthByDifficulty": {
+    "easy": [3, 5],
+    "medium": [4, 8],
+    "hard": [6, 12]
+  },
+  "phraseWordsByDifficulty": {
+    "easy": [2, 4],
+    "medium": [3, 6],
+    "hard": [4, 8]
+  }
+}

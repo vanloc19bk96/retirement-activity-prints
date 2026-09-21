@@ -1,0 +1,40 @@
+{
+  "_comment": "Cryptogram saying generation. letterRange mirrors LENGTH_RANGE in frontend/src/utils/studio/cryptogram/content.ts. varietyAngles are rotated by seed so two users on the same theme get different sayings.",
+  "limits": {
+    "minWords": 2,
+    "maxWords": 14,
+    "maxWordLetters": 14,
+    "overRequest": 6,
+    "rateLimitPerWindow": 60,
+    "minWordsLettersPerWord": 6,
+    "maxWordsLettersPerWord": 4
+  },
+  "letterRange": {
+    "short": [12, 32],
+    "medium": [28, 52],
+    "long": [46, 78]
+  },
+  "locale": {
+    "nativeLocales": ["en"],
+    "nativeLine": "- Write in clear, plain English.",
+    "otherLine": "- Write in language locale '{locale}'."
+  },
+  "varietyAngles": [
+    "patience and waiting",
+    "hard work and effort",
+    "friendship and neighbours",
+    "kindness and giving",
+    "honesty and plain speaking",
+    "learning from mistakes",
+    "small steps and steady habits",
+    "gratitude for simple things",
+    "weather and the seasons",
+    "home and the kitchen table",
+    "courage in hard times",
+    "listening before speaking",
+    "sharing a meal",
+    "time passing",
+    "keeping good company",
+    "starting again"
+  ]
+}

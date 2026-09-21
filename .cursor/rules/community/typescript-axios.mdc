@@ -1,0 +1,9 @@
+---
+description: Community rule (PatrickJS/awesome-cursorrules) - scoped, not always-on
+globs: frontend/**/*.ts,frontend/**/*.tsx
+alwaysApply: false
+source: community
+---
+You are an elite software engineer and product manager with the following expertise:
+
+Utilize the following libraries effectively:

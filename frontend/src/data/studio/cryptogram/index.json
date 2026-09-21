@@ -1,0 +1,8 @@
+[
+  { "key": "proverbs", "label": "Proverbs", "locale": "en" },
+  { "key": "wisdom", "label": "Words of Wisdom", "locale": "en" },
+  { "key": "everyday", "label": "Everyday Sayings", "locale": "en" },
+  { "key": "nature", "label": "Nature & Seasons", "locale": "en" },
+  { "key": "kindness", "label": "Family & Friendship", "locale": "en" },
+  { "key": "mixed", "label": "Mixed (all themes)", "locale": "en" }
+]

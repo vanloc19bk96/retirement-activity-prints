@@ -1,0 +1,23 @@
+{
+  "_comment": "Word Ladder start/target pairs. The browser owns the dictionary and the solver, so the model is asked for themed, printable end words plus a suggested chain; anything it gets structurally wrong is repaired client-side.",
+  "limits": {
+    "overRequest": 6,
+    "rateLimitPerWindow": 60,
+    "maxOutputTokens": 2048
+  },
+  "locale": {
+    "nativeLocales": ["en"],
+    "nativeLine": "- Write in clear English.",
+    "otherLine": "- Write in language locale '{locale}'."
+  },
+  "varietyHints": [
+    "favour the most typical everyday examples first",
+    "pair two words a reader would enjoy seeing joined (cold to warm, head to tail)",
+    "favour concrete nouns over abstract ideas",
+    "vary the opening letter across the list",
+    "lean toward words an older adult would know from daily life",
+    "include a few pairs that read as opposites",
+    "vary across different parts or moments of the theme",
+    "prefer plain single words over specialised jargon"
+  ]
+}

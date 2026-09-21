@@ -1,0 +1,153 @@
+---
+description: Studio generators must keep content inside the safe area, balanced and visually polished, centered in the body, with even grid strokes
+globs: frontend/src/utils/studio/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Studio Layout — Safe, Balanced, Centered
+
+**Non-negotiable:** every Fabric object a generator emits (structure, prompt, decoration, **and** hidden `answer` rings/marks) must stay inside the page **safe area**. Overflow past the margin guide fails KDP/print and fails `assertObjectsInSafeMargin` in `runGeneratorContractTests`.
+
+**Also required:** the page must look **balanced and print-ready** — even gaps, aligned columns, no top-heavy / lopsided blocks, figures legible at option size.
+
+## Safe area (required)
+
+1. Start from `contentBox(ctx)` — that box **is** the safe area (`ctx.margin` on all four sides).
+2. Apply `insetHorizontal(contentBox(ctx), STUDIO_CONTENT_SAFE_INSET_X)` before `drawHeader` so content is not edge-flush left/right.
+3. Place **all** drawing inside that inset content / `header.body` (and further insets you create). Never use raw `0` / page edges / coordinates outside `contentBox`.
+4. Account for **visual overflow** when placing near edges:
+   - Answer rings / halos that use `left - 2` / `width + 4` must still fit inside the safe box — inset the option/grid field first, then draw the ring.
+   - Stroke width, circle radius, polygon extent, and textbox `width` count toward bounds.
+   - `originX/originY: 'center'` objects extend half-size past `left`/`top` — check the true extent.
+5. When packing many items (matrices, options, long sequences), **shrink / clamp / reflow** to fit — do not let later rows or option strips spill past `body` bottom or content right edge.
+6. Contract tests already call `assertObjectsInSafeMargin` — keep it green. For dense layouts, add an extra assert on the max config (e.g. `matricesPerPage: 4`, longest sequence).
+
+```typescript
+// ❌ BAD — ring/halo drawn outside the option field → can cross safe margin
+buildRect({ left: box.left - 2, top: box.top - 2, width: box.width + 4, ... }, tag, 'answer')
+
+// ✅ GOOD — reserve ring padding inside the content field, then ring stays in-bounds
+const field = insetBox(optionArea, 4) // room for halo
+const box = /* option cell inside field */
+buildRect({ left: box.left - 2, top: box.top - 2, width: box.width + 4, ... }, tag, 'answer')
+```
+
+```typescript
+// ❌ BAD — ignore safe box; hardcode or grow past page
+objects.push(buildText({ left: 0, top: 0, width: ctx.pageWidth, text }, tag, 'prompt'))
+
+// ✅ GOOD — derive every region from inset content
+const content = insetHorizontal(contentBox(ctx), STUDIO_CONTENT_SAFE_INSET_X)
+const header = drawHeader(content, config, tag, instruction)
+// …draw only inside header.body / split regions of body
+```
+
+## Balance & visual polish (required)
+
+Safe area alone is not enough — the sheet must look even and intentional.
+
+1. **Optical center** — after header/banner, the puzzle block sits in the vertical/horizontal center of the remaining body (not stuck under the title with empty space below).
+2. **Even rhythm** — gutters between rows/columns/options are consistent; equal-sized cells/options; square option tiles when the spec shows squares.
+3. **Aligned columns** — repeated items (sequences, option rows, multi-puzzle stacks) share the same column edges / label width so the page reads as one composition.
+4. **Proportion** — matrix vs options (or study vs recall) split so neither band looks crushed; when `itemsPerPage` increases, scale cell size evenly rather than packing one corner.
+5. **Whitespace** — avoid large empty voids on one side and cramped clusters on the other; prefer symmetric insets and centered stacks (`rows` / `columns` / `fitSquareGrid` + re-center).
+6. **Legibility** — figures, digits, and option labels stay clear at the smallest config size; do not shrink past readability to “make it fit.”
+7. **Print-first B&W** — uniform stroke weights, no accidental double lines, no decorative clutter that fights the puzzle.
+
+```typescript
+// ❌ BAD — top-aligned stack; uneven option widths; leftover empty body below
+const stackTop = field.top
+const optBoxes = columns(optionArea, n, 0) // flush, non-square
+
+// ✅ GOOD — center the block; even gutters; square, evenly sized options
+const stackTop = field.top + (field.height - stackH) / 2
+const optBoxes = columns(optionArea, n, 10).map(squareInset)
+```
+
+## Center content in the body / on the canvas (required)
+
+After `drawHeader` (+ optional banner), the puzzle field **and** answer-key content must sit in the **center** of the remaining body — not stuck under the header or flush to one margin.
+
+1. **Vertical:** `top = field.top + (field.height - blockH) / 2` (or `fitSquareGrid` / `centerNodesInBox`).
+2. **Horizontal:** when the block is narrower than the body, shrink-wrap then center (`left = field.left + (field.width - blockW) / 2`). Full-width two-column tables still center each cell’s content band.
+3. **Answer keys:** revealed `studioRole: 'answer'` text/marks stay centered in their cell/band. If prompts are omitted on the key, do **not** leave answers left-aligned under the missing prompt — re-center them.
+4. **Titles / instructions:** already centered by `drawHeader` — keep that; do not left-align the main puzzle against a centered title.
+5. Prefer `boxCenterX` / `boxCenterY` + `originX/Y: 'center'` for short centered runs (`studio-fabric-text.mdc`).
+
+## Grids
+
+`fitSquareGrid(box, cols, rows)` already centers. Always use it for rectangular grids; do not place cells from `box.left` / `box.top` without centering.
+
+When snapping to integers (crisp strokes), **re-center in the field after rounding** — do not only `Math.round` the floated origin (that biases top-left):
+
+```typescript
+// ❌ BAD — round origin only; grid drifts up/left
+const g = fitSquareGrid(field, size, size)
+const left = Math.round(g.bounds.left)
+const top = Math.round(g.bounds.top)
+
+// ✅ GOOD — integer size, then center in field
+const cell = fitSquareGrid(field, size, size).cell
+const side = cell * size
+const left = Math.round(field.left + (field.width - side) / 2)
+const top = Math.round(field.top + (field.height - side) / 2)
+```
+
+Pass the **full** `header.body` as the field (or a symmetric inset). Do not top-align the grid in a short strip under the header.
+
+## Grid strokes (logic / number grids)
+
+- Draw each grid line **once** — never stack cell rects + box rects (double strokes look uneven).
+- Prefer **filled ink bars** (`buildRect` with `fill: STUDIO_INK`, `strokeWidth: 0`) over stroked `Line` for uniform weight on canvas.
+- Box / band edges: `STUDIO_STROKE_BOLD`; cell edges: `STUDIO_STROKE_HAIRLINE`.
+- Snap bar positions to integers.
+
+## Group the puzzle block
+
+Wrap the grid (lines + digits) in one `buildGroup` so the user can move it as a unit. Use `unionObjectBounds(parts)` for group bounds when children may extend slightly past the nominal grid.
+
+## Digits / cell labels
+
+Default `fontWeight: 'normal'` for Sudoku-style number grids unless the spec requires bold givens. Keep size/alignment identical for every cell digit.
+
+## Instruction copy
+
+When size or box geometry is configurable, instruction text must be **generated from config** (grid size + box dims), not a hardcoded classic-9×9 sentence.
+
+```typescript
+// ✅ 9×9 → "…9×9 grid…3×3 box…1–9…"; 6×6 → "…6×6…2×3…1–6…"
+`Fill this ${size}×${size} grid so every row, column, and ${boxW}×${boxH} box contains the numbers 1–${size} exactly once.`
+```
+
+## Scattered / freeform clusters (trail-making, etc.)
+
+1. Place points inside a padded scatter box.
+2. Compute the cluster bounds (include circle radius + endpoint markers).
+3. **Translate** so the cluster center matches the body center (`field` below header/banner).
+
+```typescript
+// ❌ BAD — scatter fills from the top of `field`; looks top-heavy on the page
+const nodes = buildNodes(part, count, field, radius, rng)
+
+// ✅ GOOD — scatter, then center in the remaining body
+const nodes = centerNodesInBox(
+  buildNodes(part, count, scatterBox, radius, rng),
+  field,
+  radius,
+  markerClearance,
+)
+```
+
+## Checklist
+
+- [ ] **Every object (incl. answer halos) inside safe area** — `contentBox` + horizontal inset; no edge overflow
+- [ ] **Centered on canvas** — puzzle + answer-key blocks optically centered in body (H + V); answers centered when prompts are omitted on the key
+- [ ] **Balanced & polished** — even gutters, aligned columns, legible at min size, no top-heavy / lopsided layout
+- [ ] Dense configs still fit (max items / options / grid size) — clamp or scale, don't clip
+- [ ] `runGeneratorContractTests` safe-margin assert green
+- [ ] Puzzle block visually centered in the area below title/instructions
+- [ ] Grids use `fitSquareGrid` (or explicit center math); integer snap re-centers in field
+- [ ] Freeform clusters recentered after placement — do not leave random scatter top-left biased
+- [ ] Outer `buildGroup` bounds match the centered content (`unionObjectBounds`)
+- [ ] Grid lines drawn once; bold only on box edges; filled bars for crisp ink
+- [ ] Instruction mentions actual grid size / box size from config

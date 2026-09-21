@@ -1,0 +1,218 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Tailwind v4 only emits utilities like `bg-primary` for colors registered in `@theme`.
+ * Semantic values live in `--theme-*`; `--color-*` aliases keep inline styles / body working.
+ */
+@theme inline {
+  --color-background: var(--theme-background);
+  --color-foreground: var(--theme-foreground);
+  --color-card: var(--theme-card);
+  --color-card-foreground: var(--theme-card-foreground);
+  --color-popover: var(--theme-popover);
+  --color-popover-foreground: var(--theme-popover-foreground);
+  --color-primary: var(--theme-primary);
+  --color-primary-foreground: var(--theme-primary-foreground);
+  --color-secondary: var(--theme-secondary);
+  --color-secondary-foreground: var(--theme-secondary-foreground);
+  --color-muted: var(--theme-muted);
+  --color-muted-foreground: var(--theme-muted-foreground);
+  --color-accent: var(--theme-accent);
+  --color-accent-foreground: var(--theme-accent-foreground);
+  --color-destructive: var(--theme-destructive);
+  --color-destructive-foreground: var(--theme-destructive-foreground);
+  --color-success: var(--theme-success);
+  --color-success-foreground: var(--theme-success-foreground);
+  --color-border: var(--theme-border);
+  --color-input: var(--theme-input);
+  --color-ring: var(--theme-ring);
+}
+
+:root {
+  --font-sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+
+  /*
+   * Light theme: warm off-white base, deep navy primary, brass gold accent.
+   */
+  --theme-background: #faf8f4;
+  --theme-foreground: #1a1a1a;
+  --theme-card: #fdfcfa;
+  --theme-card-foreground: #1a1a1a;
+  --theme-popover: #fdfcfa;
+  --theme-popover-foreground: #1a1a1a;
+  --theme-primary: #1e3a5f;
+  --theme-primary-foreground: #faf8f4;
+  --theme-secondary: #f0ede8;
+  --theme-secondary-foreground: #1a1a1a;
+  --theme-muted: #f0ede8;
+  --theme-muted-foreground: #6b6b6b;
+  --theme-accent: #f3ebd9;
+  --theme-accent-foreground: #5c4520;
+  --theme-destructive: hsl(0 72% 50%);
+  --theme-destructive-foreground: #faf8f4;
+  --theme-success: #2d6a4f;
+  --theme-success-foreground: #faf8f4;
+  --theme-border: #e5e0d8;
+  --theme-input: #e5e0d8;
+  --theme-ring: #1e3a5f;
+
+  --color-background: var(--theme-background);
+  --color-foreground: var(--theme-foreground);
+  --color-card: var(--theme-card);
+  --color-card-foreground: var(--theme-card-foreground);
+  --color-popover: var(--theme-popover);
+  --color-popover-foreground: var(--theme-popover-foreground);
+  --color-primary: var(--theme-primary);
+  --color-primary-foreground: var(--theme-primary-foreground);
+  --color-secondary: var(--theme-secondary);
+  --color-secondary-foreground: var(--theme-secondary-foreground);
+  --color-muted: var(--theme-muted);
+  --color-muted-foreground: var(--theme-muted-foreground);
+  --color-accent: var(--theme-accent);
+  --color-accent-foreground: var(--theme-accent-foreground);
+  --color-destructive: var(--theme-destructive);
+  --color-destructive-foreground: var(--theme-destructive-foreground);
+  --color-success: var(--theme-success);
+  --color-success-foreground: var(--theme-success-foreground);
+  --color-border: var(--theme-border);
+  --color-input: var(--theme-input);
+  --color-ring: var(--theme-ring);
+  --color-control-accent: #c49a4a;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+}
+
+.dark {
+  /*
+   * Dark theme: charcoal base with warm text, navy primary, brass controls.
+   */
+  --theme-background: #1e1e22;
+  --theme-foreground: #faf8f4;
+  --theme-card: #28282e;
+  --theme-card-foreground: #faf8f4;
+  --theme-popover: #28282e;
+  --theme-popover-foreground: #faf8f4;
+  --theme-primary: #3d6a9f;
+  --theme-primary-foreground: #faf8f4;
+  --theme-secondary: #2a2a30;
+  --theme-secondary-foreground: #faf8f4;
+  --theme-muted: #2a2a30;
+  --theme-muted-foreground: #a0a0a0;
+  --theme-accent: #3d3528;
+  --theme-accent-foreground: #e8c878;
+  --theme-destructive: hsl(0 62.8% 40%);
+  --theme-destructive-foreground: #faf8f4;
+  --theme-success: #3d8b6a;
+  --theme-success-foreground: #faf8f4;
+  --theme-border: #3a3835;
+  --theme-input: #3a3835;
+  --theme-ring: #c49a4a;
+  --color-control-accent: #c49a4a;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}
+
+/* Custom fonts: OFL or author permits commercial use */
+@font-face {
+  font-family: 'Raleway';
+  src: url('/fonts/Raleway.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Edu AU VIC WA NT Hand';
+  src: url('/fonts/Edu AU VIC WA NT Hand.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Edu AU VIC WA NT Hand Dots';
+  src: url('/fonts/Edu AU VIC WA NT Hand Dots.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Playwrite US Modern';
+  src: url('/fonts/Playwrite US Modern.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Playwrite US Modern Guides';
+  src: url('/fonts/Playwrite US Modern Guides.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Tracey Dot';
+  src: url('/fonts/TraceyDot.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Tracey Solid';
+  src: url('/fonts/TraceySolid.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Indeterminate progress activity: a highlight sweeps across the track so the
+ * bar never looks frozen while the server streams coarse, batch-level updates. */
+@keyframes progress-indeterminate-sweep {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(360%);
+  }
+}
+
+.animate-progress-indeterminate-sweep {
+  animation: progress-indeterminate-sweep 1.3s ease-in-out infinite;
+}
+
+/* Closed-hand cursor while dragging panel items onto the canvas. */
+body.is-dnd-dragging,
+body.is-dnd-dragging * {
+  cursor: grabbing !important;
+}
+
+/* Fabric.js hidden textarea - prevent layout shift during text editing */
+.canvas-container textarea,
+textarea[data-fabric-hiddentextarea] {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+  z-index: -1 !important;
+  pointer-events: none !important;
+}

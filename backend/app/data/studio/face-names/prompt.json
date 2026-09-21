@@ -1,0 +1,28 @@
+{
+  "_comment": "Face–name recall generation content. genderMix wording steers the model; validGenders is what the validator accepts back.",
+  "limits": {
+    "overRequest": 3,
+    "rateLimitPerWindow": 60,
+    "maxNameLength": 24
+  },
+  "validGenders": [
+    "male",
+    "female",
+    "neutral"
+  ],
+  "locale": {
+    "nativeLocales": [
+      "en"
+    ],
+    "nativeLine": "- Use common English given names.",
+    "otherLine": "- Prefer names familiar in locale '{locale}'."
+  },
+  "styleLines": {
+    "full": "Include a common English surname in \"last\" for every entry.",
+    "first": "Omit \"last\" (first name only)."
+  },
+  "lastFieldHints": {
+    "full": "a surname",
+    "first": "null"
+  }
+}

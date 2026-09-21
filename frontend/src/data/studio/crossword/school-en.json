@@ -1,0 +1,3202 @@
+[
+  {
+    "word": "ABSENT",
+    "clue": "Being away from a place"
+  },
+  {
+    "word": "ACADEMIC",
+    "clue": "Belonging to the school or philosophy of Plato"
+  },
+  {
+    "word": "ACADEMY",
+    "clue": "Garden where Plato taught"
+  },
+  {
+    "word": "ADDITION",
+    "clue": "Act of adding anything"
+  },
+  {
+    "word": "ADJECTIVE",
+    "clue": "Word that modifies a noun or noun phrase"
+  },
+  {
+    "word": "ALGEBRA",
+    "clue": "System for computation using letters or other symbols"
+  },
+  {
+    "word": "ALGORITHM",
+    "clue": "Collection of ordered steps that solve a mathematical"
+  },
+  {
+    "word": "ALPHABET",
+    "clue": "Set of letters used when writing in a"
+  },
+  {
+    "word": "ANALYSIS",
+    "clue": "Decomposition into components in order to study"
+  },
+  {
+    "word": "ANATOMY",
+    "clue": "Art of studying the different parts of any"
+  },
+  {
+    "word": "ANSWER",
+    "clue": "Response or reply"
+  },
+  {
+    "word": "ARITHMETIC",
+    "clue": "Mathematics of numbers under the operations of addition"
+  },
+  {
+    "word": "ART",
+    "clue": "Creative visual work"
+  },
+  {
+    "word": "ARTICLE",
+    "clue": "Piece of nonfictional writing such as a story"
+  },
+  {
+    "word": "ASSIGNMENT",
+    "clue": "Act of assigning"
+  },
+  {
+    "word": "ASSISTANT",
+    "clue": "Having a subordinate or auxiliary position"
+  },
+  {
+    "word": "ASTRONOMY",
+    "clue": "Study of the physical universe beyond the Earth's"
+  },
+  {
+    "word": "ATLAS",
+    "clue": "Bound collection of maps often including tables illustrations"
+  },
+  {
+    "word": "ATTENDANCE",
+    "clue": "Act of attending"
+  },
+  {
+    "word": "AUTHOR",
+    "clue": "Originator or creator of a work especially of"
+  },
+  {
+    "word": "BACKPACK",
+    "clue": "Shoulder carry bag"
+  },
+  {
+    "word": "BEGINNER",
+    "clue": "Someone who is just starting at something or"
+  },
+  {
+    "word": "BIBLIOGRAPHY",
+    "clue": "Section of a written work containing citations not"
+  },
+  {
+    "word": "BINDER",
+    "clue": "Ring document holder"
+  },
+  {
+    "word": "BIOLOGY",
+    "clue": "Study of all life or living matter"
+  },
+  {
+    "word": "BLACKBOARD",
+    "clue": "Large flat surface finished with black slate or"
+  },
+  {
+    "word": "BOOK",
+    "clue": "Bound reading pages"
+  },
+  {
+    "word": "BOOKMARK",
+    "clue": "Strip of material used to mark a place"
+  },
+  {
+    "word": "BOTANY",
+    "clue": "Scientific study of plants a branch of biology"
+  },
+  {
+    "word": "BROCHURE",
+    "clue": "Booklet of printed informational matter like a pamphlet"
+  },
+  {
+    "word": "BULLETIN",
+    "clue": "Short report especially one released through official channels"
+  },
+  {
+    "word": "CALCULATOR",
+    "clue": "Mechanical or electronic device that performs mathematical calculations"
+  },
+  {
+    "word": "CAMPUS",
+    "clue": "Grounds or property of a school college university"
+  },
+  {
+    "word": "CANVAS",
+    "clue": "Type of coarse cloth woven from hemp useful"
+  },
+  {
+    "word": "CAPTION",
+    "clue": "Descriptive heading or title of a document or"
+  },
+  {
+    "word": "CATALOG",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "CHALK",
+    "clue": "Board writing stick"
+  },
+  {
+    "word": "CHAPTER",
+    "clue": "Of the main sections into which the text"
+  },
+  {
+    "word": "CHART",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "CHEMISTRY",
+    "clue": "Branch of natural science that deals with the"
+  },
+  {
+    "word": "CHOIR",
+    "clue": "Group of people who sing together"
+  },
+  {
+    "word": "CHORUS",
+    "clue": "Group of singers and dancers in a theatrical"
+  },
+  {
+    "word": "CITATION",
+    "clue": "Official summons or notice given to a person"
+  },
+  {
+    "word": "CIVICS",
+    "clue": "Study of good citizenship and proper membership in"
+  },
+  {
+    "word": "CLASS",
+    "clue": "Group collection category or set sharing characteristics or"
+  },
+  {
+    "word": "CLASSMATE",
+    "clue": "Student who is in the same class at"
+  },
+  {
+    "word": "CLASSROOM",
+    "clue": "Room often in a school where classes take"
+  },
+  {
+    "word": "CLIPBOARD",
+    "clue": "Flat piece of rigid material such as card"
+  },
+  {
+    "word": "COLLEGE",
+    "clue": "Corporate group"
+  },
+  {
+    "word": "COMPOSITION",
+    "clue": "Act of putting together"
+  },
+  {
+    "word": "COMPUTER",
+    "clue": "Desktop electronic machine"
+  },
+  {
+    "word": "CONCLUSION",
+    "clue": "End finish close or last part of something"
+  },
+  {
+    "word": "CONFERENCE",
+    "clue": "Act of consulting together formally"
+  },
+  {
+    "word": "COUNSELOR",
+    "clue": "Professional who counsels people especially on personal problems"
+  },
+  {
+    "word": "COURSE",
+    "clue": "Sequence of events"
+  },
+  {
+    "word": "CRAFT",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "CRAYON",
+    "clue": "Wax coloring stick"
+  },
+  {
+    "word": "CREATIVE",
+    "clue": "Tending to create things or having the ability"
+  },
+  {
+    "word": "CREDIT",
+    "clue": "To believe"
+  },
+  {
+    "word": "CURRICULUM",
+    "clue": "Set of courses coursework and their content offered"
+  },
+  {
+    "word": "DEBATE",
+    "clue": "Argument or discussion usually in an ordered or"
+  },
+  {
+    "word": "DECIMAL",
+    "clue": "Number expressed in the base-ten system a fractional"
+  },
+  {
+    "word": "DEFINITION",
+    "clue": "Statement of the meaning of a word or"
+  },
+  {
+    "word": "DEGREE",
+    "clue": "Stage of proficiency or qualification in a course"
+  },
+  {
+    "word": "DESK",
+    "clue": "Work or study surface"
+  },
+  {
+    "word": "DIAGRAM",
+    "clue": "Plan drawing sketch or outline to show how"
+  },
+  {
+    "word": "DIARY",
+    "clue": "Daily log of experiences especially those of the"
+  },
+  {
+    "word": "DICTATION",
+    "clue": "Dictating the process of speaking for someone else"
+  },
+  {
+    "word": "DICTIONARY",
+    "clue": "Reference work with a list of words from"
+  },
+  {
+    "word": "DIGIT",
+    "clue": "Whole numbers from to and the Arabic numerals"
+  },
+  {
+    "word": "DIPLOMA",
+    "clue": "Document issued by an educational institution testifying that"
+  },
+  {
+    "word": "DISCIPLINE",
+    "clue": "Controlled behaviour"
+  },
+  {
+    "word": "DISCUSSION",
+    "clue": "Conversation or debate concerning a particular topic"
+  },
+  {
+    "word": "DISPLAY",
+    "clue": "Show or spectacle"
+  },
+  {
+    "word": "DIVISION",
+    "clue": "Act or process of dividing anything"
+  },
+  {
+    "word": "DOCUMENT",
+    "clue": "Original or official paper used as the basis"
+  },
+  {
+    "word": "DRAMA",
+    "clue": "Composition normally in prose telling a story and"
+  },
+  {
+    "word": "DRAWING",
+    "clue": "Present participle of draw"
+  },
+  {
+    "word": "ECOLOGY",
+    "clue": "Branch of biology dealing with the relationships of"
+  },
+  {
+    "word": "ECONOMICS",
+    "clue": "Study of resource allocation distribution and consumption"
+  },
+  {
+    "word": "EDITOR",
+    "clue": "Person who edits or makes changes to documents"
+  },
+  {
+    "word": "EDUCATION",
+    "clue": "Process of imparting knowledge skill and judgment"
+  },
+  {
+    "word": "EDUCATOR",
+    "clue": "Person distinguished for their educational work a teacher"
+  },
+  {
+    "word": "ELECTRICITY",
+    "clue": "Originally a property of amber and certain other"
+  },
+  {
+    "word": "ELEMENT",
+    "clue": "Of the simplest or essential parts or principles"
+  },
+  {
+    "word": "ENCYCLOPEDIA",
+    "clue": "Comprehensive reference work with articles on a range"
+  },
+  {
+    "word": "ENERGY",
+    "clue": "Impetus behind all motion and all activity"
+  },
+  {
+    "word": "ENGINEER",
+    "clue": "Soldier engaged in designing or constructing military works"
+  },
+  {
+    "word": "ENGLISH",
+    "clue": "Spinning or rotary motion given to a ball"
+  },
+  {
+    "word": "ENROLLMENT",
+    "clue": "Act of enrolling or the state of being"
+  },
+  {
+    "word": "ENVELOPE",
+    "clue": "Letter paper wrapper"
+  },
+  {
+    "word": "ENVIRONMENT",
+    "clue": "Surroundings of and influences on a particular item"
+  },
+  {
+    "word": "EPISODE",
+    "clue": "Incident action or time period standing out by"
+  },
+  {
+    "word": "EQUATION",
+    "clue": "Act or process of equating two or more"
+  },
+  {
+    "word": "EQUIPMENT",
+    "clue": "Act of equipping or the state of being"
+  },
+  {
+    "word": "ERASER",
+    "clue": "Mistake removing rubber"
+  },
+  {
+    "word": "ESSAY",
+    "clue": "Written composition of moderate length exploring a particular"
+  },
+  {
+    "word": "ESTIMATE",
+    "clue": "Rough calculation or assessment of the value size"
+  },
+  {
+    "word": "ETHICS",
+    "clue": "Study of principles relating to right and wrong"
+  },
+  {
+    "word": "EVALUATION",
+    "clue": "Assessment such as an annual personnel performance review"
+  },
+  {
+    "word": "EXAM",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "EXAMINATION",
+    "clue": "Act of examining"
+  },
+  {
+    "word": "EXAMPLE",
+    "clue": "Something that is representative of all such things"
+  },
+  {
+    "word": "EXERCISE",
+    "clue": "Activity designed to develop or hone a skill"
+  },
+  {
+    "word": "EXHIBIT",
+    "clue": "To display or show for others to see"
+  },
+  {
+    "word": "EXPERIMENT",
+    "clue": "Test under controlled conditions made to either demonstrate"
+  },
+  {
+    "word": "EXPLANATION",
+    "clue": "Act or process of explaining"
+  },
+  {
+    "word": "FACT",
+    "clue": "Something actual as opposed to invented"
+  },
+  {
+    "word": "FACULTY",
+    "clue": "Academic staff at schools colleges universities or not-for-profit"
+  },
+  {
+    "word": "FICTION",
+    "clue": "Literary type using invented or imaginative writing instead"
+  },
+  {
+    "word": "FIELD",
+    "clue": "Land area free of woodland cities and towns"
+  },
+  {
+    "word": "FIGURE",
+    "clue": "Drawing or diagram conveying information"
+  },
+  {
+    "word": "FILM",
+    "clue": "Thin layer of some substance"
+  },
+  {
+    "word": "FINAL",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "FLASHCARD",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "FOLDER",
+    "clue": "Document grouping holder"
+  },
+  {
+    "word": "FOLKLORE",
+    "clue": "Tales legends superstitions and traditions of a particular"
+  },
+  {
+    "word": "FOOTNOTE",
+    "clue": "Short piece of text often numbered placed at"
+  },
+  {
+    "word": "FORM",
+    "clue": "To do with shape"
+  },
+  {
+    "word": "FORMULA",
+    "clue": "Mathematical rule expressed symbolically"
+  },
+  {
+    "word": "FRACTION",
+    "clue": "Part of a whole especially a comparatively small"
+  },
+  {
+    "word": "FRAGMENT",
+    "clue": "Part broken off"
+  },
+  {
+    "word": "FRAME",
+    "clue": "Bed or picture support"
+  },
+  {
+    "word": "FRENCH",
+    "clue": "To prepare food by cutting it into strips"
+  },
+  {
+    "word": "FREQUENCY",
+    "clue": "Rate of occurrence of anything"
+  },
+  {
+    "word": "FUNCTION",
+    "clue": "What something does or is used for"
+  },
+  {
+    "word": "GALLERY",
+    "clue": "Institution building or room for the exhibition and"
+  },
+  {
+    "word": "GEOGRAPHY",
+    "clue": "Description of the earth"
+  },
+  {
+    "word": "GEOLOGY",
+    "clue": "Science that studies the structure of the earth"
+  },
+  {
+    "word": "GEOMETRY",
+    "clue": "Branch of mathematics dealing with spatial relationships"
+  },
+  {
+    "word": "GERMAN",
+    "clue": "Having the same mother and father"
+  },
+  {
+    "word": "GLOSSARY",
+    "clue": "List of terms in a particular domain of"
+  },
+  {
+    "word": "GLUE",
+    "clue": "Sticky bonding liquid"
+  },
+  {
+    "word": "GOAL",
+    "clue": "Result that one is attempting to achieve"
+  },
+  {
+    "word": "GRADE",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "GRADUATE",
+    "clue": "Person who is recognized by a university as"
+  },
+  {
+    "word": "GRAMMAR",
+    "clue": "System of rules and principles for speaking and"
+  },
+  {
+    "word": "GRAPH",
+    "clue": "Data chart intended to illustrate the relationship between"
+  },
+  {
+    "word": "GRAPHICS",
+    "clue": "Making of architectural or design drawings"
+  },
+  {
+    "word": "GROUP",
+    "clue": "Number of things or persons being in some"
+  },
+  {
+    "word": "GUIDANCE",
+    "clue": "Act or process of guiding"
+  },
+  {
+    "word": "GUIDEBOOK",
+    "clue": "Alternative spelling of guide book"
+  },
+  {
+    "word": "GUITAR",
+    "clue": "Stringed musical instrument of European origin usually with"
+  },
+  {
+    "word": "GYM",
+    "clue": "Exercise workout place"
+  },
+  {
+    "word": "HABIT",
+    "clue": "Action performed on a regular basis"
+  },
+  {
+    "word": "HALL",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "HANDBOOK",
+    "clue": "Topically organized book of reference on a certain"
+  },
+  {
+    "word": "HANDWRITING",
+    "clue": "Act or process of writing done with the"
+  },
+  {
+    "word": "HEADLINE",
+    "clue": "Heading or title of a magazine or newspaper"
+  },
+  {
+    "word": "HEALTH",
+    "clue": "State of being free from physical or psychological"
+  },
+  {
+    "word": "HISTORY",
+    "clue": "Aggregate of past events"
+  },
+  {
+    "word": "HOBBY",
+    "clue": "Activity that one enjoys doing in one's spare"
+  },
+  {
+    "word": "HOMEWORK",
+    "clue": "Exercises assigned by a teacher to a student"
+  },
+  {
+    "word": "HONOR",
+    "clue": "Recognition of importance or value"
+  },
+  {
+    "word": "HYPOTHESIS",
+    "clue": "Used loosely a tentative conjecture explaining an observation"
+  },
+  {
+    "word": "IDEA",
+    "clue": "Abstract archetype of a given thing compared to"
+  },
+  {
+    "word": "IDENTITY",
+    "clue": "Sameness identicalness"
+  },
+  {
+    "word": "IDIOM",
+    "clue": "Manner of speaking a mode of expression peculiar"
+  },
+  {
+    "word": "ILLUSTRATION",
+    "clue": "Act of illustrating"
+  },
+  {
+    "word": "IMAGE",
+    "clue": "Optical or other representation of a real object"
+  },
+  {
+    "word": "IMAGINATION",
+    "clue": "Image-making power of the mind"
+  },
+  {
+    "word": "INDEX",
+    "clue": "Alphabetical listing of items and their location"
+  },
+  {
+    "word": "INDIVIDUAL",
+    "clue": "Person considered alone rather than as belonging to"
+  },
+  {
+    "word": "INFORMATION",
+    "clue": "That which resolves uncertainty"
+  },
+  {
+    "word": "INK",
+    "clue": "Pen coloring liquid"
+  },
+  {
+    "word": "INQUIRY",
+    "clue": "Act of inquiring"
+  },
+  {
+    "word": "INSTRUCTION",
+    "clue": "Act of instructing teaching or providing with information"
+  },
+  {
+    "word": "INSTRUMENT",
+    "clue": "Device used to produce music"
+  },
+  {
+    "word": "INTEGER",
+    "clue": "Number that is not a fraction"
+  },
+  {
+    "word": "INTELLIGENCE",
+    "clue": "Capacity of mind especially to understand principles truths"
+  },
+  {
+    "word": "INTEREST",
+    "clue": "Price paid for obtaining or price received for"
+  },
+  {
+    "word": "INTERVIEW",
+    "clue": "Official face-to-face meeting of monarchs or other important"
+  },
+  {
+    "word": "INTRODUCTION",
+    "clue": "Act or process of introducing"
+  },
+  {
+    "word": "INVENTION",
+    "clue": "Something invented"
+  },
+  {
+    "word": "INVENTORY",
+    "clue": "Stock of an item on hand at a"
+  },
+  {
+    "word": "INVITATION",
+    "clue": "Act of inviting"
+  },
+  {
+    "word": "JOURNAL",
+    "clue": "Diary or daily record of a person organization"
+  },
+  {
+    "word": "JUDGMENT",
+    "clue": "Act of judging"
+  },
+  {
+    "word": "JUNIOR",
+    "clue": "Low in rank"
+  },
+  {
+    "word": "JUSTICE",
+    "clue": "State or characteristic of being just or fair"
+  },
+  {
+    "word": "KINDERGARTEN",
+    "clue": "Educational institution for young children usually between ages"
+  },
+  {
+    "word": "KNOWLEDGE",
+    "clue": "Fact of knowing about something"
+  },
+  {
+    "word": "LABEL",
+    "clue": "Identifying name tag"
+  },
+  {
+    "word": "LABORATORY",
+    "clue": "Room building or institution equipped for scientific research"
+  },
+  {
+    "word": "LANGUAGE",
+    "clue": "Body of words and set of methods of"
+  },
+  {
+    "word": "LAPTOP",
+    "clue": "Portable folding computer"
+  },
+  {
+    "word": "LATIN",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "LAW",
+    "clue": "Official rule system"
+  },
+  {
+    "word": "LAYER",
+    "clue": "Single thickness of some material covering a surface"
+  },
+  {
+    "word": "LAYOUT",
+    "clue": "Structured arrangement of items within certain limits"
+  },
+  {
+    "word": "LECTURE",
+    "clue": "Spoken lesson or exposition usually delivered to a"
+  },
+  {
+    "word": "LEGEND",
+    "clue": "Unrealistic story depicting past events"
+  },
+  {
+    "word": "LEISURE",
+    "clue": "Freedom provided by the cessation of activities"
+  },
+  {
+    "word": "LESSON",
+    "clue": "To instruct to teach"
+  },
+  {
+    "word": "LETTER",
+    "clue": "Written mail message"
+  },
+  {
+    "word": "LEVEL",
+    "clue": "Straight checking tool"
+  },
+  {
+    "word": "LIBRARY",
+    "clue": "Institution which holds books and or other forms"
+  },
+  {
+    "word": "LINGUISTICS",
+    "clue": "Scientific study of language"
+  },
+  {
+    "word": "LIST",
+    "clue": "Strip of fabric especially from the edge of"
+  },
+  {
+    "word": "LITERACY",
+    "clue": "Ability to read and write"
+  },
+  {
+    "word": "LITERATURE",
+    "clue": "Body of all written works"
+  },
+  {
+    "word": "LOAN",
+    "clue": "Act or instance of lending an act or"
+  },
+  {
+    "word": "LOCATION",
+    "clue": "Particular point or place in physical space"
+  },
+  {
+    "word": "LOGIC",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "LOGO",
+    "clue": "Visual symbol or emblem that acts as a"
+  },
+  {
+    "word": "LUNCH",
+    "clue": "Light meal usually eaten around midday notably when"
+  },
+  {
+    "word": "LYRIC",
+    "clue": "Of or relating to a type of poetry"
+  },
+  {
+    "word": "MACHINE",
+    "clue": "Device that directs and controls energy often in"
+  },
+  {
+    "word": "MAGAZINE",
+    "clue": "Non-academic periodical publication generally consisting of sheets of"
+  },
+  {
+    "word": "MAGNET",
+    "clue": "Piece of material that attracts some metals by"
+  },
+  {
+    "word": "MAJOR",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "MAP",
+    "clue": "Geography chart guide"
+  },
+  {
+    "word": "MARGIN",
+    "clue": "Edge of the paper typically left blank when"
+  },
+  {
+    "word": "MARKER",
+    "clue": "Bold colored pen"
+  },
+  {
+    "word": "MASTER",
+    "clue": "Someone who has control over something or someone"
+  },
+  {
+    "word": "MATERIAL",
+    "clue": "Having to do with matter"
+  },
+  {
+    "word": "MATH",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "MATHEMATICS",
+    "clue": "Abstract representational system studying numbers shapes structures quantitative"
+  },
+  {
+    "word": "MATRIX",
+    "clue": "Table of data"
+  },
+  {
+    "word": "MEASURE",
+    "clue": "Length checking tape"
+  },
+  {
+    "word": "MECHANIC",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "MEDIA",
+    "clue": "Middle layer of the wall of a blood"
+  },
+  {
+    "word": "MEDICINE",
+    "clue": "Substance which specifically promotes healing when ingested or"
+  },
+  {
+    "word": "MELODY",
+    "clue": "Sequence of notes that makes up a musical"
+  },
+  {
+    "word": "MEMO",
+    "clue": "Short note"
+  },
+  {
+    "word": "MEMORY",
+    "clue": "Ability of the brain to record information or"
+  },
+  {
+    "word": "MENTAL",
+    "clue": "Of or relating to the mind or specifically"
+  },
+  {
+    "word": "MENU",
+    "clue": "Details of the food to be served at"
+  },
+  {
+    "word": "METAPHOR",
+    "clue": "Use of a word or phrase to refer"
+  },
+  {
+    "word": "METER",
+    "clue": "Device that measures things"
+  },
+  {
+    "word": "METHOD",
+    "clue": "Process by which a task is completed"
+  },
+  {
+    "word": "METRIC",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "MICROSCOPE",
+    "clue": "Optical instrument used for observing small objects"
+  },
+  {
+    "word": "MINERAL",
+    "clue": "Natural solid element"
+  },
+  {
+    "word": "MINUTE",
+    "clue": "Unit of time equal to sixty seconds"
+  },
+  {
+    "word": "MISSION",
+    "clue": "Set of tasks that fulfills a purpose or"
+  },
+  {
+    "word": "MODEL",
+    "clue": "Person who serves as a subject for artwork"
+  },
+  {
+    "word": "MODERN",
+    "clue": "Pertaining to a current or recent time and"
+  },
+  {
+    "word": "MOLECULE",
+    "clue": "Smallest particle of a specific element or compound"
+  },
+  {
+    "word": "MONITOR",
+    "clue": "Screen display device"
+  },
+  {
+    "word": "MONTH",
+    "clue": "Period into which a year is divided historically"
+  },
+  {
+    "word": "MUSEUM",
+    "clue": "Building or institution dedicated to the acquisition conservation"
+  },
+  {
+    "word": "MUSIC",
+    "clue": "Series of sounds organized in time usually employing"
+  },
+  {
+    "word": "MYSTERY",
+    "clue": "Something secret or unexplainable"
+  },
+  {
+    "word": "MYTH",
+    "clue": "Traditional story which embodies a belief regarding some"
+  },
+  {
+    "word": "NAME",
+    "clue": "Nounal word or phrase which indicates a particular"
+  },
+  {
+    "word": "NARRATIVE",
+    "clue": "Telling a story"
+  },
+  {
+    "word": "NATION",
+    "clue": "Historically constituted stable community of people formed based"
+  },
+  {
+    "word": "NATIVE",
+    "clue": "Belonging to one by birth"
+  },
+  {
+    "word": "NATURE",
+    "clue": "Way things are the totality of all things"
+  },
+  {
+    "word": "NAVIGATION",
+    "clue": "Theory practice and technology of charting a course"
+  },
+  {
+    "word": "NETWORK",
+    "clue": "Fabric or structure of fibrous elements attached to"
+  },
+  {
+    "word": "NEWSPAPER",
+    "clue": "Publication usually published daily or weekly and usually"
+  },
+  {
+    "word": "NOTE",
+    "clue": "Symbol or annotation"
+  },
+  {
+    "word": "NOTEBOOK",
+    "clue": "Blank writing pages"
+  },
+  {
+    "word": "NOUN",
+    "clue": "Word that functions as the name of a"
+  },
+  {
+    "word": "NOVEL",
+    "clue": "Newly made formed or evolved"
+  },
+  {
+    "word": "NUMBER",
+    "clue": "Abstract entity used to describe quantity"
+  },
+  {
+    "word": "NUMERAL",
+    "clue": "Symbol that is not a word and represents"
+  },
+  {
+    "word": "NURSE",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "NUTRITION",
+    "clue": "Organic process by which an organism assimilates food"
+  },
+  {
+    "word": "OBJECT",
+    "clue": "Thing that has physical existence but is not"
+  },
+  {
+    "word": "OBJECTIVE",
+    "clue": "Of or relating to a material object actual"
+  },
+  {
+    "word": "OBSERVATION",
+    "clue": "Act of observing and the fact of being"
+  },
+  {
+    "word": "OFFICE",
+    "clue": "Ceremonial duty or service particularly"
+  },
+  {
+    "word": "OPINION",
+    "clue": "Belief judgment or perspective that a person has"
+  },
+  {
+    "word": "ORAL",
+    "clue": "Relating to the mouth"
+  },
+  {
+    "word": "ORCHESTRA",
+    "clue": "Large group of musicians who play together on"
+  },
+  {
+    "word": "ORGANIZATION",
+    "clue": "Quality of being organized"
+  },
+  {
+    "word": "ORIGIN",
+    "clue": "Beginning of something"
+  },
+  {
+    "word": "OUTLINE",
+    "clue": "Line marking the boundary of an object figure"
+  },
+  {
+    "word": "OVERVIEW",
+    "clue": "Brief summary as of a book or a"
+  },
+  {
+    "word": "OXYGEN",
+    "clue": "Chemical element with an atomic number of and"
+  },
+  {
+    "word": "PAGE",
+    "clue": "Of the many pieces of paper bound together"
+  },
+  {
+    "word": "PAINT",
+    "clue": "Colored coating liquid"
+  },
+  {
+    "word": "PAINTING",
+    "clue": "Present participle of paint"
+  },
+  {
+    "word": "PAMPHLET",
+    "clue": "Small brief printed work consisting either of a"
+  },
+  {
+    "word": "PAPER",
+    "clue": "Writing sheet material"
+  },
+  {
+    "word": "PARAGRAPH",
+    "clue": "Passage in text that starts on a new"
+  },
+  {
+    "word": "PARENT",
+    "clue": "Of the two persons from whom one is"
+  },
+  {
+    "word": "PARK",
+    "clue": "Area of land set aside for environment preservation"
+  },
+  {
+    "word": "PART",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "PARTICLE",
+    "clue": "Very small piece of matter a fragment"
+  },
+  {
+    "word": "PARTNER",
+    "clue": "Either of a pair of people or things"
+  },
+  {
+    "word": "PASS",
+    "clue": "To change place"
+  },
+  {
+    "word": "PASSAGE",
+    "clue": "Paragraph or section of text or music with"
+  },
+  {
+    "word": "PASSWORD",
+    "clue": "Account secret code"
+  },
+  {
+    "word": "PAST",
+    "clue": "Period of time that has already happened in"
+  },
+  {
+    "word": "PATCH",
+    "clue": "Clothes repair piece"
+  },
+  {
+    "word": "PATH",
+    "clue": "Trail for the use of or worn by"
+  },
+  {
+    "word": "PATIENT",
+    "clue": "Willing to wait if necessary"
+  },
+  {
+    "word": "PATTERN",
+    "clue": "Model example"
+  },
+  {
+    "word": "PAUSE",
+    "clue": "To take a temporary rest take a break"
+  },
+  {
+    "word": "PEAK",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "PEN",
+    "clue": "Ink writing tool"
+  },
+  {
+    "word": "PENCIL",
+    "clue": "Graphite writing tool"
+  },
+  {
+    "word": "PERCENT",
+    "clue": "For every hundred"
+  },
+  {
+    "word": "PERFECT",
+    "clue": "Fitting its definition precisely"
+  },
+  {
+    "word": "PERFORM",
+    "clue": "To do"
+  },
+  {
+    "word": "PERFORMANCE",
+    "clue": "Act of performing"
+  },
+  {
+    "word": "PERIOD",
+    "clue": "Length of time"
+  },
+  {
+    "word": "PERSON",
+    "clue": "Individual substance of a rational nature"
+  },
+  {
+    "word": "PERSONAL",
+    "clue": "Pertaining to persons"
+  },
+  {
+    "word": "PERSONALITY",
+    "clue": "Set of non-physical psychological and social qualities that"
+  },
+  {
+    "word": "PERSPECTIVE",
+    "clue": "View vista or outlook"
+  },
+  {
+    "word": "PHASE",
+    "clue": "Distinguishable part of a sequence or cycle occurring"
+  },
+  {
+    "word": "PHILOSOPHY",
+    "clue": "Love of wisdom"
+  },
+  {
+    "word": "PHOTO",
+    "clue": "Captured memory image"
+  },
+  {
+    "word": "PHOTOGRAPH",
+    "clue": "Picture created by projecting an image onto a"
+  },
+  {
+    "word": "PHRASE",
+    "clue": "Short written or spoken expression"
+  },
+  {
+    "word": "PHYSICAL",
+    "clue": "Of medicine"
+  },
+  {
+    "word": "PHYSICS",
+    "clue": "Branch of science concerned with the study of"
+  },
+  {
+    "word": "PIANO",
+    "clue": "Percussive keyboard musical instrument usually ranging over seven"
+  },
+  {
+    "word": "PICTURE",
+    "clue": "Wall hanging image"
+  },
+  {
+    "word": "PIECE",
+    "clue": "Part of a larger whole usually in such"
+  },
+  {
+    "word": "PILOT",
+    "clue": "Person who steers a ship a helmsman"
+  },
+  {
+    "word": "PIN",
+    "clue": "Small sharp fastener"
+  },
+  {
+    "word": "PIONEER",
+    "clue": "Who goes before as into the wilderness preparing"
+  },
+  {
+    "word": "PIPE",
+    "clue": "Meanings relating to a wind instrument"
+  },
+  {
+    "word": "PITCH",
+    "clue": "Sticky gummy substance secreted by trees"
+  },
+  {
+    "word": "PLACE",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "PLAN",
+    "clue": "Drawing showing technical details of a building machine"
+  },
+  {
+    "word": "PLANET",
+    "clue": "Each of the seven major bodies which move"
+  },
+  {
+    "word": "PLANT",
+    "clue": "Indoor green decoration"
+  },
+  {
+    "word": "PLASTIC",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "PLATE",
+    "clue": "Flat eating dish"
+  },
+  {
+    "word": "PLATFORM",
+    "clue": "Raised stage from which speeches are made and"
+  },
+  {
+    "word": "PLAY",
+    "clue": "To act in a manner such that one"
+  },
+  {
+    "word": "PLAYGROUND",
+    "clue": "Large open space for children to play on"
+  },
+  {
+    "word": "POEM",
+    "clue": "Literary piece written in verse"
+  },
+  {
+    "word": "POET",
+    "clue": "Person who writes poems"
+  },
+  {
+    "word": "POETRY",
+    "clue": "Literature composed in verse or language exhibiting conscious"
+  },
+  {
+    "word": "POINT",
+    "clue": "Discrete division of something"
+  },
+  {
+    "word": "POLE",
+    "clue": "Originally a stick"
+  },
+  {
+    "word": "POLICY",
+    "clue": "Principle of behaviour conduct etc"
+  },
+  {
+    "word": "POLISH",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "POLITICS",
+    "clue": "Methodology and activities associated with running a government"
+  },
+  {
+    "word": "POLLEN",
+    "clue": "Fine granular substance produced in flowers"
+  },
+  {
+    "word": "POOL",
+    "clue": "Small water collection"
+  },
+  {
+    "word": "POPULAR",
+    "clue": "Common among the general public"
+  },
+  {
+    "word": "POPULATION",
+    "clue": "People living within a political or geographical boundary"
+  },
+  {
+    "word": "PORT",
+    "clue": "Place on the coast at which ships can"
+  },
+  {
+    "word": "PORTFOLIO",
+    "clue": "Case for carrying papers drawings photographs maps and"
+  },
+  {
+    "word": "PORTION",
+    "clue": "Allocated amount"
+  },
+  {
+    "word": "PORTRAIT",
+    "clue": "Painting or other picture of a person especially"
+  },
+  {
+    "word": "POSITION",
+    "clue": "Place or location"
+  },
+  {
+    "word": "POSITIVE",
+    "clue": "Not negative or neutral"
+  },
+  {
+    "word": "POSSESSION",
+    "clue": "Control or occupancy of something for which one"
+  },
+  {
+    "word": "POSSIBILITY",
+    "clue": "Quality of being possible"
+  },
+  {
+    "word": "POST",
+    "clue": "Long dowel or plank protruding from the ground"
+  },
+  {
+    "word": "POSTAGE",
+    "clue": "Charge for posting an item"
+  },
+  {
+    "word": "POSTER",
+    "clue": "Wall display print"
+  },
+  {
+    "word": "POT",
+    "clue": "Deep cooking vessel"
+  },
+  {
+    "word": "POTATO",
+    "clue": "Starchy tuber vegetable"
+  },
+  {
+    "word": "POTENTIAL",
+    "clue": "Currently unrealized ability"
+  },
+  {
+    "word": "POTTERY",
+    "clue": "Fired ceramic wares that contain clay when formed"
+  },
+  {
+    "word": "POUND",
+    "clue": "Unit of weight in various measurement systems"
+  },
+  {
+    "word": "POWDER",
+    "clue": "Fine particles which are the result of reducing"
+  },
+  {
+    "word": "POWER",
+    "clue": "Ability to do or undergo something"
+  },
+  {
+    "word": "PRACTICE",
+    "clue": "Repetition of an activity to improve a skill"
+  },
+  {
+    "word": "PRAIRIE",
+    "clue": "Flat grassland region"
+  },
+  {
+    "word": "PRECISE",
+    "clue": "Exact accurate"
+  },
+  {
+    "word": "PRECISION",
+    "clue": "State of being precise or exact"
+  },
+  {
+    "word": "PREDICT",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "PREFACE",
+    "clue": "Beginning or introductory portion that comes before the"
+  },
+  {
+    "word": "PREFER",
+    "clue": "To be in the habit of choosing something"
+  },
+  {
+    "word": "PREFIX",
+    "clue": "Something placed before another"
+  },
+  {
+    "word": "PREJUDICE",
+    "clue": "Adverse judgment or opinion formed beforehand or without"
+  },
+  {
+    "word": "PRELIMINARY",
+    "clue": "In preparation for the main matter"
+  },
+  {
+    "word": "PREMISE",
+    "clue": "Proposition antecedently supposed or proved"
+  },
+  {
+    "word": "PREPARE",
+    "clue": "To make ready for a specific future purpose"
+  },
+  {
+    "word": "PREPOSITION",
+    "clue": "Of a class of non-inflecting words typically employed"
+  },
+  {
+    "word": "PRESENCE",
+    "clue": "Fact or condition of being present or of"
+  },
+  {
+    "word": "PRESENT",
+    "clue": "Relating to now for the time being"
+  },
+  {
+    "word": "PRESERVE",
+    "clue": "Sweet spread made of any of a variety"
+  },
+  {
+    "word": "PRESIDENT",
+    "clue": "Head of state of a republic"
+  },
+  {
+    "word": "PRESS",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "PRESSURE",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "PRETEND",
+    "clue": "To claim to allege especially when falsely or"
+  },
+  {
+    "word": "PRETTY",
+    "clue": "Pleasant to the sight or other senses"
+  },
+  {
+    "word": "PREVENT",
+    "clue": "To stop"
+  },
+  {
+    "word": "PREVIOUS",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "PRICE",
+    "clue": "Cost required to gain possession of something"
+  },
+  {
+    "word": "PRIDE",
+    "clue": "Quality or state of being proud"
+  },
+  {
+    "word": "PRIMARY",
+    "clue": "First or earliest in a group or series"
+  },
+  {
+    "word": "PRIME",
+    "clue": "First in importance degree or rank"
+  },
+  {
+    "word": "PRIMITIVE",
+    "clue": "Original or primary word"
+  },
+  {
+    "word": "PRINCIPAL",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "PRINCIPLE",
+    "clue": "Fundamental assumption or guiding belief"
+  },
+  {
+    "word": "PRINT",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "PRINTER",
+    "clue": "Paper output machine"
+  },
+  {
+    "word": "PRIOR",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "PRIVATE",
+    "clue": "Belonging to concerning or accessible only to an"
+  },
+  {
+    "word": "PRIVILEGE",
+    "clue": "Exemption from certain laws granted by the Pope"
+  },
+  {
+    "word": "PRIZE",
+    "clue": "That which is taken from another"
+  },
+  {
+    "word": "PROBABILITY",
+    "clue": "State of being probable"
+  },
+  {
+    "word": "PROBLEM",
+    "clue": "Difficulty that has to be resolved or dealt"
+  },
+  {
+    "word": "PROCEDURE",
+    "clue": "Particular method for performing a task"
+  },
+  {
+    "word": "PROCESS",
+    "clue": "Series of events which produce a result"
+  },
+  {
+    "word": "PRODUCE",
+    "clue": "To bring forth to yield make manufacture or"
+  },
+  {
+    "word": "PRODUCT",
+    "clue": "Anything that is produced"
+  },
+  {
+    "word": "PROFESSION",
+    "clue": "Declaration of faith"
+  },
+  {
+    "word": "PROFESSOR",
+    "clue": "Most senior rank for an academic at a"
+  },
+  {
+    "word": "PROFILE",
+    "clue": "Outermost shape view or edge of an object"
+  },
+  {
+    "word": "PROFIT",
+    "clue": "Total income or cash flow minus expenditures"
+  },
+  {
+    "word": "PROGRAM",
+    "clue": "Set of structured activities"
+  },
+  {
+    "word": "PROGRESS",
+    "clue": "Movement or advancement through a series of events"
+  },
+  {
+    "word": "PROJECT",
+    "clue": "Planned endeavor usually with a specific goal and"
+  },
+  {
+    "word": "PROMISE",
+    "clue": "Oath or affirmation"
+  },
+  {
+    "word": "PROMOTE",
+    "clue": "To raise to a more important responsible or"
+  },
+  {
+    "word": "PROMPT",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "PRONOUN",
+    "clue": "Type of word that refers anaphorically to a"
+  },
+  {
+    "word": "PRONOUNCE",
+    "clue": "To declare formally officially or ceremoniously"
+  },
+  {
+    "word": "PROOF",
+    "clue": "Effort process or operation designed to establish or"
+  },
+  {
+    "word": "PROPER",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "PROPERTY",
+    "clue": "Something that is owned"
+  },
+  {
+    "word": "PROPORTION",
+    "clue": "Quantity of something that is part of the"
+  },
+  {
+    "word": "PROPOSAL",
+    "clue": "Something which is proposed or offered for consideration"
+  },
+  {
+    "word": "PROSE",
+    "clue": "Language particularly written language not intended as poetry"
+  },
+  {
+    "word": "PROTECT",
+    "clue": "To keep safe"
+  },
+  {
+    "word": "PROTEIN",
+    "clue": "Of numerous large complex naturally-produced molecules composed of"
+  },
+  {
+    "word": "PROTEST",
+    "clue": "To make a strong objection"
+  },
+  {
+    "word": "PROUD",
+    "clue": "Feeling honoured"
+  },
+  {
+    "word": "PROVE",
+    "clue": "To demonstrate that something is true or viable"
+  },
+  {
+    "word": "PROVIDE",
+    "clue": "To make a living"
+  },
+  {
+    "word": "PROVINCE",
+    "clue": "Region of the earth or of a continent"
+  },
+  {
+    "word": "PSYCHOLOGY",
+    "clue": "Study of the human mind"
+  },
+  {
+    "word": "PUBLIC",
+    "clue": "Able to be seen or known by everyone"
+  },
+  {
+    "word": "PUBLISH",
+    "clue": "To issue for distribution and or sale"
+  },
+  {
+    "word": "PUDDING",
+    "clue": "Soft creamy dessert"
+  },
+  {
+    "word": "PUPIL",
+    "clue": "Learner at a school under the supervision of"
+  },
+  {
+    "word": "PURCHASE",
+    "clue": "Acquisition of title to or property in anything"
+  },
+  {
+    "word": "PURE",
+    "clue": "Free of flaws or imperfections"
+  },
+  {
+    "word": "PURPOSE",
+    "clue": "End for which something is done is made"
+  },
+  {
+    "word": "PURSE",
+    "clue": "Small personal carry bag"
+  },
+  {
+    "word": "PURSUE",
+    "clue": "To follow urgently originally with intent to capture"
+  },
+  {
+    "word": "PUSH",
+    "clue": "To apply a force to such that it"
+  },
+  {
+    "word": "PUT",
+    "clue": "Place in position"
+  },
+  {
+    "word": "PUZZLE",
+    "clue": "Interlocking picture game"
+  },
+  {
+    "word": "PYRAMID",
+    "clue": "Ancient massive construction with a square or rectangular"
+  },
+  {
+    "word": "QUALITY",
+    "clue": "Level of excellence"
+  },
+  {
+    "word": "QUANTITY",
+    "clue": "Fundamental generic term used when referring to the"
+  },
+  {
+    "word": "QUARTER",
+    "clue": "Fourth part of something"
+  },
+  {
+    "word": "QUESTION",
+    "clue": "Sentence phrase or word which asks for information"
+  },
+  {
+    "word": "QUICK",
+    "clue": "Moving with speed rapidity or swiftness or capable"
+  },
+  {
+    "word": "QUIET",
+    "clue": "With little or no sound"
+  },
+  {
+    "word": "QUILT",
+    "clue": "Stitched bed cover"
+  },
+  {
+    "word": "QUIZ",
+    "clue": "Odd puzzling or absurd person or thing"
+  },
+  {
+    "word": "QUOTE",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "RACE",
+    "clue": "Contest between people animals vehicles etc"
+  },
+  {
+    "word": "RACK",
+    "clue": "Series of one or more shelves stacked one"
+  },
+  {
+    "word": "RADAR",
+    "clue": "Method of detecting distant objects and determining their"
+  },
+  {
+    "word": "RADIO",
+    "clue": "Broadcast receiver device"
+  },
+  {
+    "word": "RADIUS",
+    "clue": "Long bone in the forearm on the side"
+  },
+  {
+    "word": "RAIL",
+    "clue": "Horizontal bar extending between supports and used for"
+  },
+  {
+    "word": "RAIN",
+    "clue": "Falling sky water"
+  },
+  {
+    "word": "RAINBOW",
+    "clue": "Arc of colored light"
+  },
+  {
+    "word": "RAISE",
+    "clue": "To cause to rise"
+  },
+  {
+    "word": "RAKE",
+    "clue": "Leaf gathering tool"
+  },
+  {
+    "word": "RANCH",
+    "clue": "Large plot of land used for raising cattle"
+  },
+  {
+    "word": "RANDOM",
+    "clue": "Roving motion"
+  },
+  {
+    "word": "RANGE",
+    "clue": "Line or series of mountains buildings etc"
+  },
+  {
+    "word": "RANK",
+    "clue": "Strong of its kind or in character"
+  },
+  {
+    "word": "RAPID",
+    "clue": "Very swift or quick"
+  },
+  {
+    "word": "RARE",
+    "clue": "Very uncommon"
+  },
+  {
+    "word": "RATE",
+    "clue": "Worth of something"
+  },
+  {
+    "word": "RATHER",
+    "clue": "More quickly"
+  },
+  {
+    "word": "RATIO",
+    "clue": "Number representing a comparison between two named things"
+  },
+  {
+    "word": "RAW",
+    "clue": "Uncooked natural state"
+  },
+  {
+    "word": "RAY",
+    "clue": "Flat winged sea fish"
+  },
+  {
+    "word": "REACH",
+    "clue": "To extend stretch or thrust out"
+  },
+  {
+    "word": "REACT",
+    "clue": "To act in response"
+  },
+  {
+    "word": "REACTION",
+    "clue": "Action or statement in response to a stimulus"
+  },
+  {
+    "word": "READ",
+    "clue": "To look at and interpret letters or other"
+  },
+  {
+    "word": "READER",
+    "clue": "Person who reads"
+  },
+  {
+    "word": "READING",
+    "clue": "Present participle of read"
+  },
+  {
+    "word": "READY",
+    "clue": "Prepared for immediate action or use"
+  },
+  {
+    "word": "REAL",
+    "clue": "True genuine not merely nominal or apparent"
+  },
+  {
+    "word": "REALITY",
+    "clue": "State of being actual or real"
+  },
+  {
+    "word": "REALIZE",
+    "clue": "To make real"
+  },
+  {
+    "word": "REASON",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "RECALL",
+    "clue": "To withdraw retract"
+  },
+  {
+    "word": "RECEIPT",
+    "clue": "Act of receiving or the fact of having"
+  },
+  {
+    "word": "RECEIVE",
+    "clue": "To take as something that is offered given"
+  },
+  {
+    "word": "RECENT",
+    "clue": "Having happened a short while ago"
+  },
+  {
+    "word": "RECIPE",
+    "clue": "Formula for preparing or using a medicine"
+  },
+  {
+    "word": "RECITE",
+    "clue": "To repeat aloud often before an audience"
+  },
+  {
+    "word": "RECOGNIZE",
+    "clue": "To match to a memory of some previous"
+  },
+  {
+    "word": "RECOMMEND",
+    "clue": "To bestow commendation on"
+  },
+  {
+    "word": "RECORD",
+    "clue": "Item of information put into a temporary or"
+  },
+  {
+    "word": "RECTANGLE",
+    "clue": "Quadrilateral having opposing sides parallel and four right"
+  },
+  {
+    "word": "RECYCLE",
+    "clue": "Reuse collection bin"
+  },
+  {
+    "word": "RED",
+    "clue": "Color of blood"
+  },
+  {
+    "word": "REDUCE",
+    "clue": "To bring down the size quantity quality value"
+  },
+  {
+    "word": "REFER",
+    "clue": "To direct the attention of"
+  },
+  {
+    "word": "REFERENCE",
+    "clue": "Relationship or relation"
+  },
+  {
+    "word": "REFLECT",
+    "clue": "To bend back from a surface"
+  },
+  {
+    "word": "REFUSE",
+    "clue": "Discarded rejected"
+  },
+  {
+    "word": "REGION",
+    "clue": "Considerable and connected part of a space or"
+  },
+  {
+    "word": "REGISTER",
+    "clue": "Formal recording of names events transactions etc"
+  },
+  {
+    "word": "REGRET",
+    "clue": "To feel sorry about afterthink"
+  },
+  {
+    "word": "REGULAR",
+    "clue": "Bound by religious rule"
+  },
+  {
+    "word": "REGULATE",
+    "clue": "To dictate policy"
+  },
+  {
+    "word": "REHEARSAL",
+    "clue": "Practicing of something which is to be performed"
+  },
+  {
+    "word": "REJECT",
+    "clue": "To refuse to accept"
+  },
+  {
+    "word": "RELATE",
+    "clue": "To tell in a descriptive way"
+  },
+  {
+    "word": "RELATIVE",
+    "clue": "Connected to or depending on something else"
+  },
+  {
+    "word": "RELAX",
+    "clue": "To calm down"
+  },
+  {
+    "word": "RELEASE",
+    "clue": "Event of setting free"
+  },
+  {
+    "word": "RELEVANT",
+    "clue": "Related connected or pertinent to a topic"
+  },
+  {
+    "word": "RELIABLE",
+    "clue": "Suitable or fit to be relied on"
+  },
+  {
+    "word": "RELIEF",
+    "clue": "Removal of stress or discomfort"
+  },
+  {
+    "word": "RELIGION",
+    "clue": "Belief in a spiritual or metaphysical reality accompanied"
+  },
+  {
+    "word": "RELY",
+    "clue": "To trust"
+  },
+  {
+    "word": "REMAIN",
+    "clue": "That which is left"
+  },
+  {
+    "word": "REMARK",
+    "clue": "Act of pointing out or noticing"
+  },
+  {
+    "word": "REMEMBER",
+    "clue": "To recall from one's memory"
+  },
+  {
+    "word": "REMIND",
+    "clue": "To cause one to experience a memory"
+  },
+  {
+    "word": "REMOTE",
+    "clue": "Channel changing control"
+  },
+  {
+    "word": "REMOVE",
+    "clue": "To delete"
+  },
+  {
+    "word": "RENEW",
+    "clue": "To make new again"
+  },
+  {
+    "word": "RENT",
+    "clue": "Payment made by a tenant at intervals in"
+  },
+  {
+    "word": "REPAIR",
+    "clue": "To restore to good working order fix or"
+  },
+  {
+    "word": "REPEAT",
+    "clue": "To do or say again"
+  },
+  {
+    "word": "REPLACE",
+    "clue": "To restore to a former place position condition"
+  },
+  {
+    "word": "REPLY",
+    "clue": "To give a written or spoken response especially"
+  },
+  {
+    "word": "REPORT",
+    "clue": "To relate details of"
+  },
+  {
+    "word": "REPRESENT",
+    "clue": "To present again or anew"
+  },
+  {
+    "word": "REPUBLIC",
+    "clue": "State where sovereignty rests with the people or"
+  },
+  {
+    "word": "REQUEST",
+    "clue": "To ask for"
+  },
+  {
+    "word": "REQUIRE",
+    "clue": "To ask for something"
+  },
+  {
+    "word": "RESCUE",
+    "clue": "To save from any violence danger or evil"
+  },
+  {
+    "word": "RESEARCH",
+    "clue": "Diligent inquiry or examination to seek or revise"
+  },
+  {
+    "word": "RESEMBLE",
+    "clue": "To be like or similar to"
+  },
+  {
+    "word": "RESERVE",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "RESIGN",
+    "clue": "To give up"
+  },
+  {
+    "word": "RESIST",
+    "clue": "To attempt to counter the actions or effects"
+  },
+  {
+    "word": "RESOURCE",
+    "clue": "Something that one uses to achieve an objective"
+  },
+  {
+    "word": "RESPECT",
+    "clue": "Attitude of consideration or high regard"
+  },
+  {
+    "word": "RESPOND",
+    "clue": "To say something in return"
+  },
+  {
+    "word": "RESPONSE",
+    "clue": "Answer or reply or something in the nature"
+  },
+  {
+    "word": "REST",
+    "clue": "Relief from work or activity by sleeping"
+  },
+  {
+    "word": "RESTAURANT",
+    "clue": "Eating establishment in which diners are served food"
+  },
+  {
+    "word": "RESULT",
+    "clue": "To proceed spring up or rise as a"
+  },
+  {
+    "word": "RETAIN",
+    "clue": "To keep in possession or use"
+  },
+  {
+    "word": "RETIRE",
+    "clue": "To stop working on a permanent basis usually"
+  },
+  {
+    "word": "RETREAT",
+    "clue": "Act of pulling back or withdrawing as from"
+  },
+  {
+    "word": "RETURN",
+    "clue": "To come or go back"
+  },
+  {
+    "word": "REVEAL",
+    "clue": "Outer side of a window or door frame"
+  },
+  {
+    "word": "REVERSE",
+    "clue": "Opposite contrary"
+  },
+  {
+    "word": "REVIEW",
+    "clue": "Second or subsequent reading of a text or"
+  },
+  {
+    "word": "REVISE",
+    "clue": "To review alter and amend especially of written"
+  },
+  {
+    "word": "REVOLUTION",
+    "clue": "Political upheaval in a government or state characterized"
+  },
+  {
+    "word": "REWARD",
+    "clue": "Something of value given in return for an"
+  },
+  {
+    "word": "RHYTHM",
+    "clue": "Variation of strong and weak elements of sounds"
+  },
+  {
+    "word": "RIB",
+    "clue": "Chest bone pair"
+  },
+  {
+    "word": "RIBBON",
+    "clue": "Long narrow strip of material used for decoration"
+  },
+  {
+    "word": "RICE",
+    "clue": "Staple white grain"
+  },
+  {
+    "word": "RICH",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "RID",
+    "clue": "Free from remove"
+  },
+  {
+    "word": "RIDE",
+    "clue": "To transport oneself by sitting on and directing"
+  },
+  {
+    "word": "RIDGE",
+    "clue": "Back of any animal"
+  },
+  {
+    "word": "RIGHT",
+    "clue": "Straight not bent"
+  },
+  {
+    "word": "RIM",
+    "clue": "Outer circular edge"
+  },
+  {
+    "word": "RING",
+    "clue": "Solid object in the shape of a circle"
+  },
+  {
+    "word": "RINSE",
+    "clue": "To wash quickly using water and no soap"
+  },
+  {
+    "word": "RIP",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "RIPE",
+    "clue": "Ready for reaping or gathering"
+  },
+  {
+    "word": "RISE",
+    "clue": "To move or appear to move physically upwards"
+  },
+  {
+    "word": "RISK",
+    "clue": "Probability of a negative outcome to a decision"
+  },
+  {
+    "word": "RITUAL",
+    "clue": "Related to a rite or repeated set of"
+  },
+  {
+    "word": "RIVAL",
+    "clue": "Competitor with the same goal as another or"
+  },
+  {
+    "word": "RIVER",
+    "clue": "Flowing freshwater stream"
+  },
+  {
+    "word": "ROAD",
+    "clue": "Way used for travelling between places originally one"
+  },
+  {
+    "word": "ROAR",
+    "clue": "To make a loud deep cry especially from"
+  },
+  {
+    "word": "ROAST",
+    "clue": "To cook food by heating in an oven"
+  },
+  {
+    "word": "ROB",
+    "clue": "To steal from especially using force or violence"
+  },
+  {
+    "word": "ROBE",
+    "clue": "Long loose outer garment often signifying honorary stature"
+  },
+  {
+    "word": "ROBOT",
+    "clue": "System of serfdom used in Central Europe under"
+  },
+  {
+    "word": "ROCK",
+    "clue": "Hard mineral mass"
+  },
+  {
+    "word": "ROCKET",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "ROD",
+    "clue": "Long thin stick"
+  },
+  {
+    "word": "ROLE",
+    "clue": "Character or part played by a performer or"
+  },
+  {
+    "word": "ROLL",
+    "clue": "Small round bread"
+  },
+  {
+    "word": "ROMANCE",
+    "clue": "Story relating to chivalry"
+  },
+  {
+    "word": "ROOF",
+    "clue": "External covering at the top of a building"
+  },
+  {
+    "word": "ROOM",
+    "clue": "Opportunity or scope"
+  },
+  {
+    "word": "ROOSTER",
+    "clue": "Crow of dawn"
+  },
+  {
+    "word": "ROOT",
+    "clue": "Part of a plant generally underground that anchors"
+  },
+  {
+    "word": "ROPE",
+    "clue": "Twisted binding cord"
+  },
+  {
+    "word": "ROSE",
+    "clue": "Thorny fragrant flower"
+  },
+  {
+    "word": "ROUGH",
+    "clue": "Not smooth"
+  },
+  {
+    "word": "ROUND",
+    "clue": "Of shape"
+  },
+  {
+    "word": "ROUTE",
+    "clue": "Course or way which is traveled or passed"
+  },
+  {
+    "word": "ROW",
+    "clue": "Line of items"
+  },
+  {
+    "word": "ROYAL",
+    "clue": "Of or relating to a monarch or their"
+  },
+  {
+    "word": "RUB",
+    "clue": "Friction massage motion"
+  },
+  {
+    "word": "RUBBER",
+    "clue": "Pliable material derived from the sap of the"
+  },
+  {
+    "word": "RUDE",
+    "clue": "Lacking in refinement or civility"
+  },
+  {
+    "word": "RUG",
+    "clue": "Floor covering mat"
+  },
+  {
+    "word": "RUIN",
+    "clue": "Remains of a destroyed or dilapidated construction such"
+  },
+  {
+    "word": "RULE",
+    "clue": "Regulation law guideline"
+  },
+  {
+    "word": "RULER",
+    "clue": "Straight measuring stick"
+  },
+  {
+    "word": "RUMOR",
+    "clue": "Statement or claim of questionable accuracy from no"
+  },
+  {
+    "word": "RUN",
+    "clue": "Move quickly feet"
+  },
+  {
+    "word": "RURAL",
+    "clue": "Relating to the countryside or to agriculture"
+  },
+  {
+    "word": "RUSH",
+    "clue": "Wetland stiff stem"
+  },
+  {
+    "word": "RUST",
+    "clue": "Deteriorated state of iron or steel as a"
+  },
+  {
+    "word": "SACK",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "SAD",
+    "clue": "Unhappy sorrowful feeling"
+  },
+  {
+    "word": "SADDLE",
+    "clue": "Seat for a rider typically made of leather"
+  },
+  {
+    "word": "SAFE",
+    "clue": "Valuables locking box"
+  },
+  {
+    "word": "SAFETY",
+    "clue": "Condition or feeling of being safe"
+  },
+  {
+    "word": "SAID",
+    "clue": "Simple past tense and past participle of say"
+  },
+  {
+    "word": "SAIL",
+    "clue": "Piece of fabric attached to a boat and"
+  },
+  {
+    "word": "SALAD",
+    "clue": "Mixed raw vegetable bowl"
+  },
+  {
+    "word": "SALARY",
+    "clue": "Fixed amount of money paid to a worker"
+  },
+  {
+    "word": "SALE",
+    "clue": "Exchange of goods or services for currency or"
+  },
+  {
+    "word": "SALT",
+    "clue": "Table seasoning crystal"
+  },
+  {
+    "word": "SAME",
+    "clue": "Not different or other"
+  },
+  {
+    "word": "SAMPLE",
+    "clue": "Part or snippet of something taken or presented"
+  },
+  {
+    "word": "SAND",
+    "clue": "Fine beach grains"
+  },
+  {
+    "word": "SANDWICH",
+    "clue": "Filling between bread slices"
+  },
+  {
+    "word": "SATELLITE",
+    "clue": "Moon or other smaller body orbiting a larger"
+  },
+  {
+    "word": "SATISFIED",
+    "clue": "Simple past tense and past participle of satisfy"
+  },
+  {
+    "word": "SAUCE",
+    "clue": "Liquid flavor topping"
+  },
+  {
+    "word": "SAVE",
+    "clue": "To prevent harm or difficulty"
+  },
+  {
+    "word": "SAW",
+    "clue": "Wood cutting tool"
+  },
+  {
+    "word": "SAY",
+    "clue": "Speak words aloud"
+  },
+  {
+    "word": "SCALE",
+    "clue": "Weight measuring device"
+  },
+  {
+    "word": "SCANDAL",
+    "clue": "Incident or event that disgraces or damages the"
+  },
+  {
+    "word": "SCARCE",
+    "clue": "Uncommon rare"
+  },
+  {
+    "word": "SCARE",
+    "clue": "Minor fright"
+  },
+  {
+    "word": "SCARF",
+    "clue": "Neck warming cloth"
+  },
+  {
+    "word": "SCATTER",
+    "clue": "To separate and go in different directions"
+  },
+  {
+    "word": "SCENE",
+    "clue": "Location of an event that attracts attention"
+  },
+  {
+    "word": "SCENT",
+    "clue": "Distinctive smell"
+  },
+  {
+    "word": "SCHEDULE",
+    "clue": "Slip of paper"
+  },
+  {
+    "word": "SCHEME",
+    "clue": "Artful deviation from the ordinary arrangement of words"
+  },
+  {
+    "word": "SCHOLAR",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "SCHOOL",
+    "clue": "Institution dedicated to teaching and learning"
+  },
+  {
+    "word": "SCIENCE",
+    "clue": "Particular discipline or branch of learning especially one"
+  },
+  {
+    "word": "SCISSORS",
+    "clue": "Two-blade cutting tool"
+  },
+  {
+    "word": "SCORE",
+    "clue": "Total number of goals points runs etc"
+  },
+  {
+    "word": "SCOUT",
+    "clue": "Person sent out to gain and bring in"
+  },
+  {
+    "word": "SCRAPE",
+    "clue": "To draw along while exerting pressure"
+  },
+  {
+    "word": "SCRATCH",
+    "clue": "To rub a surface with a sharp object"
+  },
+  {
+    "word": "SCREAM",
+    "clue": "Loud emphatic exclamation of extreme emotion especially horror"
+  },
+  {
+    "word": "SCREEN",
+    "clue": "Insect blocking mesh"
+  },
+  {
+    "word": "SCREW",
+    "clue": "Threaded fastening pin"
+  },
+  {
+    "word": "SCRIPT",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "SCULPTURE",
+    "clue": "Three dimensional work of art created by shaping"
+  },
+  {
+    "word": "SEA",
+    "clue": "Large salt water body"
+  },
+  {
+    "word": "SEARCH",
+    "clue": "Attempt to find something"
+  },
+  {
+    "word": "SEASON",
+    "clue": "Quarter of the year"
+  },
+  {
+    "word": "SEAT",
+    "clue": "Something to be sat upon"
+  },
+  {
+    "word": "SECOND",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "SECRET",
+    "clue": "Piece of knowledge that is hidden and intended"
+  },
+  {
+    "word": "SECTION",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "SECTOR",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "SECURE",
+    "clue": "Free from attack or danger"
+  },
+  {
+    "word": "SECURITY",
+    "clue": "Condition of not being threatened especially physically psychologically"
+  },
+  {
+    "word": "SEE",
+    "clue": "To perceive or detect someone or something with"
+  },
+  {
+    "word": "SEED",
+    "clue": "Fertilized and ripened ovule containing an embryonic plant"
+  },
+  {
+    "word": "SEEK",
+    "clue": "To try to find"
+  },
+  {
+    "word": "SEEM",
+    "clue": "To appear"
+  },
+  {
+    "word": "SEEN",
+    "clue": "Past participle of see"
+  },
+  {
+    "word": "SEIZE",
+    "clue": "To deliberately take hold of"
+  },
+  {
+    "word": "SELECT",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "SELF",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "SELL",
+    "clue": "To transfer goods or provide services in exchange"
+  },
+  {
+    "word": "SEMESTER",
+    "clue": "Half of a school year or academic year"
+  },
+  {
+    "word": "SEMINAR",
+    "clue": "Class held for advanced studies in which students"
+  },
+  {
+    "word": "SENATE",
+    "clue": "In some bicameral legislative systems the upper house"
+  },
+  {
+    "word": "SEND",
+    "clue": "To make something go from one place to"
+  },
+  {
+    "word": "SENIOR",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "SENSE",
+    "clue": "Of the manners by which living beings perceive"
+  },
+  {
+    "word": "SENTENCE",
+    "clue": "Decision or judgement of a jury or court"
+  },
+  {
+    "word": "SEPARATE",
+    "clue": "Apart from"
+  },
+  {
+    "word": "SEQUENCE",
+    "clue": "Set of things next to each other in"
+  },
+  {
+    "word": "SERIES",
+    "clue": "Number of things that follow on one after"
+  },
+  {
+    "word": "SERIOUS",
+    "clue": "Without humor or expression of happiness"
+  },
+  {
+    "word": "SERVANT",
+    "clue": "Who is hired to perform regular household or"
+  },
+  {
+    "word": "SERVE",
+    "clue": "Act of putting the ball or shuttlecock in"
+  },
+  {
+    "word": "SERVICE",
+    "clue": "Act of being of assistance to someone"
+  },
+  {
+    "word": "SESSION",
+    "clue": "Period devoted to a particular activity e"
+  },
+  {
+    "word": "SET",
+    "clue": "Collection or place"
+  },
+  {
+    "word": "SETTLE",
+    "clue": "To conclude or resolve"
+  },
+  {
+    "word": "SEVEN",
+    "clue": "Numerical value equal to"
+  },
+  {
+    "word": "SEVERAL",
+    "clue": "Separate distinct"
+  },
+  {
+    "word": "SEVERE",
+    "clue": "Very bad or intense"
+  },
+  {
+    "word": "SEW",
+    "clue": "Stitch with needle"
+  },
+  {
+    "word": "SHADE",
+    "clue": "Lamp light blocker"
+  },
+  {
+    "word": "SHADOW",
+    "clue": "Dark image projected onto a surface where light"
+  },
+  {
+    "word": "SHAKE",
+    "clue": "To cause to move rapidly in opposite directions"
+  },
+  {
+    "word": "SHALL",
+    "clue": "Used before a verb to indicate the simple"
+  },
+  {
+    "word": "SHALLOW",
+    "clue": "Having little depth"
+  },
+  {
+    "word": "SHAME",
+    "clue": "Uncomfortable or painful feeling due to recognition or"
+  },
+  {
+    "word": "SHAPE",
+    "clue": "Status or condition of something"
+  },
+  {
+    "word": "SHARE",
+    "clue": "Portion of something especially a portion given or"
+  },
+  {
+    "word": "SHARP",
+    "clue": "Terminating in a point or edge especially one"
+  },
+  {
+    "word": "SHAVE",
+    "clue": "To make bald or shorter by using a"
+  },
+  {
+    "word": "SHE",
+    "clue": "That female person"
+  },
+  {
+    "word": "SHEAR",
+    "clue": "To cut originally with a sword or other"
+  },
+  {
+    "word": "SHED",
+    "clue": "To part separate or divide"
+  },
+  {
+    "word": "SHEEP",
+    "clue": "Woolly flock grazer"
+  },
+  {
+    "word": "SHEET",
+    "clue": "Bed covering cloth"
+  },
+  {
+    "word": "SHELF",
+    "clue": "Wall storage board"
+  },
+  {
+    "word": "SHELL",
+    "clue": "Hard external covering of an animal"
+  },
+  {
+    "word": "SHELTER",
+    "clue": "Refuge haven or other cover or protection from"
+  },
+  {
+    "word": "SHEPHERD",
+    "clue": "Person who tends sheep especially a grazing flock"
+  },
+  {
+    "word": "SHIELD",
+    "clue": "Anything that protects or defends"
+  },
+  {
+    "word": "SHIFT",
+    "clue": "Movement to do something a beginning"
+  },
+  {
+    "word": "SHINE",
+    "clue": "To emit or reflect light so as to"
+  },
+  {
+    "word": "SHIP",
+    "clue": "Water-borne vessel generally larger than a boat"
+  },
+  {
+    "word": "SHIRT",
+    "clue": "Upper body garment"
+  },
+  {
+    "word": "SHIVER",
+    "clue": "To tremble or shake especially when cold or"
+  },
+  {
+    "word": "SHOCK",
+    "clue": "Sudden heavy impact"
+  },
+  {
+    "word": "SHOE",
+    "clue": "Foot outer covering"
+  },
+  {
+    "word": "SHOOT",
+    "clue": "To launch a projectile"
+  },
+  {
+    "word": "SHOP",
+    "clue": "Establishment that sells goods or services to the"
+  },
+  {
+    "word": "SHORE",
+    "clue": "Edge where land meets water"
+  },
+  {
+    "word": "SHORT",
+    "clue": "Having a small distance from one end or"
+  },
+  {
+    "word": "SHOT",
+    "clue": "Worn out or broken"
+  },
+  {
+    "word": "SHOULD",
+    "clue": "Ought to"
+  },
+  {
+    "word": "SHOULDER",
+    "clue": "Part of an animal's body between the base"
+  },
+  {
+    "word": "SHOUT",
+    "clue": "Loud burst of voice or voices"
+  },
+  {
+    "word": "SHOW",
+    "clue": "To display to have somebody see"
+  },
+  {
+    "word": "SHOWER",
+    "clue": "Overhead bathing spray"
+  },
+  {
+    "word": "SHRED",
+    "clue": "Fragment of something"
+  },
+  {
+    "word": "SHRIMP",
+    "clue": "Small pink crustacean"
+  },
+  {
+    "word": "SHRINE",
+    "clue": "Holy or sacred place dedicated to a specific"
+  },
+  {
+    "word": "SHRINK",
+    "clue": "To cause to become smaller"
+  },
+  {
+    "word": "SHRUG",
+    "clue": "Lifting of the shoulders to signal indifference or"
+  },
+  {
+    "word": "SHUT",
+    "clue": "To close to stop from being open"
+  },
+  {
+    "word": "SHUTTLE",
+    "clue": "Tool used to carry the woof back and"
+  },
+  {
+    "word": "SHY",
+    "clue": "Timid reserved nature"
+  },
+  {
+    "word": "SICK",
+    "clue": "In poor health"
+  },
+  {
+    "word": "SIDE",
+    "clue": "Bounding straight edge of a two-dimensional shape"
+  },
+  {
+    "word": "SIDEWALK",
+    "clue": "Paved footpath located at the side of a"
+  },
+  {
+    "word": "SIEVE",
+    "clue": "Device with a mesh bottom to separate in"
+  },
+  {
+    "word": "SIGH",
+    "clue": "To inhale a larger quantity of air than"
+  },
+  {
+    "word": "SIGHT",
+    "clue": "Ability to see"
+  },
+  {
+    "word": "SIGN",
+    "clue": "Information display board"
+  },
+  {
+    "word": "SIGNAL",
+    "clue": "Sequence of states representing an encoded message in"
+  },
+  {
+    "word": "SILENCE",
+    "clue": "Absence of any sound"
+  },
+  {
+    "word": "SILENT",
+    "clue": "Free from sound or noise"
+  },
+  {
+    "word": "SILK",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "SILLY",
+    "clue": "Laughable or amusing through foolishness or a foolish"
+  },
+  {
+    "word": "SILVER",
+    "clue": "Lustrous white metallic element atomic number atomic weight"
+  },
+  {
+    "word": "SIMILAR",
+    "clue": "Having traits or characteristics in common"
+  },
+  {
+    "word": "SIMPLE",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "SIMPLY",
+    "clue": "In a simple way or state"
+  },
+  {
+    "word": "SINCE",
+    "clue": "From a specified time in the past"
+  },
+  {
+    "word": "SING",
+    "clue": "To produce musical or harmonious sounds with one"
+  },
+  {
+    "word": "SINGER",
+    "clue": "Person who sings often professionally"
+  },
+  {
+    "word": "SINGLE",
+    "clue": "Not accompanied by anything else"
+  },
+  {
+    "word": "SINK",
+    "clue": "Water basin fixture"
+  },
+  {
+    "word": "SIP",
+    "clue": "Small drink taste"
+  },
+  {
+    "word": "SIR",
+    "clue": "Man of a higher rank or position"
+  },
+  {
+    "word": "SISTER",
+    "clue": "Daughter of the same parents as another person"
+  },
+  {
+    "word": "SIT",
+    "clue": "Rest on seat"
+  },
+  {
+    "word": "SITE",
+    "clue": "Sorrow grief"
+  },
+  {
+    "word": "SITUATION",
+    "clue": "Combination of circumstances at a given moment"
+  },
+  {
+    "word": "SIX",
+    "clue": "Numerical value equal to"
+  },
+  {
+    "word": "SIZE",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "SKATE",
+    "clue": "Rolling foot board"
+  },
+  {
+    "word": "SKELETON",
+    "clue": "System that provides support to an organism internal"
+  },
+  {
+    "word": "SKETCH",
+    "clue": "To make a brief basic drawing"
+  },
+  {
+    "word": "SKI",
+    "clue": "Snow gliding sport"
+  },
+  {
+    "word": "SKILL",
+    "clue": "Capacity to do something well"
+  },
+  {
+    "word": "SKIN",
+    "clue": "Outer protective layer of the body of any"
+  },
+  {
+    "word": "SKIP",
+    "clue": "To move by hopping on alternate feet"
+  },
+  {
+    "word": "SKIRT",
+    "clue": "Waist hanging garment"
+  },
+  {
+    "word": "SKULL",
+    "clue": "Main bones of the head considered as a"
+  },
+  {
+    "word": "SKY",
+    "clue": "Overhead blue expanse"
+  },
+  {
+    "word": "SLAB",
+    "clue": "Large flat piece of solid material"
+  },
+  {
+    "word": "SLACK",
+    "clue": "Part of anything that hangs loose having no"
+  },
+  {
+    "word": "SLAM",
+    "clue": "To shut with sudden force so as to"
+  },
+  {
+    "word": "SLANG",
+    "clue": "Language outside of conventional usage and in the"
+  },
+  {
+    "word": "SLAP",
+    "clue": "Blow especially one given with the open hand"
+  },
+  {
+    "word": "SLASH",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "SLATE",
+    "clue": "Flat layered rock"
+  },
+  {
+    "word": "SLEEP",
+    "clue": "To rest in a state of reduced consciousness"
+  },
+  {
+    "word": "SLEEVE",
+    "clue": "Part of a garment that covers the arm"
+  },
+  {
+    "word": "SLENDER",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "SLICE",
+    "clue": "That which is thin and broad"
+  },
+  {
+    "word": "SLIDE",
+    "clue": "To move in continuous contact with a surface"
+  },
+  {
+    "word": "SLIGHT",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "SLIM",
+    "clue": "Slender thin"
+  },
+  {
+    "word": "SLIP",
+    "clue": "Word from school or learning"
+  },
+  {
+    "word": "SLIT",
+    "clue": "Narrow cut or opening"
+  },
+  {
+    "word": "SLOGAN",
+    "clue": "Distinctive phrase of a person or group of"
+  },
+  {
+    "word": "SLOPE",
+    "clue": "Area of ground that tends evenly upward or"
+  },
+  {
+    "word": "SLOT",
+    "clue": "Broad flat wooden bar a slat especially as"
+  },
+  {
+    "word": "SLOW",
+    "clue": "Taking a long time to move or go"
+  },
+  {
+    "word": "SMALL",
+    "clue": "Not large or big"
+  },
+  {
+    "word": "SMART",
+    "clue": "To hurt or sting"
+  },
+  {
+    "word": "SMASH",
+    "clue": "Sound of a violent impact"
+  },
+  {
+    "word": "SMELL",
+    "clue": "Sensation pleasant or unpleasant detected by inhaling air"
+  }
+]

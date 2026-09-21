@@ -1,0 +1,62 @@
+[
+  {
+    "key": "animals",
+    "label": "Animals",
+    "locale": "en",
+    "count": 519
+  },
+  {
+    "key": "food",
+    "label": "Food",
+    "locale": "en",
+    "count": 426
+  },
+  {
+    "key": "nature",
+    "label": "Nature",
+    "locale": "en",
+    "count": 253
+  },
+  {
+    "key": "household",
+    "label": "Household",
+    "locale": "en",
+    "count": 276
+  },
+  {
+    "key": "body",
+    "label": "Body",
+    "locale": "en",
+    "count": 187
+  },
+  {
+    "key": "sports",
+    "label": "Sports",
+    "locale": "en",
+    "count": 548
+  },
+  {
+    "key": "travel",
+    "label": "Travel",
+    "locale": "en",
+    "count": 208
+  },
+  {
+    "key": "school",
+    "label": "School",
+    "locale": "en",
+    "count": 248
+  },
+  {
+    "key": "music",
+    "label": "Music",
+    "locale": "en",
+    "count": 237
+  },
+  {
+    "key": "space",
+    "label": "Space",
+    "locale": "en",
+    "count": 187
+  }
+]

@@ -1,0 +1,144 @@
+{
+  "_comment": "Reflective writing generation content, shared by life-timeline (mode=life-story) and memory-journal-prompt (mode=journal). The journal theme is never looked up in a table: whatever the author picked or typed is interpolated into the prompt, so presets and custom themes take one path. Edit wording here rather than in studio_life_timeline_service.py.",
+  "limits": {
+    "lifeMaxLen": 160,
+    "journalMaxLen": 120,
+    "aiBatchSize": 12,
+    "overRequestMultiplier": 2,
+    "overRequestExtra": 4,
+    "maxIdleBatches": 12,
+    "rateLimitPerWindow": 60,
+    "temperature": 0.8,
+    "tokensPerPrompt": 100,
+    "minOutputTokens": 2048,
+    "maxOutputTokens": 8192
+  },
+  "tones": {
+    "gentle": "warm and gentle",
+    "playful": "light and playful",
+    "reflective": "thoughtful but still light"
+  },
+  "locale": {
+    "nativeLocales": [
+      "en",
+      "en-US"
+    ],
+    "nativeLine": "- Prefer clear, everyday English.",
+    "otherLine": "- Prefer phrasing familiar in locale '{locale}'."
+  },
+  "lifeStory": {
+    "_comment": "stageLabels turn the config key into words a model can write about — the request carries 'youngAdult', the prompt must say 'young adulthood'. stageLenses say what makes a memory belong to this stage and nowhere else; stageAnchors are the phrases that mark the time without every prompt parroting the page header. stageHints are the raw material a prompt writer would reach for: specific enough that the model does not fall back to 'home, family, play'.",
+    "stageLabels": {
+      "childhood": "childhood",
+      "school": "the school years",
+      "youngAdult": "young adulthood",
+      "work": "working life",
+      "family": "family and friends",
+      "places": "places lived in and journeys taken",
+      "laterLife": "the later years",
+      "timeline": "a whole life, one line at a time"
+    },
+    "stageLenses": {
+      "childhood": "the world at a child's height — what the grown-ups decided, what was done without any money, what felt enormous at the time",
+      "school": "the years of being a pupil — bells and lessons, the playground, being one of a class, walking or riding there and back",
+      "youngAdult": "the first years of answering to nobody — your own wage, your own room, going out, learning to manage things yourself",
+      "work": "the years of earning a living — the workplace itself, the people in it, the trade or knack you were known for",
+      "family": "the years your household and your circle were busiest — gatherings, traditions, the people who called in",
+      "places": "the towns, houses and journeys — arriving somewhere new, settling in, the route you knew best, going back",
+      "laterLife": "the years the days became your own — unhurried mornings, younger visitors, long-practised routines",
+      "timeline": "any single point across a whole life, each cue clearly placed in its own time"
+    },
+    "customStageLens": "what could only have happened during \"{stage}\" and at no other point in a life",
+    "stageAnchors": {
+      "childhood": [
+        "when you were small",
+        "as a child",
+        "before you started school",
+        "in the school holidays when you were young",
+        "at the age when the grown-ups decided everything"
+      ],
+      "school": [
+        "in your school days",
+        "on a school morning",
+        "at the school you went to",
+        "when the bell went",
+        "in the year you liked best at school"
+      ],
+      "youngAdult": [
+        "in your late teens and twenties",
+        "when you first had money of your own",
+        "in the years you first went out on your own",
+        "when you first lived away from where you grew up"
+      ],
+      "work": [
+        "in your working years",
+        "on a working morning",
+        "at the place you worked longest",
+        "when you were still new to the job"
+      ],
+      "family": [
+        "in the years your house was busiest",
+        "when everyone gathered",
+        "in the years you saw most of your neighbours and friends"
+      ],
+      "places": [
+        "in the place you lived longest",
+        "when you first arrived somewhere new",
+        "on the journey you made most often"
+      ],
+      "laterLife": [
+        "in these later years",
+        "now the days are your own",
+        "since you stopped keeping to anyone else's clock"
+      ],
+      "timeline": [
+        "at that point in your life"
+      ]
+    },
+    "customStageAnchors": [
+      "during your {stage}",
+      "back in your {stage}"
+    ],
+    "stageHints": {
+      "childhood": "the house and who was in it, the yard or street outside, games nobody organised, sweets and Sunday food, pets, bedtime, hand-me-down clothes, weather and seasons",
+      "school": "the journey there and back, the classroom and the playground, a teacher's habits and sayings, lessons loved and dreaded, lunches, uniforms, nicknames, the sound of the bell",
+      "youngAdult": "the first wage and what it bought, a first room of one's own, music and dancing, clothes and hair, going out with friends, buses and bicycles, learning to cook, drive or mend things",
+      "work": "the first morning at a new job, tools, desks and machines, workmates and their sayings, tea breaks, what the place smelled and sounded like, a skill they became known for, payday",
+      "family": "birthdays and weddings, family sayings and traditions, neighbours who called in, cooking for a crowd, who made everyone laugh, holidays at home, the photographs taken",
+      "places": "streets and houses lived in, the journey to get there, the view from a window, seaside and countryside days, packing up and moving, a place they went back to again and again",
+      "laterLife": "hobbies picked back up, young visitors, the garden, a well-practised recipe, a favourite chair and what was on, walks and neighbours, the quiet pleasures of an ordinary day",
+      "timeline": "short one-line memory cues that could sit anywhere across a whole life"
+    },
+    "customStageHint": "the ordinary texture of \"{stage}\" — the people around them, where they were, what they did on an ordinary day, and the sounds, smells, food and objects that belonged to it",
+    "avoidTopics": [
+      "death, bereavement, illness, injury, or care needs",
+      "regret, failure, mistakes, or \"what would you do differently\"",
+      "conflict, estrangement, divorce, money problems",
+      "anything judging whether their life was well spent",
+      "exact years, dates, ages, full names or addresses — nothing that puts the reader's memory on trial",
+      "anything that assumes the reader had siblings, children, a partner, a car, a holiday or spare money — ask openly, so anyone can answer",
+      "anything requiring a yes/no answer, or starting with {yes_no_openers}"
+    ]
+  },
+  "journal": {
+    "_comment": "Journal prompts are printed one to a page, so each has to stand alone. No table lookup for themes: whatever the author picked or typed is interpolated into themeHint, so presets and custom themes take one path. timeFrames is the whole of the 'when' instruction — it drops into the template as one block, so each entry carries its own anchoring language rather than a bare label.",
+    "themeHint": "\"{theme}\" — every prompt must clearly fit this theme, as an ordinary reader would understand those words, and each prompt must reach a different corner of it",
+    "openThemeHint": "a bit of everything — no single subject, so spread the prompts across ordinary life: people, places, food and home, work and hobbies, the senses, and the small pleasures of a day",
+    "timeFrames": {
+      "past": "When: earlier life. Anchor every prompt in the past — \"when you were younger\", \"in the house you grew up in\", \"back when\" — and keep the memories warm ones. Never ask about today.",
+      "present": "When: today and this week. Ask about what is within reach now — this morning, the view from the window, what was on the table, who called in. Low-pressure: nothing to work out, nothing to look up.",
+      "future": "When: the days ahead. Ask about something small and gentle to look forward to, plan, or wish for. Keep it within an ordinary week at home — never anything that depends on health, money, or travelling far.",
+      "mixed": "When: vary it across the set — some prompts about earlier life, some about today or this week, and at least one about something to look forward to. Never two in a row from the same time frame."
+    },
+    "defaultTimeFrame": "mixed",
+    "avoidTopics": [
+      "death, bereavement, illness, injury, or care needs",
+      "regret, failure, mistakes, or \"what would you do differently\"",
+      "conflict, estrangement, divorce, money problems",
+      "exact years, dates, ages, full names or addresses — nothing that puts the reader's memory on trial",
+      "how much they remember, or anything they can no longer do — never measure the reader against a younger self",
+      "anything that assumes the reader had siblings, children, a partner, a car, a holiday or spare money — ask openly, so anyone can answer",
+      "anything requiring a yes/no answer, or starting with {yes_no_openers}"
+    ]
+  }
+}

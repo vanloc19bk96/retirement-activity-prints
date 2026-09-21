@@ -1,0 +1,25 @@
+{
+  "_comment": "Coloring-page prompt axes. styles = shape language / aesthetic ONLY (never line thickness, background or fills — those belong to system.md and lineWeights). aliases map the frontend's kebab-case keys onto style ids.",
+  "defaultStyle": "bold_and_easy",
+  "defaultLineWeight": "medium",
+  "aliases": {
+    "bold-easy": "bold_and_easy",
+    "simple-outline": "simple_outline"
+  },
+  "styles": {
+    "simple_outline": "minimal clean line art with simple, easy-to-recognize shapes, beginner-friendly coloring page, low detail count, large open fillable regions and clear silhouettes",
+    "bold_and_easy": "very simple flat shapes with oversized fillable areas, extremely low detail count, no tiny interior lines, easy coloring page suitable for very young children or seniors",
+    "chunky": "chunky inflated illustration style, forms look soft, rounded and squeezable like plush toys, puffy balloon-like volumes with no sharp corners",
+    "sticker": "die-cut sticker style with a strong, clear silhouette suitable for cutting out, simple flat iconic shapes, playful and decorative",
+    "kawaii": "kawaii cute style with rounded chubby proportions, large round simple eyes each with a small highlight circle, tiny dot nose, small curved smiling mouth, gentle friendly expression",
+    "cartoon": "classic Western cartoon style with expressive, exaggerated features, confident inked outlines, lively dynamic poses, retro Saturday-morning animation aesthetic and stylized proportions",
+    "chibi": "chibi style with oversized head and small stubby body, very large expressive eyes each with a highlight circle, short rounded limbs, tiny nose and mouth, overall super-cute proportions",
+    "classic": "classic picture-book illustration style, warm storybook feel reminiscent of traditional children's books, natural organic shapes with a gentle hand-drawn quality"
+  },
+  "lineWeights": {
+    "thin": "THIN, fine outlines like a sharp fine-liner pen (~0.3 mm). Narrow stroke so small interior details stay readable. Uniform width throughout — same thickness on body outlines and interior details, no tapering.",
+    "medium": "MEDIUM-WEIGHT outlines like a standard felt-tip pen (~0.7 mm). Confident and clear; prints cleanly without feeling heavy. Uniform width throughout — same thickness on body outlines and interior details, no tapering.",
+    "thick": "THICK, BOLD outlines like a broad permanent marker (~2 mm). Wide and dominant, easy for young children to follow. Uniform width throughout — same thickness on body outlines and interior details, no tapering."
+  },
+  "interiorTemplate": "SUBJECT: {idea}. STYLE: {style}. LINE QUALITY: {line_weight}"
+}

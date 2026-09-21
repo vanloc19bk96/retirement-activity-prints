@@ -1,0 +1,268 @@
+[
+  {
+    "fullTitle": "The Sound of Music",
+    "answer": "Music",
+    "category": "film",
+    "year": 1965,
+    "era": "1960s"
+  },
+  {
+    "fullTitle": "Gone with the Wind",
+    "answer": "Wind",
+    "category": "film",
+    "year": 1939,
+    "era": "1950s"
+  },
+  {
+    "fullTitle": "An American in Paris",
+    "answer": "Paris",
+    "category": "film",
+    "year": 1951,
+    "era": "1950s"
+  },
+  {
+    "fullTitle": "Singin' in the Rain",
+    "answer": "Rain",
+    "category": "film",
+    "year": 1952,
+    "era": "1950s"
+  },
+  {
+    "fullTitle": "The Wizard of Oz",
+    "answer": "Oz",
+    "category": "film",
+    "year": 1939,
+    "era": "1950s"
+  },
+  {
+    "fullTitle": "West Side Story",
+    "answer": "Story",
+    "category": "film",
+    "year": 1961,
+    "era": "1960s"
+  },
+  {
+    "fullTitle": "Mary Poppins",
+    "answer": "Poppins",
+    "category": "film",
+    "year": 1964,
+    "era": "1960s"
+  },
+  {
+    "fullTitle": "The Graduate",
+    "answer": "Graduate",
+    "category": "film",
+    "year": 1967,
+    "era": "1960s"
+  },
+  {
+    "fullTitle": "Funny Girl",
+    "answer": "Girl",
+    "category": "film",
+    "year": 1968,
+    "era": "1960s"
+  },
+  {
+    "fullTitle": "The Godfather",
+    "answer": "Godfather",
+    "category": "film",
+    "year": 1972,
+    "era": "1970s"
+  },
+  {
+    "fullTitle": "Close Encounters of the Third Kind",
+    "answer": "Kind",
+    "category": "film",
+    "year": 1977,
+    "era": "1970s"
+  },
+  {
+    "fullTitle": "Saturday Night Fever",
+    "answer": "Fever",
+    "category": "film",
+    "year": 1977,
+    "era": "1970s"
+  },
+  {
+    "fullTitle": "Star Wars",
+    "answer": "Wars",
+    "category": "film",
+    "year": 1977,
+    "era": "1970s"
+  },
+  {
+    "fullTitle": "The Deer Hunter",
+    "answer": "Hunter",
+    "category": "film",
+    "year": 1978,
+    "era": "1970s"
+  },
+  {
+    "fullTitle": "E.T. the Extra-Terrestrial",
+    "answer": "Extra-Terrestrial",
+    "category": "film",
+    "year": 1982,
+    "era": "1980s"
+  },
+  {
+    "fullTitle": "Back to the Future",
+    "answer": "Future",
+    "category": "film",
+    "year": 1985,
+    "era": "1980s"
+  },
+  {
+    "fullTitle": "The Breakfast Club",
+    "answer": "Breakfast",
+    "category": "film",
+    "year": 1985,
+    "era": "1980s"
+  },
+  {
+    "fullTitle": "Top Gun",
+    "answer": "Gun",
+    "category": "film",
+    "year": 1986,
+    "era": "1980s"
+  },
+  {
+    "fullTitle": "Dirty Dancing",
+    "answer": "Dancing",
+    "category": "film",
+    "year": 1987,
+    "era": "1980s"
+  },
+  {
+    "fullTitle": "Home Alone",
+    "answer": "Alone",
+    "category": "film",
+    "year": 1990,
+    "era": "1990s"
+  },
+  {
+    "fullTitle": "Jurassic Park",
+    "answer": "Park",
+    "category": "film",
+    "year": 1993,
+    "era": "1990s"
+  },
+  {
+    "fullTitle": "Forrest Gump",
+    "answer": "Gump",
+    "category": "film",
+    "year": 1994,
+    "era": "1990s"
+  },
+  {
+    "fullTitle": "The Lion King",
+    "answer": "Lion",
+    "category": "film",
+    "year": 1994,
+    "era": "1990s"
+  },
+  {
+    "fullTitle": "Good Will Hunting",
+    "answer": "Hunting",
+    "category": "film",
+    "year": 1997,
+    "era": "1990s"
+  },
+  {
+    "fullTitle": "The Matrix",
+    "answer": "Matrix",
+    "category": "film",
+    "year": 1999,
+    "era": "1990s"
+  },
+  {
+    "fullTitle": "Monsters, Inc.",
+    "answer": "Monsters",
+    "category": "film",
+    "year": 2001,
+    "era": "2000s"
+  },
+  {
+    "fullTitle": "Finding Nemo",
+    "answer": "Nemo",
+    "category": "film",
+    "year": 2003,
+    "era": "2000s"
+  },
+  {
+    "fullTitle": "The Incredibles",
+    "answer": "Incredibles",
+    "category": "film",
+    "year": 2004,
+    "era": "2000s"
+  },
+  {
+    "fullTitle": "Pirates of the Caribbean",
+    "answer": "Caribbean",
+    "category": "film",
+    "year": 2003,
+    "era": "2000s"
+  },
+  {
+    "fullTitle": "The Dark Knight",
+    "answer": "Knight",
+    "category": "film",
+    "year": 2008,
+    "era": "2000s"
+  },
+  {
+    "fullTitle": "It's a Wonderful Life",
+    "answer": "Wonderful",
+    "category": "film",
+    "year": 1946,
+    "era": "1950s"
+  },
+  {
+    "fullTitle": "Some Like It Hot",
+    "answer": "Hot",
+    "category": "film",
+    "year": 1959,
+    "era": "1950s"
+  },
+  {
+    "fullTitle": "Lawrence of Arabia",
+    "answer": "Arabia",
+    "category": "film",
+    "year": 1962,
+    "era": "1960s"
+  },
+  {
+    "fullTitle": "To Kill a Mockingbird",
+    "answer": "Mockingbird",
+    "category": "film",
+    "year": 1962,
+    "era": "1960s"
+  },
+  {
+    "fullTitle": "Doctor Zhivago",
+    "answer": "Zhivago",
+    "category": "film",
+    "year": 1965,
+    "era": "1960s"
+  },
+  {
+    "fullTitle": "Raiders of the Lost Ark",
+    "answer": "Ark",
+    "category": "film",
+    "year": 1981,
+    "era": "1980s"
+  },
+  {
+    "fullTitle": "The Terminator",
+    "answer": "Terminator",
+    "category": "film",
+    "year": 1984,
+    "era": "1980s"
+  },
+  {
+    "fullTitle": "Pretty Woman",
+    "answer": "Woman",
+    "category": "film",
+    "year": 1990,
+    "era": "1990s"
+  }
+]

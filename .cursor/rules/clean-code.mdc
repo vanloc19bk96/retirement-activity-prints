@@ -1,0 +1,409 @@
+---
+description: Core development standards — always applied to every conversation
+alwaysApply: true
+---
+
+# Core Development Rules
+
+> Martial-arts style: short, direct, no fluff. Every token counts.
+
+---
+
+## Agent Behavior
+
+- Read existing code BEFORE writing anything. Understand patterns first.
+- Project rules: `clean-code.mdc` + `react-state-performance.mdc` (always-on). Community rules/skills: `.cursor/COMMUNITY-MANIFEST.md`.
+- Never assume. If context is missing, ask ONE clarifying question.
+- Don't apologize for errors — fix them.
+- If code is incomplete, add `// TODO:` comments instead of leaving it broken.
+- After generating code, mentally check: "Does this match existing patterns in the codebase?"
+- Keep SOLID but simple — separation of concerns without over-engineering.
+
+---
+
+## Size Limits
+
+| Unit | Limit | Action if exceeded |
+|------|-------|--------------------|
+| File | 300 lines | Split into modules |
+| Function | 30–50 lines | Extract sub-functions |
+| Parameters | 3–4 max | Use object/options pattern |
+| Rule file | 500 lines | Split into scoped `.mdc` files |
+
+---
+
+## Naming Convention — Consistent Everywhere
+
+```typescript
+// Variables & functions: camelCase
+const activeUsers = users.filter(u => u.isActive);
+function calculateTotalPrice(cartItems: CartItem[]): number {}
+
+// Types & interfaces: PascalCase
+interface UserProfile {}
+type ApiResponse<T> = {}
+
+// Constants: UPPER_SNAKE_CASE
+const MAX_RETRY_COUNT = 3;
+
+// Files: kebab-case
+// user-profile.service.ts | use-auth.hook.ts | api-client.ts
+
+// Boolean variables: prefix with is/has/can/should
+const isLoading = false;
+const hasPermission = true;
+```
+
+**Rule: Naming must be self-documenting. No abbreviations except universally known ones (id, url, api).**
+
+---
+
+## Single Responsibility (SRP)
+
+Each function / class / module does ONE thing only.
+
+```typescript
+// ❌ BAD
+function processUser(user: User) {
+  validateUser(user);
+  saveToDatabase(user);
+  sendEmail(user);
+  logActivity(user);
+}
+
+// ✅ GOOD — orchestrator calls focused units
+async function onboardUser(user: User) {
+  validate(user);
+  await userRepository.save(user);
+  await emailService.sendWelcome(user);
+  logger.info('user_onboarded', { userId: user.id });
+}
+```
+
+---
+
+## DRY — No Repeated Logic
+
+```typescript
+// ❌ BAD
+if (user.role === 'admin' || user.role === 'moderator') { /* check 1 */ }
+if (user.role === 'admin' || user.role === 'moderator') { /* check 2 */ }
+
+// ✅ GOOD
+const MODERATOR_ROLES = ['admin', 'moderator'] as const;
+const canModerate = (user: User) => MODERATOR_ROLES.includes(user.role);
+```
+
+---
+
+## KISS — Simplicity Wins
+
+Prefer readable over clever.
+
+```typescript
+// ❌ BAD — clever but unreadable
+const result = arr.reduce((a, b) => ({...a, [b.id]: (a[b.id] || 0) + b.val}), {});
+
+// ✅ GOOD — obvious at a glance
+const result: Record<string, number> = {};
+for (const item of arr) {
+  result[item.id] = (result[item.id] ?? 0) + item.val;
+}
+```
+
+---
+
+## Fail Fast — Validate at Entry
+
+```typescript
+// ✅ GOOD — guard clauses first
+function processOrder(order: Order) {
+  if (!order) throw new Error('Order is required');
+  if (!order.items?.length) throw new Error('Order must have items');
+  if (order.total < 0) throw new Error('Order total cannot be negative');
+
+  const discounted = applyDiscount(order.total);
+  return createInvoice(order, discounted);
+}
+```
+
+---
+
+## Pure Functions — No Hidden Side Effects
+
+```typescript
+// ❌ BAD — mutates input silently
+function getFullName(user: User) {
+  user.lastAccessed = new Date(); // hidden side effect
+  return `${user.firstName} ${user.lastName}`;
+}
+
+// ✅ GOOD
+function getFullName(user: Pick<User, 'firstName' | 'lastName'>): string {
+  return `${user.firstName} ${user.lastName}`;
+}
+```
+
+---
+
+## Error Handling
+
+```typescript
+// Always handle errors explicitly — never swallow them silently
+try {
+  const data = await fetchUser(id);
+  return data;
+} catch (error) {
+  logger.error('fetch_user_failed', { userId: id, error });
+  throw new AppError('USER_FETCH_FAILED', { cause: error });
+}
+
+// Use typed errors, not generic strings
+class AppError extends Error {
+  constructor(public code: string, options?: ErrorOptions) {
+    super(code, options);
+  }
+}
+```
+
+---
+
+## File Structure — Always in This Order
+
+```
+1. Imports (external → internal → relative)
+2. Constants / Types / Interfaces
+3. Private helpers
+4. Main exported functions / components
+5. Default export (if applicable)
+```
+
+---
+
+## Comments — English Only
+
+```typescript
+// ✅ Explain WHY, not WHAT
+// Retry up to 3 times because the payment gateway has intermittent timeouts
+const MAX_PAYMENT_RETRIES = 3;
+
+// ❌ Don't explain obvious code
+// increment i by 1
+i++;
+```
+
+---
+
+## Frontend Architecture — API Call Pattern
+
+When frontend calls a backend API, **always** follow this 4-layer structure:
+
+```
+src/
+  types/
+    user.types.ts         ← Request/Response interfaces
+  api/
+    user.api.ts           ← Raw fetch/axios calls, no business logic
+  context/
+    UserContext.tsx        ← Global state if needed (auth, theme, etc.)
+  hooks/
+    useUser.ts            ← Business logic, loading/error states
+  components/
+    UserProfile.tsx        ← UI only, calls hooks
+```
+
+```typescript
+// types/user.types.ts
+export interface GetUserResponse {
+  id: string;
+  name: string;
+  email: string;
+}
+
+// api/user.api.ts
+export const userApi = {
+  getById: (id: string): Promise<GetUserResponse> =>
+    http.get(`/users/${id}`),
+  update: (id: string, payload: UpdateUserPayload): Promise<GetUserResponse> =>
+    http.patch(`/users/${id}`, payload),
+};
+
+// hooks/useUser.ts
+export function useUser(id: string) {
+  const [user, setUser] = useState<GetUserResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    setIsLoading(true);
+    userApi.getById(id)
+      .then(setUser)
+      .catch(setError)
+      .finally(() => setIsLoading(false));
+  }, [id]);
+
+  return { user, isLoading, error };
+}
+```
+
+---
+
+## Frontend Architecture — UI vs Business Logic
+
+Prefer a **container → hook → UI** separation for non-trivial screens.
+
+```
+src/
+  hooks/
+    use-canvas-editor.ts        ← business/editor logic, refs, actions
+  components/
+    layout/
+      MainContent.tsx           ← container/orchestrator, layout + wiring only
+      Toolbar.tsx               ← UI only, no Fabric/DOM mutations
+  utils/
+    fabric-selection.ts         ← pure helpers to read Fabric selection
+  types/
+    text-toolbar.types.ts       ← shared UI state/types (no React imports)
+```
+
+- **UI components** (`Toolbar`, buttons, panels):
+  - Receive data + callbacks via props
+  - Do **not** reach into canvas refs or call imperative APIs directly
+- **Hooks** (`useXxx`):
+  - Own state + refs
+  - Expose `props` + `actions` objects for easy wiring
+  - Keep functions small; extract pure helpers to `utils/` when logic grows
+- **Containers** (`MainContent`):
+  - Keep JSX clean (avoid long inline callbacks)
+  - Compose hooks + pass bindings down
+
+Rule of thumb:
+- If a component needs to call `canvas.getActiveObject()` / `target.set()` / `requestRenderAll()`, that code belongs in a **hook/service**, not in the UI component.
+
+---
+
+## Frontend — Low Complexity React Patterns
+
+> Full state/props/scale rules: see `react-state-performance.mdc`.
+
+- **Avoid inline callbacks in JSX** when they contain logic. Prefer named `useCallback` handlers or hook actions.
+- **Keep state minimal** — lowest scope wins; never store derivable data; `useRef` for non-render values.
+- **Props**: typed in `types/`, stable for `memo` children, grouped via `{ state, actions }` from hooks.
+- **Scale**: lazy-mount off-screen items, `Map`/`Set` for lookups, chunk + `yieldToMainThread()` for bulk work.
+- **Prefer pure helpers** in `src/utils/` for data/transform logic (no React imports).
+- **Avoid `any`**:
+  - Use `unknown` at boundaries and narrow
+  - If a third-party lib forces `any`, isolate it to a tiny adapter (1 file) and keep the rest typed
+- **Hook API design**:
+  - Return `{ state, actions }` or `{ bindings }` objects
+  - Keep stable references; avoid recreating functions unnecessarily
+  - One hook = one domain (editor, auth, upload, etc.)
+- **Memo selectively** — `React.memo` on list rows (50+), not every leaf component.
+
+---
+
+## UI/UX — Shadcn + Accessibility (Required)
+
+- **Use Shadcn components** for common UI primitives (Button, Input, Select, Dropdown, Tooltip, Dialog, Toast).
+  - Avoid raw `<button>`/`<input>`/`<select>` unless there is a clear reason.
+- **Accessibility is not optional**:
+  - Every interactive element must have an accessible name (`aria-label` or visible label).
+  - Preserve keyboard navigation (Tab order, Enter/Space to activate).
+  - Use `role="toolbar"` + `role="group"` only when semantics are correct.
+- **Feedback states**:
+  - Always handle: empty state, loading, error.
+  - Disable buttons when action is not applicable; provide tooltip if unclear.
+- **Forms / inputs**:
+  - Number inputs: set `min/max/step`, clamp/validate on change.
+  - Debounce high-frequency updates if they cause jank (canvas edits, sliders).
+- **Visual consistency**:
+  - Use design tokens/util classes consistently (spacing, borders, colors).
+  - Keep clickable targets >= 32px and maintain clear hover/focus styles.
+
+---
+
+## Backend Architecture — Service Layer Required
+
+Every endpoint's business logic lives in a **service**, never in the controller/handler.
+
+```
+src/
+  controllers/    ← HTTP layer: parse request, call service, return response
+  services/       ← Business logic, validation, orchestration
+  repositories/   ← Database queries only
+  models/         ← Data schemas / entities
+  middlewares/    ← Auth, logging, error handling
+```
+
+```typescript
+// ✅ Controller — thin
+async function updateUser(req: Request, res: Response) {
+  const user = await userService.update(req.params.id, req.body);
+  res.json(user);
+}
+
+// ✅ Service — all the logic lives here
+async function update(id: string, payload: UpdateUserDto) {
+  const existing = await userRepository.findById(id);
+  if (!existing) throw new NotFoundError('User not found');
+
+  const validated = validateUpdatePayload(payload);
+  return userRepository.update(id, validated);
+}
+```
+
+---
+
+## TypeScript — Always Typed
+
+```typescript
+// ❌ No implicit any
+function process(data: any) {}
+
+// ✅ Explicit types
+function process(data: ProcessPayload): ProcessResult {}
+
+// Use unknown over any for untrusted input
+function parseApiResponse(raw: unknown): ApiResponse {
+  return apiResponseSchema.parse(raw);
+}
+```
+
+---
+
+## Git Commits — Conventional Format
+
+```
+feat: add user authentication
+fix: resolve token expiry on refresh
+refactor: extract payment logic to service
+docs: update API endpoint documentation
+chore: upgrade dependencies
+```
+
+Format: `type(scope?): message` — under 72 characters.
+
+---
+
+## Pre-Code Checklist
+
+Before writing any code, confirm:
+
+- [ ] Understand existing patterns in the codebase?
+- [ ] Is this the simplest solution that works?
+- [ ] Does each function do exactly ONE thing?
+- [ ] Are names self-documenting (no abbreviations)?
+- [ ] Input validated at entry point?
+- [ ] Errors handled explicitly, not swallowed?
+- [ ] No duplicated logic?
+- [ ] No hidden side effects?
+- [ ] Comments in English, explaining WHY?
+- [ ] Frontend: types → api → hook → component structure?
+- [ ] State/props: lowest scope, stable refs, no derivable duplicate state?
+- [ ] Large data: chunked work, O(1) lookups, cleanup + memory bounded?
+- [ ] Backend: controller thin, logic in service?
+- [ ] File under 300 lines?
+- [ ] Would a new dev understand this without asking questions?
+- [ ] Component like button, card... uses Shacdn
+- [ ] Follow correct color

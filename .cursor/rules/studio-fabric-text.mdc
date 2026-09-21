@@ -1,0 +1,59 @@
+---
+description: Studio Fabric textbox width, centering, and no-wrap layout
+globs: frontend/src/utils/studio/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Studio Fabric Text Layout
+
+Generators emit Fabric JSON via `buildText`. Wrong `width` causes wrap, overflow past the safe area, and giant selection boxes.
+
+## Width = content (default for labels / banners / titles)
+
+Never stretch a short string across the full column or banner width. The Fabric textbox `width` must match the glyph run (`estimateTextBoxWidth`) — a fat empty selection box means the width is wrong.
+
+```typescript
+// ❌ BAD — full-width box; looks left-aligned, wraps early, huge hit target
+buildText({ left: box.left, text, width: box.width, ... }, tag, 'decoration')
+
+// ❌ BAD — inflated advance “just in case” (e.g. length * size * 0.72) → empty space in the box
+buildText({ text, width: text.length * fontSize * 0.72, ... }, tag, 'prompt')
+
+// ✅ GOOD — width matches glyph run (capped at max)
+import { estimateTextBoxWidth, boxCenterX } from '../studio-layout'
+
+buildText({
+  left: boxCenterX(box),
+  text,
+  width: estimateTextBoxWidth(text, fontSize, box.width),
+  textAlign: 'center',
+  originX: 'center',
+  ...
+}, tag, 'decoration')
+```
+
+To prevent soft-wrap on spaced one-line runs, use NBSP / fit font size to the column — **do not** fake a wider textbox. Follow `drawHeader` in `studio-layout.ts` for centered titles/instructions.
+
+## When to use full column width
+
+Only when copy is meant to **wrap** inside a column (long paragraphs). Still keep the box inside `contentBox` / `insetHorizontal(..., STUDIO_CONTENT_SAFE_INSET_X)`.
+
+## One-line runs (digits, codes, short sequences)
+
+Must not wrap. Fit font size so the estimated width fits the column, then set textbox width with `estimateTextBoxWidth`:
+
+```typescript
+const fitted = Math.max(MIN, Math.min(PREFERRED, maxWidth / (text.length * 0.55 + 1)))
+width: estimateTextBoxWidth(text, fitted, maxWidth)
+```
+
+Do not rely on Fabric wrap for “read once” digit/symbol rows — wrapped glyphs spill into the next row and past the safe area.
+
+## Checklist before finishing a generator
+
+- [ ] Short labels/banners: `estimateTextBoxWidth` + center via `originX: 'center'` when centered
+- [ ] No prompt/answer/decoration text overflows the page **safe area** (`contentBox` / `ctx.margin`) — see `studio-layout.mdc`
+- [ ] Textbox `width` + `left` (and centered origins) keep the full glyph run inside the inset content box
+- [ ] Digit/sequence rows stay on a single line at every configured length
+- [ ] Prefer patterns already used in `drawHeader`, `sequence-recall`, `list-recall`
+- [ ] Puzzle grid/field centered in the body below the header — see `studio-layout.mdc`

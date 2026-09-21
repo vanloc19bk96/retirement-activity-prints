@@ -1,0 +1,19 @@
+{
+  "_comment": "Category fluency generation content.",
+  "limits": {
+    "minLineCount": 8,
+    "maxLineCount": 30,
+    "rateLimitPerWindow": 60
+  },
+  "locale": {
+    "nativeLocales": ["en"],
+    "nativeLine": "- Write in clear English.",
+    "otherLine": "- Write the category name and examples in language locale '{locale}'."
+  },
+  "difficultyLevels": {
+    "easy": "a very common, easy category (like animals or fruits)",
+    "standard": "a common everyday category",
+    "hard": "a more specific or unusual (but fair) category"
+  },
+  "categoryHintLine": " The category should relate to: {hint}."
+}

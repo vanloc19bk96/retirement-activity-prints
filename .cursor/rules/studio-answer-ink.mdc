@@ -1,0 +1,49 @@
+---
+description: Studio answer keys — monochrome ink for B&W sheets; producesAnswerKey auto-adds solution pages
+globs: frontend/src/utils/studio/**/*.{ts,tsx},frontend/src/hooks/studio/**/*.{ts,tsx},frontend/src/constants/studio*.ts
+alwaysApply: false
+---
+
+# Studio Answer Key Conventions
+
+## 1. Automatic solution pages
+
+Every template with `producesAnswerKey: true` **automatically** inserts a solution page after the puzzle when generated. There is **no** form toggle (`includeAnswerKey` / `answerKeyForAll` are removed).
+
+```typescript
+// ✅ GOOD — flag only; generate always adds the solution page
+producesAnswerKey: true
+```
+
+Do **not** add answer-key toggles to `configSchema`. `runStudioGenerateOnce` keys off `producesAnswerKey` alone.
+
+DEV assert in `studio-templates.ts` throws if a template still exposes those field keys.
+
+## 2. Answer-key ink — print-safe monochrome
+
+Answer-key pages tint revealed `studioRole: 'answer'` objects with `answerInk`. Blue (`STUDIO_ANSWER_INK = #1D4ED8`) is for color UI templates only.
+
+For **black-and-white / print-first** worksheets (attention drills, dual-task, stroop, counting, trails, etc.), answer-key ink must be **black**:
+
+- Use `STUDIO_ANSWER_INK_MONO` (`STUDIO_INK` / `#000000`)
+- Register the template key in `STUDIO_ANSWER_INK_MONO_TEMPLATES` in `studio.constants.ts`
+- `answerInkForTemplate` in `run-studio-generate.ts` reads that set — do not hardcode a new `===` chain
+
+```typescript
+// ❌ BAD — B&W sheet gets blue answers on the key page
+buildAnswerPage(objects, STUDIO_ANSWER_INK)
+
+// ✅ GOOD — print-safe black
+buildAnswerPage(objects, STUDIO_ANSWER_INK_MONO)
+// + add template key to STUDIO_ANSWER_INK_MONO_TEMPLATES
+```
+
+Only templates that intentionally use color in the puzzle may keep default `STUDIO_ANSWER_INK`.
+
+## Checklist (new `producesAnswerKey` template)
+
+- [ ] `producesAnswerKey: true` (generate auto-adds solution page)
+- [ ] Hidden `studioRole: 'answer'` objects on the puzzle page
+- [ ] Puzzle fills/strokes monochrome when the sheet is B&W
+- [ ] B&W templates listed in `STUDIO_ANSWER_INK_MONO_TEMPLATES`
+- [ ] Tests: answer harvest + (if B&W) black ink on answer page

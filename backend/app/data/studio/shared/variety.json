@@ -1,0 +1,34 @@
+{
+  "_comment": "Shared freshness content: how every AI studio game is told to stop repeating itself.",
+  "limits": {
+    "memoryPerBucket": 240,
+    "maxBuckets": 4000,
+    "promptAvoidCount": 48,
+    "maxLabelChars": 60
+  },
+  "lines": {
+    "header": "FRESHNESS — this sheet must not repeat earlier sheets from the same book:",
+    "angle": "Where the theme allows, lean towards {angle} — not the most obvious answers.",
+    "avoid": "Already used on earlier sheets, do NOT repeat: {avoided}.",
+    "avoidTail": "Reuse one only if the theme genuinely offers nothing else that fits.",
+    "nonce": "Variation token {nonce} — treat this as a fresh draw and make different picks than your default ones."
+  },
+  "angles": [
+    "the less obvious choices — skip the first few that come to mind",
+    "things linked to mornings and starting the day",
+    "things linked to evenings, winding down and rest",
+    "things you would meet outdoors or on a walk",
+    "things tied to cold weather and the indoor months",
+    "things tied to warm weather, gardens and holidays",
+    "what a household keeps in a cupboard or a drawer rather than on show",
+    "things tied to cooking, baking and shared meals",
+    "things tied to hobbies, crafts and pastimes",
+    "things tied to travel, journeys and days out",
+    "things tied to celebrations, visitors and special occasions",
+    "things tied to work, chores and getting jobs done",
+    "older, more traditional choices",
+    "the small everyday details rather than the headline examples",
+    "things tied to music, radio, reading and quiet entertainment",
+    "things tied to animals, pets and the garden"
+  ]
+}

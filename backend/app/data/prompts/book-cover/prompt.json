@@ -1,0 +1,19 @@
+{
+  "_comment": "AI book-cover image prompt. Blocks are joined with newlines in order; the optional subtitle/author blocks are dropped when the field is empty.",
+  "defaults": {
+    "aspectRatio": "2:3",
+    "theme": "the user's chosen book theme",
+    "mood": "neutral",
+    "colorPreference": "harmonious"
+  },
+  "blocks": {
+    "base": "A best-selling Amazon KDP book cover design, vertical portrait, {aspect_ratio} aspect ratio. Full-bleed colored background that extends to every edge — never plain white at the outer edges, so the cover stands out against Amazon's white page.",
+    "title": "TITLE TEXT (render exactly, the single most dominant element, top third of cover, horizontally centered, occupying roughly 25-30% of the cover height):\n\"{title}\"",
+    "subtitle": "\nSUBTITLE TEXT (render exactly, smaller, directly below title, horizontally centered, may sit on a simple accent banner or ribbon):\n\"{subtitle}\"",
+    "author": "\nAUTHOR TEXT (render exactly, small, near the bottom of the cover but comfortably inside the safe margin, horizontally centered on the page):\n\"{author}\"",
+    "typography": "\nTypography: extra-bold block or heavy sans-serif typeface for the title — thick letterforms that stay readable when the cover is shrunk to a tiny thumbnail in Amazon search results. Very high contrast between the title and its background (light text on dark background or dark text on light background); a subtle drop shadow or thin outline may separate text from the artwork. No thin, script, or decorative hard-to-read fonts. All text must be spelled exactly as written above with no alterations. All text elements are center-aligned horizontally — the title, subtitle, and author name each sit on the vertical center axis of the cover. Clear hierarchy: title largest, subtitle second, author smallest.",
+    "artwork": "\nArtwork: {theme}, {mood} aesthetic, {color_preference} color palette with rich saturated tones. The illustration fills the cover behind the text but keeps a calm, low-detail zone behind the title so the text pops. The composition is symmetrical and balanced around the vertical center axis to support the centered text layout. Generous breathing room — no clutter, no tiny busy details, no more than two supporting illustration subjects.",
+    "printSafeMargins": "\nPRINT-SAFE MARGINS (critical): this cover is physically trimmed after printing, so the outer edge of the image is cut off. Keep every text element (title, subtitle, author) and every essential subject fully inside a safe area inset roughly 8% from each edge of the image. Only the background color, pattern, or scenery may touch or run off the edges (full bleed). Never let letters or key subjects touch the image edges.",
+    "style": "\nStyle: flat vector-style illustration, bold silhouettes, limited palette of 3-4 colors, high contrast, crisp clean edges. The whole design must pass the thumbnail test: title readable and genre obvious when the cover is displayed at postage-stamp size in Amazon search results. Professional publishing quality."
+  }
+}

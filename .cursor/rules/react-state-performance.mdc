@@ -1,0 +1,129 @@
+---
+description: React state, props, and scale performance — low complexity, high speed, bounded memory
+globs: frontend/**/*.{ts,tsx}
+alwaysApply: true
+---
+
+# React State, Props & Scale Performance
+
+> Apply on every frontend change. Prefer simple code that stays fast at 500–1000+ items.
+
+---
+
+## State Placement (lowest scope wins)
+
+| Scope | Use when | Avoid |
+|-------|----------|-------|
+| `useState` in component/hook | Only this UI needs it (`isOpen`, `draft`) | Lifting "just in case" |
+| Lifted state / callback props | 2+ siblings share read+write | Prop drilling >2 levels |
+| Domain context (`BookContext`, `CanvasSettingsContext`) | Many distant consumers, read-heavy | One mega-context for everything |
+| `useRef` | Values that must NOT re-render (`isIntersectingRef`, canvas refs, cancel flags) | Storing UI that should display |
+| Pure `utils/` | Deterministic transforms, validation, indexing | React imports in utils |
+
+```typescript
+// ❌ BAD — duplicated + derivable
+const [items, setItems] = useState<Item[]>([])
+const [activeCount, setActiveCount] = useState(0)
+
+// ✅ GOOD — single source, derive
+const [items, setItems] = useState<Item[]>([])
+const activeCount = useMemo(() => items.filter((i) => i.isActive).length, [items])
+```
+
+**Reducer** when one action updates 3+ related fields. **Never** mirror server data in context if a hook already owns it.
+
+---
+
+## Props Design
+
+- Define prop interfaces in `types/*.types.ts` — not inline in components.
+- UI components: **data + callbacks only** — no canvas/DOM/API side effects.
+- Hooks return stable shapes: `{ state, actions }` or `{ bindings }` — containers spread once.
+
+```typescript
+// ❌ BAD — new object every render → memo child always re-renders
+<RowItem config={{ id, onSelect: () => select(id) }} />
+
+// ✅ GOOD — stable callback from hook + primitive props
+const { selectItem } = actions
+<RowItem id={id} isSelected={selectedId === id} onSelect={selectItem} />
+```
+
+- **Max 3–4 top-level props** on leaf UI — group the rest into one typed object from the hook.
+- Do not pass entire parent state when child needs one field.
+- `children` / composition over boolean prop explosion (`renderX`, `showY`, `hideZ`).
+
+---
+
+## Re-render Control (targeted, not blanket)
+
+| Tool | Use when |
+|------|----------|
+| `React.memo` | List/grid row components rendered 50+ times (`FabricCanvasItem`) |
+| `useCallback` | Callback passed to `memo` child or effect dependency |
+| `useMemo` | O(n) filter/sort/map on large arrays; expensive object builds |
+| Ref | Read latest value in async loop without stale closure re-subscribe |
+
+```typescript
+// ❌ BAD — memo everywhere (adds compare cost, obscures data flow)
+export const Label = memo(({ text }: { text: string }) => <span>{text}</span>)
+
+// ✅ GOOD — memo at list boundary only
+export const FabricCanvasItem = memo(function FabricCanvasItem(props) { ... })
+```
+
+**Do not** `useCallback`/`useMemo` by default — add when profiling or list scale demands it.
+
+---
+
+## Large Collections (500–1000+ pages/items)
+
+Follow existing editor patterns:
+
+1. **Lazy mount** — lightweight shell + heavy child only when near viewport (`FabricCanvasItem` → `FabricCanvasItemActive`).
+2. **Hysteresis** — different activate/deactivate margins to avoid mount/dispose thrash on scroll.
+3. **Index structures** — `Map<number, T>` / `Set` for O(1) lookup; never `.find()` in hot loops.
+4. **Chunk + yield** — long sync work calls `yieldToMainThread()` between chunks; show progress UI.
+5. **Batch updates** — one `setState` / one store commit per chunk, not per item.
+6. **Virtualize** when DOM node count is the bottleneck (thumbnails, long lists).
+
+```typescript
+// ✅ GOOD — bounded memory at scale
+for (const job of chunk) {
+  if (cancelRef.current) break
+  await processJob(job)
+  await yieldToMainThread()
+}
+```
+
+---
+
+## Memory
+
+- **Cleanup** every `useEffect`: listeners, `IntersectionObserver`, timers, `URL.revokeObjectURL`.
+- **Dispose** heavy instances on unmount (Fabric canvas, workers, large buffers).
+- **Persist + release** — save to store, drop live instance when off-screen (visibility hook pattern).
+- **No unbounded caches** in React state — cap size or use LRU in module scope with explicit eviction.
+- **Avoid** spreading/cloning large nested objects in render; update only changed slice.
+
+---
+
+## Complexity Limits
+
+- One hook = one domain (`use-bulk-puzzle-generation`, `use-canvas-download`).
+- Orchestrator hook calls pure utils; utils have zero React hooks.
+- Max **3–4** `useState` per hook — merge related fields or use `useReducer`.
+- No inline logic in JSX beyond trivial ternaries — extract named handler or hook action.
+- Effects: **one concern per effect**; deps must be complete and minimal.
+
+---
+
+## Pre-Change Checklist (frontend)
+
+- [ ] State at lowest scope? No derivable duplicate state?
+- [ ] Props minimal, stable, typed in `types/`?
+- [ ] List rows memoized? Callbacks stable for memo children?
+- [ ] Large loops chunked + yielding? Progress feedback for user?
+- [ ] Lookups O(1)? No full-array scan in hot path?
+- [ ] Effects cleaned up? Heavy refs released off-screen?
+- [ ] Would 1000 items still feel responsive?

@@ -1,0 +1,4035 @@
+[
+  {
+    "id": "shape-001",
+    "name": "cat",
+    "theme": "animals",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2,
+        "y": 2,
+        "rotation": 135,
+        "flipped": true
+      },
+      {
+        "tan": "largeTri",
+        "x": 2,
+        "y": 2,
+        "rotation": 45,
+        "flipped": true
+      },
+      {
+        "tan": "mediumTri",
+        "x": 4,
+        "y": 4,
+        "rotation": 90,
+        "flipped": true
+      },
+      {
+        "tan": "square",
+        "x": 3,
+        "y": 1,
+        "rotation": 45
+      },
+      {
+        "tan": "smallTri",
+        "x": 3,
+        "y": 1,
+        "rotation": 225,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 2,
+        "y": 2,
+        "rotation": 45
+      },
+      {
+        "tan": "parallelogram",
+        "x": 3,
+        "y": 3,
+        "rotation": 0,
+        "flipped": true
+      }
+    ]
+  },
+  {
+    "id": "shape-002",
+    "name": "dog",
+    "theme": "animals",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 5.5355339059,
+        "y": 2,
+        "rotation": 135
+      },
+      {
+        "tan": "largeTri",
+        "x": 5.5355339059,
+        "y": 2,
+        "rotation": 45
+      },
+      {
+        "tan": "mediumTri",
+        "x": 3.5355339059,
+        "y": 3.7071067812,
+        "rotation": 90
+      },
+      {
+        "tan": "square",
+        "x": 3.5355339059,
+        "y": 2.2928932188,
+        "rotation": 90
+      },
+      {
+        "tan": "parallelogram",
+        "x": 2.8284271247,
+        "y": 2.2928932188,
+        "rotation": 45,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 4.5355339059,
+        "y": 5,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.5355339059,
+        "y": 3.7071067812,
+        "rotation": 45
+      }
+    ]
+  },
+  {
+    "id": "shape-003",
+    "name": "bird",
+    "theme": "animals",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2.2928932188,
+        "y": 2.4142135624,
+        "rotation": 315
+      },
+      {
+        "tan": "largeTri",
+        "x": 4,
+        "y": 4.1213203436,
+        "rotation": 135
+      },
+      {
+        "tan": "mediumTri",
+        "x": 4.2928932188,
+        "y": 3.4142135624,
+        "rotation": 0
+      },
+      {
+        "tan": "square",
+        "x": 4.2928932188,
+        "y": 1.4142135624,
+        "rotation": 270
+      },
+      {
+        "tan": "parallelogram",
+        "x": 0.5857864376,
+        "y": 3.8284271248,
+        "rotation": 135,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 6,
+        "y": 2.4142135624,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.4142135624,
+        "y": 4.4142135624,
+        "rotation": 180
+      }
+    ]
+  },
+  {
+    "id": "shape-004",
+    "name": "rabbit",
+    "theme": "animals",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2,
+        "y": 3.7071067812,
+        "rotation": 45
+      },
+      {
+        "tan": "largeTri",
+        "x": 2.2928932188,
+        "y": 4,
+        "rotation": 225
+      },
+      {
+        "tan": "mediumTri",
+        "x": 3,
+        "y": 2,
+        "rotation": 180
+      },
+      {
+        "tan": "square",
+        "x": 2.5857864376,
+        "y": 5.7071067812,
+        "rotation": 0
+      },
+      {
+        "tan": "parallelogram",
+        "x": 5.2928932188,
+        "y": 5,
+        "rotation": 180
+      },
+      {
+        "tan": "smallTri",
+        "x": 6,
+        "y": 6,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 2.5857864376,
+        "y": 6.4142135624,
+        "rotation": 90
+      }
+    ]
+  },
+  {
+    "id": "shape-005",
+    "name": "swan",
+    "theme": "animals",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 3.2928932188,
+        "y": 3,
+        "rotation": 270
+      },
+      {
+        "tan": "largeTri",
+        "x": 1.2928932188,
+        "y": 2,
+        "rotation": 315
+      },
+      {
+        "tan": "mediumTri",
+        "x": 1.4142135624,
+        "y": 2.1213203436,
+        "rotation": 135
+      },
+      {
+        "tan": "square",
+        "x": 3.2928932188,
+        "y": 1.5857864377,
+        "rotation": 270
+      },
+      {
+        "tan": "parallelogram",
+        "x": 2.5857864376,
+        "y": 3.2928932188,
+        "rotation": 45
+      },
+      {
+        "tan": "smallTri",
+        "x": 6.1213203435,
+        "y": 3,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 5,
+        "y": 5.7071067812,
+        "rotation": 135
+      }
+    ]
+  },
+  {
+    "id": "shape-006",
+    "name": "goose",
+    "theme": "animals",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 4,
+        "y": 3.2928932188,
+        "rotation": 135
+      },
+      {
+        "tan": "largeTri",
+        "x": 2.8284271247,
+        "y": 7.2928932188,
+        "rotation": 180
+      },
+      {
+        "tan": "mediumTri",
+        "x": 2,
+        "y": 4,
+        "rotation": 180
+      },
+      {
+        "tan": "square",
+        "x": 3.7071067812,
+        "y": 1,
+        "rotation": 135
+      },
+      {
+        "tan": "parallelogram",
+        "x": 3,
+        "y": 8.2928932188,
+        "rotation": 180
+      },
+      {
+        "tan": "smallTri",
+        "x": 3.7071067812,
+        "y": 9.2928932188,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 4.2071067812,
+        "y": 8.7928932188,
+        "rotation": 45
+      }
+    ]
+  },
+  {
+    "id": "shape-007",
+    "name": "fox",
+    "theme": "animals",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 4,
+        "y": 2,
+        "rotation": 90
+      },
+      {
+        "tan": "largeTri",
+        "x": 4,
+        "y": 3,
+        "rotation": 270
+      },
+      {
+        "tan": "mediumTri",
+        "x": 0,
+        "y": 2,
+        "rotation": 270
+      },
+      {
+        "tan": "square",
+        "x": 2.2928932188,
+        "y": 2,
+        "rotation": 270
+      },
+      {
+        "tan": "parallelogram",
+        "x": 8.7071067812,
+        "y": 4,
+        "rotation": 180
+      },
+      {
+        "tan": "smallTri",
+        "x": 6.2928932188,
+        "y": 5,
+        "rotation": 270
+      },
+      {
+        "tan": "smallTri",
+        "x": 5.7071067812,
+        "y": 6,
+        "rotation": 225
+      }
+    ]
+  },
+  {
+    "id": "shape-008",
+    "name": "fish",
+    "theme": "animals",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 3,
+        "y": 3.7071067811,
+        "rotation": 180
+      },
+      {
+        "tan": "largeTri",
+        "x": 3,
+        "y": 3.4142135623,
+        "rotation": 270
+      },
+      {
+        "tan": "mediumTri",
+        "x": 2,
+        "y": 3.7071067811,
+        "rotation": 90
+      },
+      {
+        "tan": "square",
+        "x": 3,
+        "y": 4.8284271247,
+        "rotation": 270
+      },
+      {
+        "tan": "parallelogram",
+        "x": 7.4142135624,
+        "y": 4.8284271247,
+        "rotation": 45,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 6.7071067812,
+        "y": 2.7071067811,
+        "rotation": 90
+      },
+      {
+        "tan": "smallTri",
+        "x": 3.4142135624,
+        "y": 1,
+        "rotation": 315
+      }
+    ]
+  },
+  {
+    "id": "shape-009",
+    "name": "duck",
+    "theme": "animals",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 5.1213203435,
+        "y": 2,
+        "rotation": 135
+      },
+      {
+        "tan": "largeTri",
+        "x": 1.1213203435,
+        "y": 4,
+        "rotation": 315
+      },
+      {
+        "tan": "mediumTri",
+        "x": 1.8284271247,
+        "y": 6.7071067812,
+        "rotation": 270
+      },
+      {
+        "tan": "square",
+        "x": 1.8284271247,
+        "y": 5.5857864376,
+        "rotation": 90
+      },
+      {
+        "tan": "parallelogram",
+        "x": 2.8284271247,
+        "y": 7,
+        "rotation": 135
+      },
+      {
+        "tan": "smallTri",
+        "x": 2.1213203435,
+        "y": 7.7071067812,
+        "rotation": 315
+      },
+      {
+        "tan": "smallTri",
+        "x": 5.8284271247,
+        "y": 2.7071067812,
+        "rotation": 225
+      }
+    ]
+  },
+  {
+    "id": "shape-010",
+    "name": "hen",
+    "theme": "animals",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 0,
+        "y": 4.5355339059,
+        "rotation": 315
+      },
+      {
+        "tan": "largeTri",
+        "x": 2,
+        "y": 2.8284271247,
+        "rotation": 270
+      },
+      {
+        "tan": "mediumTri",
+        "x": 6.2928932188,
+        "y": 2.8284271247,
+        "rotation": 90
+      },
+      {
+        "tan": "square",
+        "x": 0.2928932188,
+        "y": 6.8284271247,
+        "rotation": 315
+      },
+      {
+        "tan": "parallelogram",
+        "x": 7.7071067812,
+        "y": 5.3639610306,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 1,
+        "y": 5.5355339059,
+        "rotation": 135
+      },
+      {
+        "tan": "smallTri",
+        "x": 8,
+        "y": 2.8284271247,
+        "rotation": 90
+      }
+    ]
+  },
+  {
+    "id": "shape-011",
+    "name": "crane",
+    "theme": "animals",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 4,
+        "y": 2,
+        "rotation": 45
+      },
+      {
+        "tan": "largeTri",
+        "x": 4,
+        "y": 2,
+        "rotation": 135
+      },
+      {
+        "tan": "mediumTri",
+        "x": 1.7071067812,
+        "y": 4,
+        "rotation": 0
+      },
+      {
+        "tan": "square",
+        "x": 5.7071067812,
+        "y": 3.7071067812,
+        "rotation": 315
+      },
+      {
+        "tan": "parallelogram",
+        "x": 6,
+        "y": 4,
+        "rotation": 270,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 1,
+        "y": 3,
+        "rotation": 45
+      },
+      {
+        "tan": "smallTri",
+        "x": 6.7071067812,
+        "y": 6.7071067812,
+        "rotation": 45
+      }
+    ]
+  },
+  {
+    "id": "shape-012",
+    "name": "camel",
+    "theme": "animals",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2,
+        "y": 2.2928932188,
+        "rotation": 0
+      },
+      {
+        "tan": "largeTri",
+        "x": 0,
+        "y": 7,
+        "rotation": 315
+      },
+      {
+        "tan": "mediumTri",
+        "x": 2,
+        "y": 9,
+        "rotation": 270
+      },
+      {
+        "tan": "square",
+        "x": 2.7071067812,
+        "y": 9,
+        "rotation": 0
+      },
+      {
+        "tan": "parallelogram",
+        "x": 3.8284271247,
+        "y": 0.8786796564,
+        "rotation": 135
+      },
+      {
+        "tan": "smallTri",
+        "x": 2,
+        "y": 2.5857864376,
+        "rotation": 90
+      },
+      {
+        "tan": "smallTri",
+        "x": 4.7071067812,
+        "y": 0,
+        "rotation": 45
+      }
+    ]
+  },
+  {
+    "id": "shape-013",
+    "name": "horse",
+    "theme": "animals",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 4.2928932188,
+        "y": 2.8284271247,
+        "rotation": 0
+      },
+      {
+        "tan": "largeTri",
+        "x": 3.2928932188,
+        "y": 2.8284271247,
+        "rotation": 270
+      },
+      {
+        "tan": "mediumTri",
+        "x": 2.7071067812,
+        "y": 4.2426406871,
+        "rotation": 225
+      },
+      {
+        "tan": "square",
+        "x": 2,
+        "y": 3.5355339059,
+        "rotation": 135
+      },
+      {
+        "tan": "parallelogram",
+        "x": 9,
+        "y": 2.8284271247,
+        "rotation": 180
+      },
+      {
+        "tan": "smallTri",
+        "x": 9,
+        "y": 2.8284271247,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 0,
+        "y": 4.9497474683,
+        "rotation": 270
+      }
+    ]
+  },
+  {
+    "id": "shape-014",
+    "name": "frog",
+    "theme": "animals",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 5.4142135624,
+        "y": 3.4142135624,
+        "rotation": 90
+      },
+      {
+        "tan": "largeTri",
+        "x": 2.4142135624,
+        "y": 1.4142135624,
+        "rotation": 45
+      },
+      {
+        "tan": "mediumTri",
+        "x": 5.4142135624,
+        "y": 2.4142135624,
+        "rotation": 0
+      },
+      {
+        "tan": "square",
+        "x": 4,
+        "y": 1.4142135624,
+        "rotation": 0
+      },
+      {
+        "tan": "parallelogram",
+        "x": 6.4142135624,
+        "y": 4.4142135624,
+        "rotation": 90
+      },
+      {
+        "tan": "smallTri",
+        "x": 4.7071067812,
+        "y": 1.4142135624,
+        "rotation": 180
+      },
+      {
+        "tan": "smallTri",
+        "x": 0,
+        "y": 2.4142135624,
+        "rotation": 0
+      }
+    ]
+  },
+  {
+    "id": "shape-015",
+    "name": "turtle",
+    "theme": "animals",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 5.2928932188,
+        "y": 2.8284271247,
+        "rotation": 180
+      },
+      {
+        "tan": "largeTri",
+        "x": 2,
+        "y": 4.8284271247,
+        "rotation": 225
+      },
+      {
+        "tan": "mediumTri",
+        "x": 5,
+        "y": 2.8284271247,
+        "rotation": 0
+      },
+      {
+        "tan": "square",
+        "x": 3,
+        "y": 3.8284271247,
+        "rotation": 45
+      },
+      {
+        "tan": "parallelogram",
+        "x": 8,
+        "y": 3.8284271247,
+        "rotation": 0,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 4,
+        "y": 4.5355339059,
+        "rotation": 315
+      },
+      {
+        "tan": "smallTri",
+        "x": 3.2928932188,
+        "y": 6.9497474683,
+        "rotation": 180
+      }
+    ]
+  },
+  {
+    "id": "shape-016",
+    "name": "house",
+    "theme": "objects",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 3,
+        "y": 5.2928932188,
+        "rotation": 135
+      },
+      {
+        "tan": "largeTri",
+        "x": 3.7071067812,
+        "y": 6,
+        "rotation": 225
+      },
+      {
+        "tan": "mediumTri",
+        "x": 2,
+        "y": 4,
+        "rotation": 270
+      },
+      {
+        "tan": "square",
+        "x": 6,
+        "y": 4,
+        "rotation": 180
+      },
+      {
+        "tan": "parallelogram",
+        "x": 1,
+        "y": 0,
+        "rotation": 270,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 0,
+        "y": 7.2928932188,
+        "rotation": 315
+      },
+      {
+        "tan": "smallTri",
+        "x": 4,
+        "y": 6.2928932188,
+        "rotation": 135
+      }
+    ]
+  },
+  {
+    "id": "shape-017",
+    "name": "boat",
+    "theme": "objects",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2,
+        "y": 3.4142135624,
+        "rotation": 225
+      },
+      {
+        "tan": "largeTri",
+        "x": 3,
+        "y": 2.4142135624,
+        "rotation": 315
+      },
+      {
+        "tan": "mediumTri",
+        "x": 5,
+        "y": 3.4142135624,
+        "rotation": 0
+      },
+      {
+        "tan": "square",
+        "x": 5,
+        "y": 4.7071067812,
+        "rotation": 90
+      },
+      {
+        "tan": "parallelogram",
+        "x": 3.2928932188,
+        "y": 6.1213203436,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.2928932188,
+        "y": 1.4142135624,
+        "rotation": 270
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.8786796564,
+        "y": 6.1213203436,
+        "rotation": 270
+      }
+    ]
+  },
+  {
+    "id": "shape-018",
+    "name": "candle",
+    "theme": "objects",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2,
+        "y": 6.2928932188,
+        "rotation": 225
+      },
+      {
+        "tan": "largeTri",
+        "x": 6,
+        "y": 5.1213203435,
+        "rotation": 180
+      },
+      {
+        "tan": "mediumTri",
+        "x": 6,
+        "y": 3.2928932188,
+        "rotation": 270
+      },
+      {
+        "tan": "square",
+        "x": 6.7071067812,
+        "y": 0,
+        "rotation": 45
+      },
+      {
+        "tan": "parallelogram",
+        "x": 0.8786796565,
+        "y": 2.8786796564,
+        "rotation": 225,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 6,
+        "y": 1.2928932188,
+        "rotation": 135
+      },
+      {
+        "tan": "smallTri",
+        "x": 7,
+        "y": 5,
+        "rotation": 135
+      }
+    ]
+  },
+  {
+    "id": "shape-019",
+    "name": "teapot",
+    "theme": "objects",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 4,
+        "y": 3.4142135624,
+        "rotation": 180
+      },
+      {
+        "tan": "largeTri",
+        "x": 6,
+        "y": 4.1213203436,
+        "rotation": 135
+      },
+      {
+        "tan": "mediumTri",
+        "x": 4,
+        "y": 6.4142135624,
+        "rotation": 180
+      },
+      {
+        "tan": "square",
+        "x": 4,
+        "y": 1.4142135624,
+        "rotation": 270
+      },
+      {
+        "tan": "parallelogram",
+        "x": 5.7071067812,
+        "y": 7.4142135624,
+        "rotation": 180
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.7071067812,
+        "y": 7.4142135624,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 0,
+        "y": 7.1213203436,
+        "rotation": 270
+      }
+    ]
+  },
+  {
+    "id": "shape-020",
+    "name": "arrow",
+    "theme": "objects",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 3,
+        "y": 3.7071067812,
+        "rotation": 180
+      },
+      {
+        "tan": "largeTri",
+        "x": 2,
+        "y": 5.7071067812,
+        "rotation": 225
+      },
+      {
+        "tan": "mediumTri",
+        "x": 4,
+        "y": 5.7071067812,
+        "rotation": 180
+      },
+      {
+        "tan": "square",
+        "x": 0,
+        "y": 5.7071067812,
+        "rotation": 315
+      },
+      {
+        "tan": "parallelogram",
+        "x": 4.4142135624,
+        "y": 0,
+        "rotation": 315,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 4.7071067812,
+        "y": 6.7071067812,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 2,
+        "y": 1.8786796565,
+        "rotation": 225
+      }
+    ]
+  },
+  {
+    "id": "shape-021",
+    "name": "kite",
+    "theme": "objects",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 5,
+        "y": 0.2928932188,
+        "rotation": 45
+      },
+      {
+        "tan": "largeTri",
+        "x": 4,
+        "y": 2.2928932188,
+        "rotation": 90
+      },
+      {
+        "tan": "mediumTri",
+        "x": 4,
+        "y": 6,
+        "rotation": 270
+      },
+      {
+        "tan": "square",
+        "x": 2,
+        "y": 1.2928932188,
+        "rotation": 315
+      },
+      {
+        "tan": "parallelogram",
+        "x": 7.7071067812,
+        "y": 1,
+        "rotation": 180
+      },
+      {
+        "tan": "smallTri",
+        "x": 7,
+        "y": 5.5857864376,
+        "rotation": 90
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.4142135624,
+        "y": 2.2928932188,
+        "rotation": 180
+      }
+    ]
+  },
+  {
+    "id": "shape-022",
+    "name": "tree",
+    "theme": "objects",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2.8284271247,
+        "y": 4.7071067812,
+        "rotation": 90
+      },
+      {
+        "tan": "largeTri",
+        "x": 2.8284271247,
+        "y": 3.4142135624,
+        "rotation": 0
+      },
+      {
+        "tan": "mediumTri",
+        "x": 5.5355339059,
+        "y": 3.4142135624,
+        "rotation": 180
+      },
+      {
+        "tan": "square",
+        "x": 1.5355339059,
+        "y": 3.2928932188,
+        "rotation": 90
+      },
+      {
+        "tan": "parallelogram",
+        "x": 5.5355339059,
+        "y": 1.4142135624,
+        "rotation": 0,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 5.4142135623,
+        "y": 1.4142135624,
+        "rotation": 270
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.8284271247,
+        "y": 6.5355339059,
+        "rotation": 45
+      }
+    ]
+  },
+  {
+    "id": "shape-023",
+    "name": "boat sail",
+    "theme": "objects",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 0,
+        "y": 2,
+        "rotation": 315
+      },
+      {
+        "tan": "largeTri",
+        "x": 2,
+        "y": 2,
+        "rotation": 0
+      },
+      {
+        "tan": "mediumTri",
+        "x": 2,
+        "y": 0,
+        "rotation": 0
+      },
+      {
+        "tan": "square",
+        "x": 4.7071067812,
+        "y": 2,
+        "rotation": 270
+      },
+      {
+        "tan": "parallelogram",
+        "x": 3.4142135624,
+        "y": 3.4142135624,
+        "rotation": 90
+      },
+      {
+        "tan": "smallTri",
+        "x": 5.2928932188,
+        "y": 2,
+        "rotation": 0
+      },
+      {
+        "tan": "smallTri",
+        "x": 2.4142135624,
+        "y": 6.8284271248,
+        "rotation": 180
+      }
+    ]
+  },
+  {
+    "id": "shape-024",
+    "name": "lamp",
+    "theme": "objects",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 1.2928932188,
+        "y": 4,
+        "rotation": 270
+      },
+      {
+        "tan": "largeTri",
+        "x": 2.2928932188,
+        "y": 6,
+        "rotation": 225
+      },
+      {
+        "tan": "mediumTri",
+        "x": 0,
+        "y": 5.7071067812,
+        "rotation": 270
+      },
+      {
+        "tan": "square",
+        "x": 4.1213203435,
+        "y": 4,
+        "rotation": 225
+      },
+      {
+        "tan": "parallelogram",
+        "x": 5.4142135624,
+        "y": 0.7071067812,
+        "rotation": 135
+      },
+      {
+        "tan": "smallTri",
+        "x": 3.2928932188,
+        "y": 0,
+        "rotation": 0
+      },
+      {
+        "tan": "smallTri",
+        "x": 0.2928932188,
+        "y": 1.7071067812,
+        "rotation": 315
+      }
+    ]
+  },
+  {
+    "id": "shape-025",
+    "name": "table",
+    "theme": "objects",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2.2928932188,
+        "y": 4.4142135624,
+        "rotation": 225
+      },
+      {
+        "tan": "largeTri",
+        "x": 2,
+        "y": 4.1213203436,
+        "rotation": 45
+      },
+      {
+        "tan": "mediumTri",
+        "x": 2,
+        "y": 6.1213203436,
+        "rotation": 90
+      },
+      {
+        "tan": "square",
+        "x": 5,
+        "y": 1,
+        "rotation": 90
+      },
+      {
+        "tan": "parallelogram",
+        "x": 2,
+        "y": 9.1213203436,
+        "rotation": 270
+      },
+      {
+        "tan": "smallTri",
+        "x": 4.5857864376,
+        "y": 0,
+        "rotation": 45
+      },
+      {
+        "tan": "smallTri",
+        "x": 3,
+        "y": 7.7071067812,
+        "rotation": 0
+      }
+    ]
+  },
+  {
+    "id": "shape-026",
+    "name": "chair",
+    "theme": "objects",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 3.4142135624,
+        "y": 3.4142135624,
+        "rotation": 135
+      },
+      {
+        "tan": "largeTri",
+        "x": 4.4142135624,
+        "y": 2.4142135624,
+        "rotation": 45
+      },
+      {
+        "tan": "mediumTri",
+        "x": 5.1213203436,
+        "y": 3.1213203436,
+        "rotation": 315
+      },
+      {
+        "tan": "square",
+        "x": 6.4142135624,
+        "y": 4.4142135624,
+        "rotation": 45
+      },
+      {
+        "tan": "parallelogram",
+        "x": 6.8284271248,
+        "y": 0,
+        "rotation": 315,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 5.8284271248,
+        "y": 1,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.4142135624,
+        "y": 0.1213203436,
+        "rotation": 90
+      }
+    ]
+  },
+  {
+    "id": "shape-027",
+    "name": "bridge",
+    "theme": "objects",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 3.7071067812,
+        "y": 3.4142135624,
+        "rotation": 135
+      },
+      {
+        "tan": "largeTri",
+        "x": 2.7071067812,
+        "y": 4.4142135624,
+        "rotation": 45
+      },
+      {
+        "tan": "mediumTri",
+        "x": 3.7071067812,
+        "y": 1.4142135624,
+        "rotation": 90
+      },
+      {
+        "tan": "square",
+        "x": 2,
+        "y": 1.4142135624,
+        "rotation": 180
+      },
+      {
+        "tan": "parallelogram",
+        "x": 3,
+        "y": 7.4142135624,
+        "rotation": 180
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.7071067812,
+        "y": 3.4142135624,
+        "rotation": 90
+      },
+      {
+        "tan": "smallTri",
+        "x": 3.7071067812,
+        "y": 1.7071067812,
+        "rotation": 0
+      }
+    ]
+  },
+  {
+    "id": "shape-028",
+    "name": "tower",
+    "theme": "objects",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 3.4142135623,
+        "y": 5.8284271247,
+        "rotation": 90
+      },
+      {
+        "tan": "largeTri",
+        "x": 2,
+        "y": 7.2426406871,
+        "rotation": 45
+      },
+      {
+        "tan": "mediumTri",
+        "x": 1.4142135623,
+        "y": 5.8284271247,
+        "rotation": 270
+      },
+      {
+        "tan": "square",
+        "x": 2.7071067811,
+        "y": 3.1213203435,
+        "rotation": 135
+      },
+      {
+        "tan": "parallelogram",
+        "x": 2.4142135623,
+        "y": 2.8284271247,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 4.7071067811,
+        "y": 5.7071067811,
+        "rotation": 90
+      },
+      {
+        "tan": "smallTri",
+        "x": 5.7071067811,
+        "y": 6.8284271247,
+        "rotation": 135
+      }
+    ]
+  },
+  {
+    "id": "shape-029",
+    "name": "rocket",
+    "theme": "objects",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 3.7071067812,
+        "y": 2.7071067812,
+        "rotation": 0
+      },
+      {
+        "tan": "largeTri",
+        "x": 6.7071067812,
+        "y": 0.7071067812,
+        "rotation": 45
+      },
+      {
+        "tan": "mediumTri",
+        "x": 3.7071067812,
+        "y": 6,
+        "rotation": 180
+      },
+      {
+        "tan": "square",
+        "x": 7.7071067812,
+        "y": 1.7071067812,
+        "rotation": 315
+      },
+      {
+        "tan": "parallelogram",
+        "x": 9.2071067812,
+        "y": 2.2071067812,
+        "rotation": 180,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 7.4142135624,
+        "y": 0,
+        "rotation": 90
+      },
+      {
+        "tan": "smallTri",
+        "x": 1,
+        "y": 7,
+        "rotation": 225
+      }
+    ]
+  },
+  {
+    "id": "shape-030",
+    "name": "boot",
+    "theme": "objects",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 4,
+        "y": 5,
+        "rotation": 225
+      },
+      {
+        "tan": "largeTri",
+        "x": 1,
+        "y": 4.8284271247,
+        "rotation": 270
+      },
+      {
+        "tan": "mediumTri",
+        "x": 5.7071067812,
+        "y": 3,
+        "rotation": 270
+      },
+      {
+        "tan": "square",
+        "x": 6.7071067812,
+        "y": 2,
+        "rotation": 225
+      },
+      {
+        "tan": "parallelogram",
+        "x": 6.7071067812,
+        "y": 3,
+        "rotation": 0
+      },
+      {
+        "tan": "smallTri",
+        "x": 5.7071067812,
+        "y": 1.2928932188,
+        "rotation": 90
+      },
+      {
+        "tan": "smallTri",
+        "x": 0,
+        "y": 1.7071067812,
+        "rotation": 315
+      }
+    ]
+  },
+  {
+    "id": "shape-031",
+    "name": "walker",
+    "theme": "people",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2.2928932188,
+        "y": 7,
+        "rotation": 225
+      },
+      {
+        "tan": "largeTri",
+        "x": 2,
+        "y": 6.7071067812,
+        "rotation": 45
+      },
+      {
+        "tan": "mediumTri",
+        "x": 5.2928932188,
+        "y": 5,
+        "rotation": 180
+      },
+      {
+        "tan": "square",
+        "x": 1.4142135624,
+        "y": 5,
+        "rotation": 180
+      },
+      {
+        "tan": "parallelogram",
+        "x": 2.8284271248,
+        "y": 1.4644660941,
+        "rotation": 315,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 5.2928932188,
+        "y": 8.5857864376,
+        "rotation": 90
+      },
+      {
+        "tan": "smallTri",
+        "x": 3.2928932188,
+        "y": 1,
+        "rotation": 135
+      }
+    ]
+  },
+  {
+    "id": "shape-032",
+    "name": "dancer",
+    "theme": "people",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2,
+        "y": 4,
+        "rotation": 225
+      },
+      {
+        "tan": "largeTri",
+        "x": 1.1715728753,
+        "y": 6,
+        "rotation": 270
+      },
+      {
+        "tan": "mediumTri",
+        "x": 0.7071067812,
+        "y": 2,
+        "rotation": 270
+      },
+      {
+        "tan": "square",
+        "x": 5,
+        "y": 7.4142135624,
+        "rotation": 180
+      },
+      {
+        "tan": "parallelogram",
+        "x": 6,
+        "y": 5.7071067812,
+        "rotation": 90
+      },
+      {
+        "tan": "smallTri",
+        "x": 6,
+        "y": 7.1213203436,
+        "rotation": 270
+      },
+      {
+        "tan": "smallTri",
+        "x": 4,
+        "y": 8.7071067812,
+        "rotation": 315
+      }
+    ]
+  },
+  {
+    "id": "shape-033",
+    "name": "runner",
+    "theme": "people",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2.2928932188,
+        "y": 4.7071067812,
+        "rotation": 45
+      },
+      {
+        "tan": "largeTri",
+        "x": 1,
+        "y": 3.4142135624,
+        "rotation": 315
+      },
+      {
+        "tan": "mediumTri",
+        "x": 3,
+        "y": 2.4142135624,
+        "rotation": 0
+      },
+      {
+        "tan": "square",
+        "x": 1,
+        "y": 3.4142135624,
+        "rotation": 45
+      },
+      {
+        "tan": "parallelogram",
+        "x": 7.4142135624,
+        "y": 1,
+        "rotation": 135
+      },
+      {
+        "tan": "smallTri",
+        "x": 1,
+        "y": 5.4142135624,
+        "rotation": 135
+      },
+      {
+        "tan": "smallTri",
+        "x": 5.7071067812,
+        "y": 0,
+        "rotation": 45
+      }
+    ]
+  },
+  {
+    "id": "shape-034",
+    "name": "thinker",
+    "theme": "people",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2.7071067812,
+        "y": 5.2928932188,
+        "rotation": 225
+      },
+      {
+        "tan": "largeTri",
+        "x": 3.4142135624,
+        "y": 6,
+        "rotation": 135
+      },
+      {
+        "tan": "mediumTri",
+        "x": 4.7071067812,
+        "y": 3.2928932188,
+        "rotation": 180
+      },
+      {
+        "tan": "square",
+        "x": 0,
+        "y": 6,
+        "rotation": 0
+      },
+      {
+        "tan": "parallelogram",
+        "x": 2.4142135624,
+        "y": 7,
+        "rotation": 180,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.4142135624,
+        "y": 8.8284271248,
+        "rotation": 180
+      },
+      {
+        "tan": "smallTri",
+        "x": 5.7071067812,
+        "y": 1,
+        "rotation": 135
+      }
+    ]
+  },
+  {
+    "id": "shape-035",
+    "name": "sitter",
+    "theme": "people",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 3.7071067812,
+        "y": 3.7071067812,
+        "rotation": 270
+      },
+      {
+        "tan": "largeTri",
+        "x": 5,
+        "y": 5.7071067812,
+        "rotation": 225
+      },
+      {
+        "tan": "mediumTri",
+        "x": 8,
+        "y": 4.7071067812,
+        "rotation": 180
+      },
+      {
+        "tan": "square",
+        "x": 3.4142135624,
+        "y": 2.2928932188,
+        "rotation": 90
+      },
+      {
+        "tan": "parallelogram",
+        "x": 1,
+        "y": 1,
+        "rotation": 270,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.5857864376,
+        "y": 5,
+        "rotation": 270
+      },
+      {
+        "tan": "smallTri",
+        "x": 0,
+        "y": 1,
+        "rotation": 315
+      }
+    ]
+  },
+  {
+    "id": "shape-036",
+    "name": "jumper",
+    "theme": "people",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 4,
+        "y": 4.2928932188,
+        "rotation": 225
+      },
+      {
+        "tan": "largeTri",
+        "x": 6,
+        "y": 0.2928932188,
+        "rotation": 45
+      },
+      {
+        "tan": "mediumTri",
+        "x": 3.7071067812,
+        "y": 2.2928932188,
+        "rotation": 180
+      },
+      {
+        "tan": "square",
+        "x": 7.7071067812,
+        "y": 0,
+        "rotation": 45
+      },
+      {
+        "tan": "parallelogram",
+        "x": 0,
+        "y": 2,
+        "rotation": 180,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 8,
+        "y": 3.2928932188,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 8.4142135624,
+        "y": 4.2928932188,
+        "rotation": 180
+      }
+    ]
+  },
+  {
+    "id": "shape-037",
+    "name": "bowler",
+    "theme": "people",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 5.2928932188,
+        "y": 2.2928932188,
+        "rotation": 0
+      },
+      {
+        "tan": "largeTri",
+        "x": 3.2928932188,
+        "y": 2.2928932188,
+        "rotation": 315
+      },
+      {
+        "tan": "mediumTri",
+        "x": 5.2928932188,
+        "y": 0,
+        "rotation": 0
+      },
+      {
+        "tan": "square",
+        "x": 2.2928932188,
+        "y": 3.2928932188,
+        "rotation": 315
+      },
+      {
+        "tan": "parallelogram",
+        "x": 2.4142135624,
+        "y": 4.8284271247,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 6.2928932188,
+        "y": 1,
+        "rotation": 315
+      },
+      {
+        "tan": "smallTri",
+        "x": 0,
+        "y": 3,
+        "rotation": 315
+      }
+    ]
+  },
+  {
+    "id": "shape-038",
+    "name": "reader",
+    "theme": "people",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 5.2928932188,
+        "y": 7,
+        "rotation": 180
+      },
+      {
+        "tan": "largeTri",
+        "x": 3.8786796565,
+        "y": 5.5857864377,
+        "rotation": 135
+      },
+      {
+        "tan": "mediumTri",
+        "x": 2,
+        "y": 1.7071067812,
+        "rotation": 90
+      },
+      {
+        "tan": "square",
+        "x": 3.2928932188,
+        "y": 5,
+        "rotation": 225
+      },
+      {
+        "tan": "parallelogram",
+        "x": 3,
+        "y": 3,
+        "rotation": 90,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.2928932188,
+        "y": 3,
+        "rotation": 135
+      },
+      {
+        "tan": "smallTri",
+        "x": 6.2928932188,
+        "y": 4,
+        "rotation": 135
+      }
+    ]
+  },
+  {
+    "id": "shape-039",
+    "name": "waiter",
+    "theme": "people",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 5.7071067812,
+        "y": 2,
+        "rotation": 135
+      },
+      {
+        "tan": "largeTri",
+        "x": 1.7071067812,
+        "y": 3,
+        "rotation": 315
+      },
+      {
+        "tan": "mediumTri",
+        "x": 5.7071067812,
+        "y": 2,
+        "rotation": 45
+      },
+      {
+        "tan": "square",
+        "x": 1,
+        "y": 4.2928932188,
+        "rotation": 225
+      },
+      {
+        "tan": "parallelogram",
+        "x": 1.7071067812,
+        "y": 7,
+        "rotation": 90,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.2928932188,
+        "y": 8,
+        "rotation": 270
+      },
+      {
+        "tan": "smallTri",
+        "x": 2,
+        "y": 5.2928932188,
+        "rotation": 225
+      }
+    ]
+  },
+  {
+    "id": "shape-040",
+    "name": "climber",
+    "theme": "people",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2.8284271247,
+        "y": 2.8284271247,
+        "rotation": 90
+      },
+      {
+        "tan": "largeTri",
+        "x": 2,
+        "y": 2.8284271247,
+        "rotation": 270
+      },
+      {
+        "tan": "mediumTri",
+        "x": 5.5355339059,
+        "y": 1.5355339059,
+        "rotation": 90
+      },
+      {
+        "tan": "square",
+        "x": 6.9497474683,
+        "y": 0.8284271247,
+        "rotation": 90
+      },
+      {
+        "tan": "parallelogram",
+        "x": 1.4142135623,
+        "y": 4.2426406871,
+        "rotation": 315
+      },
+      {
+        "tan": "smallTri",
+        "x": 3.8284271247,
+        "y": 6.5355339059,
+        "rotation": 135
+      },
+      {
+        "tan": "smallTri",
+        "x": 4.5355339059,
+        "y": 5.8284271247,
+        "rotation": 45
+      }
+    ]
+  },
+  {
+    "id": "shape-041",
+    "name": "letter A",
+    "theme": "letters",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2.8284271247,
+        "y": 4.7071067812,
+        "rotation": 270
+      },
+      {
+        "tan": "largeTri",
+        "x": 2.8284271247,
+        "y": 3.5355339059,
+        "rotation": 180
+      },
+      {
+        "tan": "mediumTri",
+        "x": 3.5355339059,
+        "y": 4.7071067812,
+        "rotation": 90
+      },
+      {
+        "tan": "square",
+        "x": 4.2426406871,
+        "y": 1.4142135624,
+        "rotation": 180
+      },
+      {
+        "tan": "parallelogram",
+        "x": 3.5355339059,
+        "y": 5.4142135624,
+        "rotation": 270,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 2.5355339059,
+        "y": 5.7071067812,
+        "rotation": 135
+      },
+      {
+        "tan": "smallTri",
+        "x": 3.5355339059,
+        "y": 6.7071067812,
+        "rotation": 135
+      }
+    ]
+  },
+  {
+    "id": "shape-042",
+    "name": "letter C",
+    "theme": "letters",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 4,
+        "y": 4,
+        "rotation": 225
+      },
+      {
+        "tan": "largeTri",
+        "x": 3,
+        "y": 3,
+        "rotation": 135
+      },
+      {
+        "tan": "mediumTri",
+        "x": 1.4142135624,
+        "y": 1.4142135624,
+        "rotation": 225
+      },
+      {
+        "tan": "square",
+        "x": 3,
+        "y": 3,
+        "rotation": 45
+      },
+      {
+        "tan": "parallelogram",
+        "x": 0,
+        "y": 4.7071067812,
+        "rotation": 270
+      },
+      {
+        "tan": "smallTri",
+        "x": 0,
+        "y": 5,
+        "rotation": 315
+      },
+      {
+        "tan": "smallTri",
+        "x": 1,
+        "y": 1.7071067812,
+        "rotation": 135
+      }
+    ]
+  },
+  {
+    "id": "shape-043",
+    "name": "letter E",
+    "theme": "letters",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 4,
+        "y": 2.7071067812,
+        "rotation": 45
+      },
+      {
+        "tan": "largeTri",
+        "x": 4.2928932188,
+        "y": 3,
+        "rotation": 315
+      },
+      {
+        "tan": "mediumTri",
+        "x": 4.2928932188,
+        "y": 1,
+        "rotation": 90
+      },
+      {
+        "tan": "square",
+        "x": 6.2928932188,
+        "y": 1.7071067812,
+        "rotation": 0
+      },
+      {
+        "tan": "parallelogram",
+        "x": 1,
+        "y": 0,
+        "rotation": 0
+      },
+      {
+        "tan": "smallTri",
+        "x": 1,
+        "y": 0,
+        "rotation": 45
+      },
+      {
+        "tan": "smallTri",
+        "x": 3.4142135624,
+        "y": 4.7071067812,
+        "rotation": 90
+      }
+    ]
+  },
+  {
+    "id": "shape-044",
+    "name": "letter F",
+    "theme": "letters",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 4.2426406871,
+        "y": 3.7071067812,
+        "rotation": 180
+      },
+      {
+        "tan": "largeTri",
+        "x": 3.2426406871,
+        "y": 3.7071067812,
+        "rotation": 0
+      },
+      {
+        "tan": "mediumTri",
+        "x": 1.4142135624,
+        "y": 5.1213203436,
+        "rotation": 225
+      },
+      {
+        "tan": "square",
+        "x": 5.6568542495,
+        "y": 1.4142135624,
+        "rotation": 180
+      },
+      {
+        "tan": "parallelogram",
+        "x": 5.2426406871,
+        "y": 1.4142135624,
+        "rotation": 0
+      },
+      {
+        "tan": "smallTri",
+        "x": 8.2426406871,
+        "y": 2.4142135624,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 3.2426406871,
+        "y": 6.5355339059,
+        "rotation": 180
+      }
+    ]
+  },
+  {
+    "id": "shape-045",
+    "name": "letter H",
+    "theme": "letters",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 6.2928932188,
+        "y": 1.2928932188,
+        "rotation": 0
+      },
+      {
+        "tan": "largeTri",
+        "x": 4.2928932188,
+        "y": 6,
+        "rotation": 315
+      },
+      {
+        "tan": "mediumTri",
+        "x": 6.2928932188,
+        "y": 2,
+        "rotation": 180
+      },
+      {
+        "tan": "square",
+        "x": 7.7071067812,
+        "y": 6.8786796564,
+        "rotation": 90
+      },
+      {
+        "tan": "parallelogram",
+        "x": 1.8786796564,
+        "y": 3,
+        "rotation": 315
+      },
+      {
+        "tan": "smallTri",
+        "x": 2.2928932188,
+        "y": 3,
+        "rotation": 0
+      },
+      {
+        "tan": "smallTri",
+        "x": 1,
+        "y": 4,
+        "rotation": 225
+      }
+    ]
+  },
+  {
+    "id": "shape-046",
+    "name": "letter L",
+    "theme": "letters",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 3.7071067812,
+        "y": 3,
+        "rotation": 0
+      },
+      {
+        "tan": "largeTri",
+        "x": 3.7071067812,
+        "y": 1,
+        "rotation": 45
+      },
+      {
+        "tan": "mediumTri",
+        "x": 5.4142135624,
+        "y": 0.7071067812,
+        "rotation": 90
+      },
+      {
+        "tan": "square",
+        "x": 2.8284271248,
+        "y": 3,
+        "rotation": 90
+      },
+      {
+        "tan": "parallelogram",
+        "x": 3.7071067812,
+        "y": 1,
+        "rotation": 180
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.4142135624,
+        "y": 4,
+        "rotation": 90
+      },
+      {
+        "tan": "smallTri",
+        "x": 0.7071067812,
+        "y": 6.1213203436,
+        "rotation": 270
+      }
+    ]
+  },
+  {
+    "id": "shape-047",
+    "name": "letter P",
+    "theme": "letters",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 3.2928932188,
+        "y": 3.2928932188,
+        "rotation": 45
+      },
+      {
+        "tan": "largeTri",
+        "x": 5,
+        "y": 5,
+        "rotation": 315
+      },
+      {
+        "tan": "mediumTri",
+        "x": 7,
+        "y": 3.2928932188,
+        "rotation": 270
+      },
+      {
+        "tan": "square",
+        "x": 5,
+        "y": 7,
+        "rotation": 315
+      },
+      {
+        "tan": "parallelogram",
+        "x": 0,
+        "y": 5.2928932188,
+        "rotation": 0
+      },
+      {
+        "tan": "smallTri",
+        "x": 6,
+        "y": 1,
+        "rotation": 315
+      },
+      {
+        "tan": "smallTri",
+        "x": 8.2928932188,
+        "y": 4.2928932188,
+        "rotation": 225
+      }
+    ]
+  },
+  {
+    "id": "shape-048",
+    "name": "letter T",
+    "theme": "letters",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2,
+        "y": 0.2928932188,
+        "rotation": 45
+      },
+      {
+        "tan": "largeTri",
+        "x": 3.1715728753,
+        "y": 2.2928932188,
+        "rotation": 0
+      },
+      {
+        "tan": "mediumTri",
+        "x": 6.7071067812,
+        "y": 2.2928932188,
+        "rotation": 180
+      },
+      {
+        "tan": "square",
+        "x": 6.5857864377,
+        "y": 3.7071067812,
+        "rotation": 135
+      },
+      {
+        "tan": "parallelogram",
+        "x": 5.0857864377,
+        "y": 4.2071067812,
+        "rotation": 45
+      },
+      {
+        "tan": "smallTri",
+        "x": 3.1213203436,
+        "y": 0,
+        "rotation": 90
+      },
+      {
+        "tan": "smallTri",
+        "x": 7.7071067812,
+        "y": 3,
+        "rotation": 135
+      }
+    ]
+  },
+  {
+    "id": "shape-049",
+    "name": "letter U",
+    "theme": "letters",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2.2928932188,
+        "y": 2,
+        "rotation": 315
+      },
+      {
+        "tan": "largeTri",
+        "x": 6.2928932188,
+        "y": 5.7071067812,
+        "rotation": 135
+      },
+      {
+        "tan": "mediumTri",
+        "x": 4.2928932188,
+        "y": 9,
+        "rotation": 180
+      },
+      {
+        "tan": "square",
+        "x": 6.2928932188,
+        "y": 3.7071067812,
+        "rotation": 45
+      },
+      {
+        "tan": "parallelogram",
+        "x": 1.2928932188,
+        "y": 3,
+        "rotation": 0
+      },
+      {
+        "tan": "smallTri",
+        "x": 4.2928932188,
+        "y": 7.7071067812,
+        "rotation": 315
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.4142135624,
+        "y": 3,
+        "rotation": 180
+      }
+    ]
+  },
+  {
+    "id": "shape-050",
+    "name": "letter Z",
+    "theme": "letters",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2.7071067812,
+        "y": 7,
+        "rotation": 270
+      },
+      {
+        "tan": "largeTri",
+        "x": 0.7071067812,
+        "y": 4.7071067812,
+        "rotation": 315
+      },
+      {
+        "tan": "mediumTri",
+        "x": 1.4142135624,
+        "y": 7,
+        "rotation": 0
+      },
+      {
+        "tan": "square",
+        "x": 6.4142135624,
+        "y": 8.4142135624,
+        "rotation": 180
+      },
+      {
+        "tan": "parallelogram",
+        "x": 2.7071067812,
+        "y": 3,
+        "rotation": 270
+      },
+      {
+        "tan": "smallTri",
+        "x": 4.1213203436,
+        "y": 3,
+        "rotation": 180
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.4142135624,
+        "y": 7.5857864376,
+        "rotation": 90
+      }
+    ]
+  },
+  {
+    "id": "shape-051",
+    "name": "number 4",
+    "theme": "letters",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 3.4142135624,
+        "y": 1.2928932188,
+        "rotation": 0
+      },
+      {
+        "tan": "largeTri",
+        "x": 1.4142135624,
+        "y": 5.2928932188,
+        "rotation": 315
+      },
+      {
+        "tan": "mediumTri",
+        "x": 1.4142135624,
+        "y": 3.2928932188,
+        "rotation": 0
+      },
+      {
+        "tan": "square",
+        "x": 0,
+        "y": 5,
+        "rotation": 0
+      },
+      {
+        "tan": "parallelogram",
+        "x": 3.4142135624,
+        "y": 3,
+        "rotation": 90,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 3.4142135624,
+        "y": 7,
+        "rotation": 0
+      },
+      {
+        "tan": "smallTri",
+        "x": 7.1213203436,
+        "y": 0.2928932188,
+        "rotation": 45
+      }
+    ]
+  },
+  {
+    "id": "shape-052",
+    "name": "number 7",
+    "theme": "letters",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2.8284271247,
+        "y": 7,
+        "rotation": 180
+      },
+      {
+        "tan": "largeTri",
+        "x": 4.8284271247,
+        "y": 4.7071067812,
+        "rotation": 135
+      },
+      {
+        "tan": "mediumTri",
+        "x": 2.8284271247,
+        "y": 1,
+        "rotation": 90
+      },
+      {
+        "tan": "square",
+        "x": 4.5355339059,
+        "y": 5,
+        "rotation": 315
+      },
+      {
+        "tan": "parallelogram",
+        "x": 4.8284271247,
+        "y": 4.7071067812,
+        "rotation": 270
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.5355339059,
+        "y": 0,
+        "rotation": 45
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.8284271247,
+        "y": 2,
+        "rotation": 45
+      }
+    ]
+  },
+  {
+    "id": "shape-053",
+    "name": "letter A",
+    "theme": "letters",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2.2928932188,
+        "y": 3.4142135624,
+        "rotation": 0
+      },
+      {
+        "tan": "largeTri",
+        "x": 3.2928932188,
+        "y": 1.4142135624,
+        "rotation": 45
+      },
+      {
+        "tan": "mediumTri",
+        "x": 4.7071067812,
+        "y": 2.8284271248,
+        "rotation": 225
+      },
+      {
+        "tan": "square",
+        "x": 6.5355339059,
+        "y": 4.8284271248,
+        "rotation": 180
+      },
+      {
+        "tan": "parallelogram",
+        "x": 0.8786796564,
+        "y": 6.535533906,
+        "rotation": 135,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 4.4142135624,
+        "y": 1.4142135624,
+        "rotation": 180
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.4142135624,
+        "y": 7.4142135624,
+        "rotation": 180
+      }
+    ]
+  },
+  {
+    "id": "shape-054",
+    "name": "letter C",
+    "theme": "letters",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 3.2928932188,
+        "y": 2.4142135624,
+        "rotation": 90
+      },
+      {
+        "tan": "largeTri",
+        "x": 5.2928932188,
+        "y": 7.1213203436,
+        "rotation": 135
+      },
+      {
+        "tan": "mediumTri",
+        "x": 3.2928932188,
+        "y": 1.4142135624,
+        "rotation": 0
+      },
+      {
+        "tan": "square",
+        "x": 3.2928932188,
+        "y": 1.4142135624,
+        "rotation": 270
+      },
+      {
+        "tan": "parallelogram",
+        "x": 0,
+        "y": 1.4142135624,
+        "rotation": 0
+      },
+      {
+        "tan": "smallTri",
+        "x": 3,
+        "y": 1.4142135624,
+        "rotation": 180
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.4644660941,
+        "y": 3.4142135624,
+        "rotation": 135
+      }
+    ]
+  },
+  {
+    "id": "shape-055",
+    "name": "letter E",
+    "theme": "letters",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2.2928932188,
+        "y": 3,
+        "rotation": 315
+      },
+      {
+        "tan": "largeTri",
+        "x": 4,
+        "y": 4.7071067812,
+        "rotation": 135
+      },
+      {
+        "tan": "mediumTri",
+        "x": 2,
+        "y": 3.7071067812,
+        "rotation": 180
+      },
+      {
+        "tan": "square",
+        "x": 4.2928932188,
+        "y": 2,
+        "rotation": 0
+      },
+      {
+        "tan": "parallelogram",
+        "x": 5.7071067812,
+        "y": 6.5355339059,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 5,
+        "y": 2,
+        "rotation": 270
+      },
+      {
+        "tan": "smallTri",
+        "x": 4.2928932188,
+        "y": 1,
+        "rotation": 135
+      }
+    ]
+  },
+  {
+    "id": "shape-056",
+    "name": "letter F",
+    "theme": "letters",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 3.2928932188,
+        "y": 2.7071067811,
+        "rotation": 45
+      },
+      {
+        "tan": "largeTri",
+        "x": 2,
+        "y": 6.7071067811,
+        "rotation": 225
+      },
+      {
+        "tan": "mediumTri",
+        "x": 6.2928932188,
+        "y": 3.7071067811,
+        "rotation": 90
+      },
+      {
+        "tan": "square",
+        "x": 0.2928932188,
+        "y": 3.7071067811,
+        "rotation": 315
+      },
+      {
+        "tan": "parallelogram",
+        "x": 1.4142135624,
+        "y": 2.8284271247,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 6.2928932188,
+        "y": 2.7071067811,
+        "rotation": 45
+      },
+      {
+        "tan": "smallTri",
+        "x": 7.2928932188,
+        "y": 4.7071067811,
+        "rotation": 225
+      }
+    ]
+  },
+  {
+    "id": "shape-057",
+    "name": "letter H",
+    "theme": "letters",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2.2928932188,
+        "y": 3,
+        "rotation": 0
+      },
+      {
+        "tan": "largeTri",
+        "x": 0.2928932188,
+        "y": 2,
+        "rotation": 315
+      },
+      {
+        "tan": "mediumTri",
+        "x": 2.2928932188,
+        "y": 5.7071067812,
+        "rotation": 90
+      },
+      {
+        "tan": "square",
+        "x": 4.7071067812,
+        "y": 1.5857864376,
+        "rotation": 90
+      },
+      {
+        "tan": "parallelogram",
+        "x": 2.2928932188,
+        "y": 8,
+        "rotation": 270
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.4142135624,
+        "y": 5.7071067812,
+        "rotation": 180
+      },
+      {
+        "tan": "smallTri",
+        "x": 6.2928932188,
+        "y": 3,
+        "rotation": 180
+      }
+    ]
+  },
+  {
+    "id": "shape-058",
+    "name": "letter L",
+    "theme": "letters",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2,
+        "y": 1,
+        "rotation": 0
+      },
+      {
+        "tan": "largeTri",
+        "x": 0,
+        "y": 5.7071067812,
+        "rotation": 315
+      },
+      {
+        "tan": "mediumTri",
+        "x": 2,
+        "y": 7,
+        "rotation": 270
+      },
+      {
+        "tan": "square",
+        "x": 5,
+        "y": 6,
+        "rotation": 135
+      },
+      {
+        "tan": "parallelogram",
+        "x": 0.7071067812,
+        "y": 0,
+        "rotation": 0
+      },
+      {
+        "tan": "smallTri",
+        "x": 6,
+        "y": 5.5857864376,
+        "rotation": 90
+      },
+      {
+        "tan": "smallTri",
+        "x": 3.7071067812,
+        "y": 1,
+        "rotation": 225
+      }
+    ]
+  },
+  {
+    "id": "shape-059",
+    "name": "letter P",
+    "theme": "letters",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2,
+        "y": 2.2928932188,
+        "rotation": 45
+      },
+      {
+        "tan": "largeTri",
+        "x": 4.7071067812,
+        "y": 5,
+        "rotation": 225
+      },
+      {
+        "tan": "mediumTri",
+        "x": 6,
+        "y": 3,
+        "rotation": 270
+      },
+      {
+        "tan": "square",
+        "x": 7,
+        "y": 2,
+        "rotation": 225
+      },
+      {
+        "tan": "parallelogram",
+        "x": 2.2928932188,
+        "y": 4.2928932188,
+        "rotation": 225,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 7.7071067812,
+        "y": 1.2928932188,
+        "rotation": 315
+      },
+      {
+        "tan": "smallTri",
+        "x": 5,
+        "y": 0.5857864376,
+        "rotation": 0
+      }
+    ]
+  },
+  {
+    "id": "shape-060",
+    "name": "letter T",
+    "theme": "letters",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2.7071067812,
+        "y": 2,
+        "rotation": 315
+      },
+      {
+        "tan": "largeTri",
+        "x": 5.4142135624,
+        "y": 4.7071067812,
+        "rotation": 135
+      },
+      {
+        "tan": "mediumTri",
+        "x": 1.4142135624,
+        "y": 0.7071067812,
+        "rotation": 45
+      },
+      {
+        "tan": "square",
+        "x": 4.7071067812,
+        "y": 1.7071067812,
+        "rotation": 270
+      },
+      {
+        "tan": "parallelogram",
+        "x": 0,
+        "y": 2.1213203436,
+        "rotation": 225,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 2.4142135624,
+        "y": 7,
+        "rotation": 315
+      },
+      {
+        "tan": "smallTri",
+        "x": 5.7071067812,
+        "y": 2.7071067812,
+        "rotation": 225
+      }
+    ]
+  },
+  {
+    "id": "shape-061",
+    "name": "letter U",
+    "theme": "letters",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 4.2928932188,
+        "y": 1.4142135624,
+        "rotation": 0
+      },
+      {
+        "tan": "largeTri",
+        "x": 2.2928932188,
+        "y": 5.1213203436,
+        "rotation": 315
+      },
+      {
+        "tan": "mediumTri",
+        "x": 5.7071067812,
+        "y": 6.8284271248,
+        "rotation": 135
+      },
+      {
+        "tan": "square",
+        "x": 4.2928932188,
+        "y": 1.1213203436,
+        "rotation": 90
+      },
+      {
+        "tan": "parallelogram",
+        "x": 0,
+        "y": 5.4142135624,
+        "rotation": 180,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 8,
+        "y": 1.4142135624,
+        "rotation": 180
+      },
+      {
+        "tan": "smallTri",
+        "x": 7,
+        "y": 6.7071067812,
+        "rotation": 90
+      }
+    ]
+  },
+  {
+    "id": "shape-062",
+    "name": "letter Z",
+    "theme": "letters",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 3,
+        "y": 3,
+        "rotation": 0
+      },
+      {
+        "tan": "largeTri",
+        "x": 3,
+        "y": 4.4142135624,
+        "rotation": 180
+      },
+      {
+        "tan": "mediumTri",
+        "x": 4.5857864376,
+        "y": 1.5857864376,
+        "rotation": 45
+      },
+      {
+        "tan": "square",
+        "x": 1.5857864376,
+        "y": 6.4142135624,
+        "rotation": 270
+      },
+      {
+        "tan": "parallelogram",
+        "x": 0,
+        "y": 2.5857864377,
+        "rotation": 180,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 6,
+        "y": 1.5857864376,
+        "rotation": 90
+      },
+      {
+        "tan": "smallTri",
+        "x": 7,
+        "y": 1,
+        "rotation": 135
+      }
+    ]
+  },
+  {
+    "id": "shape-063",
+    "name": "number 4",
+    "theme": "letters",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 5.2928932188,
+        "y": 5.2928932188,
+        "rotation": 225
+      },
+      {
+        "tan": "largeTri",
+        "x": 3.2928932188,
+        "y": 1.2928932188,
+        "rotation": 45
+      },
+      {
+        "tan": "mediumTri",
+        "x": 2,
+        "y": 3.2928932188,
+        "rotation": 90
+      },
+      {
+        "tan": "square",
+        "x": 5,
+        "y": 1,
+        "rotation": 45
+      },
+      {
+        "tan": "parallelogram",
+        "x": 6.2928932188,
+        "y": 4.2928932188,
+        "rotation": 90
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.2928932188,
+        "y": 6,
+        "rotation": 270
+      },
+      {
+        "tan": "smallTri",
+        "x": 5,
+        "y": 1,
+        "rotation": 135
+      }
+    ]
+  },
+  {
+    "id": "shape-064",
+    "name": "number 7",
+    "theme": "letters",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 5.2928932188,
+        "y": 4.7071067812,
+        "rotation": 225
+      },
+      {
+        "tan": "largeTri",
+        "x": 3.2928932188,
+        "y": 0.7071067812,
+        "rotation": 45
+      },
+      {
+        "tan": "mediumTri",
+        "x": 5,
+        "y": 2.4142135624,
+        "rotation": 225
+      },
+      {
+        "tan": "square",
+        "x": 3.2928932188,
+        "y": 4.7071067812,
+        "rotation": 315
+      },
+      {
+        "tan": "parallelogram",
+        "x": 4.4142135624,
+        "y": 7.2426406871,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 1,
+        "y": 3.7071067812,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 6,
+        "y": 0,
+        "rotation": 45
+      }
+    ]
+  },
+  {
+    "id": "shape-065",
+    "name": "letter A",
+    "theme": "letters",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 4.4142135624,
+        "y": 4.7071067812,
+        "rotation": 225
+      },
+      {
+        "tan": "largeTri",
+        "x": 5.1213203436,
+        "y": 5.4142135624,
+        "rotation": 135
+      },
+      {
+        "tan": "mediumTri",
+        "x": 3.1213203436,
+        "y": 6.4142135624,
+        "rotation": 180
+      },
+      {
+        "tan": "square",
+        "x": 1.4142135624,
+        "y": 2.7071067812,
+        "rotation": 270
+      },
+      {
+        "tan": "parallelogram",
+        "x": 3.1213203436,
+        "y": 1.7071067812,
+        "rotation": 0
+      },
+      {
+        "tan": "smallTri",
+        "x": 6.1213203436,
+        "y": 2.7071067812,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.4142135624,
+        "y": 1.4142135624,
+        "rotation": 180
+      }
+    ]
+  },
+  {
+    "id": "shape-066",
+    "name": "letter C",
+    "theme": "letters",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 0,
+        "y": 6,
+        "rotation": 315
+      },
+      {
+        "tan": "largeTri",
+        "x": 2.7071067812,
+        "y": 8.7071067812,
+        "rotation": 135
+      },
+      {
+        "tan": "mediumTri",
+        "x": 1,
+        "y": 3,
+        "rotation": 0
+      },
+      {
+        "tan": "square",
+        "x": 3.7071067812,
+        "y": 3,
+        "rotation": 180
+      },
+      {
+        "tan": "parallelogram",
+        "x": 3,
+        "y": 3,
+        "rotation": 0
+      },
+      {
+        "tan": "smallTri",
+        "x": 4.7071067812,
+        "y": 1,
+        "rotation": 135
+      },
+      {
+        "tan": "smallTri",
+        "x": 4.7071067812,
+        "y": 2,
+        "rotation": 45
+      }
+    ]
+  },
+  {
+    "id": "shape-067",
+    "name": "letter E",
+    "theme": "letters",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2,
+        "y": 2.7071067812,
+        "rotation": 135
+      },
+      {
+        "tan": "largeTri",
+        "x": 1.2928932188,
+        "y": 2,
+        "rotation": 315
+      },
+      {
+        "tan": "mediumTri",
+        "x": 3.2928932188,
+        "y": 0.7071067812,
+        "rotation": 0
+      },
+      {
+        "tan": "square",
+        "x": 3,
+        "y": 3.7071067812,
+        "rotation": 135
+      },
+      {
+        "tan": "parallelogram",
+        "x": 4.2928932188,
+        "y": 2.7071067812,
+        "rotation": 90
+      },
+      {
+        "tan": "smallTri",
+        "x": 4.2928932188,
+        "y": 1.7071067812,
+        "rotation": 315
+      },
+      {
+        "tan": "smallTri",
+        "x": 6.2928932188,
+        "y": 2,
+        "rotation": 135
+      }
+    ]
+  },
+  {
+    "id": "shape-068",
+    "name": "letter F",
+    "theme": "letters",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 4.8284271247,
+        "y": 2,
+        "rotation": 90
+      },
+      {
+        "tan": "largeTri",
+        "x": 3.4142135624,
+        "y": 3.4142135624,
+        "rotation": 135
+      },
+      {
+        "tan": "mediumTri",
+        "x": 4.5355339059,
+        "y": 2,
+        "rotation": 270
+      },
+      {
+        "tan": "square",
+        "x": 6.5355339059,
+        "y": 0,
+        "rotation": 45
+      },
+      {
+        "tan": "parallelogram",
+        "x": 0.5355339059,
+        "y": 7.7071067812,
+        "rotation": 135,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.4142135624,
+        "y": 4,
+        "rotation": 90
+      },
+      {
+        "tan": "smallTri",
+        "x": 2.9497474683,
+        "y": 5.8786796565,
+        "rotation": 135
+      }
+    ]
+  },
+  {
+    "id": "shape-069",
+    "name": "letter H",
+    "theme": "letters",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 3.7071067812,
+        "y": 3,
+        "rotation": 90
+      },
+      {
+        "tan": "largeTri",
+        "x": 2.7071067812,
+        "y": 1,
+        "rotation": 45
+      },
+      {
+        "tan": "mediumTri",
+        "x": 3.7071067812,
+        "y": 7.2928932188,
+        "rotation": 270
+      },
+      {
+        "tan": "square",
+        "x": 3.7071067812,
+        "y": 6.2928932188,
+        "rotation": 90
+      },
+      {
+        "tan": "parallelogram",
+        "x": 3,
+        "y": 6.2928932188,
+        "rotation": 180
+      },
+      {
+        "tan": "smallTri",
+        "x": 2.7071067812,
+        "y": 1,
+        "rotation": 135
+      },
+      {
+        "tan": "smallTri",
+        "x": 2.7071067812,
+        "y": 1,
+        "rotation": 225
+      }
+    ]
+  },
+  {
+    "id": "shape-070",
+    "name": "letter L",
+    "theme": "letters",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 5.4142135624,
+        "y": 4,
+        "rotation": 135
+      },
+      {
+        "tan": "largeTri",
+        "x": 1.4142135624,
+        "y": 6.7071067812,
+        "rotation": 315
+      },
+      {
+        "tan": "mediumTri",
+        "x": 1.4142135624,
+        "y": 8.7071067812,
+        "rotation": 270
+      },
+      {
+        "tan": "square",
+        "x": 3.4142135624,
+        "y": 8.2928932188,
+        "rotation": 0
+      },
+      {
+        "tan": "parallelogram",
+        "x": 4.4142135624,
+        "y": 3,
+        "rotation": 90,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.4142135624,
+        "y": 7.5857864376,
+        "rotation": 90
+      },
+      {
+        "tan": "smallTri",
+        "x": 5.4142135624,
+        "y": 2,
+        "rotation": 135
+      }
+    ]
+  },
+  {
+    "id": "shape-071",
+    "name": "letter P",
+    "theme": "letters",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 5.7071067812,
+        "y": 0,
+        "rotation": 45
+      },
+      {
+        "tan": "largeTri",
+        "x": 2.7071067812,
+        "y": 4,
+        "rotation": 225
+      },
+      {
+        "tan": "mediumTri",
+        "x": 4.7071067812,
+        "y": 2,
+        "rotation": 0
+      },
+      {
+        "tan": "square",
+        "x": 4.7071067812,
+        "y": 5.2928932188,
+        "rotation": 180
+      },
+      {
+        "tan": "parallelogram",
+        "x": 0,
+        "y": 1,
+        "rotation": 0
+      },
+      {
+        "tan": "smallTri",
+        "x": 1,
+        "y": 2.2928932188,
+        "rotation": 45
+      },
+      {
+        "tan": "smallTri",
+        "x": 6.7071067812,
+        "y": 1,
+        "rotation": 315
+      }
+    ]
+  },
+  {
+    "id": "shape-072",
+    "name": "letter T",
+    "theme": "letters",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 3.2928932188,
+        "y": 3.2928932188,
+        "rotation": 180
+      },
+      {
+        "tan": "largeTri",
+        "x": 5.2928932188,
+        "y": 2,
+        "rotation": 135
+      },
+      {
+        "tan": "mediumTri",
+        "x": 3.2928932188,
+        "y": 5.2928932188,
+        "rotation": 180
+      },
+      {
+        "tan": "square",
+        "x": 1.4142135624,
+        "y": 3.2928932188,
+        "rotation": 90
+      },
+      {
+        "tan": "parallelogram",
+        "x": 5,
+        "y": 6.2928932188,
+        "rotation": 180
+      },
+      {
+        "tan": "smallTri",
+        "x": 5,
+        "y": 0.2928932188,
+        "rotation": 90
+      },
+      {
+        "tan": "smallTri",
+        "x": 6.4142135624,
+        "y": 1.7071067812,
+        "rotation": 90
+      }
+    ]
+  },
+  {
+    "id": "shape-073",
+    "name": "letter U",
+    "theme": "letters",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 0,
+        "y": 4,
+        "rotation": 315
+      },
+      {
+        "tan": "largeTri",
+        "x": 4,
+        "y": 3,
+        "rotation": 135
+      },
+      {
+        "tan": "mediumTri",
+        "x": 1.7071067812,
+        "y": 5.7071067812,
+        "rotation": 45
+      },
+      {
+        "tan": "square",
+        "x": 4,
+        "y": 8,
+        "rotation": 225
+      },
+      {
+        "tan": "parallelogram",
+        "x": 3,
+        "y": 4,
+        "rotation": 180,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 2,
+        "y": 1,
+        "rotation": 315
+      },
+      {
+        "tan": "smallTri",
+        "x": 3.5,
+        "y": 8.9142135624,
+        "rotation": 270
+      }
+    ]
+  },
+  {
+    "id": "shape-074",
+    "name": "letter Z",
+    "theme": "letters",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 8.4142135623,
+        "y": 0,
+        "rotation": 0
+      },
+      {
+        "tan": "largeTri",
+        "x": 8.4142135623,
+        "y": 2,
+        "rotation": 90
+      },
+      {
+        "tan": "mediumTri",
+        "x": 4.9999999999,
+        "y": 0.5857864376,
+        "rotation": 45
+      },
+      {
+        "tan": "square",
+        "x": 8.4142135623,
+        "y": 4.5857864376,
+        "rotation": 0
+      },
+      {
+        "tan": "parallelogram",
+        "x": 3.8284271247,
+        "y": 2,
+        "rotation": 135
+      },
+      {
+        "tan": "smallTri",
+        "x": 1,
+        "y": 3.4142135624,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 10.4142135623,
+        "y": 7,
+        "rotation": 225
+      }
+    ]
+  },
+  {
+    "id": "shape-075",
+    "name": "number 4",
+    "theme": "letters",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2,
+        "y": 2.8284271247,
+        "rotation": 270
+      },
+      {
+        "tan": "largeTri",
+        "x": 4.8284271247,
+        "y": 2.8284271247,
+        "rotation": 90
+      },
+      {
+        "tan": "mediumTri",
+        "x": 2,
+        "y": 1.8284271247,
+        "rotation": 90
+      },
+      {
+        "tan": "square",
+        "x": 4,
+        "y": 6.8284271247,
+        "rotation": 225
+      },
+      {
+        "tan": "parallelogram",
+        "x": 4.7071067812,
+        "y": 7.5355339059,
+        "rotation": 180
+      },
+      {
+        "tan": "smallTri",
+        "x": 3.5857864376,
+        "y": 7.5355339059,
+        "rotation": 0
+      },
+      {
+        "tan": "smallTri",
+        "x": 3.5857864376,
+        "y": 8.9497474683,
+        "rotation": 315
+      }
+    ]
+  },
+  {
+    "id": "shape-076",
+    "name": "number 7",
+    "theme": "letters",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 4,
+        "y": 4.2426406871,
+        "rotation": 315
+      },
+      {
+        "tan": "largeTri",
+        "x": 4,
+        "y": 1.4142135624,
+        "rotation": 0
+      },
+      {
+        "tan": "mediumTri",
+        "x": 2.2928932188,
+        "y": 4.5355339059,
+        "rotation": 270
+      },
+      {
+        "tan": "square",
+        "x": 2.4142135624,
+        "y": 4.5355339059,
+        "rotation": 90
+      },
+      {
+        "tan": "parallelogram",
+        "x": 0,
+        "y": 7.2426406871,
+        "rotation": 270
+      },
+      {
+        "tan": "smallTri",
+        "x": 4,
+        "y": 1.4142135624,
+        "rotation": 270
+      },
+      {
+        "tan": "smallTri",
+        "x": 7,
+        "y": 4.2426406871,
+        "rotation": 135
+      }
+    ]
+  },
+  {
+    "id": "shape-077",
+    "name": "letter A",
+    "theme": "letters",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 1.2928932188,
+        "y": 4.7071067812,
+        "rotation": 315
+      },
+      {
+        "tan": "largeTri",
+        "x": 5.2928932188,
+        "y": 4.4142135624,
+        "rotation": 135
+      },
+      {
+        "tan": "mediumTri",
+        "x": 4.2928932188,
+        "y": 1.4142135624,
+        "rotation": 90
+      },
+      {
+        "tan": "square",
+        "x": 3.7071067812,
+        "y": 1.4142135624,
+        "rotation": 180
+      },
+      {
+        "tan": "parallelogram",
+        "x": 1.4142135624,
+        "y": 6.2426406871,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 3.7071067812,
+        "y": 1.4142135624,
+        "rotation": 270
+      },
+      {
+        "tan": "smallTri",
+        "x": 0.2928932188,
+        "y": 3.7071067812,
+        "rotation": 315
+      }
+    ]
+  },
+  {
+    "id": "shape-078",
+    "name": "letter C",
+    "theme": "letters",
+    "difficulty": "hard",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 5.2928932188,
+        "y": 1.7071067811,
+        "rotation": 45
+      },
+      {
+        "tan": "largeTri",
+        "x": 3.2928932188,
+        "y": 3.7071067811,
+        "rotation": 225
+      },
+      {
+        "tan": "mediumTri",
+        "x": 2,
+        "y": 4.4142135623,
+        "rotation": 270
+      },
+      {
+        "tan": "square",
+        "x": 2,
+        "y": 2.4142135623,
+        "rotation": 135
+      },
+      {
+        "tan": "parallelogram",
+        "x": 6.4142135624,
+        "y": 2.8284271247,
+        "rotation": 225
+      },
+      {
+        "tan": "smallTri",
+        "x": 4.2928932188,
+        "y": 0.7071067811,
+        "rotation": 45
+      },
+      {
+        "tan": "smallTri",
+        "x": 3,
+        "y": 1.7071067811,
+        "rotation": 180
+      }
+    ]
+  },
+  {
+    "id": "shape-079",
+    "name": "letter E",
+    "theme": "letters",
+    "difficulty": "easy",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 2.8284271247,
+        "y": 5,
+        "rotation": 180
+      },
+      {
+        "tan": "largeTri",
+        "x": 2.8284271247,
+        "y": 2,
+        "rotation": 0
+      },
+      {
+        "tan": "mediumTri",
+        "x": 1.4142135624,
+        "y": 3.5857864376,
+        "rotation": 135
+      },
+      {
+        "tan": "square",
+        "x": 1.4142135624,
+        "y": 1.5857864376,
+        "rotation": 45
+      },
+      {
+        "tan": "parallelogram",
+        "x": 3.8284271247,
+        "y": 2,
+        "rotation": 180,
+        "flipped": true
+      },
+      {
+        "tan": "smallTri",
+        "x": 0.8284271247,
+        "y": 5,
+        "rotation": 0
+      },
+      {
+        "tan": "smallTri",
+        "x": 6.8284271247,
+        "y": 0,
+        "rotation": 45
+      }
+    ]
+  },
+  {
+    "id": "shape-080",
+    "name": "letter F",
+    "theme": "letters",
+    "difficulty": "medium",
+    "pieces": [
+      {
+        "tan": "largeTri",
+        "x": 5.4142135624,
+        "y": 0.2928932188,
+        "rotation": 45
+      },
+      {
+        "tan": "largeTri",
+        "x": 8.4142135624,
+        "y": 0.4644660941,
+        "rotation": 90
+      },
+      {
+        "tan": "mediumTri",
+        "x": 3.4142135624,
+        "y": 0.2928932188,
+        "rotation": 0
+      },
+      {
+        "tan": "square",
+        "x": 2,
+        "y": 0,
+        "rotation": 0
+      },
+      {
+        "tan": "parallelogram",
+        "x": 2.4142135624,
+        "y": 2.2928932188,
+        "rotation": 0
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.4142135624,
+        "y": 2.2928932188,
+        "rotation": 270
+      },
+      {
+        "tan": "smallTri",
+        "x": 1.4142135624,
+        "y": 0.2928932188,
+        "rotation": 90
+      }
+    ]
+  }
+]

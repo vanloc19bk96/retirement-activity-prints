@@ -1,0 +1,51 @@
+{
+  "_comment": "Decade Trivia generation content. The topic taxonomy lives in topics.json and the editorial guardrails in safety.json. `verification` drives the second, independent fact-check pass — the single biggest lever on printed accuracy, so it is on by default. `maxRounds` caps how many times a page will go back to the model chasing a ticked topic that keeps failing the filters.",
+  "limits": {
+    "minConfidence": 0.85,
+    "overRequest": 5,
+    "maxRounds": 3,
+    "rateLimitPerWindow": 60,
+    "temperature": 0.3,
+    "maxOutputTokens": 8192,
+    "verifyEnabled": 1,
+    "verifyTemperature": 0.0,
+    "verifyMaxOutputTokens": 4096
+  },
+  "hedgeTerms": [
+    "possibly",
+    "probably",
+    "around",
+    "maybe",
+    "perhaps",
+    "approximately",
+    "roughly",
+    "might",
+    "believed to be",
+    "some say",
+    "one of the",
+    "or similar",
+    "either"
+  ],
+  "difficultyLevels": {
+    "easy": "facts almost anyone who lived through the decade would remember",
+    "standard": "well-known facts a person of that era would likely recall",
+    "challenging": "well-known but less obvious facts — still widely documented"
+  },
+  "locale": {
+    "nativeLocales": [
+      "en",
+      "en-US"
+    ],
+    "nativeLine": "- Prefer well-known U.S. / English-language cultural references.",
+    "otherLine": "- Prefer cultural references familiar in locale '{locale}'."
+  },
+  "formatRules": {
+    "short-answer": "Set \"format\" to \"short-answer\" and leave \"options\" null. The answer is a concise write-in of one to four words.",
+    "fill-blank": "Set \"format\" to \"fill-blank\" and leave \"options\" null. Write a plain descriptive sentence about the decade with exactly one blank marked as ___ (three underscores), and put the missing words in \"answer\". The blank must be a whole word or phrase with a space on each side — never glue it to part of the answer (write \"released in ___\", never \"released in 19___\"). Do NOT use song lyrics, poems, dialogue or advertising slogans.",
+    "multiple-choice": "Set \"format\" to \"multiple-choice\" and give exactly 4 \"options\": one clearly correct, three clearly wrong but plausible. The correct option must appear in \"options\" spelled exactly as in \"answer\". Do not always put the correct option first — vary its position across the batch.",
+    "mixed": "Vary \"format\" with this exact mix across the batch: {multiple_choice} \"multiple-choice\" (exactly 4 \"options\" each; correct answer spelled exactly as in \"answer\"; vary which option index is correct), {short_answer} \"short-answer\", and {fill_blank} \"fill-blank\" (both write-in formats with \"options\" null). Include every format — do not favour multiple-choice."
+  },
+  "verification": {
+    "instruction": "You are fact-checking trivia that is about to be printed in a book for sale. For each numbered item below, work out the answer yourself from your own knowledge BEFORE looking at the given answer, then judge it.\n\nReturn one result per item with:\n- \"index\": the item number exactly as given.\n- \"verdict\": \"correct\" only when the given answer is the single, well-established, uncontested answer to the question as written; \"wrong\" when a different answer is right; \"unsure\" for anything you cannot confirm, anything that depends on country, edition or how you count, and anything where the question itself contains a false premise.\n- \"decade_ok\": true only when the fact genuinely belongs to the {decade}. A thing invented, released or popular in a different decade is NOT decade_ok even if the question asserts otherwise.\n- \"topic\": which ONE subject the question is really about, chosen from this list and nothing else: {topics}. Judge by what the question is about, not by any label it was given. If it does not clearly belong to one of those, answer \"other\" — a question about clothing, hairstyles or home life is \"other\" unless \"everyday\" is in the list, and so on for every subject not listed.\n- \"actual_year\": the year the fact actually happened, or null when there is no single year.\n- \"note\": at most 12 words saying why, when the verdict is not \"correct\".\n\nJudge every item independently. \"unsure\" and \"other\" are perfectly good answers — a dropped question costs nothing, a wrong or off-topic printed one costs a refund and a bad review."
+  }
+}

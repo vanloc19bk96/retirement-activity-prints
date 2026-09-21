@@ -1,0 +1,268 @@
+[
+  {
+    "fullTitle": "Singin' in the Rain",
+    "answer": "Rain",
+    "category": "song",
+    "year": 1952,
+    "era": "1950s"
+  },
+  {
+    "fullTitle": "Moon River",
+    "answer": "Moon",
+    "category": "song",
+    "year": 1961,
+    "era": "1960s"
+  },
+  {
+    "fullTitle": "Here Comes the Sun",
+    "answer": "Sun",
+    "category": "song",
+    "year": 1969,
+    "era": "1960s"
+  },
+  {
+    "fullTitle": "Hey Jude",
+    "answer": "Jude",
+    "category": "song",
+    "year": 1968,
+    "era": "1960s"
+  },
+  {
+    "fullTitle": "Bridge Over Troubled Water",
+    "answer": "Bridge",
+    "category": "song",
+    "year": 1970,
+    "era": "1970s"
+  },
+  {
+    "fullTitle": "Let It Be",
+    "answer": "Let",
+    "category": "song",
+    "year": 1970,
+    "era": "1970s"
+  },
+  {
+    "fullTitle": "American Pie",
+    "answer": "Pie",
+    "category": "song",
+    "year": 1971,
+    "era": "1970s"
+  },
+  {
+    "fullTitle": "Hotel California",
+    "answer": "Hotel",
+    "category": "song",
+    "year": 1977,
+    "era": "1970s"
+  },
+  {
+    "fullTitle": "Stayin' Alive",
+    "answer": "Alive",
+    "category": "song",
+    "year": 1977,
+    "era": "1970s"
+  },
+  {
+    "fullTitle": "Give Peace a Chance",
+    "answer": "Peace",
+    "category": "song",
+    "year": 1969,
+    "era": "1960s"
+  },
+  {
+    "fullTitle": "Billie Jean",
+    "answer": "Jean",
+    "category": "song",
+    "year": 1983,
+    "era": "1980s"
+  },
+  {
+    "fullTitle": "Beat It",
+    "answer": "Beat",
+    "category": "song",
+    "year": 1982,
+    "era": "1980s"
+  },
+  {
+    "fullTitle": "Like a Virgin",
+    "answer": "Virgin",
+    "category": "song",
+    "year": 1984,
+    "era": "1980s"
+  },
+  {
+    "fullTitle": "Sweet Child o' Mine",
+    "answer": "Child",
+    "category": "song",
+    "year": 1987,
+    "era": "1980s"
+  },
+  {
+    "fullTitle": "I Will Always Love You",
+    "answer": "Love",
+    "category": "song",
+    "year": 1992,
+    "era": "1990s"
+  },
+  {
+    "fullTitle": "Don't Look Back in Anger",
+    "answer": "Anger",
+    "category": "song",
+    "year": 1996,
+    "era": "1990s"
+  },
+  {
+    "fullTitle": "My Heart Will Go On",
+    "answer": "Heart",
+    "category": "song",
+    "year": 1997,
+    "era": "1990s"
+  },
+  {
+    "fullTitle": "Smells Like Teen Spirit",
+    "answer": "Spirit",
+    "category": "song",
+    "year": 1991,
+    "era": "1990s"
+  },
+  {
+    "fullTitle": "Hey Ya!",
+    "answer": "Hey",
+    "category": "song",
+    "year": 2003,
+    "era": "2000s"
+  },
+  {
+    "fullTitle": "Single Ladies",
+    "answer": "Ladies",
+    "category": "song",
+    "year": 2008,
+    "era": "2000s"
+  },
+  {
+    "fullTitle": "Over the Rainbow",
+    "answer": "Rainbow",
+    "category": "song",
+    "year": 1939,
+    "era": "1950s"
+  },
+  {
+    "fullTitle": "White Christmas",
+    "answer": "Christmas",
+    "category": "song",
+    "year": 1942,
+    "era": "1950s"
+  },
+  {
+    "fullTitle": "Unchained Melody",
+    "answer": "Melody",
+    "category": "song",
+    "year": 1955,
+    "era": "1950s"
+  },
+  {
+    "fullTitle": "Jailhouse Rock",
+    "answer": "Jailhouse",
+    "category": "song",
+    "year": 1957,
+    "era": "1950s"
+  },
+  {
+    "fullTitle": "What a Wonderful World",
+    "answer": "Wonderful",
+    "category": "song",
+    "year": 1967,
+    "era": "1960s"
+  },
+  {
+    "fullTitle": "Natural Woman",
+    "answer": "Woman",
+    "category": "song",
+    "year": 1967,
+    "era": "1960s"
+  },
+  {
+    "fullTitle": "Proud Mary",
+    "answer": "Mary",
+    "category": "song",
+    "year": 1969,
+    "era": "1960s"
+  },
+  {
+    "fullTitle": "Dancing Queen",
+    "answer": "Queen",
+    "category": "song",
+    "year": 1976,
+    "era": "1970s"
+  },
+  {
+    "fullTitle": "Bohemian Rhapsody",
+    "answer": "Rhapsody",
+    "category": "song",
+    "year": 1975,
+    "era": "1970s"
+  },
+  {
+    "fullTitle": "Every Breath You Take",
+    "answer": "Breath",
+    "category": "song",
+    "year": 1983,
+    "era": "1980s"
+  },
+  {
+    "fullTitle": "Careless Whisper",
+    "answer": "Whisper",
+    "category": "song",
+    "year": 1984,
+    "era": "1980s"
+  },
+  {
+    "fullTitle": "Take On Me",
+    "answer": "Take",
+    "category": "song",
+    "year": 1985,
+    "era": "1980s"
+  },
+  {
+    "fullTitle": "Losing My Religion",
+    "answer": "Religion",
+    "category": "song",
+    "year": 1991,
+    "era": "1990s"
+  },
+  {
+    "fullTitle": "Spice Up Your Life",
+    "answer": "Life",
+    "category": "song",
+    "year": 1997,
+    "era": "1990s"
+  },
+  {
+    "fullTitle": "Candle in the Wind",
+    "answer": "Candle",
+    "category": "song",
+    "year": 1997,
+    "era": "1990s"
+  },
+  {
+    "fullTitle": "Crazy in Love",
+    "answer": "Crazy",
+    "category": "song",
+    "year": 2003,
+    "era": "2000s"
+  },
+  {
+    "fullTitle": "Hey There Delilah",
+    "answer": "Delilah",
+    "category": "song",
+    "year": 2006,
+    "era": "2000s"
+  },
+  {
+    "fullTitle": "Viva la Vida",
+    "answer": "Vida",
+    "category": "song",
+    "year": 2008,
+    "era": "2000s"
+  }
+]

@@ -1,0 +1,37 @@
+{
+  "_comment": "Safety profile shared by the reflective-writing activities (life timeline, memory journal, then & now). Terms are matched case-insensitively on word boundaries.",
+  "blockedTerms": [
+    "died",
+    "death",
+    "passed away",
+    "funeral",
+    "regret",
+    "failure",
+    "failed",
+    "worst",
+    "illness",
+    "sick",
+    "divorce",
+    "argument",
+    "lost",
+    "loss",
+    "wish you had",
+    "should have",
+    "mistake"
+  ],
+  "yesNoOpeners": [
+    "Did",
+    "Do",
+    "Does",
+    "Were",
+    "Was",
+    "Have",
+    "Has",
+    "Is",
+    "Are",
+    "Can",
+    "Could",
+    "Would",
+    "Will"
+  ]
+}

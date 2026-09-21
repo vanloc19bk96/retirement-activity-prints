@@ -1,0 +1,18 @@
+{
+  "_comment": "Editor cover-art image prompt (studio cover generator). positionDescriptions map the UI's position values onto canvas wording; textLines/blocks are assembled by cover_prompt.py.",
+  "positionDescriptions": {
+    "top": "upper third of the canvas (approximately top 30% horizontal band)",
+    "center": "central horizontal band of the canvas (middle 30%)",
+    "bottom": "lower third of the canvas (approximately bottom 30% horizontal band)"
+  },
+  "textLines": {
+    "title": "- TITLE (exact text): \"{text}\" — place in the {position}",
+    "subtitle": "- SUBTITLE (exact text): \"{text}\" — place in the {position}",
+    "author": "- AUTHOR (exact text): \"{text}\" — place in the {position}"
+  },
+  "typographyBlock": "\nCOVER TYPOGRAPHY (render only the exact text listed below — do not invent or substitute other words):\n{cover_text_section}\n\nTypography rules:\n- Use the EXACT spelling shown above. Do not paraphrase, abbreviate, or use placeholder words.\n- Title: largest and boldest text on the cover; legible at Amazon thumbnail size.\n- Subtitle: clearly smaller than the title.\n- Author: smallest of the three, clean byline style.\n- High contrast between text and background; balance text within each zone.\n",
+  "textRules": {
+    "withText": "1. Render only the cover typography listed above. Do not add any other words, slogans, or labels beyond what the user specified.",
+    "withoutText": "1. NO title text, subtitle, author name, slogans, or decorative phrases in the image — artwork only."
+  }
+}
