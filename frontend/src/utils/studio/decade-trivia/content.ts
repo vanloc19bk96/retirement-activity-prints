@@ -19,6 +19,10 @@ const BLANK_RUN_GLOBAL = /_{2,}/g
 const BLANK_MIN = 10
 const BLANK_MAX = 18
 
+export const SHORT_ANSWER_MAX_WORDS = 4
+const GLUED_BEFORE = /[\w'’-]+$/
+const GLUED_AFTER = /^[\w'’-]+/
+
 /**
  * Collapse whitespace and strip markdown bold a model may leak into prose.
  * Underscores are deliberately left alone — they are how a blank is marked, and
@@ -70,12 +74,12 @@ function splitAroundBlank(
 
   // Stranded prefix: trailing word characters glued to the blank that the
   // answer already starts with (the `19` of `19___` for answer `1961`).
-  const gluedBefore = /[\w'’-]+$/.exec(before)?.[0] ?? ''
+  const gluedBefore = GLUED_BEFORE.exec(before)?.[0] ?? ''
   if (gluedBefore && lowerAnswer.startsWith(gluedBefore.toLowerCase())) {
     before = before.slice(0, before.length - gluedBefore.length)
   }
 
-  const gluedAfter = /^[\w'’-]+/.exec(after)?.[0] ?? ''
+  const gluedAfter = GLUED_AFTER.exec(after)?.[0] ?? ''
   if (gluedAfter && lowerAnswer.endsWith(gluedAfter.toLowerCase())) {
     after = after.slice(gluedAfter.length)
   }
@@ -119,8 +123,41 @@ export function writeInText(question: string, answer: string): WriteInText {
   return { prompt: join(blank), solution: join(value) }
 }
 
+export function answerWordCount(raw: string): number {
+  return cleanAnswer(raw).split(/\s+/).filter(Boolean).length
+}
+
+export function isShortAnswerLength(raw: string): boolean {
+  const count = answerWordCount(raw)
+  return count >= 1 && count <= SHORT_ANSWER_MAX_WORDS
+}
+
+/**
+ * Fill-blank is printable when there is a blank, and any text glued to it is
+ * a prefix/suffix of the answer (so it can be absorbed, never `19` + `1961`).
+ */
+export function isValidFillBlank(question: string, answer: string): boolean {
+  const text = cleanSentence(question)
+  const value = cleanAnswer(answer)
+  if (!text || !value) return false
+  const match = BLANK_RUN.exec(text)
+  if (!match) return false
+
+  const before = text.slice(0, match.index)
+  const after = text.slice(match.index + match[0].length)
+  const lowerAnswer = value.toLowerCase()
+
+  const gluedBefore = GLUED_BEFORE.exec(before)?.[0] ?? ''
+  if (gluedBefore && !lowerAnswer.startsWith(gluedBefore.toLowerCase())) return false
+
+  const gluedAfter = GLUED_AFTER.exec(after)?.[0] ?? ''
+  if (gluedAfter && !lowerAnswer.endsWith(gluedAfter.toLowerCase())) return false
+
+  return true
+}
+
 export function isMultipleChoice(item: TriviaItem): boolean {
-  return item.format === 'multiple-choice' && (item.options?.length ?? 0) >= 2
+  return item.format === 'multiple-choice' && (item.options?.length ?? 0) === 4
 }
 
 export function isFillBlank(item: TriviaItem): boolean {

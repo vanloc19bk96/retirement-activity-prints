@@ -27,9 +27,9 @@
     "either"
   ],
   "difficultyLevels": {
-    "easy": "facts almost anyone who lived through the decade would remember",
-    "standard": "well-known facts a person of that era would likely recall",
-    "challenging": "well-known but less obvious facts — still widely documented"
+    "easy": "very familiar facts most people from the era would recognize",
+    "standard": "well-known facts associated with the decade",
+    "challenging": "less obvious but still widely documented facts — never obscure or uncertain trivia"
   },
   "locale": {
     "nativeLocales": [

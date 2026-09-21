@@ -69,7 +69,7 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ---
 
-## Logic (14 games)
+## Logic (12 games)
 
 ### Sudoku (`sudoku`)
 The classic number placement puzzle. Fill every row, column and box so each
@@ -137,20 +137,6 @@ Pages: 1 · Answer key: yes · AI content: no
 Hold a running total in your head down a ladder of steps, then write only
 the final answer. Whole numbers throughout, never negative.
 Pages: 1 · Answer key: yes · AI content: no
-
-### Card Sums (`card-sums`)
-Mental arithmetic on playing cards. Three puzzle types: add up each row,
-circle the cards that make a target total, or follow a plus-and-minus ladder
-to its final figure. Court cards can count as 11/12/13 or as 10 each; values
-are explained in the instructions when the toggle is on.
-Pages: 1 · Answer key: yes · AI content: no · Tag: `card`
-
-### Next Card (`next-card`)
-Each row of playing cards follows a hidden rule — the rank climbs, the suit
-cycles, the colour alternates. Work out the rule and supply the card that
-comes next (draw it, write rank+suit, or circle one of three choices). Every
-sequence is checked so the printed answer is the only fair one.
-Pages: 1 · Answer key: yes · AI content: no · Tag: `card`
 
 ---
 
@@ -317,8 +303,6 @@ Pages: 1 · Answer key: no · AI content: no · Fixed default title (key: `brain
 | pattern-continuation | Pattern Continuation | logic | 1 | yes | no |
 | matrix-reasoning | Matrix Reasoning | logic | 1 | yes | no |
 | mental-math-ladder | Mental Math Ladder | logic | 1 | yes | no |
-| card-sums | Card Sums | logic | 1 | yes | no |
-| next-card | Next Card | logic | 1 | yes | no |
 | word-search | Word Search | word | 1 | yes | yes |
 | crossword | Crossword | word | 1 | yes | yes |
 | cryptogram | Cryptogram | word | 1 | yes | yes |
@@ -346,4 +330,4 @@ Pages: 1 · Answer key: no · AI content: no · Fixed default title (key: `brain
 or a model that doubles as its own key) rather than producing a separate
 solution page.*
 
-**Total: 36 games** (14 logic · 9 word · 6 spatial · 5 reminiscence · 2 tracker).
+**Total: 34 games** (12 logic · 9 word · 6 spatial · 5 reminiscence · 2 tracker).

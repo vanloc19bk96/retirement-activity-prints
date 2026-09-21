@@ -9,10 +9,9 @@ interface Props {
 /**
  * Cross-cutting tag filters, beside the category tabs.
  *
- * Deliberately a second row rather than an eighth tab: the Card Games Pack
- * lives in `logic` and `memory` so the Build-a-book planner keeps a real
- * cognitive taxonomy, and this is how a seller still sees the pack in one
- * click. Clicking an active chip clears it.
+ * Deliberately a second row rather than another tab: a tag can span
+ * categories while the Build-a-book planner keeps a real cognitive taxonomy.
+ * Clicking an active chip clears it.
  */
 export function StudioTagChips({ value, onChange }: Props) {
   if (STUDIO_TAG_FILTERS.length === 0) return null

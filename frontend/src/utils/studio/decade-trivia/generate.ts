@@ -13,6 +13,7 @@ import {
   contentBox,
   insetHorizontal,
   drawHeader,
+  boxCenterX,
   type Box,
 } from '../studio-layout'
 import { buildText, type StudioTag } from '../studio-fabric-builders'
@@ -28,15 +29,14 @@ import {
   validateDecadeTriviaConfig,
 } from './config'
 import { resolveDecade } from './decade'
-import { cleanAnswer, cleanSentence, isMultipleChoice } from './content'
+import { cleanAnswer, cleanSentence, isMultipleChoice, isShortAnswerLength, isValidFillBlank } from './content'
 import { BODY_BOTTOM_PAD, planTriviaPage } from './layout'
 import { drawTriviaPage } from './draw'
 
 const TEMPLATE_KEY = 'decade-trivia'
 
-function instructionFor(decade: string): string {
-  // Keep this short — a long wrap steals vertical space from large-print questions.
-  return `How much do you remember about the ${decade}? Take your time. No rush, no score`
+export function instructionFor(decade: string): string {
+  return `How much do you remember about the ${decade}?\nTake your time. No rush, no score.`
 }
 
 /**
@@ -46,7 +46,8 @@ function instructionFor(decade: string): string {
  */
 function usableItems(items: TriviaItem[], limit: number): TriviaItem[] {
   const out: TriviaItem[] = []
-  const seen = new Set<string>()
+  const seenQuestions = new Set<string>()
+  const seenAnswers = new Set<string>()
 
   for (const raw of items) {
     if (out.length >= limit) break
@@ -54,21 +55,29 @@ function usableItems(items: TriviaItem[], limit: number): TriviaItem[] {
     const answer = cleanAnswer(raw.answer)
     if (!question || !answer) continue
 
-    const key = question.toLowerCase()
-    if (seen.has(key)) continue
+    const questionKey = question.toLowerCase()
+    const answerKey = answer.toLowerCase()
+    if (seenQuestions.has(questionKey) || seenAnswers.has(answerKey)) continue
 
     const options = raw.options?.map((o) => cleanSentence(o)).filter(Boolean)
     const item: TriviaItem = { ...raw, question, answer, options }
     if (item.format === 'multiple-choice') {
-      if (!isMultipleChoice(item)) continue
-      const lowered = options!.map((o) => o.toLowerCase())
-      if (new Set(lowered).size !== lowered.length) continue
+      if (!isMultipleChoice(item) || !options) continue
+      const lowered = options.map((o) => o.toLowerCase())
+      if (lowered.length !== 4 || new Set(lowered).size !== 4) continue
       if (!lowered.includes(answer.toLowerCase())) continue
+    } else if (item.format === 'fill-blank') {
+      if (!isValidFillBlank(question, answer)) continue
+      item.options = undefined
+    } else if (item.format === 'short-answer') {
+      if (!isShortAnswerLength(answer)) continue
+      item.options = undefined
     } else {
       item.options = undefined
     }
 
-    seen.add(key)
+    seenQuestions.add(questionKey)
+    seenAnswers.add(answerKey)
     out.push(item)
   }
 
@@ -85,17 +94,23 @@ function messagePage(
     instanceId: ctx.instanceId,
     pageRole: 'single',
   }
+  const font = String(config.fontFamily ?? STUDIO_DEFAULT_FONT)
+  const content = insetHorizontal(contentBox(ctx), STUDIO_CONTENT_SAFE_INSET_X)
+  const header = drawHeader(content, config, tag, instructionFor(resolveDecade(config)))
   return {
     pageRole: 'single',
     objects: [
+      ...header.objects,
       buildText(
         {
-          left: ctx.margin.left,
-          top: ctx.margin.top,
+          left: boxCenterX(header.body),
+          top: header.body.top + header.body.height * 0.35,
           text: message,
-          fontFamily: String(config.fontFamily ?? STUDIO_DEFAULT_FONT),
+          fontFamily: font,
           fill: STUDIO_INK_MUTED,
-          width: ctx.pageWidth - ctx.margin.left - ctx.margin.right,
+          width: header.body.width * 0.85,
+          textAlign: 'center',
+          originX: 'center',
         },
         tag,
         'decoration',

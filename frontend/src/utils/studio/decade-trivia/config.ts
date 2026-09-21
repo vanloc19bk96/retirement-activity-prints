@@ -208,9 +208,9 @@ export const DECADE_TRIVIA_CONFIG_SCHEMA: StudioConfigField[] = [
     type: 'select',
     default: 'standard',
     options: [
-      { label: 'Easy (almost everyone remembers)', value: 'easy' },
-      { label: 'Standard', value: 'standard' },
-      { label: 'Challenging', value: 'challenging' },
+      { label: 'Easy — most people from the era remember', value: 'easy' },
+      { label: 'Standard — well-known facts of the decade', value: 'standard' },
+      { label: 'Challenging — less obvious, still well documented', value: 'challenging' },
     ],
   },
   {

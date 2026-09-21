@@ -38,18 +38,11 @@ const PREFERRED_PT = 16
 const MAX_BOOK_PT = 18
 const MIN_BOOK_PT = 14
 const HARD_FLOOR_PT = 12
-/**
- * Only reached when a dense page on a small trim cannot hold the floor even
- * with the gaps closed. Still legible; the questions-per-page help text steers
- * authors away from needing it.
- */
-const ABSOLUTE_FLOOR_PT = 10
 
 export const LARGE_PRINT = pt(PREFERRED_PT)
 export const MAX_PRINT = pt(MAX_BOOK_PT)
 export const MIN_PRINT = pt(MIN_BOOK_PT)
 export const HARD_MIN_PRINT = pt(HARD_FLOOR_PT)
-export const ABSOLUTE_MIN_PRINT = pt(ABSOLUTE_FLOOR_PT)
 
 /** Prompt leading — roomy enough that two wrapped lines still read as one sentence. */
 export const PROMPT_LINE_HEIGHT = 1.22
@@ -417,12 +410,7 @@ export function planTriviaPage(input: PlanInput): TriviaPageLayout {
     }
   }
 
-  for (let size = HARD_MIN_PRINT - 0.5; size >= ABSOLUTE_MIN_PRINT - 0.01; size -= 0.5) {
-    const candidate = at(Math.round(size * 100) / 100)
-    if (fits(candidate, MIN_BLOCK_GAP * 0.55)) return place(input, candidate)
-  }
-
   // Beyond this the page is over-specified; gaps close and the stack still
   // cannot overlap, because blocks are placed by their own measured heights.
-  return place(input, at(ABSOLUTE_MIN_PRINT))
+  return place(input, at(HARD_MIN_PRINT))
 }

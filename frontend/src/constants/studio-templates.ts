@@ -11,8 +11,6 @@ import { STUDIO_CATEGORIES } from '@/constants/studio-categories'
 import { STARTER_STUDIO_TEMPLATE_KEYS } from '@/constants/studio-plan-access'
 import { gridCopyTemplate } from '@/utils/studio/grid-copy/generate'
 import { mentalMathLadderTemplate } from '@/utils/studio/mental-math-ladder/generate'
-import { cardSumsTemplate } from '@/utils/studio/card-sums/generate'
-import { nextCardTemplate } from '@/utils/studio/next-card/generate'
 import { sudokuTemplate } from '@/utils/studio/sudoku/generate'
 import { kakuroTemplate } from '@/utils/studio/kakuro/generate'
 import { futoshikiTemplate } from '@/utils/studio/futoshiki/generate'
@@ -65,8 +63,6 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   patternContinuationTemplate,
   matrixReasoningTemplate,
   mentalMathLadderTemplate,
-  cardSumsTemplate,
-  nextCardTemplate,
 
   // Word
   wordSearchTemplate,

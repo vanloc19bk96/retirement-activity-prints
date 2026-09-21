@@ -74,7 +74,7 @@ export function canonicalGridForm<T>(grid: Grid<T>, cell: CellSerialiser<T>): st
 /**
  * Canonical form of an ordered run. A sequence read back to front is the same
  * puzzle for layouts with no inherent direction; pass `directional` for the
- * ones that have one (Next Card's rule runs left to right and only that way).
+ * ones that have one (a rule that runs left to right and only that way).
  */
 export function canonicalSequenceForm<T>(
   items: readonly T[],

@@ -38,6 +38,8 @@ _GLUED_AFTER = re.compile(r"^[\w'’-]+")
 
 #: The canonical blank the frontend widens into a printed rule.
 BLANK = "___"
+SHORT_ANSWER_MAX_WORDS = 4
+_WORD_SPLIT = re.compile(r"\S+")
 
 
 @lru_cache(maxsize=1)
@@ -105,6 +107,16 @@ def evidence_year_outside_decade(year: int | None, decade: str) -> bool:
         return False
     start, end = decade_year_range(decade)
     return not start <= year <= end
+
+
+def answer_word_count(text: str) -> int:
+    return len(_WORD_SPLIT.findall(text.strip()))
+
+
+def is_printable_short_answer(answer: str) -> bool:
+    """Short-answer copy is a 1–4 word write-in, not a sentence."""
+    count = answer_word_count(answer)
+    return 1 <= count <= SHORT_ANSWER_MAX_WORDS
 
 
 def answer_leaks_into_question(question: str, answer: str) -> bool:

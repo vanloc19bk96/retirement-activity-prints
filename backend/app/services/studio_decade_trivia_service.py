@@ -40,6 +40,7 @@ from app.services.studio_decade_trivia_content import (
     answer_leaks_into_question,
     evidence_year_outside_decade,
     is_hedged,
+    is_printable_short_answer,
     is_unsuitable,
     mentions_year_outside_decade,
     repair_fill_blank,
@@ -206,6 +207,8 @@ def _validate_one(raw: dict[str, Any], req: DecadeTriviaRequest) -> TriviaItem |
     else:
         # Options on a write-in item are noise; the page never renders them.
         options = []
+        if item_format == "short-answer" and not is_printable_short_answer(answer):
+            return None
         if item_format == "fill-blank":
             repaired = repair_fill_blank(question, answer)
             if repaired is None:
@@ -260,15 +263,15 @@ def _mixed_targets(count: int) -> dict[TriviaItemFormat, int]:
     return targets
 
 
-def _reformat_item(item: TriviaItem, fmt: TriviaItemFormat) -> TriviaItem:
+def _reformat_item(item: TriviaItem, fmt: TriviaItemFormat) -> TriviaItem | None:
     """Reuse a surplus item as a missing write-in format (question + answer stay).
 
     Only short-answer is a safe target: turning an arbitrary question into a
     fill-blank sentence would mean inventing where the blank goes, and a badly
     placed blank is exactly the defect this rewrite set out to remove.
     """
-    if fmt != "short-answer":
-        return item
+    if fmt != "short-answer" or not is_printable_short_answer(item.answer):
+        return None
     return TriviaItem(
         question=item.question,
         options=None,
@@ -339,6 +342,7 @@ def _compose_page(
     #    still owes short-answer seats — the only safe reformat, see
     #    `_reformat_item`.
     if format_targets is not None:
+        skipped_mc: set[int] = set()
         while len(picked) < count and taken.get("short-answer", 0) < format_targets.get(
             "short-answer", 0
         ):
@@ -346,13 +350,19 @@ def _compose_page(
                 (
                     i
                     for i, item in enumerate(items)
-                    if i not in picked and item.format == "multiple-choice"
+                    if i not in picked
+                    and i not in skipped_mc
+                    and item.format == "multiple-choice"
                 ),
                 None,
             )
             if index is None:
                 break
-            take(index, _reformat_item(items[index], "short-answer"))
+            converted = _reformat_item(items[index], "short-answer")
+            if converted is None:
+                skipped_mc.add(index)
+                continue
+            take(index, converted)
 
     # 4. Whatever is left, until the page is full.
     for i, item in enumerate(items):
@@ -576,7 +586,7 @@ def apply_verdicts(
             continue
         if str(verdict.get("verdict", "")).strip().casefold() != "correct":
             continue
-        if verdict.get("decade_ok") is False:
+        if verdict.get("decade_ok") is not True:
             continue
         if allowed is not None:
             claimed = normalize_topic(str(verdict.get("topic", "")).strip())
@@ -589,7 +599,11 @@ def apply_verdicts(
 
 
 async def _verify(items: list[TriviaItem], req: DecadeTriviaRequest) -> list[TriviaItem]:
-    """Second opinion on every item. A failed check never empties the page."""
+    """Second opinion on every item.
+
+    A failed or empty check drops the batch. Shipping unverified trivia is
+    worse than a short page — or a generation error if nothing survives.
+    """
     if not items or not verification_enabled():
         return items
 
@@ -605,11 +619,11 @@ async def _verify(items: list[TriviaItem], req: DecadeTriviaRequest) -> list[Tri
         results = parse_json_object(raw).get("results")
     except Exception as exc:
         logger.warning("studio_decade_trivia_verification_failed error=%s", exc)
-        return items
+        return []
 
     if not isinstance(results, list) or not results:
         logger.warning("studio_decade_trivia_verification_empty count=%s", len(items))
-        return items
+        return []
 
     return apply_verdicts(items, results, allowed)
 

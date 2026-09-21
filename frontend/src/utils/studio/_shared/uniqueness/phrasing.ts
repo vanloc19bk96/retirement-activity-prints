@@ -82,7 +82,8 @@ export function poolForMode(pool: PhrasingPool, mode: string): readonly string[]
  *
  * KDP does not ban gambling content, but casino framing triggers content
  * review, muddies categorisation, and is off-brand for a memory product line.
- * A "Card Sums" page is mental arithmetic; it is never a blackjack drill.
+ * A playing-card worksheet is a memory or arithmetic page; it is never a
+ * blackjack drill.
  */
 export const BANNED_GAMBLING_TERMS: readonly string[] = [
   'casino',

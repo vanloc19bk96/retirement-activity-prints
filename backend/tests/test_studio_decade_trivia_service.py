@@ -12,11 +12,13 @@ from app.services.studio_decade_trivia_content import (
     decade_year_range,
     evidence_year_outside_decade,
     is_hedged,
+    is_printable_short_answer,
     is_unsuitable,
     mentions_year_outside_decade,
     repair_fill_blank,
 )
 from app.services.studio_decade_trivia_service import (
+    DecadeTriviaGenerationError,
     apply_verdicts,
     generate_decade_trivia,
     balance_mixed_for_tests,
@@ -202,6 +204,20 @@ def test_drops_a_question_that_contains_its_own_answer() -> None:
         "confidence": 0.95,
     }
     assert validate_trivia_items_for_tests([item], _req(format="fill-blank")) == []
+
+
+def test_drops_short_answers_outside_one_to_four_words() -> None:
+    assert is_printable_short_answer("The Twist")
+    assert is_printable_short_answer("Diana Ross")
+    assert not is_printable_short_answer("The Andy Griffith Show Host")
+    item = {
+        "question": "Who hosted the variety hour every Sunday night?",
+        "answer": "The famous Sunday night variety show host",
+        "topic": "tv",
+        "format": "short-answer",
+        "confidence": 0.95,
+    }
+    assert validate_trivia_items_for_tests([item], _req(format="short-answer", topics=["tv"])) == []
 
 
 def test_keeps_a_repaired_fill_blank_item() -> None:
@@ -497,6 +513,12 @@ def test_verification_drops_items_dated_to_another_decade() -> None:
     assert apply_verdicts(items, results) == []
 
 
+def test_verification_requires_decade_ok_true() -> None:
+    items = [_item("q1", "a1")]
+    results = [{"index": 1, "verdict": "correct"}]
+    assert apply_verdicts(items, results) == []
+
+
 def test_verification_drops_items_the_checker_skipped() -> None:
     items = [_item("q1", "a1"), _item("q2", "a2")]
     results = [{"index": 1, "verdict": "correct", "decade_ok": True}]
@@ -732,3 +754,26 @@ def test_mixed_format_page_still_covers_every_ticked_topic(
     )
 
     assert {item.topic for item in page.items} == {"music", "products"}
+
+
+def test_failed_verification_does_not_ship_unverified_items(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def fake_gemini(_prompt: str) -> str:
+        return json.dumps({"items": [_draft("music", 0) for _ in range(6)]})
+
+    async def fake_verify(_prompt: str) -> str:
+        raise RuntimeError("checker down")
+
+    monkeypatch.setattr(
+        "app.services.studio_decade_trivia_service._call_gemini", fake_gemini
+    )
+    monkeypatch.setattr(
+        "app.services.studio_decade_trivia_service._call_gemini_verify", fake_verify
+    )
+    monkeypatch.setattr(
+        "app.services.studio_decade_trivia_service._check_rate_limit", lambda _uid: None
+    )
+
+    with pytest.raises(DecadeTriviaGenerationError, match="fact-checking"):
+        asyncio.run(generate_decade_trivia(_req(topics=["music"]), user_id="user-1"))

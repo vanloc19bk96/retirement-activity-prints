@@ -1,46 +1,23 @@
 /**
- * Hand-written phrasing pools for the Card Games Pack (§4.7).
+ * Hand-written phrasing pools for procedural Studio templates.
  *
  * Every string in this directory is written by a person and reviewed once. None
- * of it is produced at runtime by a language model — the moment generated text
- * enters, the pack's "no AI-content disclosure required" claim dies (§5.4).
+ * of it is produced at runtime by a language model — generated copy would
+ * require an AI-content disclosure.
  *
- * `studio-phrasing.test.ts` enforces the ten-variant floor, rejects duplicates
- * inside a pool, and lints every string against the banned vocabulary (§9.7).
+ * Pack tests enforce the ten-variant floor, reject duplicates inside a pool,
+ * and lint every string against the banned vocabulary.
  */
 
 import type { PhrasingPool } from '@/utils/studio/_shared/uniqueness/phrasing'
-import {
-  CARD_SUMS_INSTRUCTIONS,
-  CARD_SUMS_TARGET_LABELS,
-  CARD_SUMS_VALUE_HINTS,
-} from './card-sums.phrasing'
-import { NEXT_CARD_CHOICE_LABELS, NEXT_CARD_INSTRUCTIONS } from './next-card.phrasing'
 import { WORD_FIT_INSTRUCTIONS } from './word-fit.phrasing'
 
-export * from './card-sums.phrasing'
-export * from './next-card.phrasing'
 export * from './word-fit.phrasing'
 
-/** Every instruction pool, keyed by template. Used by the phrasing tests. */
-export const CARD_INSTRUCTION_POOLS: Readonly<Record<string, PhrasingPool>> = {
-  'card-sums': CARD_SUMS_INSTRUCTIONS,
-  'next-card': NEXT_CARD_INSTRUCTIONS,
-}
-
 /**
- * Instruction pools for the procedural non-card templates. Same hand-written
- * discipline and the same ten-variant floor; kept in its own map so the card
- * pack's ship gate keeps testing the card pack.
+ * Instruction pools for the procedural templates. Same hand-written
+ * discipline and the same ten-variant floor.
  */
 export const STUDIO_INSTRUCTION_POOLS: Readonly<Record<string, PhrasingPool>> = {
   'word-fit': WORD_FIT_INSTRUCTIONS,
-}
-
-/** Every label pool. Held together so the lint cannot miss one. */
-export const CARD_LABEL_POOLS: Readonly<Record<string, readonly string[]>> = {
-  'card-sums:valueHint:face': CARD_SUMS_VALUE_HINTS.face ?? [],
-  'card-sums:valueHint:ten': CARD_SUMS_VALUE_HINTS.ten ?? [],
-  'card-sums:target': CARD_SUMS_TARGET_LABELS,
-  'next-card:choice': NEXT_CARD_CHOICE_LABELS,
 }

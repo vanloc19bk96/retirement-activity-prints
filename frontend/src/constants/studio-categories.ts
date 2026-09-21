@@ -20,14 +20,10 @@ export const STUDIO_CATEGORIES: { value: StudioCategoryFilter; label: string }[]
 /**
  * Cross-cutting tag filters, shown as chips beside the category tabs.
  *
- * A tag is not a category. The Card Games Pack registers in `logic` so the
- * Build-a-book planner keeps an honest cognitive taxonomy, while the chip
- * still gives sellers one click to see the whole pack — and the sales page a
- * "Card Games Pack" bullet (Card Games Pack spec §7).
+ * A tag is not a category. Keep this empty until a pack again needs a
+ * one-click filter that cuts across the cognitive taxonomy.
  */
-export const STUDIO_TAG_FILTERS: { value: string; label: string }[] = [
-  { value: 'card', label: 'Cards' },
-]
+export const STUDIO_TAG_FILTERS: { value: string; label: string }[] = []
 
 /** Category label lookup (used by search so "memory" matches memory games). */
 export const STUDIO_CATEGORY_LABELS: Record<StudioCategory, string> = {

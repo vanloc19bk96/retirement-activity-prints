@@ -1,8 +1,8 @@
 /**
  * Ship-blocking gates for the procedural non-card templates.
  *
- * Same discipline as `card-pack.test.ts`, applied to the templates that do not
- * draw playing cards: the print QA gate across every supported trim (§9.6), the
+ * Ship-blocking gates for the procedural templates that do not draw playing
+ * cards: the print QA gate across every supported trim (§9.6), the
  * cross-account uniqueness simulation (§9.5), reprint determinism (§9.8) and
  * the phrasing lint (§9.7).
  *

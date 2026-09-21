@@ -239,11 +239,11 @@ export interface StudioTemplateDefinition {
   pageCount: 1 | 2
   producesAnswerKey: boolean
   /**
-   * Cross-cutting labels for search and filter chips, e.g. `['card']`.
+   * Cross-cutting labels for search and filter chips.
    *
-   * A tag is not a category: the Card Games Pack registers in `logic` so the
-   * Build-a-book planner keeps an honest cognitive taxonomy, while the tag
-   * still gives sellers a one-click way to see the pack.
+   * A tag is not a category: templates still register under one cognitive
+   * category so the Build-a-book planner stays honest, while a tag can give
+   * sellers a one-click filter across that taxonomy.
    */
   tags?: readonly string[]
   /**

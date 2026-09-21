@@ -57,7 +57,7 @@ describe('sha256', () => {
 
 describe('seed derivation', () => {
   it('gives two accounts different puzzles for identical settings and code', () => {
-    const input = { templateKey: 'card-sums', configHash: 'abc', pageNonce: 1 }
+    const input = { templateKey: 'sudoku', configHash: 'abc', pageNonce: 1 }
     const a = deriveSeedHex({ ...input, ownerSalt: resolveOwnerSalt({ ownerKey: 'user:1' }) })
     const b = deriveSeedHex({ ...input, ownerSalt: resolveOwnerSalt({ ownerKey: 'user:2' }) })
     expect(a).not.toBe(b)
@@ -73,7 +73,7 @@ describe('seed derivation', () => {
   it('reproduces the same seed for the same salt, config and nonce', () => {
     const input = {
       ownerSalt: 'aa11',
-      templateKey: 'card-sums',
+      templateKey: 'sudoku',
       configHash: 'x',
       pageNonce: 7,
     }
@@ -270,7 +270,7 @@ describe('canonical ledger', () => {
     const ledger = new CanonicalLedger([canonicalHash('only')])
     expect(() =>
       resolveUniquePuzzle({
-        templateKey: 'card-sums',
+        templateKey: 'sudoku',
         ledger,
         hardLimit: 8,
         build: () => ({ value: 1, canonicalForm: 'only' }),

@@ -1,8 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { decadeTriviaTemplate } from './generate'
+import { decadeTriviaTemplate, instructionFor } from './generate'
 import { buildDefaultConfig } from '@/constants/studio-templates'
 import { resetObjectCounter } from '../studio-fabric-builders'
-import { assertObjectsInSafeMargin, STUDIO_TEST_CTX } from '../studio-generator-test'
+import {
+  assertObjectsInSafeMargin,
+  runGeneratorContractTests,
+  STUDIO_TEST_CTX,
+} from '../studio-generator-test'
 import { buildAnswerPage, harvestAnswers } from '../studio-answer-key'
 import {
   STUDIO_ANSWER_INK_MONO,
@@ -23,8 +27,9 @@ import {
   validateDecadeTriviaConfig,
 } from './config'
 import { toDecadeTriviaRequest, decadeTriviaPrefetch } from './prefetch'
-import { cleanAnswer, writeInText } from './content'
-import { BODY_BOTTOM_PAD, MIN_PRINT, MAX_PRINT, planTriviaPage, pt } from './layout'
+import { cleanAnswer, isShortAnswerLength, isValidFillBlank, writeInText } from './content'
+import { normalizeDecadeLabel } from './decade'
+import { BODY_BOTTOM_PAD, HARD_MIN_PRINT, MIN_PRINT, MAX_PRINT, planTriviaPage, pt } from './layout'
 import { contentBox, drawHeader, insetHorizontal, type Box } from '../studio-layout'
 import {
   FABRIC_FONT_SIZE_MULT,
@@ -157,10 +162,15 @@ function bodyArea(config: StudioConfig = {}): Box {
     content,
     merged,
     { templateKey: 'decade-trivia', instanceId: 't', pageRole: 'single' },
-    'How much do you remember about the 1960s? Take your time. No rush, no score',
+    instructionFor(String(merged.decade ?? '1960s')),
   )
   return { ...header.body, height: header.body.height - BODY_BOTTOM_PAD }
 }
+
+runGeneratorContractTests(decadeTriviaTemplate, {
+  expectSeedVariance: false,
+  contextOverrides: { remoteData: remote(makeItems(5)) },
+})
 
 describe('studio text metrics', () => {
   it('reserves Fabric line boxes, not bare font sizes', () => {
@@ -259,10 +269,18 @@ describe('decade-trivia content', () => {
     expect(solution).not.toMatch(/_{2,}/)
   })
 
-  it('appends a blank when the model marked none', () => {
-    const { prompt, solution } = writeInText('Which drink came in a glass bottle?', 'Cola')
-    expect(prompt).toMatch(/_{2,}$/)
-    expect(solution.endsWith('Cola')).toBe(true)
+  it('rejects a fill-blank with no marker instead of inventing one', () => {
+    expect(isValidFillBlank('Which drink came in a glass bottle?', 'Cola')).toBe(false)
+  })
+
+  it('rejects a numeric blank glued to an answer it is not part of', () => {
+    expect(isValidFillBlank('The film opened in 19___.', 'The Twist')).toBe(false)
+    expect(isValidFillBlank('The film opened in 19___.', '1961')).toBe(true)
+  })
+
+  it('keeps short answers to one to four words', () => {
+    expect(isShortAnswerLength('The Twist')).toBe(true)
+    expect(isShortAnswerLength('The Andy Griffith Show Host')).toBe(false)
   })
 
   it('strips trailing punctuation and quotes from answers', () => {
@@ -289,7 +307,12 @@ describe('decade-trivia layout', () => {
         const items = makeItems(count, format).map((item, i) => ({
           ...item,
           // A long prompt is the case that used to collide with the row below.
-          question: i % 2 === 0 ? `${LONG_QUESTION} (${i})` : item.question,
+          question:
+            i % 2 === 0
+              ? format === 'fill-blank'
+                ? `${LONG_QUESTION} The group was called ___. (${i})`
+                : `${LONG_QUESTION} (${i})`
+              : item.question,
         }))
         const groups = run(items, { questionCount: count, format }).filter(
           (o) => o.type === 'group',
@@ -512,6 +535,15 @@ describe('decade-trivia layout', () => {
     expect(layout.fontSize).toBeLessThanOrEqual(MAX_PRINT)
   })
 
+  it('keeps an 8-question page at or above 12pt', () => {
+    const layout = planTriviaPage({
+      items: makeItems(8),
+      area: bodyArea({ questionCount: 8 }),
+      font: FONT,
+    })
+    expect(layout.fontSize).toBeGreaterThanOrEqual(HARD_MIN_PRINT)
+  })
+
   it('locks prompt and option prose with NBSP so Fabric keeps the planned line count', () => {
     // Breakable spaces let Fabric soft-wrap a hard-planned line and stack it on
     // the options below. Locked lines + wrapSafeWidth keep both axes honest.
@@ -559,10 +591,49 @@ describe('decade-trivia layout', () => {
     const items = [
       SAMPLE,
       { ...SAMPLE, question: 'Broken item?', answer: 'Not an option' },
-      { ...SAMPLE, question: 'Third item?' },
+      {
+        ...SAMPLE,
+        question: 'Third item?',
+        options: ['Foo', 'Bar', 'Baz', 'Qux'],
+        answer: 'Foo',
+      },
     ]
     const groups = run(items).filter((o) => o.type === 'group')
     expect(groups).toHaveLength(2)
+  })
+
+  it('drops multiple-choice items that do not have exactly four unique options', () => {
+    const items = [
+      SAMPLE,
+      {
+        ...SAMPLE,
+        question: 'Only three options?',
+        options: ['The Twist', 'The Charleston', 'The Jitterbug'],
+      },
+    ]
+    expect(run(items).filter((o) => o.type === 'group')).toHaveLength(1)
+  })
+
+  it('drops duplicate answers on the same page', () => {
+    const items = [
+      SAMPLE,
+      { ...SAMPLE, question: 'A different prompt with the same answer?' },
+    ]
+    expect(run(items).filter((o) => o.type === 'group')).toHaveLength(1)
+  })
+
+  it('drops a fill-blank that never marked a blank', () => {
+    const items: TriviaItem[] = [
+      {
+        question: 'Which drink came in a glass bottle?',
+        answer: 'Cola',
+        topic: 'food',
+        format: 'fill-blank',
+      },
+    ]
+    expect(run(items, { format: 'fill-blank' }).filter((o) => o.type === 'group')).toHaveLength(
+      0,
+    )
   })
 
   it('never crashes when remoteData is missing', () => {
@@ -580,6 +651,23 @@ describe('decade-trivia answer key', () => {
     for (const answer of harvestAnswers(objects)) {
       expect(answer.visible).toBe(false)
     }
+  })
+
+  it('prints the same questions and option order on the solution page', () => {
+    const items = makeItems(5).map((item, i) => ({
+      ...item,
+      options: [`Right ${i}`, `W1 ${i}`, `W2 ${i}`, `W3 ${i}`],
+      answer: `Right ${i}`,
+    }))
+    const puzzle = run(items)
+    const key = buildAnswerPage(puzzle, STUDIO_ANSWER_INK_MONO)
+    const puzzleCopy = flattenAbsolute(puzzle)
+      .filter((o) => o.studioRole === 'prompt' && typeof o.text === 'string')
+      .map((o) => String(o.text).replace(/\u00a0/g, ' '))
+    const keyCopy = flattenAbsolute(key)
+      .filter((o) => o.studioRole === 'prompt' && typeof o.text === 'string')
+      .map((o) => String(o.text).replace(/\u00a0/g, ' '))
+    expect(keyCopy).toEqual(puzzleCopy)
   })
 
   it('rings exactly one option per question on the solution page', () => {
@@ -665,6 +753,13 @@ describe('decade-trivia config', () => {
     expect(
       validateDecadeTriviaConfig({ customTopic: true, customTopicText: '  ' })?.field,
     ).toBe('customTopicText')
+  })
+
+  it('normalizes custom decades to a YYYYYs label', () => {
+    expect(normalizeDecadeLabel('2010')).toBe('2010s')
+    expect(normalizeDecadeLabel('2014')).toBe('2010s')
+    expect(normalizeDecadeLabel('the 2010s')).toBe('2010s')
+    expect(normalizeDecadeLabel('1940s')).toBe('1940s')
   })
 
   it('warns when more topics are ticked than there are questions', () => {

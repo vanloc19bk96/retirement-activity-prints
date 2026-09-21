@@ -44,10 +44,7 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'maze',
   'follow-the-route',
   'word-ladder',
-  // Card Games Pack — the whole pack is black-and-white interior by design (§2.1).
-  'card-sums',
-  'next-card',
-  // Procedural non-card worksheets — black-and-white interior by design.
+  // Procedural worksheets — black-and-white interior by design.
   'word-fit',
 ])
 
