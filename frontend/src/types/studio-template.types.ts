@@ -24,8 +24,6 @@ export type StudioCategory =
   | 'spatial'
   /** Life story, nostalgia and open-ended writing. */
   | 'reminiscence'
-  /** Logs and planners the reader fills in over time. */
-  | 'tracker'
 
 export type StudioRole = 'prompt' | 'answer' | 'key' | 'decoration' | 'structure'
 
@@ -254,14 +252,14 @@ export interface StudioTemplateDefinition {
   /** Custom canvas-edit tip; used when `showsCanvasEditHint` is true. */
   canvasEditHint?: string
   /**
-   * Fixed default for Page title text (e.g. trackers).
+   * Fixed default for Page title text (e.g. cryptogram).
    * When set, the form uses this instead of auto “Game N”, until the user edits.
    */
   defaultPageTitle?: string
   /**
-   * Blank / fixed forms whose layout does not change with seed (e.g. trackers).
-   * Book and bulk runs skip content-fingerprint uniqueness so the same log page
-   * can appear more than once — retries cannot invent a different sheet.
+   * Blank / fixed forms whose layout does not change with seed.
+   * Book and bulk runs skip content-fingerprint uniqueness so the same sheet
+   * can appear more than once — retries cannot invent a different page.
    */
   seedInvariant?: boolean
   thumbnail: string

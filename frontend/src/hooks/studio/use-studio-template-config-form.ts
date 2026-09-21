@@ -30,7 +30,6 @@ const CONTENT_PHASE_LABEL: Record<StudioCategory, string> = {
   word: 'Picking the words…',
   spatial: 'Sketching the puzzle…',
   reminiscence: 'Writing your prompts…',
-  tracker: 'Setting up your pages…',
 }
 
 export function useStudioTemplateConfigForm(template: StudioTemplateDefinition) {
@@ -135,7 +134,7 @@ export function useStudioTemplateConfigForm(template: StudioTemplateDefinition) 
 
   const resolveTitleForGenerate = (): string => {
     if (!showTitle) return ''
-    // Fixed-title templates (trackers) keep their default until the user edits.
+    // Fixed-title templates keep their default until the user edits.
     if (fixedPageTitle && !isTitleCustomized) return fixedPageTitle
     if (!isTitleCustomized) {
       return nextStudioGameTitle(canvasStateStore, interiorPageCount)

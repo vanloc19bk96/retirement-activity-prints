@@ -1,5 +1,5 @@
 export const STARTER_PLAN_FEATURES = [
-  '16 ready-to-use Studio games, covering all 5 categories: logic, word, spatial, reminiscence and trackers',
+  '9 ready-to-use Studio games, covering all 4 categories: logic, word, spatial, and reminiscence',
   'Canva-style drag-and-drop canvas: add and reposition images, text, and shapes',
   'WYSIWYG: what you see in the app is exactly what you get',
   'Export as JPG, 300 DPI PNG, or PDF',

@@ -28,7 +28,7 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ## Shared concepts across all games
 
-- **Category** — one of 5 buyer-facing groups (tab order below).
+- **Category** — one of 4 buyer-facing groups (tab order below).
 - **Page count** — currently `1` (a single puzzle page). Answer keys add a
   separate solution page when the game produces one.
 - **Answer key** — when a game "produces an answer key," a solution page is
@@ -54,8 +54,6 @@ options it exposes* — not the implementation. Source of truth in code:
 - **Canvas-edit hint** — a few games group their output so the editor shows a
   tip ("ungroup the grid, then add from Components") if the user wants to
   hand-edit individual cells after generation. Marked **Canvas-edit hint** below.
-- **Fixed title games (trackers)** — logs/trackers default their page title to
-  a fixed label (e.g. "Puzzle Log") instead of auto-numbering "Game N".
 
 ## Category taxonomy
 
@@ -64,8 +62,7 @@ options it exposes* — not the implementation. Source of truth in code:
 | `logic` | Logic | Deduction, number and pattern puzzles with one right answer. |
 | `word` | Word | Words and language. |
 | `spatial` | Spatial | Visual-spatial reasoning and drawing. |
-| `reminiscence` | Reminiscence | Life story, nostalgia and open-ended writing. |
-| `tracker` | Trackers | Logs and planners the reader fills in over time. |
+| `reminiscence` | Reminiscence | Nostalgia trivia and era-based recall. |
 
 ---
 
@@ -180,49 +177,13 @@ Pages: 1 · Answer key: no (model doubles as key) · AI content: no
 
 ---
 
-## Reminiscence (5 games)
+## Reminiscence (1 game)
 
 ### Decade Trivia (`decade-trivia`)
 Large-print nostalgia trivia on music, TV, films, products, and everyday
 life. Pick a decade or type your own. Questions are AI-written and
 fact-checked — spot-check before publishing.
 Pages: 1 · Answer key: yes · AI content: yes
-
-### Title Complete (`title-complete`)
-Fill in the missing words of famous song, film, and TV titles from memory.
-Pick a category and era, or type your own. Titles only (never lyrics), so
-the book stays independent of any artist or studio.
-Pages: 1 · Answer key: yes · AI content: yes
-
-### Family Names (`family-names`)
-A large-print keepsake table to write family members’ labels, first names,
-last names, and ages. Choose how many blank rows fit the page.
-Pages: 1 · Answer key: no (fill-in roster) · AI content: no
-
-### Life Timeline (`life-timeline`)
-A guided keepsake for writing down a life story, stage by stage. Warm,
-open-ended prompts with plenty of room to write.
-Pages: 1 · Answer key: no (open-ended writing) · AI content: yes
-
-### Memory Journal Prompt (`memory-journal-prompt`)
-One open-ended prompt with a full page to answer it. Prompts are generated
-fresh, so a long journal never repeats itself. Large print for handwriting.
-Pages: 1 · Answer key: no (open-ended writing) · AI content: yes
-
----
-
-## Trackers (2 games)
-
-### Spaced Repetition Log (`spaced-repetition-log`)
-A review tracker built on spaced repetition. Write down what you want to
-remember, then tick off each review on a schedule that moves it into
-long-term memory.
-Pages: 1 · Answer key: no · AI content: no · Fixed default title
-
-### Puzzle Log (`brain-training-tracker`)
-A log for the puzzles you finish: the date, the page, whether you completed
-it, and room for a note. Large print with plenty of writing space.
-Pages: 1 · Answer key: no · AI content: no · Fixed default title (key: `brain-training-tracker`)
 
 ---
 
@@ -247,15 +208,9 @@ Pages: 1 · Answer key: no · AI content: no · Fixed default title (key: `brain
 | shape-rotation-match | Shape Rotation Match | spatial | 1 | yes | no |
 | grid-copy | Grid Copy | spatial | 1 | – | no |
 | decade-trivia | Decade Trivia | reminiscence | 1 | yes | yes |
-| title-complete | Title Complete | reminiscence | 1 | yes | yes |
-| family-names | Family Names | reminiscence | 1 | – | no |
-| life-timeline | Life Timeline | reminiscence | 1 | – | yes |
-| memory-journal-prompt | Memory Journal Prompt | reminiscence | 1 | – | yes |
-| spaced-repetition-log | Spaced Repetition Log | tracker | 1 | – | no |
-| brain-training-tracker | Puzzle Log | tracker | 1 | – | no |
 
 *"Answer key = –" means the game is self-checking (an open-ended prompt,
 or a model that doubles as its own key) rather than producing a separate
 solution page.*
 
-**Total: 23 games** (1 logic · 9 word · 6 spatial · 5 reminiscence · 2 tracker).
+**Total: 17 games** (1 logic · 9 word · 6 spatial · 1 reminiscence).

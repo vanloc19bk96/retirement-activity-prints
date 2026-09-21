@@ -21,8 +21,6 @@ from app.api.routes.studio_first_letter_recall import (
 from app.api.routes.studio_anagram import router as studio_anagram_router
 from app.api.routes.studio_missing_vowels import router as studio_missing_vowels_router
 from app.api.routes.studio_decade_trivia import router as studio_decade_trivia_router
-from app.api.routes.studio_life_timeline import router as studio_life_timeline_router
-from app.api.routes.studio_title_complete import router as studio_title_complete_router
 from app.api.routes.studio_cryptogram import router as studio_cryptogram_router
 from app.api.routes.studio_retirement_anagram import (
     router as studio_retirement_anagram_router,
@@ -55,8 +53,6 @@ router.include_router(studio_first_letter_recall_router)
 router.include_router(studio_anagram_router)
 router.include_router(studio_missing_vowels_router)
 router.include_router(studio_decade_trivia_router)
-router.include_router(studio_life_timeline_router)
-router.include_router(studio_title_complete_router)
 router.include_router(studio_cryptogram_router)
 router.include_router(studio_retirement_anagram_router)
 router.include_router(studio_theme_words_router)

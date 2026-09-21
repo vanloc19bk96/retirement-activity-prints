@@ -25,7 +25,6 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'shape-rotation-match',
   'mirror-draw',
   'decade-trivia',
-  'title-complete',
   'category-fluency',
   'first-letter-recall',
   'paper-folding',

@@ -142,7 +142,7 @@ export interface StudioFabricObject {
 
 export type StudioCategory =
   | 'memory' | 'logic' | 'word'
-  | 'spatial' | 'reminiscence' | 'tracker'
+  | 'spatial' | 'reminiscence'
 
 export type StudioRole = 'prompt' | 'answer' | 'key' | 'decoration' | 'structure'
 
@@ -1421,7 +1421,6 @@ export const STUDIO_CATEGORIES: { value: StudioCategoryFilter; label: string }[]
   { value: 'word', label: 'Word' },
   { value: 'spatial', label: 'Spatial' },
   { value: 'reminiscence', label: 'Reminiscence' },
-  { value: 'tracker', label: 'Trackers' },
 ]
 
 // components/panels/studio/StudioCategoryTabs.tsx

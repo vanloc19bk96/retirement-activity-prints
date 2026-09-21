@@ -152,15 +152,6 @@ function shouldOmitFromAnswerPage(obj: StudioFabricObject): boolean {
       return true
     }
   }
-  // Title-complete keys keep the grid; drop prompts, blanks, and letter-count hints.
-  if (obj.studioTemplateKey === 'title-complete') {
-    if (obj.studioRole === 'prompt') return true
-    if (obj.studioRole === 'structure' && isFabricType(obj, 'line')) return true
-    if (obj.studioRole === 'decoration') {
-      const text = String(obj.text ?? '').replace(/\u00a0/g, ' ').trim()
-      if (/^\(\d+\)$/.test(text)) return true
-    }
-  }
   // Category Fluency / First Letter Recall: sample list only — drop banner, write-in lines, score.
   if (
     obj.studioTemplateKey === 'category-fluency' ||

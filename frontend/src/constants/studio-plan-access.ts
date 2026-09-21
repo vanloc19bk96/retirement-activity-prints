@@ -7,7 +7,7 @@
  * - every category is represented, so no tab is ever empty;
  * - the classics that actually sell activity books are in (Word Search,
  *   Crossword, Sudoku, Maze, Cryptogram…);
- * - the mix spans deduction, words, drawing, life story and a log page,
+ * - the mix spans deduction, words, drawing and nostalgia trivia,
  *   which is enough page variety for a full book.
  *
  * Listed in `STUDIO_TEMPLATES` order (grouped by category) so this file reads
@@ -29,12 +29,8 @@ export const STARTER_STUDIO_TEMPLATE_KEYS: readonly string[] = [
   'mirror-draw',
   'shape-rotation-match',
 
-  // Reminiscence (2)
+  // Reminiscence (1)
   'decade-trivia',
-  'memory-journal-prompt',
-
-  // Trackers (1)
-  'brain-training-tracker',
 ]
 
 /** How many templates Starter can use (marketing copy reads this too). */

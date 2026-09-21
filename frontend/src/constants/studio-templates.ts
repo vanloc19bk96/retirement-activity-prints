@@ -27,12 +27,6 @@ import { paperFoldingTemplate } from '@/utils/studio/paper-folding/generate'
 import { mazeTemplate } from '@/utils/studio/maze/generate'
 import { followTheRouteTemplate } from '@/utils/studio/follow-the-route/generate'
 import { decadeTriviaTemplate } from '@/utils/studio/decade-trivia/generate'
-import { lifeTimelineTemplate } from '@/utils/studio/life-timeline/generate'
-import { memoryJournalPromptTemplate } from '@/utils/studio/memory-journal-prompt/generate'
-import { familyNamesTemplate } from '@/utils/studio/family-names/generate'
-import { titleCompleteTemplate } from '@/utils/studio/title-complete/generate'
-import { spacedRepetitionLogTemplate } from '@/utils/studio/spaced-repetition-log/generate'
-import { brainTrainingTrackerTemplate } from '@/utils/studio/brain-training-tracker/generate'
 
 /**
  * Card order in the Studio panel. Grouped by category in the same order as
@@ -64,14 +58,6 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
 
   // Reminiscence
   decadeTriviaTemplate,
-  titleCompleteTemplate,
-  familyNamesTemplate,
-  lifeTimelineTemplate,
-  memoryJournalPromptTemplate,
-
-  // Trackers
-  spacedRepetitionLogTemplate,
-  brainTrainingTrackerTemplate,
 ]
 
 function withCommonFields(def: StudioTemplateDefinition): StudioTemplateDefinition {

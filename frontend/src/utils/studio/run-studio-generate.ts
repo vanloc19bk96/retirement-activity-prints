@@ -137,7 +137,7 @@ export async function runStudioGenerateOnce(options: {
     marginGuide,
   })
 
-  // Fixed blank sheets (trackers) never vary by seed — fingerprint retries
+  // Seed-invariant sheets never vary by seed — fingerprint retries
   // would exhaust and skip every duplicate instance in a book/bulk run.
   const claimed = await claimUniqueStudioOutputs({
     usedSeeds,
