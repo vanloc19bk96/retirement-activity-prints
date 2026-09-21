@@ -1,7 +1,7 @@
 export interface CrosswordCluesRequest {
   /** When set, AI invents answers + clues for this theme. */
   theme?: string
-  /** When set (custom words), AI writes clues for these answers. */
+  /** When set (legacy custom words), AI writes clues for these answers. */
   words?: string[]
   itemCount?: number
   minLetters?: number

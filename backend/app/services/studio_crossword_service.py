@@ -116,29 +116,32 @@ def _build_theme_prompt(req: CrosswordCluesRequest) -> str:
     theme = req.theme.strip()
     angle = rotate(_angles(), req.seed)
     want = req.item_count + int_value(_limits(), "overRequest")
-    return f"""You create crossword answers and short clues for an adult workbook.
+    return f"""You create crossword answers and short clues for a printable
+retirement activity book aimed at adults and retirees.
 
-Theme: {theme}
-Invent {want} single-word answers about that theme.
-Each word must be {req.min_letters}-{req.max_letters} letters, A–Z only.
+Category/theme: {theme}
+Invent {want} candidate answers about that retirement theme.
+Each answer must be one word or a short two-word phrase.
+Normalize spaces away when counting letters: "Road Trip" → ROADTRIP is
+{req.min_letters}-{req.max_letters} letters, A–Z only (no hyphens or digits).
 Seed for variety: {req.seed}. Lean towards {angle} where it suits the theme.
 {_difficulty_line(req.difficulty)}
 
 Rules:
-- One word per entry: no spaces, hyphens, accents, digits, or punctuation.
-- Count the letters before writing; a word outside {req.min_letters}-{req.max_letters}
-  is discarded.
-- Everyday vocabulary an older adult would recognise.
-- No brand names, no proper nouns, no duplicates / same-root plurals.
-- Clue is 2–10 words. No quotation marks around the whole clue.
-- The clue must not contain the answer word or any stem of it — a solver who
-  already sees the answer has nothing to solve.
-- Exactly one answer must fit the clue. Avoid clues that several words satisfy.
-- Wholesome and neutral. No violence, politics, brands, or adult content.
+- Clearly related to retirement / the theme — not generic filler vocabulary.
+- Everyday English an older adult would recognise.
+- No brand names, celebrities, franchises, song/movie/book titles, sports teams,
+  slogans, politics, medical claims, or adult content.
+- Positive, respectful tone — never age stereotypes (frail, senile, useless).
+- Distinct answers — avoid near-duplicates (TRAVEL / TRAVELING).
+- Clue is 2–10 words, concise for a printed clue list.
+- The clue must not contain the answer or an obvious stem (travel/traveler).
+- Exactly one intended answer; avoid ambiguous multi-answer clues.
 {_locale_line(req.locale)}
 
-Write about {want} entries in "clues", "word" uppercase, e.g.
-{{ "word": "TIGER", "clue": "Big striped cat" }}
+Write about {want} entries in "clues". Put the display phrase in "word"
+(e.g. "Road Trip" or "GARDEN"), and a fair clue, e.g.
+{{ "word": "Road Trip", "clue": "A vacation taken by car" }}
 """
 
 
@@ -193,7 +196,7 @@ def _parse_pair_items(
     for item in raw_clues:
         if not isinstance(item, dict):
             continue
-        word = _normalize_word(str(item.get("word", "")))
+        word = _normalize_word(str(item.get("word", "") or item.get("answer", "")))
         clue = str(item.get("clue", "")).strip()
         if not _word_re().match(word):
             continue

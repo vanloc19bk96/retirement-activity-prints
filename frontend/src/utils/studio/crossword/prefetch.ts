@@ -5,129 +5,113 @@ import {
   studioVarietyKey,
 } from '../studio-variety'
 import type { StudioConfig } from '@/types/studio-template.types'
-import { createRng } from '../studio-rng'
 import {
-  crosswordThemeLabel,
-  isCustomAiTheme,
-  isCustomWords,
-  letterBoundsForDifficulty,
-  lengthHintClue,
-  mergeClues,
-  parseDifficulty,
-  parseWordCount,
+  aiThemeLabel,
   candidatePoolSize,
-  resolveCustomThemeText,
-  resolveWordsAndClues,
-  sanitizeCustomPairs,
-} from './words'
+  clueMaxChars,
+  letterBoundsForDifficulty,
+  parseAnswerCount,
+  parsePrintStyle,
+  parseRetirementDifficulty,
+  resolveAiThemePrompt,
+  toApiDifficulty,
+} from './config'
+import {
+  filterUnsafeThemeCopy,
+  isValidClueText,
+  normalizeAnswerDisplay,
+} from './content-quality'
+import { selectCrosswordCandidates } from './candidate-selector'
 import type { CrosswordPair } from './types'
+
+export const CROSSWORD_AI_EMPTY_MESSAGE =
+  "We couldn't create enough high-quality crossword content for this theme. Try again or choose a broader retirement theme."
+
+const MAX_AI_ATTEMPTS = 3
 
 function pairsFromAiClues(
   items: { word: string; clue: string }[],
+  options: { minLetters: number; maxLetters: number; maxClueChars: number },
 ): CrosswordPair[] {
   const seen = new Set<string>()
   const out: CrosswordPair[] = []
   for (const item of items) {
-    const word = item.word.toUpperCase().replace(/[^A-Z]/g, '')
+    const normalized = normalizeAnswerDisplay(item.word)
+    if (!normalized) continue
+    const { token } = normalized
+    if (token.length < options.minLetters || token.length > options.maxLetters) continue
+    if (seen.has(token)) continue
     const clue = String(item.clue ?? '').trim()
-    if (word.length < 3 || word.length > 12 || !clue) continue
-    if (seen.has(word)) continue
-    if (clue.toUpperCase().includes(word)) continue
-    seen.add(word)
-    out.push({ word, clue })
+    if (!isValidClueText(clue, token, options.maxClueChars)) continue
+    seen.add(token)
+    out.push({ word: token, clue })
   }
   return out
 }
 
-function resolveThemePhrase(config: StudioConfig): string {
-  if (isCustomAiTheme(config)) {
-    return resolveCustomThemeText(config) || 'everyday objects'
-  }
-  const key = String(config.theme ?? 'animals')
-  return crosswordThemeLabel(key)
-}
-
 /**
- * Always ask AI for crossword content:
- * - theme modes → words + clues in one call
- * - custom words → clues for the typed answers (keeps user-supplied clues)
- * Bundled theme lists are offline fallback only.
+ * AI-only prefetch — no bundled theme fallback, no length-hint clues.
+ * Retries up to 3 times with avoid lists, then fails visibly.
  */
 export async function crosswordPrefetch(
   config: StudioConfig,
   signal: AbortSignal,
 ): Promise<CrosswordPair[]> {
   const seed = Number(config.seed ?? 1)
-  const rng = createRng(seed)
-  const difficulty = parseDifficulty(config.difficulty)
+  const difficulty = parseRetirementDifficulty(config.difficulty)
+  const printStyle = parsePrintStyle(config.printStyle)
   const bounds = letterBoundsForDifficulty(difficulty)
-  const wordCount = parseWordCount(config.wordCount)
+  const targetCount = parseAnswerCount(config.answerCount ?? config.wordCount, difficulty, printStyle)
+  const poolSize = candidatePoolSize(targetCount)
+  const maxClueChars = clueMaxChars(difficulty)
 
-  if (isCustomWords(config)) {
-    const custom = sanitizeCustomPairs(config.words)
-    if (custom.length === 0) return custom
+  const themeRaw = resolveAiThemePrompt(config)
+  const theme = filterUnsafeThemeCopy(themeRaw) ?? themeRaw
+  const label = aiThemeLabel(config) || theme
+  const varietyKey = studioVarietyKey('crossword', label, difficulty)
 
-    const needsAi = custom.some((p) => !p.clue)
-    if (!needsAi) {
-      return custom.map((p) => ({ word: p.word, clue: p.clue }))
-    }
+  const rejected: string[] = []
+  let lastError: unknown
 
+  for (let attempt = 0; attempt < MAX_AI_ATTEMPTS; attempt++) {
     try {
       const response = await generateCrosswordClues(
         {
-          words: custom.map((p) => p.word),
-          difficulty,
-          seed,
+          theme,
+          itemCount: poolSize,
+          minLetters: bounds.min,
+          maxLetters: bounds.max,
+          difficulty: toApiDifficulty(difficulty),
+          seed: seed + attempt * 97,
+          avoid: [...studioAvoidList(varietyKey), ...rejected],
         },
         signal,
       )
-      const merged = mergeClues(custom, response.clues)
-      return merged.map((p) => ({
-        word: p.word,
-        clue: p.clue || lengthHintClue(p.word),
-      }))
+      const pairs = selectCrosswordCandidates(
+        pairsFromAiClues(response.clues, {
+          minLetters: bounds.min,
+          maxLetters: bounds.max,
+          maxClueChars,
+        }),
+        targetCount,
+      )
+      if (pairs.length >= Math.max(4, Math.ceil(targetCount * 0.75))) {
+        rememberStudioContent(
+          varietyKey,
+          pairs.map((pair) => pair.word),
+        )
+        return pairs
+      }
+      rejected.push(...pairs.map((p) => p.word))
     } catch (error) {
       if (signal.aborted) throw error
-      console.warn('[crossword] AI clues failed; using typed/length-hint clues', error)
-      return custom.map((p) => ({
-        word: p.word,
-        clue: p.clue || lengthHintClue(p.word),
-      }))
+      lastError = error
+      console.warn(`[crossword] AI attempt ${attempt + 1} failed`, error)
     }
   }
 
-  // Only theme mode can repeat itself; custom words are the author's own.
-  const themePhrase = resolveThemePhrase(config)
-  const varietyKey = studioVarietyKey('crossword', themePhrase, difficulty)
-
-  try {
-    const response = await generateCrosswordClues(
-      {
-        theme: themePhrase,
-        itemCount: candidatePoolSize(wordCount),
-        minLetters: bounds.min,
-        maxLetters: bounds.max,
-        difficulty,
-        seed,
-        avoid: studioAvoidList(varietyKey),
-      },
-      signal,
-    )
-    const pairs = pairsFromAiClues(response.clues).slice(0, candidatePoolSize(wordCount))
-    if (pairs.length >= 4) {
-      rememberStudioContent(
-        varietyKey,
-        pairs.map((pair) => pair.word),
-      )
-      return pairs
-    }
-  } catch (error) {
-    if (signal.aborted) throw error
-    console.warn('[crossword] AI theme content failed; using bundled theme', error)
+  if (lastError instanceof Error && lastError.message.trim()) {
+    throw new Error(lastError.message.trim())
   }
-
-  return resolveWordsAndClues(
-    { ...config, customTheme: false, source: 'theme' },
-    rng,
-  )
+  throw new Error(CROSSWORD_AI_EMPTY_MESSAGE)
 }

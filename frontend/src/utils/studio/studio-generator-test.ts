@@ -105,6 +105,8 @@ export function runGeneratorContractTests(
     /** Fixed-layout templates (no RNG) skip seed-variance. Default true. */
     expectSeedVariance?: boolean
     configOverrides?: Record<string, unknown>
+    /** Extra generate-context fields (e.g. AI `remoteData` fixtures). */
+    contextOverrides?: Partial<StudioGenerateContext>
   },
 ): void {
   const expectAnswers = options?.expectAnswers ?? template.producesAnswerKey
@@ -115,17 +117,21 @@ export function runGeneratorContractTests(
     fontFamily: 'PT Serif',
     ...options?.configOverrides,
   }
+  const ctx: StudioGenerateContext = {
+    ...STUDIO_TEST_CTX,
+    ...options?.contextOverrides,
+  }
 
   describe(template.key, () => {
     it('is deterministic for a given seed', () => {
       clearStudioRecentContent()
       resetObjectCounter()
-      const a = template.generate(config, STUDIO_TEST_CTX)
+      const a = template.generate(config, ctx)
       // Templates that record variety (AI avoid-lists, magic-square banks) must
       // start each draw from a clean ledger or the second call avoids the first.
       clearStudioRecentContent()
       resetObjectCounter()
-      const b = template.generate(config, STUDIO_TEST_CTX)
+      const b = template.generate(config, ctx)
       expect(a).toEqual(b)
     })
 
@@ -133,11 +139,11 @@ export function runGeneratorContractTests(
       it('produces different output for a different seed', () => {
         clearStudioRecentContent()
         resetObjectCounter()
-        const a = JSON.stringify(template.generate(config, STUDIO_TEST_CTX))
+        const a = JSON.stringify(template.generate(config, ctx))
         clearStudioRecentContent()
         resetObjectCounter()
         const b = JSON.stringify(
-          template.generate({ ...config, seed: 7 }, { ...STUDIO_TEST_CTX, seed: 7 }),
+          template.generate({ ...config, seed: 7 }, { ...ctx, seed: 7 }),
         )
         expect(a).not.toEqual(b)
       })
@@ -145,11 +151,11 @@ export function runGeneratorContractTests(
       it('is seed-invariant (fixed layout)', () => {
         clearStudioRecentContent()
         resetObjectCounter()
-        const a = JSON.stringify(template.generate(config, STUDIO_TEST_CTX))
+        const a = JSON.stringify(template.generate(config, ctx))
         clearStudioRecentContent()
         resetObjectCounter()
         const b = JSON.stringify(
-          template.generate({ ...config, seed: 7 }, { ...STUDIO_TEST_CTX, seed: 7 }),
+          template.generate({ ...config, seed: 7 }, { ...ctx, seed: 7 }),
         )
         expect(a).toEqual(b)
       })
@@ -157,19 +163,19 @@ export function runGeneratorContractTests(
 
     it('keeps every object inside the safe margin', () => {
       resetObjectCounter()
-      const pages = template.generate(config, STUDIO_TEST_CTX)
+      const pages = template.generate(config, ctx)
       for (const page of pages) {
-        assertObjectsInSafeMargin(page.objects)
+        assertObjectsInSafeMargin(page.objects, ctx)
       }
     })
 
     it('tags every object with the template key and instance id', () => {
       resetObjectCounter()
-      const pages = template.generate(config, STUDIO_TEST_CTX)
+      const pages = template.generate(config, ctx)
       for (const page of pages) {
         for (const o of page.objects) {
           expect(o.studioTemplateKey).toBe(template.key)
-          expect(o.studioInstanceId).toBe('test-run')
+          expect(o.studioInstanceId).toBe(ctx.instanceId)
         }
       }
     })
@@ -177,7 +183,7 @@ export function runGeneratorContractTests(
     if (expectAnswers) {
       it('emits hidden answer objects', () => {
         resetObjectCounter()
-        const pages = template.generate(config, STUDIO_TEST_CTX)
+        const pages = template.generate(config, ctx)
         const answers = pages.flatMap((p) => harvestAnswers(p.objects))
         expect(answers.length).toBeGreaterThan(0)
         expect(answers.every((o) => o.visible === false)).toBe(true)

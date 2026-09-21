@@ -1,27 +1,27 @@
 {
-  "_comment": "Crossword clue-generation content. varietyAngles are rotated by seed so two users on the same theme get different word sets.",
+  "_comment": "Retirement Crossword clue-generation. varietyAngles rotate by seed so two users on the same theme get different word sets.",
   "limits": {
-    "overRequest": 4,
+    "overRequest": 8,
     "rateLimitPerWindow": 60,
-    "minWordLetters": 3,
+    "minWordLetters": 4,
     "maxWordLetters": 12
   },
   "locale": {
     "nativeLocales": ["en"],
-    "nativeLine": "- Write in clear English.",
+    "nativeLine": "- Write in clear English for adults and retirees.",
     "otherLine": "- Write clues in language locale '{locale}'."
   },
-  "difficultyLine": "Difficulty '{difficulty}': easy = short common words + straightforward clues; medium = everyday words + lightly playful clues; hard = longer/trickier words + harder wording, still fair.",
+  "difficultyLine": "Difficulty '{difficulty}': easy/relaxed = shorter common words (4–8 letters) + direct clues; medium/classic = everyday words (4–10) + clear descriptive clues; hard/challenge = longer words (5–12) + moderately indirect but fair clues — never obscure trivia.",
   "varietyAngles": [
-    "things you can hold in one hand",
-    "things found outdoors",
-    "things used in the morning",
-    "older or traditional examples",
-    "things that make a sound",
-    "things you might give as a gift",
-    "things seen in a kitchen",
-    "things linked to a season",
-    "things a child would name first",
-    "less obvious examples"
+    "everyday retirement hobbies",
+    "travel and getaways",
+    "home and garden",
+    "friends and family gatherings",
+    "career memories without brand names",
+    "relaxed weekend pastimes",
+    "nature walks and outdoors",
+    "cooking and kitchen leisure",
+    "creative arts and crafts",
+    "positive new-chapter moments"
   ]
 }

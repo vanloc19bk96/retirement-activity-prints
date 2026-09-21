@@ -55,17 +55,20 @@ function fitClueFontSize(
   down: CrosswordEntry[],
   colWidth: number,
   listHeight: number,
+  minFontSize: number,
 ): number {
-  if (listHeight < 16) return 10
+  const floor = Math.max(8, Math.min(14, Math.round(minFontSize)))
+  if (listHeight < 16) return floor
   const all = [...across, ...down]
-  if (all.length === 0) return 12
+  if (all.length === 0) return Math.max(floor, 12)
 
-  for (let fontSize = Math.min(16, STUDIO_BODY_SIZE - 8); fontSize >= 8; fontSize -= 1) {
+  for (let fontSize = Math.min(16, STUDIO_BODY_SIZE - 8); fontSize >= floor; fontSize -= 1) {
     const acrossFits = columnFits(across, fontSize, colWidth, listHeight)
     const downFits = columnFits(down, fontSize, colWidth, listHeight)
     if (acrossFits && downFits) return fontSize
   }
-  return 8
+  // Prefer the large-print floor over shrinking further (spec §46).
+  return floor
 }
 
 function columnFits(
@@ -199,6 +202,7 @@ export function drawClueLists(
   area: Box,
   font: string,
   tag: StudioTag,
+  minFontSize = 8,
 ): StudioFabricObject | null {
   const across = entries
     .filter((e) => e.dir === 'across')
@@ -212,7 +216,13 @@ export function drawClueLists(
   const listHeight = Math.max(0, padded.height - titleSize - 8 - CLUE_GROUP_PAD)
 
   const provisionalColW = Math.max(40, (padded.width - COL_GUTTER) / 2)
-  const fontSize = fitClueFontSize(across, down, provisionalColW, listHeight)
+  const fontSize = fitClueFontSize(
+    across,
+    down,
+    provisionalColW,
+    listHeight,
+    minFontSize,
+  )
 
   const acrossW = maxClueWidth(across, fontSize, provisionalColW)
   const downW = maxClueWidth(down, fontSize, provisionalColW)

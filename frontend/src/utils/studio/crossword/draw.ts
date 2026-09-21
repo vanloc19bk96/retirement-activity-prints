@@ -171,8 +171,18 @@ export function drawCrosswordPuzzle(options: {
   tag: StudioTag
   /** Solution page: filled grid only, optically centered in the body. */
   forAnswerKey?: boolean
+  /** Large-print floor is 12 pt (spec §46); standard may go lower. */
+  minClueFontSize?: number
 }): CrosswordDrawnPuzzle {
-  const { field, built, entries, font, tag, forAnswerKey = false } = options
+  const {
+    field,
+    built,
+    entries,
+    font,
+    tag,
+    forAnswerKey = false,
+    minClueFontSize = 8,
+  } = options
 
   if (forAnswerKey) {
     const grid = drawLetterGrid(built, entries, field, font, tag, 'center')
@@ -199,7 +209,7 @@ export function drawCrosswordPuzzle(options: {
   }
 
   const grid = drawLetterGrid(built, entries, gridArea, font, tag, 'top')
-  const clues = drawClueLists(entries, clueArea, font, tag)
+  const clues = drawClueLists(entries, clueArea, font, tag, minClueFontSize)
   return {
     grid,
     clues,

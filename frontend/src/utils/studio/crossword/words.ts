@@ -216,7 +216,6 @@ export function customThemeTitle(config: StudioConfig): string {
 }
 
 export { CUSTOM_THEME_MAX_LENGTH }
-
 function lengthScore(word: string, difficulty: CrosswordDifficulty): number {
   const len = word.length
   if (difficulty === 'easy') {
@@ -294,3 +293,4 @@ export function mergeClues(
     return { word: p.word, clue: ai }
   })
 }
+

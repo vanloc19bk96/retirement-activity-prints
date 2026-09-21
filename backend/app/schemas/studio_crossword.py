@@ -14,8 +14,8 @@ class CrosswordCluesRequest(StudioVarietyRequest):
 
     words: List[str] = Field(default_factory=list, max_length=40)
     theme: str = Field(default="", max_length=120)
-    item_count: int = Field(default=14, ge=4, le=24, alias="itemCount")
-    min_letters: int = Field(default=3, ge=3, le=12, alias="minLetters")
+    item_count: int = Field(default=24, ge=4, le=40, alias="itemCount")
+    min_letters: int = Field(default=4, ge=3, le=12, alias="minLetters")
     max_letters: int = Field(default=12, ge=3, le=12, alias="maxLetters")
     difficulty: Literal["easy", "medium", "hard"] = "medium"
     seed: int = Field(default=1, ge=0)

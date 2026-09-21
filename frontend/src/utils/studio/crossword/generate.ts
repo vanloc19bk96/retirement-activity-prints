@@ -3,7 +3,6 @@ import type {
   StudioConfig,
   StudioGenerateContext,
   StudioPageOutput,
-  StudioConfigValidationError,
   StudioFabricObject,
 } from '@/types/studio-template.types'
 import { createRng, type StudioRng } from '../studio-rng'
@@ -13,24 +12,24 @@ import { STUDIO_CONTENT_SAFE_INSET_X, STUDIO_BODY_SIZE, STUDIO_DIGIT_FONT } from
 import { kickOffFontFamilyLoading } from '@/utils/font-loader'
 import { buildCrossword, maxGridForPlaceCount, numberEntries } from './construct'
 import {
-  resolveWordsAndClues,
-  sanitizeCustomPairs,
-  validateCustomWordLines,
-  rawCustomWordLines,
-  crosswordThemeLabel,
-  isCustomWords,
-  isCustomAiTheme,
-  customThemeTitle,
-  resolveCustomThemeText,
-  CUSTOM_THEME_MAX_LENGTH,
-  parseWordCount,
-  packingBudget,
-  CROSSWORD_WORD_COUNT_DEFAULT,
-  CROSSWORD_WORD_COUNT_MAX,
-  CROSSWORD_WORD_COUNT_MIN,
-} from './words'
+  AI_THEME_MAX_LENGTH,
+  aiThemeLabel,
+  answerCountSelectOptions,
+  buildInstruction,
+  categorySelectOptions,
+  minimumPublishCount,
+  parseAnswerCount,
+  parsePrintStyle,
+  parseRetirementDifficulty,
+  parseWriteOwnTheme,
+  themeSelectOptions,
+  validateRetirementCrosswordConfig,
+} from './config'
+import { themeIpWarning } from './content-quality'
+import { selectCrosswordCandidates } from './candidate-selector'
 import { drawCrosswordPuzzle } from './draw'
-import { crosswordPrefetch } from './prefetch'
+import { crosswordPrefetch, CROSSWORD_AI_EMPTY_MESSAGE } from './prefetch'
+import { parseRetirementCategory } from '../retirement-word-search/retirement-themes'
 import type { CrosswordBuild, CrosswordEntry, CrosswordPair } from './types'
 
 export {
@@ -45,11 +44,22 @@ export {
 } from './construct'
 export type { CrosswordEntry, CrosswordBuild, CrosswordPair, CrosswordDir } from './types'
 export {
+  packingBudget,
+  parseRetirementDifficulty,
+  parsePrintStyle,
+  parseAnswerCount,
+  letterBoundsForDifficulty,
+  candidatePoolSize,
+  aiThemeLabel,
+  resolveAiThemePrompt,
+  validateRetirementCrosswordConfig,
+} from './config'
+/** Kept for word-fit and legacy imports. */
+export {
   resolveWordsAndClues,
   mergeClues,
   sanitizeCustomPairs,
   validateCustomWordLines,
-  packingBudget,
   loadThemeEntries,
   listCrosswordThemeMeta,
   crosswordThemeLabel,
@@ -59,124 +69,69 @@ export {
   resolveCustomThemeText,
 } from './words'
 
-const INSTRUCTION =
-  'Fill in the grid by solving the clues. Across answers read left to right; ' +
-  'Down answers read top to bottom. Shared letters help you check your answers'
-
 function withThemeTitle(config: StudioConfig): StudioConfig {
   if (String(config.title ?? '').trim()) return config
-  if (isCustomWords(config)) return config
-  if (isCustomAiTheme(config)) {
-    const label = customThemeTitle(config)
-    return label ? { ...config, title: label } : config
-  }
-  return { ...config, title: crosswordThemeLabel(String(config.theme ?? 'animals')) }
+  const label = aiThemeLabel(config)
+  return label ? { ...config, title: label } : config
 }
 
 function resolvePairs(config: StudioConfig, ctx: StudioGenerateContext): CrosswordPair[] {
   const remote = ctx.remoteData as CrosswordPair[] | undefined
-  if (remote?.length) return remote
-  return resolveWordsAndClues(config, createRng(ctx.seed))
+  if (!remote?.length) {
+    throw new Error(CROSSWORD_AI_EMPTY_MESSAGE)
+  }
+  const difficulty = parseRetirementDifficulty(config.difficulty)
+  const printStyle = parsePrintStyle(config.printStyle)
+  const target = parseAnswerCount(
+    config.answerCount ?? config.wordCount,
+    difficulty,
+    printStyle,
+  )
+  return selectCrosswordCandidates(remote, target)
 }
 
-function requestedPlaceCount(config: StudioConfig, pairs: CrosswordPair[]): number {
-  if (isCustomWords(config)) return pairs.length
-  return parseWordCount(config.wordCount)
-}
-
-/** Prefer the requested count; theme mode may soften as a last resort. */
 function buildCrosswordWithFallback(
   pairs: CrosswordPair[],
   rng: StudioRng,
   placeCount: number,
-  options?: { requireExact?: boolean },
+  minAcceptable: number,
 ): ReturnType<typeof buildCrossword> {
-  const requireExact = options?.requireExact === true
   const maxSize = maxGridForPlaceCount(placeCount)
   let best: ReturnType<typeof buildCrossword> = null
-  // Custom lists have no substitute pool — spend more rng passes to place every word.
-  const exactAttempts = requireExact ? 12 : 3
 
-  for (let attempt = 0; attempt < exactAttempts; attempt++) {
+  for (let attempt = 0; attempt < 6; attempt++) {
     const built = buildCrossword(pairs, maxSize, rng, placeCount)
     if (!built) continue
     if (built.entries.length >= placeCount) return built
     if (!best || built.entries.length > best.entries.length) best = built
   }
 
-  if (requireExact) {
-    return best && best.entries.length >= placeCount ? best : null
-  }
-
-  const tryCounts = [placeCount - 1, placeCount - 2, 12, 8, 6]
+  // Spec §41 — allow target − 1 only when still above publish minimum.
+  const tryCounts = [placeCount - 1]
   for (const count of tryCounts) {
-    if (count < 4 || count >= placeCount) continue
+    if (count < minAcceptable) continue
     if (best && best.entries.length >= count) continue
     const built = buildCrossword(pairs, maxGridForPlaceCount(count), rng, count)
     if (!built) continue
-    if (built.entries.length >= placeCount) return built
     if (!best || built.entries.length > best.entries.length) best = built
   }
-  return best
+
+  if (best && best.entries.length >= minAcceptable) return best
+  return null
 }
 
-export function validateCrosswordConfig(
-  config: StudioConfig,
-): StudioConfigValidationError | null {
-  if (isCustomWords(config)) {
-    const formatError = validateCustomWordLines(config.words)
-    if (formatError) {
-      return { field: 'words', message: formatError }
-    }
-    const pairs = sanitizeCustomPairs(config.words)
-    const budget = packingBudget()
-    if (pairs.length < CROSSWORD_WORD_COUNT_MIN) {
-      return {
-        field: 'words',
-        message: `Enter at least ${CROSSWORD_WORD_COUNT_MIN} lines as WORD | clue (3–12 letters, A–Z).`,
-      }
-    }
-    if (pairs.length > budget) {
-      const extra = pairs.length - budget
-      return {
-        field: 'words',
-        message: `A crossword fits at most ${budget} words. Remove ${extra} word${extra === 1 ? '' : 's'}.`,
-      }
-    }
-    return null
-  }
-
-  if (!isCustomAiTheme(config)) return null
-  const text = resolveCustomThemeText(config)
-  if (!text) {
-    return {
-      field: 'customThemeText',
-      message: 'Enter a custom theme, or turn off Custom theme.',
-    }
-  }
-  if (String(config.customThemeText ?? '').trim().length > CUSTOM_THEME_MAX_LENGTH) {
-    return {
-      field: 'customThemeText',
-      message: `Keep the custom theme under ${CUSTOM_THEME_MAX_LENGTH} characters.`,
-    }
-  }
-  return null
+export function validateCrosswordConfig(config: StudioConfig) {
+  return validateRetirementCrosswordConfig(config)
 }
 
 function errorPage(
   ctx: StudioGenerateContext,
   config: StudioConfig,
   tag: StudioTag,
+  message: string,
 ): StudioPageOutput {
   const content = insetHorizontal(contentBox(ctx), STUDIO_CONTENT_SAFE_INSET_X)
-  const header = drawHeader(content, config, tag, INSTRUCTION)
-  const customCount = isCustomWords(config) ? sanitizeCustomPairs(config.words).length : 0
-  const msg =
-    customCount > 0
-      ? `Could not interlock all ${customCount} words into one crossword. ` +
-        'Remove a few answers, or use shorter words, then try again.'
-      : 'Could not build an interlocking crossword from these words. ' +
-        'Try fewer or shorter words, or pick a different theme.'
+  const header = drawHeader(content, config, tag, buildInstruction())
   const fontSize = STUDIO_BODY_SIZE - 4
   return {
     pageRole: 'single',
@@ -186,7 +141,7 @@ function errorPage(
         {
           left: boxCenterX(header.body),
           top: header.body.top + header.body.height * 0.35,
-          text: msg,
+          text: message,
           fontFamily: String(config.fontFamily),
           fontSize,
           width: header.body.width * 0.85,
@@ -209,6 +164,7 @@ function layoutCrosswordPage(options: {
   font: string
   instruction: string
   forAnswerKey?: boolean
+  minClueFontSize: number
 }): StudioFabricObject[] {
   const content = insetHorizontal(contentBox(options.ctx), STUDIO_CONTENT_SAFE_INSET_X)
   const header = drawHeader(content, options.config, options.tag, options.instruction)
@@ -219,6 +175,7 @@ function layoutCrosswordPage(options: {
     font: options.font,
     tag: options.tag,
     forAnswerKey: options.forAnswerKey,
+    minClueFontSize: options.minClueFontSize,
   })
   return [...header.objects, ...drawn.objects]
 }
@@ -227,7 +184,22 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
   const font = String(config.fontFamily)
   void kickOffFontFamilyLoading(STUDIO_DIGIT_FONT)
   const rng = createRng(ctx.seed ^ 0x9e3779b9)
-  const pairs = resolvePairs(config, ctx)
+  const difficulty = parseRetirementDifficulty(config.difficulty)
+  const printStyle = parsePrintStyle(config.printStyle)
+  const placeCount = parseAnswerCount(
+    config.answerCount ?? config.wordCount,
+    difficulty,
+    printStyle,
+  )
+  // Spec §41–§42: allow target−1, never below the difficulty floor unless the
+  // user explicitly requested fewer answers than that floor.
+  const minAcceptable = Math.min(
+    placeCount,
+    Math.max(minimumPublishCount(difficulty), placeCount - 1),
+  )
+  const minClueFontSize = printStyle === 'large-print' ? 12 : 8
+  const showInstructions = config.showInstructions !== false
+  const instruction = showInstructions ? buildInstruction() : ''
 
   const tag: StudioTag = {
     templateKey: 'crossword',
@@ -237,27 +209,44 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 
   const pageConfig = withThemeTitle(config)
 
-  if (pairs.length < 4) {
-    return [errorPage(ctx, pageConfig, tag)]
+  let pairs: CrosswordPair[]
+  try {
+    pairs = resolvePairs(config, ctx)
+  } catch {
+    return [errorPage(ctx, pageConfig, tag, CROSSWORD_AI_EMPTY_MESSAGE)]
   }
 
-  const placeCount = requestedPlaceCount(config, pairs)
-  const built = buildCrosswordWithFallback(pairs, rng, placeCount, {
-    // Own-words lists must place every answer — never silently drop 2–3 words.
-    requireExact: isCustomWords(config),
-  })
-  if (!built || (isCustomWords(config) && built.entries.length < placeCount)) {
-    return [errorPage(ctx, pageConfig, tag)]
+  if (pairs.length < 4) {
+    return [errorPage(ctx, pageConfig, tag, CROSSWORD_AI_EMPTY_MESSAGE)]
+  }
+
+  const built = buildCrosswordWithFallback(pairs, rng, placeCount, minAcceptable)
+  if (!built || built.entries.length < minAcceptable) {
+    return [
+      errorPage(
+        ctx,
+        pageConfig,
+        tag,
+        'Unable to generate crossword. Try again or choose a broader retirement theme.',
+      ),
+    ]
   }
 
   const entries = numberEntries(built.entries, built.grid, built.size)
-  const layout = { config: pageConfig, ctx, tag, built, entries, font }
+  const layout = {
+    config: pageConfig,
+    ctx,
+    tag,
+    built,
+    entries,
+    font,
+    minClueFontSize,
+  }
 
   return [
     {
       pageRole: 'single',
-      objects: layoutCrosswordPage({ ...layout, instruction: INSTRUCTION }),
-      // Solution: no how-to / clue lists — taller body, grid centered and larger.
+      objects: layoutCrosswordPage({ ...layout, instruction }),
       answerSourceObjects: layoutCrosswordPage({
         ...layout,
         instruction: '',
@@ -272,7 +261,7 @@ export const crosswordTemplate: StudioTemplateDefinition = {
   label: 'Crossword',
   category: 'word',
   description:
-    'A classic crossword. Solve the clues to fill interlocking words. Pick a theme and let AI write the answers and clues, or supply your own words. Includes an answer key.',
+    'Large-print retirement crossword. AI writes fresh answers and clues for any retirement theme. Includes an answer key.',
   pageCount: 1,
   producesAnswerKey: true,
   prefetch: crosswordPrefetch,
@@ -287,102 +276,76 @@ export const crosswordTemplate: StudioTemplateDefinition = {
   </svg>`,
   configSchema: [
     {
-      key: 'source',
-      label: 'Words from',
+      key: 'writeOwnTheme',
+      label: 'Write my own theme',
+      type: 'toggle',
+      default: false,
+      help: 'Off: pick a retirement category and theme. On: type any theme for AI.',
+    },
+    {
+      key: 'retirementCategory',
+      label: 'Category',
       type: 'select',
-      default: 'theme',
-      options: [
-        { label: 'A theme (pick for me)', value: 'theme' },
-        { label: 'My own words', value: 'custom' },
-      ],
+      default: 'retirement-life',
+      options: categorySelectOptions(),
+      visibleWhen: (c) => !parseWriteOwnTheme(c.writeOwnTheme),
+    },
+    {
+      key: 'presetThemeId',
+      label: 'Theme',
+      type: 'select',
+      default: 'life-after-work',
+      options: themeSelectOptions('retirement-life'),
+      optionsWhen: (c) =>
+        themeSelectOptions(parseRetirementCategory(c.retirementCategory)),
+      visibleWhen: (c) => !parseWriteOwnTheme(c.writeOwnTheme),
+      help: 'AI invents fresh answers and clues for this retirement theme each time.',
     },
     {
       key: 'customTheme',
-      label: 'Custom theme',
-      type: 'toggle',
-      default: false,
-      visibleWhen: (c) => c.source !== 'custom',
-      help: 'Turn on to type a theme; AI invents fresh answer words and clues for it.',
-    },
-    {
-      key: 'theme',
-      label: 'Theme',
-      type: 'select',
-      default: 'animals',
-      options: [
-        { label: 'Animals', value: 'animals' },
-        { label: 'Food', value: 'food' },
-        { label: 'Nature', value: 'nature' },
-        { label: 'Household', value: 'household' },
-        { label: 'Body', value: 'body' },
-        { label: 'Sports', value: 'sports' },
-        { label: 'Travel', value: 'travel' },
-        { label: 'School', value: 'school' },
-        { label: 'Music', value: 'music' },
-        { label: 'Space', value: 'space' },
-      ],
-      visibleWhen: (c) => c.source !== 'custom' && c.customTheme !== true,
-    },
-    {
-      key: 'customThemeText',
-      label: 'Your theme',
+      label: 'Custom retirement theme',
       type: 'text',
-      default: 'things at the beach',
-      max: CUSTOM_THEME_MAX_LENGTH,
-      visibleWhen: (c) => c.source !== 'custom' && c.customTheme === true,
-      help: 'Short phrase for AI answers + clues (e.g. camping trip, bakery). Max 120 characters.',
-    },
-    {
-      key: 'words',
-      label: 'Your words (one per line)',
-      type: 'wordList',
-      default: [],
-      visibleWhen: (c) => c.source === 'custom',
-      placeholder: 'TIGER | Big striped cat\nEAGLE | Bird of prey\nHORSE | Farm animal you ride',
-      helpWhen: (c) => {
-        const budget = packingBudget()
-        const usable = sanitizeCustomPairs(c.words).length
-        return (
-          `One answer per line as WORD | clue (e.g. TIGER | Big striped cat). ` +
-          `Every line needs the | (or :). Blank clues are written by AI. ` +
-          `Import a .txt with the same format. ${usable}/${budget} words.`
-        )
-      },
-      warningWhen: (c) => {
-        const budget = packingBudget()
-        const rawLines = rawCustomWordLines(c.words)
-        const usable = sanitizeCustomPairs(c.words)
-        if (rawLines.length === 0) {
-          return `Each line needs WORD | clue (3–12 letters, A–Z). Max ${budget} words.`
-        }
-        // Over-budget is a blocking validateConfig error — only soft-warn skipped lines here.
-        const skippedInvalid = rawLines.length - usable.length
-        if (skippedInvalid <= 0) return null
-        return `${skippedInvalid} line${skippedInvalid === 1 ? '' : 's'} skipped (need WORD | clue, 3–12 letters, A–Z).`
-      },
-    },
-    {
-      key: 'wordCount',
-      label: 'Number of words',
-      type: 'number',
-      default: CROSSWORD_WORD_COUNT_DEFAULT,
-      min: CROSSWORD_WORD_COUNT_MIN,
-      max: CROSSWORD_WORD_COUNT_MAX,
-      step: 1,
-      visibleWhen: (c) => c.source !== 'custom',
-      helpWhen: () =>
-        `How many interlocking answers to place. Max ${CROSSWORD_WORD_COUNT_MAX} for a theme crossword.`,
+      default: '',
+      max: AI_THEME_MAX_LENGTH,
+      visibleWhen: (c) => parseWriteOwnTheme(c.writeOwnTheme),
+      help: 'Theme only — AI writes the answers (e.g. Retirement Gardening). Max 120 characters.',
+      warningWhen: (c) =>
+        themeIpWarning(String(c.customTheme ?? c.customThemeText ?? '')),
     },
     {
       key: 'difficulty',
       label: 'Difficulty',
       type: 'select',
-      default: 'medium',
+      default: 'classic',
       options: [
-        { label: 'Easy (short, common words)', value: 'easy' },
-        { label: 'Medium', value: 'medium' },
-        { label: 'Hard (longer, trickier)', value: 'hard' },
+        { label: 'Relaxed (direct clues, shorter words)', value: 'relaxed' },
+        { label: 'Classic', value: 'classic' },
+        { label: 'Challenge (fair but trickier)', value: 'challenge' },
       ],
+    },
+    {
+      key: 'printStyle',
+      label: 'Print style',
+      type: 'select',
+      default: 'large-print',
+      options: [
+        { label: 'Large print (default)', value: 'large-print' },
+        { label: 'Standard', value: 'standard' },
+      ],
+      help: 'Large print keeps clue text at least 12 pt and a modest answer count.',
+    },
+    {
+      key: 'answerCount',
+      label: 'Number of answers (advanced)',
+      type: 'select',
+      default: 'auto',
+      options: answerCountSelectOptions(),
+      helpWhen: (c) => {
+        const difficulty = parseRetirementDifficulty(c.difficulty)
+        const printStyle = parsePrintStyle(c.printStyle)
+        const n = parseAnswerCount(c.answerCount, difficulty, printStyle)
+        return `Auto follows difficulty + print style (currently ${n}).`
+      },
     },
   ],
   generate,
