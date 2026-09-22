@@ -1,98 +1,68 @@
-import type { StudioConfig, StudioConfigField } from '@/types/studio-template.types'
+import type {
+  StudioConfig,
+  StudioConfigField,
+  StudioConfigLayoutContext,
+} from '@/types/studio-template.types'
+import { DPI, PDF_POINTS_PER_INCH } from '@/types/canvas-settings.types'
 import { BOX_DIMS, type SudokuSize } from './solver'
-import type { SudokuDifficulty } from './rate'
-import { parsePrintStyle, type RetirementPrintStyle } from '../crossword/config'
-
-export type { SudokuDifficulty } from './rate'
-export type { RetirementPrintStyle }
-
-export function parseSize(raw: unknown): SudokuSize {
-  if (raw === 6 || raw === '6' || raw === '6x6') return 6
-  if (raw === 9 || raw === '9' || raw === '9x9') return 9
-  if (raw === 4 || raw === '4' || raw === '4x4') return 6
-  return 9
-}
-
-export function parseDifficulty(raw: unknown): SudokuDifficulty {
-  const value = String(raw ?? 'classic')
-  if (value === 'relaxed' || value === 'classic' || value === 'challenge') return value
-  if (value === 'easy') return 'relaxed'
-  if (value === 'hard' || value === 'expert') return 'challenge'
-  return 'classic'
-}
-
-export function allowsTwoPuzzles(size: SudokuSize, printStyle: RetirementPrintStyle): boolean {
-  return size === 6 || printStyle === 'standard'
-}
-
-export function parsePuzzlesPerPage(
-  raw: unknown,
-  size: SudokuSize,
-  printStyle: RetirementPrintStyle,
-): 1 | 2 {
-  if (!allowsTwoPuzzles(size, printStyle)) return 1
-  return raw === 2 || raw === '2' ? 2 : 1
-}
+import {
+  DEFAULT_SUDOKU_LEVEL_ID,
+  SUDOKU_LEVEL_OPTIONS,
+  parseSudokuLevel,
+  type SudokuLevel,
+} from './levels'
+import { sudokuGridField, sudokuGridGeometry } from './layout'
 
 export function instructionFor(size: SudokuSize): string {
   const [boxW, boxH] = BOX_DIMS[size]
-  return `Fill the grid so every row, column, and ${boxW}×${boxH} box contains the numbers 1–${size} exactly once.`
+  return `Fill every row, column and ${boxW}×${boxH} box with the numbers 1 to ${size}.`
 }
 
-/** 8.5" landscape-independent: convert print points to canvas pixels. */
-export function printPointsToPx(pt: number, pageWidth: number): number {
-  return Math.max(1, Math.round((pt * pageWidth) / (8.5 * 72)))
+/**
+ * Below this the page stops being a large-print page.
+ *
+ * Every KDP trim clears it comfortably at the margins this app sets; the note
+ * exists for the seller who has pushed the gutter out for a 600-page book on
+ * the smallest trim, where the honest answer is "use a bigger page".
+ */
+const LARGE_PRINT_FLOOR_PT = 16
+
+function formatInches(px: number): string {
+  return (Math.round((px / DPI) * 10) / 10).toFixed(1)
 }
 
-export function minDigitPx(printStyle: RetirementPrintStyle, pageWidth: number): number {
-  return printPointsToPx(printStyle === 'large-print' ? 18 : 12, pageWidth)
+/**
+ * What this level will actually print on the page size the seller has chosen.
+ *
+ * Grid size, digit size and clue count are all decided for them, so the form
+ * owes them a plain sentence about the result rather than the knobs.
+ */
+export function sudokuPrintNote(
+  level: SudokuLevel,
+  layout: StudioConfigLayoutContext | undefined,
+  config: StudioConfig,
+): string {
+  const shape = `${level.size}×${level.size} grid, about ${level.targetClues} numbers already filled in.`
+  if (!layout) return `${shape} Every puzzle has one solution and gets its own answer page.`
+
+  const field = sudokuGridField(layout, config, instructionFor(level.size))
+  const geometry = sudokuGridGeometry(field, level.size, layout.pageWidth)
+  const digitPt = Math.round((geometry.digitFontSize * PDF_POINTS_PER_INCH) / DPI)
+  const measurements = `Prints ${formatInches(geometry.bounds.width)} in wide with ${digitPt} pt numbers`
+
+  if (digitPt < LARGE_PRINT_FLOOR_PT) {
+    return `${shape} ${measurements} — a larger page size in Settings gives bigger, clearer numbers.`
+  }
+  return `${shape} ${measurements}, plus a matching answer page.`
 }
 
 export const SUDOKU_CONFIG_SCHEMA: StudioConfigField[] = [
   {
-    key: 'size',
-    label: 'Grid size',
+    key: 'level',
+    label: 'Puzzle level',
     type: 'select',
-    default: '9x9',
-    options: [
-      { label: '9×9 (classic)', value: '9x9' },
-      { label: '6×6 (2×3 boxes)', value: '6x6' },
-    ],
-    help: '6×6 is easier to read in large print. 9×9 is standard Sudoku.',
-  },
-  {
-    key: 'difficulty',
-    label: 'Difficulty',
-    type: 'select',
-    default: 'classic',
-    options: [
-      { label: 'Relaxed (singles and basic elimination)', value: 'relaxed' },
-      { label: 'Classic (moderate logic, no guessing)', value: 'classic' },
-      { label: 'Challenge (harder deductions, still no guessing)', value: 'challenge' },
-    ],
-  },
-  {
-    key: 'printStyle',
-    label: 'Print style',
-    type: 'select',
-    default: 'large-print',
-    options: [
-      { label: 'Large print (default)', value: 'large-print' },
-      { label: 'Standard', value: 'standard' },
-    ],
-    help: 'Large print keeps digits at least 18 pt and one 9×9 per page.',
-  },
-  {
-    key: 'puzzlesPerPage',
-    label: 'Puzzles per page',
-    type: 'select',
-    default: 1,
-    options: [
-      { label: '1 (default)', value: 1 },
-      { label: '2', value: 2 },
-    ],
-    visibleWhen: (c: StudioConfig) =>
-      allowsTwoPuzzles(parseSize(c.size), parsePrintStyle(c.printStyle)),
-    help: 'Two per page for 6×6, or for 9×9 in standard print.',
+    default: DEFAULT_SUDOKU_LEVEL_ID,
+    options: SUDOKU_LEVEL_OPTIONS,
+    helpWhen: (config, layout) => sudokuPrintNote(parseSudokuLevel(config), layout, config),
   },
 ]

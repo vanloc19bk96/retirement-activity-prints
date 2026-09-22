@@ -1,79 +1,60 @@
 import type { StudioFabricObject } from '@/types/studio-template.types'
-import { STUDIO_DIGIT_FONT } from '@/constants/studio.constants'
-import {
-  estimateTextBoxWidth,
-  unionObjectBounds,
-  type Box,
-} from '../studio-layout'
+import { STUDIO_DIGIT_FONT, STUDIO_RULE } from '@/constants/studio.constants'
+import { estimateTextBoxWidth, unionObjectBounds, type Box } from '../studio-layout'
 import { buildText, buildGroup, type StudioTag } from '../studio-fabric-builders'
-import { drawGridLines, snapGridInField } from '../studio-grid-rules'
+import { drawGridLines } from '../studio-grid-rules'
 import { canonicalKeyData } from '../_shared/uniqueness'
 import { BOX_DIMS } from './solver'
-import { minDigitPx, type RetirementPrintStyle } from './config'
+import { sudokuGridGeometry } from './layout'
 import { sudokuCanonicalKey, type RetirementSudokuPuzzle } from './puzzle'
 
 export function drawSudokuGrid(options: {
   field: Box
   puzzle: RetirementSudokuPuzzle
   tag: StudioTag
-  printStyle: RetirementPrintStyle
   pageWidth: number
 }): StudioFabricObject {
-  const { field, puzzle, tag, printStyle, pageWidth } = options
+  const { field, puzzle, tag, pageWidth } = options
   const { size } = puzzle
   const [boxW, boxH] = BOX_DIMS[size]
-  const g = snapGridInField(field, size, size)
+  const g = sudokuGridGeometry(field, size, pageWidth)
+
   const parts: StudioFabricObject[] = [
     ...drawGridLines(g.bounds, g.cell, size, size, tag, {
       boxCols: boxW,
       boxRows: boxH,
+      // Near-black at both weights: a print grid separates its boxes by rule
+      // thickness, not by fading the cell lines out toward the paper.
+      fill: STUDIO_RULE,
     }),
   ]
 
-  const preferred = Math.round(g.cell * 0.55)
-  const minSize = minDigitPx(printStyle, pageWidth)
-  const maxSize = Math.max(8, Math.floor(g.cell * 0.72))
-  const fontSize = Math.min(maxSize, Math.max(Math.min(minSize, maxSize), preferred))
-
+  const fontSize = g.digitFontSize
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size; c++) {
       const cell = g.cellBox(r, c)
-      const digitOpts = {
+      const digit = (text: string) => ({
         left: Math.round(cell.left + cell.width / 2),
         top: Math.round(cell.top + cell.height / 2),
+        text,
         fontFamily: STUDIO_DIGIT_FONT,
         fontSize,
-        fontWeight: 'normal' as const,
+        fontWeight: 'normal',
+        width: estimateTextBoxWidth(text, fontSize, cell.width),
         textAlign: 'center' as const,
         originX: 'center' as const,
         originY: 'center' as const,
+        // Fabric's default multiplier centres a lone glyph off the cell axis.
+        lineHeight: 1,
+      })
+
+      const given = puzzle.puzzle[r][c]
+      if (given !== 0) {
+        parts.push(buildText(digit(String(given)), tag, 'prompt'))
       }
-      if (puzzle.puzzle[r][c] !== 0) {
-        const text = String(puzzle.puzzle[r][c])
-        parts.push(
-          buildText(
-            {
-              ...digitOpts,
-              text,
-              width: estimateTextBoxWidth(text, fontSize, cell.width),
-            },
-            tag,
-            'prompt',
-          ),
-        )
-      }
-      const answer = String(puzzle.solved[r][c])
-      parts.push(
-        buildText(
-          {
-            ...digitOpts,
-            text: answer,
-            width: estimateTextBoxWidth(answer, fontSize, cell.width),
-          },
-          tag,
-          'answer',
-        ),
-      )
+      // Every cell carries its answer, givens included: the solution page drops
+      // the prompts, so a cell without one would print blank on the key.
+      parts.push(buildText(digit(String(puzzle.solved[r][c])), tag, 'answer'))
     }
   }
 

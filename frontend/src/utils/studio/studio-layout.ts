@@ -1,6 +1,6 @@
 import type {
   StudioConfig,
-  StudioGenerateContext,
+  StudioConfigLayoutContext,
   StudioFabricObject,
 } from '@/types/studio-template.types'
 import type { StudioTag } from './studio-fabric-builders'
@@ -206,8 +206,14 @@ export {
   textObjectHeight,
 } from './studio-object-bounds'
 
-/** The safe printable area. Every generator starts here. */
-export function contentBox(ctx: StudioGenerateContext): Box {
+/**
+ * The safe printable area. Every generator starts here.
+ *
+ * Typed on the page geometry alone, so a form field can measure the same
+ * column the generator will lay out in (`StudioGenerateContext` still
+ * satisfies it).
+ */
+export function contentBox(ctx: StudioConfigLayoutContext): Box {
   const { margin, pageWidth, pageHeight } = ctx
   return {
     left: margin.left,

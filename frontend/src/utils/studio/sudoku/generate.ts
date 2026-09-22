@@ -3,159 +3,47 @@ import type {
   StudioConfig,
   StudioGenerateContext,
   StudioPageOutput,
-  StudioFabricObject,
 } from '@/types/studio-template.types'
 import { createRng } from '../studio-rng'
-import {
-  contentBox,
-  insetHorizontal,
-  drawHeader,
-  rows,
-  boxCenterX,
-  estimateTextBoxWidth,
-  type Box,
-} from '../studio-layout'
-import { buildText, type StudioTag } from '../studio-fabric-builders'
-import {
-  STUDIO_CONTENT_SAFE_INSET_X,
-  STUDIO_DEFAULT_FONT,
-  STUDIO_DIGIT_FONT,
-  STUDIO_INK_MUTED,
-  STUDIO_SECTION_GAP,
-} from '@/constants/studio.constants'
+import { drawHeader } from '../studio-layout'
+import type { StudioTag } from '../studio-fabric-builders'
+import { STUDIO_DIGIT_FONT } from '@/constants/studio.constants'
 import { kickOffFontFamilyLoading } from '@/utils/font-loader'
-import { parsePrintStyle } from '../crossword/config'
-import {
-  instructionFor,
-  parseDifficulty,
-  parsePuzzlesPerPage,
-  parseSize,
-  SUDOKU_CONFIG_SCHEMA,
-} from './config'
-import { generateRatedPuzzles, type RetirementSudokuPuzzle } from './puzzle'
+import { SUDOKU_CONFIG_SCHEMA, instructionFor } from './config'
+import { parseSudokuLevel } from './levels'
+import { sudokuContentBox } from './layout'
+import { generateLevelPuzzle } from './puzzle'
 import { drawSudokuGrid } from './draw'
 
-export {
-  BOX_DIMS,
-  generateSolvedGrid,
-  carvePuzzle,
-  countSolutions,
-  isFullyValid,
-  isValidPlacement,
-  givensMatchSolution,
-} from './solver'
-export type { SudokuSize } from './solver'
-export { ratePuzzle, isSolvableWith } from './rate'
-export type { SudokuDifficulty } from './rate'
-export {
-  generateRatedPuzzle,
-  generateRatedPuzzles,
-  hashSudokuGrid,
-  preflightSudoku,
-  clueCount,
-  matchesRequestedDifficulty,
-} from './puzzle'
-export type { RetirementSudokuPuzzle } from './puzzle'
-export {
-  parseSize,
-  parseDifficulty,
-  parsePuzzlesPerPage,
-  instructionFor,
-  minDigitPx,
-} from './config'
-
-const PUZZLE_INDEX_SIZE = 22
-const PUZZLE_INDEX_GAP = 8
-
-function drawIndexedGrid(options: {
-  field: Box
-  index: number
-  count: number
-  puzzle: RetirementSudokuPuzzle
-  tag: StudioTag
-  printStyle: ReturnType<typeof parsePrintStyle>
-  pageWidth: number
-  font: string
-}): StudioFabricObject[] {
-  const { field, index, count, puzzle, tag, printStyle, pageWidth, font } = options
-  let gridField = field
-  const objects: StudioFabricObject[] = []
-  if (count > 1) {
-    const stripH = PUZZLE_INDEX_SIZE + PUZZLE_INDEX_GAP
-    const label = String(index + 1)
-    objects.push(
-      buildText(
-        {
-          left: boxCenterX(field),
-          top: field.top,
-          text: label,
-          fontFamily: font,
-          fontSize: PUZZLE_INDEX_SIZE,
-          fontWeight: 'normal',
-          fill: STUDIO_INK_MUTED,
-          width: estimateTextBoxWidth(label, PUZZLE_INDEX_SIZE, field.width),
-          textAlign: 'center',
-          originX: 'center',
-        },
-        tag,
-        'decoration',
-      ),
-    )
-    gridField = {
-      ...field,
-      top: field.top + stripH,
-      height: Math.max(1, field.height - stripH),
-    }
-  }
-  objects.push(
-    drawSudokuGrid({
-      field: gridField,
-      puzzle,
-      tag,
-      printStyle,
-      pageWidth,
-    }),
-  )
-  return objects
-}
-
+/**
+ * One puzzle per page, always.
+ *
+ * Two grids on a sheet halves the cell size, and a Sudoku whose digits an
+ * older reader has to squint at is a Sudoku they put down. The page budget
+ * that buys is the right trade for the audience this book is sold to.
+ */
 function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageOutput[] {
-  const size = parseSize(config.size)
-  const difficulty = parseDifficulty(config.difficulty)
-  const printStyle = parsePrintStyle(config.printStyle)
-  const count = parsePuzzlesPerPage(config.puzzlesPerPage, size, printStyle)
+  const level = parseSudokuLevel(config)
   const rng = createRng(ctx.seed)
   void kickOffFontFamilyLoading(STUDIO_DIGIT_FONT)
 
-  const puzzles = generateRatedPuzzles(count, size, difficulty, rng)
+  const puzzle = generateLevelPuzzle(level, rng)
   const tag: StudioTag = {
     templateKey: 'sudoku',
     instanceId: ctx.instanceId,
     pageRole: 'single',
   }
 
-  const content = insetHorizontal(contentBox(ctx), STUDIO_CONTENT_SAFE_INSET_X)
-  const header = drawHeader(content, config, tag, instructionFor(size))
-  const fields = count === 2 ? rows(header.body, 2, STUDIO_SECTION_GAP) : [header.body]
-  const font = String(config.fontFamily ?? STUDIO_DEFAULT_FONT)
-
-  const objects: StudioFabricObject[] = [...header.objects]
-  puzzles.forEach((puzzle, index) => {
-    objects.push(
-      ...drawIndexedGrid({
-        field: fields[index] ?? header.body,
-        index,
-        count,
-        puzzle,
-        tag,
-        printStyle,
-        pageWidth: ctx.pageWidth,
-        font,
-      }),
-    )
-  })
-
-  return [{ pageRole: 'single', objects }]
+  const header = drawHeader(sudokuContentBox(ctx), config, tag, instructionFor(level.size))
+  return [
+    {
+      pageRole: 'single',
+      objects: [
+        ...header.objects,
+        drawSudokuGrid({ field: header.body, puzzle, tag, pageWidth: ctx.pageWidth }),
+      ],
+    },
+  ]
 }
 
 export const sudokuTemplate: StudioTemplateDefinition = {
@@ -163,7 +51,7 @@ export const sudokuTemplate: StudioTemplateDefinition = {
   label: 'Sudoku',
   category: 'logic',
   description:
-    'Classic number Sudoku in large print. Fill every row, column and box so each digit appears once. 6×6 or 9×9, Relaxed / Classic / Challenge, each with exactly one solution and an answer key.',
+    'Large-print number Sudoku, one puzzle to a page. Pick a level and every page prints a grid with exactly one solution, plus its own answer page.',
   pageCount: 1,
   producesAnswerKey: true,
   thumbnail: `<svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg">

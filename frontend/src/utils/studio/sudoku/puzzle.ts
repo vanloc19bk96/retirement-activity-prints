@@ -18,26 +18,18 @@ import {
   ratePuzzle,
   type SudokuDifficulty,
 } from './rate'
+import type { SudokuLevel, SudokuLevelId } from './levels'
 
 export interface RetirementSudokuPuzzle {
   puzzle: number[][]
   solved: number[][]
   size: SudokuSize
-  difficulty: SudokuDifficulty
+  level: SudokuLevelId
+  /** Hardest technique this puzzle actually needs — equals the level ceiling. */
+  rating: SudokuDifficulty
+  clues: number
   puzzleHash: string
   solutionHash: string
-}
-
-/** Starting unique-carve depth — rating, not clue count, decides accept/reject. */
-const CLUE_TARGETS: Record<SudokuSize, Record<SudokuDifficulty, number>> = {
-  9: { relaxed: 40, classic: 32, challenge: 24 },
-  6: { relaxed: 18, classic: 14, challenge: 11 },
-}
-
-/** 6×6 rarely needs pairs; these bands separate Relaxed / Classic / Challenge there. */
-const CLUE_BANDS: Record<SudokuSize, Record<SudokuDifficulty, { min: number; max: number }>> = {
-  9: { relaxed: { min: 36, max: 46 }, classic: { min: 28, max: 35 }, challenge: { min: 22, max: 27 } },
-  6: { relaxed: { min: 16, max: 22 }, classic: { min: 13, max: 15 }, challenge: { min: 10, max: 12 } },
 }
 
 const MAX_GRID_ATTEMPTS = 64
@@ -53,23 +45,23 @@ export function clueCount(puzzle: number[][], size: number): number {
 }
 
 /**
- * Technique rating is the ceiling (never ship guessing, never ship a harder
- * puzzle than the label). Clue bands separate the three labels when 6×6 or
- * sparse 9×9 still solve with the same techniques.
+ * A level's promise, stated once.
+ *
+ * The rating must land *on* the ceiling, not merely under it. Matching "at
+ * most" was what let Medium and Challenging ship the same puzzle with a
+ * different word on the cover: carved grids are overwhelmingly singles-only,
+ * so only the clue count ever differed. Requiring the technique the label
+ * names is what makes the ladder real — and the clue band on top of it is
+ * what keeps two pages of one level looking like siblings.
  */
-export function matchesRequestedDifficulty(options: {
+export function matchesLevel(options: {
   rating: SudokuDifficulty | null
-  difficulty: SudokuDifficulty
-  size: SudokuSize
+  level: SudokuLevel
   clues: number
 }): boolean {
-  const { rating, difficulty, size, clues } = options
-  if (rating === null) return false
-  if (DIFFICULTY_RANK[rating] > DIFFICULTY_RANK[difficulty]) return false
-  const band = CLUE_BANDS[size][difficulty]
-  if (clues < band.min || clues > band.max) return false
-  if (difficulty === 'relaxed') return rating === 'relaxed'
-  return true
+  const { rating, level, clues } = options
+  if (rating !== level.ceiling) return false
+  return clues >= level.minClues && clues <= level.maxClues
 }
 
 export function sudokuPuzzleForm(grid: number[][]): string {
@@ -84,103 +76,115 @@ export function sudokuCanonicalKey(puzzle: RetirementSudokuPuzzle): string {
   return composeCanonicalForm('sudoku', puzzle.puzzleHash, puzzle.solutionHash)
 }
 
+function shuffledCells(
+  puzzle: number[][],
+  size: SudokuSize,
+  filled: boolean,
+  rng: StudioRng,
+): { r: number; c: number }[] {
+  return rng.shuffle(
+    allCellPositions(size).filter(({ r, c }) => (puzzle[r][c] !== 0) === filled),
+  )
+}
+
+/** Reveal one more answer, ignoring what it does to the rating. */
 function addRandomClue(
   puzzle: number[][],
   solved: number[][],
-  size: number,
+  size: SudokuSize,
   rng: StudioRng,
 ): boolean {
-  const empties = allCellPositions(size).filter(({ r, c }) => puzzle[r][c] === 0)
-  if (empties.length === 0) return false
-  const { r, c } = rng.pick(empties)
-  puzzle[r][c] = solved[r][c]
+  const empties = shuffledCells(puzzle, size, false, rng)
+  const cell = empties[0]
+  if (!cell) return false
+  puzzle[cell.r][cell.c] = solved[cell.r][cell.c]
   return true
 }
 
-function hardenPuzzle(
+/**
+ * Strip every clue the ceiling can still do without.
+ *
+ * This is what *raises* a puzzle to its label: a grid that solves on singles
+ * alone stops doing so once the redundant givens are gone, and the pairs and
+ * pointing work the level promises is what is left. Stops at `minClues` so
+ * hardening can never undercut the comfort band.
+ */
+function hardenToCeiling(
   puzzle: number[][],
   size: SudokuSize,
-  difficulty: SudokuDifficulty,
+  ceiling: SudokuDifficulty,
+  minClues: number,
   rng: StudioRng,
 ): void {
-  const cells = rng.shuffle(allCellPositions(size).filter(({ r, c }) => puzzle[r][c] !== 0))
-  for (const { r, c } of cells) {
+  let clues = clueCount(puzzle, size)
+  for (const { r, c } of shuffledCells(puzzle, size, true, rng)) {
+    if (clues <= minClues) return
     const backup = puzzle[r][c]
     puzzle[r][c] = 0
-    if (countSolutions(puzzle, size, 2) !== 1 || !isSolvableWith(puzzle, size, difficulty)) {
+    if (countSolutions(puzzle, size, 2) !== 1 || !isSolvableWith(puzzle, size, ceiling)) {
       puzzle[r][c] = backup
+      continue
     }
+    clues--
   }
 }
 
-function tuneToDifficulty(
+/**
+ * Fill back up to the band floor without softening the puzzle.
+ *
+ * A clue added blindly can collapse the solve back to singles, which would
+ * quietly demote the page; only clues the rating survives are kept.
+ */
+function padToBandFloor(
+  puzzle: number[][],
   solved: number[][],
   size: SudokuSize,
-  difficulty: SudokuDifficulty,
+  ceiling: SudokuDifficulty,
+  minClues: number,
+  rng: StudioRng,
+): void {
+  while (clueCount(puzzle, size) < minClues) {
+    let placed = false
+    for (const { r, c } of shuffledCells(puzzle, size, false, rng)) {
+      puzzle[r][c] = solved[r][c]
+      if (ratePuzzle(puzzle, size) === ceiling) {
+        placed = true
+        break
+      }
+      puzzle[r][c] = 0
+    }
+    if (!placed) return
+  }
+}
+
+/** Carve one solved grid down to a puzzle that keeps the level's promise. */
+function tuneToLevel(
+  solved: number[][],
+  level: SudokuLevel,
   rng: StudioRng,
 ): number[][] | null {
-  const target = CLUE_TARGETS[size][difficulty]
-  const puzzle = carvePuzzle(solved, target, size, rng)
+  const { size, ceiling } = level
+  const puzzle = carvePuzzle(solved, level.targetClues, size, rng)
   if (countSolutions(puzzle, size, 2) !== 1) return null
 
+  // Never ship guessing, and never ship deduction past the level's ceiling:
+  // reveal answers until the rater can finish it within that budget.
   let rating = ratePuzzle(puzzle, size)
-  while (rating === null || DIFFICULTY_RANK[rating] > DIFFICULTY_RANK[difficulty]) {
+  while (rating === null || DIFFICULTY_RANK[rating] > DIFFICULTY_RANK[ceiling]) {
     if (!addRandomClue(puzzle, solved, size, rng)) return null
     rating = ratePuzzle(puzzle, size)
   }
 
-  fitClueBand(puzzle, solved, size, difficulty, rng)
-
-  rating = ratePuzzle(puzzle, size)
-  if (
-    !matchesRequestedDifficulty({
-      rating,
-      difficulty,
-      size,
-      clues: clueCount(puzzle, size),
-    })
-  ) {
-    return null
+  if (rating !== ceiling || clueCount(puzzle, size) > level.maxClues) {
+    hardenToCeiling(puzzle, size, ceiling, level.minClues, rng)
   }
+  padToBandFloor(puzzle, solved, size, ceiling, level.minClues, rng)
+
+  const clues = clueCount(puzzle, size)
+  if (!matchesLevel({ rating: ratePuzzle(puzzle, size), level, clues })) return null
   if (countSolutions(puzzle, size, 2) !== 1) return null
   if (!givensMatchSolution(puzzle, solved, size)) return null
   return puzzle
-}
-
-function fitClueBand(
-  puzzle: number[][],
-  solved: number[][],
-  size: SudokuSize,
-  difficulty: SudokuDifficulty,
-  rng: StudioRng,
-): void {
-  const band = CLUE_BANDS[size][difficulty]
-  if (clueCount(puzzle, size) > band.max) {
-    hardenPuzzle(puzzle, size, difficulty, rng)
-  }
-  while (clueCount(puzzle, size) < band.min) {
-    if (!addRandomClue(puzzle, solved, size, rng)) break
-  }
-}
-
-export function preflightSudoku(puzzle: RetirementSudokuPuzzle): string | null {
-  if (puzzle.size !== 6 && puzzle.size !== 9) return 'invalid grid size'
-  if (!isFullyFilled(puzzle.solved, puzzle.size)) return 'solution incomplete'
-  if (!givensMatchSolution(puzzle.puzzle, puzzle.solved, puzzle.size)) {
-    return 'givens conflict with solution'
-  }
-  if (countSolutions(puzzle.puzzle, puzzle.size, 2) !== 1) return 'not exactly one solution'
-  if (
-    !matchesRequestedDifficulty({
-      rating: ratePuzzle(puzzle.puzzle, puzzle.size),
-      difficulty: puzzle.difficulty,
-      size: puzzle.size,
-      clues: clueCount(puzzle.puzzle, puzzle.size),
-    })
-  ) {
-    return 'difficulty mismatch'
-  }
-  return null
 }
 
 function isFullyFilled(grid: number[][], size: number): boolean {
@@ -193,53 +197,60 @@ function isFullyFilled(grid: number[][], size: number): boolean {
   return true
 }
 
-export function generateRatedPuzzle(
-  size: SudokuSize,
-  difficulty: SudokuDifficulty,
+/** Last gate before a puzzle reaches the page. Returns a reason, or null. */
+export function preflightSudoku(
+  puzzle: RetirementSudokuPuzzle,
+  level: SudokuLevel,
+): string | null {
+  if (puzzle.size !== level.size) return 'grid size does not match the level'
+  if (!isFullyFilled(puzzle.solved, puzzle.size)) return 'solution incomplete'
+  if (!givensMatchSolution(puzzle.puzzle, puzzle.solved, puzzle.size)) {
+    return 'givens conflict with solution'
+  }
+  if (countSolutions(puzzle.puzzle, puzzle.size, 2) !== 1) return 'not exactly one solution'
+  if (
+    !matchesLevel({
+      rating: ratePuzzle(puzzle.puzzle, puzzle.size),
+      level,
+      clues: clueCount(puzzle.puzzle, puzzle.size),
+    })
+  ) {
+    return 'difficulty does not match the level'
+  }
+  return null
+}
+
+/**
+ * One puzzle for one page.
+ *
+ * Repeats across a book are not this function's job: the Studio stamps the
+ * canonical key below on the grid group and the book-scoped ledger reruns any
+ * sheet whose fingerprint the book has already printed.
+ */
+export function generateLevelPuzzle(
+  level: SudokuLevel,
   rng: StudioRng,
-  usedPuzzleHashes?: Set<string>,
-  usedSolutionHashes?: Set<string>,
 ): RetirementSudokuPuzzle {
+  const { size } = level
   for (let attempt = 0; attempt < MAX_GRID_ATTEMPTS; attempt++) {
     const solved = generateSolvedGrid(size, rng)
-    const solutionHash = hashSudokuGrid(solved)
-    if (usedSolutionHashes?.has(solutionHash)) continue
-
-    const puzzle = tuneToDifficulty(solved, size, difficulty, rng)
+    const puzzle = tuneToLevel(solved, level, rng)
     if (!puzzle) continue
-
-    const puzzleHash = hashSudokuGrid(puzzle)
-    if (usedPuzzleHashes?.has(puzzleHash)) continue
 
     const built: RetirementSudokuPuzzle = {
       puzzle,
       solved,
       size,
-      difficulty,
-      puzzleHash,
-      solutionHash,
+      level: level.id,
+      rating: level.ceiling,
+      clues: clueCount(puzzle, size),
+      puzzleHash: hashSudokuGrid(puzzle),
+      solutionHash: hashSudokuGrid(solved),
     }
-    if (preflightSudoku(built)) continue
-    usedPuzzleHashes?.add(puzzleHash)
-    usedSolutionHashes?.add(solutionHash)
+    if (preflightSudoku(built, level)) continue
     return built
   }
   throw new Error(
-    `Could not build a unique ${difficulty} ${size}×${size} Sudoku in ${MAX_GRID_ATTEMPTS} attempts`,
+    `Could not build a ${level.id} ${size}×${size} Sudoku in ${MAX_GRID_ATTEMPTS} attempts`,
   )
-}
-
-export function generateRatedPuzzles(
-  count: number,
-  size: SudokuSize,
-  difficulty: SudokuDifficulty,
-  rng: StudioRng,
-): RetirementSudokuPuzzle[] {
-  const usedPuzzleHashes = new Set<string>()
-  const usedSolutionHashes = new Set<string>()
-  const out: RetirementSudokuPuzzle[] = []
-  for (let i = 0; i < count; i++) {
-    out.push(generateRatedPuzzle(size, difficulty, rng, usedPuzzleHashes, usedSolutionHashes))
-  }
-  return out
 }
