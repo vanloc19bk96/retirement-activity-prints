@@ -143,10 +143,6 @@ function shouldOmitFromAnswerPage(obj: StudioFabricObject): boolean {
     }
     if (isFabricType(obj, 'group') && !objectHasAnswer(obj)) return true
   }
-  // Missing-vowels answers sit on the same cell as prompts — hide blanks on the key.
-  if (obj.studioTemplateKey === 'missing-vowels' && obj.studioRole === 'prompt') {
-    return true
-  }
   // Sudoku answers share cell anchors with givens — omit givens so ink does not double.
   if (obj.studioTemplateKey === 'sudoku' && obj.studioRole === 'prompt') {
     return true

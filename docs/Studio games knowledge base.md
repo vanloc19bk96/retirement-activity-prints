@@ -122,10 +122,27 @@ long book does not repeat.
 Pages: 1 · Answer key: yes · AI content: yes
 
 ### Missing Vowels (`missing-vowels`)
-Restore the missing vowels in retirement-themed words and short phrases
-(A/E/I/O/U become blanks; Y stays visible). Pick a retirement category and
-theme, or type your own — AI writes a fresh list each page, with no bundled
-word bank. Large-print by default, with an automatic answer key.
+Write the missing vowels back into retirement-themed words and short phrases.
+Every letter of the answer gets its own slot: consonants print, each A/E/I/O/U
+leaves a writing rule to fill in, and a short clue sits underneath — the clue
+is what makes the answer unique and the puzzle solvable, so it is never
+optional. Y is printed like any other consonant and is never a blank. Pick a
+theme (shared with the crossword, cryptogram and anagrams, so a book can run
+four games on one theme, or rotate a fresh theme per page) and a level: Gentle
+(5–7 letters, single words), Classic (6–9, words and short phrases), or
+Challenging (8–10, the longest single words). Phrases live only in Classic: a
+word gap is the widest thing a row holds and a two-column page pays for it in
+every column, so the longest level takes single words and earns its second
+column instead. How many puzzles a page holds, how big the letters set and
+whether they run in one column or two are not settings — the page derives them
+from the trim in Settings and the form reports what that produced (a 5×8 holds
+about 5 in one column, an 8.5×11 holds 16 in two). Letters never set below 16 pt and blanks never
+get narrower than a hand can write in, whatever the trim. Every page of one run
+is pinned to the same pitch and column count, so a book does not mix sizes. An
+answer only prints if restoring its vowels can spell nothing else in the common
+word list, so B_LL and CH__R never reach the page. The solution page is the
+same page with the vowels written into their own blanks. AI writes fresh words
+and clues each page so a long book does not repeat.
 Pages: 1 · Answer key: yes · AI content: yes
 
 ---

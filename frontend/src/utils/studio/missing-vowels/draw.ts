@@ -1,298 +1,242 @@
 import type { StudioFabricObject } from '@/types/studio-template.types'
+import type { MissingVowelsItem } from '@/types/studio-missing-vowels.types'
+import { STUDIO_INK, STUDIO_INK_MUTED } from '@/constants/studio.constants'
 import {
-  boxCenterX,
-  boxCenterY,
-  estimateTextBoxWidth,
-  fitFontSizeToWidth,
-  insetBox,
-  type Box,
-} from '../studio-layout'
-import {
-  buildText,
-  buildLine,
   buildGroup,
+  buildRect,
+  buildText,
   type StudioTag,
 } from '../studio-fabric-builders'
-import { drawGridLines } from '../studio-grid-rules'
+import { unionObjectBounds, type Box } from '../studio-layout'
+import { hugTextBoxWidth } from '../studio-text-metrics'
+import { toSlots } from './mask'
 import {
-  STUDIO_BODY_SIZE,
-  STUDIO_INK_MUTED,
-  STUDIO_RULE_MEDIUM,
-  STUDIO_STROKE_HAIRLINE,
-} from '@/constants/studio.constants'
-import type { RetirementPrintStyle } from './content'
-import { minPuzzleFont } from './content'
-import type { MissingVowelItem } from './mask'
+  CLUE_LINE_HEIGHT,
+  RULE_HEIGHT,
+  RULE_RATIO,
+  type MissingVowelsMetrics,
+  type MissingVowelsPagePlan,
+} from './layout'
 
-export type { MissingVowelItem }
-
-const STROKE_INSET = 16
-const CELL_PAD = 12
-const INDEX_GAP = 8
-const INDEX_W = 48
-const PREFERRED_ROW_H = STUDIO_BODY_SIZE * 2.2
-const STACKED_PREFERRED_ROW_H = STUDIO_BODY_SIZE * 3.35
-const MIN_LINE_BOTTOM_PAD = 12
-const LINE_BOTTOM_RATIO = 0.24
-const UPPERCASE_ADVANCE = 0.62
-const MASK_ADVANCE = 0.55
-
-interface MvTable {
-  cols: number
-  rows: number
-  cellW: number
-  cellH: number
-  bounds: Box
-  cellBox: (row: number, col: number) => Box
-}
-
-function fitTable(field: Box, rows: number, cols: number, preferredRowH: number): MvTable {
-  const cellW = Math.max(1, Math.floor(field.width / cols))
-  const cellH = Math.max(
-    1,
-    Math.floor(Math.min(preferredRowH, field.height / Math.max(1, rows))),
-  )
-  const gridW = cellW * cols
-  const gridH = cellH * rows
-  const left = Math.round(field.left + (field.width - gridW) / 2)
-  const top = Math.round(field.top + (field.height - gridH) / 2)
-  return {
-    cols,
-    rows,
-    cellW,
-    cellH,
-    bounds: { left, top, width: gridW, height: gridH },
-    cellBox: (row, col) => ({
-      left: left + col * cellW,
-      top: top + row * cellH,
-      width: cellW,
-      height: cellH,
-    }),
-  }
-}
-
-function itemColumnCount(
-  itemCount: number,
-  fieldHeight: number,
-  printStyle: RetirementPrintStyle,
-): number {
-  const minRow = printStyle === 'large-print' ? 40 : 28
-  if (itemCount * minRow <= fieldHeight) return 1
-  return 2
-}
-
-function noWrap(text: string): string {
-  return text.replace(/ /g, '\u00A0')
-}
-
-function estimateRunWidth(text: string, fontSize: number): number {
-  let units = 0
-  for (const ch of text) {
-    if (ch === ' ' || ch === '\u00A0') units += 0.32
-    else if (ch === '_') units += MASK_ADVANCE
-    else units += UPPERCASE_ADVANCE
-  }
-  return Math.ceil((units + 0.35) * fontSize)
-}
-
-function fitRunSize(text: string, preferred: number, maxWidth: number, minSize: number): number {
-  if (maxWidth <= 0) return minSize
-  let size = preferred
-  while (size > minSize && estimateRunWidth(text, size) > maxWidth) size -= 1
-  return Math.max(minSize, size)
-}
-
-function sharedPromptSize(
-  items: MissingVowelItem[],
-  promptMaxW: number,
-  rowH: number,
-  minSize: number,
-): number {
-  const preferred = Math.min(STUDIO_BODY_SIZE, Math.floor(rowH * 0.45))
-  let size = preferred
-  for (const item of items) {
-    size = Math.min(size, fitRunSize(noWrap(item.masked), preferred, promptMaxW, minSize))
-  }
-  return size
-}
-
-function promptBaselineY(cell: Box, fontSize: number): number {
-  return Math.round(boxCenterY(cell) + fontSize / 2)
-}
-
-function stackedWriteY(cell: Box): number {
-  const pad = Math.max(MIN_LINE_BOTTOM_PAD, Math.round(cell.height * LINE_BOTTOM_RATIO))
-  return Math.round(cell.top + cell.height - pad)
-}
-
-function stackedPromptCell(cell: Box, writeY: number, fontSize: number): Box {
-  const gap = Math.max(8, Math.round(fontSize * 0.35))
-  return { ...cell, height: Math.max(1, writeY - gap - cell.top) }
-}
-
-function pushIndexAndMasked(
+/**
+ * One row of slots: the consonants printed, a rule under every missing vowel,
+ * and the vowel itself drawn in place but hidden.
+ *
+ * Drawing the answer into the slot rather than onto a separate line is what
+ * makes the two pages agree. The puzzle page and the solution page are one
+ * layout: the key is this page with its blanks filled, at the exact positions
+ * the blanks were, so a reader checking an answer is looking at the row they
+ * just solved. It is also what lets the editor reveal a single sheet in place
+ * without regenerating it.
+ *
+ * Every glyph — printed or written — sits on one baseline, lifted just off the
+ * rules. A consonant floating at a different height from the vowel beside it is
+ * the difference between a word and a ransom note.
+ */
+function drawSlots(
   objects: StudioFabricObject[],
-  cell: Box,
-  index: number,
-  masked: string,
-  style: { font: string; textSize: number; labelSize: number; tag: StudioTag; role: 'prompt' | 'decoration' },
+  options: {
+    bandLeft: number
+    baselineY: number
+    answer: string
+    metrics: MissingVowelsMetrics
+    font: string
+    tag: StudioTag
+  },
 ): void {
-  const { font, textSize, labelSize, tag, role } = style
-  const baselineY = promptBaselineY(cell, textSize)
-  const label = `${index}.`
-  const display = noWrap(masked)
-  const contentMaxW = Math.max(24, cell.width - CELL_PAD * 2)
-  const labelW = estimateTextBoxWidth(label, labelSize, INDEX_W)
-  const textMaxW = Math.max(24, contentMaxW - labelW - INDEX_GAP)
-  const textW = Math.min(textMaxW, estimateRunWidth(display, textSize))
-  const blockW = labelW + INDEX_GAP + textW
-  const blockLeft = boxCenterX(cell) - blockW / 2
+  const { bandLeft, baselineY, answer, metrics, font, tag } = options
+  const { slotW, wordGapW, letterFont, letterLift } = metrics
+  const ruleW = Math.round(slotW * RULE_RATIO)
+  const spec = { fontFamily: font }
+  let x = bandLeft
 
-  objects.push(
-    buildText(
-      {
-        left: blockLeft,
-        top: baselineY,
-        text: label,
-        width: labelW,
-        fontFamily: font,
-        fontSize: labelSize,
-        fill: STUDIO_INK_MUTED,
-        originY: 'bottom',
-        lineHeight: 1,
-      },
-      tag,
-      'decoration',
-    ),
-  )
-  objects.push(
-    buildText(
-      {
-        left: blockLeft + labelW + INDEX_GAP,
-        top: baselineY,
-        text: display,
-        width: textW,
-        fontFamily: font,
-        fontSize: textSize,
-        originY: 'bottom',
-        lineHeight: 1,
-      },
-      tag,
-      role,
-    ),
-  )
-}
-
-function pushAnswerLine(
-  objects: StudioFabricObject[],
-  cell: Box,
-  tag: StudioTag,
-  y: number,
-): void {
-  objects.push(
-    buildLine(
-      {
-        x1: cell.left + CELL_PAD,
-        y1: y,
-        x2: cell.left + cell.width - CELL_PAD,
-        y2: y,
-        stroke: STUDIO_RULE_MEDIUM,
-        strokeWidth: STUDIO_STROKE_HAIRLINE,
-      },
-      tag,
-      'structure',
-    ),
-  )
-}
-
-function pushAnswerText(
-  objects: StudioFabricObject[],
-  cell: Box,
-  answer: string,
-  font: string,
-  fontSize: number,
-  tag: StudioTag,
-  y: number,
-): void {
-  const answerMaxW = Math.max(24, cell.width - CELL_PAD * 2)
-  const display = noWrap(answer)
-  const answerSize = fitRunSize(display, fontSize, answerMaxW, 10)
-  objects.push(
-    buildText(
-      {
-        left: boxCenterX(cell),
-        top: y,
-        text: display,
-        width: Math.min(answerMaxW, estimateRunWidth(display, answerSize)),
-        fontFamily: font,
-        fontSize: answerSize,
-        textAlign: 'center',
-        originX: 'center',
-        originY: 'bottom',
-        lineHeight: 1,
-      },
-      tag,
-      'answer',
-    ),
-  )
-}
-
-export interface DrawMvOptions {
-  forAnswerKey?: boolean
-  printStyle?: RetirementPrintStyle
-}
-
-/** Numbered list: masked prompt | write-in line (answer on the key). */
-export function drawMvItems(
-  objects: StudioFabricObject[],
-  field: Box,
-  items: MissingVowelItem[],
-  font: string,
-  tag: StudioTag,
-  options?: DrawMvOptions,
-): void {
-  if (items.length === 0) return
-
-  const forAnswerKey = options?.forAnswerKey === true
-  const printStyle = options?.printStyle ?? 'large-print'
-  const tableField = insetBox(field, STROKE_INSET)
-  const itemCols = itemColumnCount(items.length, tableField.height, printStyle)
-  const isStacked = itemCols !== 1
-  const cols = 2
-  const rows = isStacked ? Math.ceil(items.length / cols) : items.length
-  const preferredRowH = isStacked ? STACKED_PREFERRED_ROW_H : PREFERRED_ROW_H
-  const table = fitTable(tableField, rows, cols, preferredRowH)
-  const minSize = minPuzzleFont(printStyle)
-  const promptMaxW = Math.max(24, table.cellW - CELL_PAD * 2 - INDEX_W - INDEX_GAP)
-  const textSize = sharedPromptSize(items, promptMaxW, table.cellH, minSize)
-  const labelSize = fitFontSizeToWidth(`${items.length}.`, INDEX_W, textSize, 10)
-  const gridObjects: StudioFabricObject[] = []
-  const maskedRole: 'prompt' | 'decoration' = forAnswerKey ? 'decoration' : 'prompt'
-
-  items.forEach((item, i) => {
-    const promptStyle = { font, textSize, labelSize, tag, role: maskedRole }
-    if (!isStacked) {
-      const promptCell = table.cellBox(i, 0)
-      const answerCell = table.cellBox(i, 1)
-      const writeY = promptBaselineY(promptCell, textSize)
-      pushIndexAndMasked(gridObjects, promptCell, i + 1, item.masked, promptStyle)
-      if (!forAnswerKey) pushAnswerLine(gridObjects, answerCell, tag, writeY)
-      pushAnswerText(gridObjects, answerCell, item.display.toUpperCase(), font, textSize, tag, writeY)
-      return
+  for (const slot of toSlots(answer)) {
+    // A word break is air. No rule under it, or a reader counts it as a blank
+    // and looks for a letter that was never removed.
+    if (slot.gap) {
+      x += wordGapW
+      continue
     }
-    const row = Math.floor(i / table.cols)
-    const col = i % table.cols
-    const cell = table.cellBox(row, col)
-    const writeY = stackedWriteY(cell)
-    pushIndexAndMasked(gridObjects, stackedPromptCell(cell, writeY, textSize), i + 1, item.masked, promptStyle)
-    if (!forAnswerKey) pushAnswerLine(gridObjects, cell, tag, writeY)
-    pushAnswerText(gridObjects, cell, item.display.toUpperCase(), font, textSize, tag, writeY)
+    const centerX = x + slotW / 2
+
+    if (slot.blank) {
+      objects.push(
+        buildRect(
+          {
+            left: Math.round(centerX - ruleW / 2),
+            top: baselineY,
+            width: ruleW,
+            height: RULE_HEIGHT,
+            fill: STUDIO_INK,
+            stroke: 'transparent',
+            strokeWidth: 0,
+          },
+          tag,
+          'structure',
+        ),
+      )
+    }
+
+    objects.push(
+      buildText(
+        {
+          left: centerX,
+          top: baselineY - letterLift,
+          text: slot.letter,
+          width: hugTextBoxWidth(slot.letter, letterFont, slotW, spec),
+          fontFamily: font,
+          fontSize: letterFont,
+          fill: STUDIO_INK,
+          textAlign: 'center',
+          originX: 'center',
+          originY: 'bottom',
+          lineHeight: 1,
+        },
+        tag,
+        // Consonants are the puzzle; the vowels are the answer and stay hidden
+        // until the key reveals them in their own slots.
+        slot.blank ? 'answer' : 'prompt',
+      ),
+    )
+    x += slotW
+  }
+}
+
+function buildRowGroup(options: {
+  item: MissingVowelsItem
+  clueLines: readonly string[]
+  index: number
+  /** Left edge of this row's column, where the row number sits. */
+  left: number
+  plan: MissingVowelsPagePlan
+  top: number
+  font: string
+  tag: StudioTag
+}): StudioFabricObject | null {
+  const { item, clueLines, index, left, plan, top, font, tag } = options
+  const { metrics, bandWidth } = plan
+  const spec = { fontFamily: font }
+  const bandLeft = left + metrics.indexW
+  const baselineY = top + metrics.writeRoom
+  const parts: StudioFabricObject[] = []
+
+  // The number sits on the letter row rather than at the top of the block, so a
+  // reader's eye runs "1. — letters" as one line and the clue reads as a note
+  // underneath it.
+  const label = `${index + 1}.`
+  parts.push(
+    buildText(
+      {
+        left,
+        top: baselineY - metrics.letterFont / 2,
+        text: label,
+        width: hugTextBoxWidth(label, metrics.indexFont, metrics.indexW, spec),
+        fontFamily: font,
+        fontSize: metrics.indexFont,
+        fill: STUDIO_INK_MUTED,
+        originY: 'center',
+        lineHeight: 1,
+      },
+      tag,
+      'prompt',
+    ),
+  )
+
+  drawSlots(parts, {
+    bandLeft,
+    baselineY,
+    answer: item.answer,
+    metrics,
+    font,
+    tag,
   })
 
-  gridObjects.push(
-    ...drawGridLines(table.bounds, table.cellW, table.cols, table.rows, tag, {
-      rowPitch: table.cellH,
-    }),
+  // Pre-broken to the column and set in a box wider than the breaks, so Fabric
+  // has no reason to re-wrap the clue into a line the row did not reserve.
+  parts.push(
+    buildText(
+      {
+        left: bandLeft,
+        top: baselineY + RULE_HEIGHT + metrics.clueGap,
+        text: clueLines.join('\n'),
+        width: bandWidth,
+        fontFamily: font,
+        fontSize: metrics.clueFont,
+        fill: STUDIO_INK_MUTED,
+        lineHeight: CLUE_LINE_HEIGHT,
+      },
+      tag,
+      'prompt',
+    ),
   )
-  objects.push(buildGroup(gridObjects, table.bounds, tag))
+
+  const bounds = unionObjectBounds(parts)
+  if (!bounds) return null
+  return buildGroup(parts, bounds, tag, 'structure')
+}
+
+export interface DrawMissingVowelsOptions {
+  field: Box
+  plan: MissingVowelsPagePlan
+  items: readonly MissingVowelsItem[]
+  font: string
+  tag: StudioTag
+}
+
+/**
+ * Lay the rows out in the body column.
+ *
+ * Two things happen here that a plain top-left stack does not do.
+ *
+ * Leftover height is spread between the rows before the block is centred, up to
+ * one gutter each. Centring alone leaves a page of six short rows as a clump in
+ * the middle with a hand's width of white above and below it; spreading first
+ * is what makes a printed page look composed.
+ *
+ * And the columns are centred on their *drawn* width rather than filling the
+ * band. A row is a block — number, letters, clue — often only two thirds as
+ * wide as the page measure, and anchoring that block to the left margin is what
+ * makes a sheet look as though it slipped off the page.
+ *
+ * Numbering runs down a column before moving across, so a solver reads 1, 2, 3
+ * in the order a hand moves down the page.
+ */
+export function drawMissingVowelsRows(
+  objects: StudioFabricObject[],
+  options: DrawMissingVowelsOptions,
+): void {
+  const { field, plan, items, font, tag } = options
+  const { metrics, rowHeight, itemCount, columns, rowsPerColumn } = plan
+  if (itemCount === 0) return
+
+  const usableHeight = Math.max(0, field.height - plan.bottomGuard)
+  const content = rowHeight * rowsPerColumn
+  const gaps = Math.max(0, rowsPerColumn - 1)
+  const slack = Math.max(0, usableHeight - content - metrics.gutter * gaps)
+  const spread = gaps > 0 ? Math.min(slack / (gaps + 1), metrics.gutter) : 0
+  const gutter = metrics.gutter + spread
+  const stackH = content + gutter * gaps
+  const stackTop = field.top + Math.max(0, (usableHeight - stackH) / 2)
+
+  const totalWidth =
+    plan.columnWidth * columns + plan.columnGutter * Math.max(0, columns - 1)
+  const originX = field.left + Math.max(0, (field.width - totalWidth) / 2)
+
+  for (let i = 0; i < itemCount; i++) {
+    const item = items[i]
+    if (!item) continue
+    const column = Math.floor(i / rowsPerColumn)
+    const rowInColumn = i % rowsPerColumn
+    const group = buildRowGroup({
+      item,
+      clueLines: plan.rows[i]?.clueLines ?? [item.clue],
+      index: i,
+      left: originX + column * (plan.columnWidth + plan.columnGutter),
+      plan,
+      top: stackTop + rowInColumn * (rowHeight + gutter),
+      font,
+      tag,
+    })
+    if (group) objects.push(group)
+  }
 }

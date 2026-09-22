@@ -1,23 +1,20 @@
 {
-  "_comment": "Retirement missing-vowels. candidateMultiplier=2 so we ask ~itemCount×2. lengthByDifficulty is letter count excluding spaces. Y is not a vowel.",
+  "_comment": "Retirement Missing Vowels: complete answers plus the clue that reaches each one. The letter band, the word limit and the clue budget arrive on the request because the page fixes all three before a word exists (frontend levels.ts / layout.ts). The page prints A E I O U as blanks itself, so the model must never send a pre-blanked form; Y is not a vowel. minVowels is the number of blanks a row needs to be a puzzle rather than a spelling test. varietyAngles rotate by seed so two sellers on one theme get different word sets.",
   "limits": {
-    "candidateMultiplier": 2,
     "rateLimitPerWindow": 60,
     "maxOutputTokens": 4096,
     "minWordLetters": 4,
     "maxWordLetters": 14,
-    "maxPhraseWords": 2,
-    "minConsonants": 2
-  },
-  "lengthByDifficulty": {
-    "relaxed": [4, 8],
-    "classic": [5, 10],
-    "challenge": [6, 14]
+    "minVowels": 2,
+    "minConsonants": 2,
+    "minClueChars": 8,
+    "maxClueChars": 60,
+    "clueStemLetters": 4
   },
   "locale": {
     "nativeLocales": ["en"],
-    "nativeLine": "- Write in clear English.",
-    "otherLine": "- Write in language locale '{locale}'."
+    "nativeLine": "- Write in clear English for adults and retirees.",
+    "otherLine": "- Write the answers and clues in language locale '{locale}'."
   },
   "varietyAngles": [
     "everyday retirement lifestyle words",

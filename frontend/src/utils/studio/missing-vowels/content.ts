@@ -1,160 +1,212 @@
-import type { StudioConfig } from '@/types/studio-template.types'
-import type { StudioRng } from '../studio-rng'
+import type {
+  MissingVowelsClue,
+  MissingVowelsItem,
+} from '@/types/studio-missing-vowels.types'
+import { isUnsafeCopy } from '../retirement-word-search/content-quality'
+import { answerWords, isPlayableAnswer, letterToken, maskedText } from './mask'
 import {
-  aiThemeLabel,
-  parseRetirementDifficulty,
-  type RetirementPrintStyle,
-} from '../_shared/retirement-theme-config'
-import {
-  hasAgeStereotype,
-  hasMedicalClaim,
-  hasTrademarkHint,
-} from '../crossword/content-quality'
-import {
-  isPlayableMask,
-  letterToken,
-  maskVowels,
-  type MissingVowelItem,
-} from './mask'
+  hasUniqueAnswerFill,
+  loadVowelPatternIndex,
+  type VowelPatternIndex,
+} from './pattern'
+import type { MissingVowelsLevel } from './levels'
 
-export type MvDifficulty = 'relaxed' | 'classic' | 'challenge'
-export type { RetirementPrintStyle }
+export type { MissingVowelsItem }
 
 export const MISSING_VOWELS_DEFAULT_TITLE = 'Missing Vowels'
-export const MISSING_VOWELS_INSTRUCTION =
-  'Add the missing vowels to complete each word or phrase.'
-export const MISSING_VOWELS_INSTRUCTION_GENERIC =
-  'Add the missing vowels to complete each retirement-themed word or phrase.'
+
 export const MISSING_VOWELS_AI_EMPTY_MESSAGE =
-  'Unable to create enough high-quality retirement words. Try again or choose a broader theme.'
+  'Could not write enough retirement words for this theme. Try again, or pick a broader theme.'
 
-export const MIN_ITEM_COUNT = 8
-export const MAX_ITEM_COUNT = 18
-export const DEFAULT_ITEM_COUNT = 12
-export const CANDIDATE_MULTIPLIER = 2
+/**
+ * The instruction a solver actually needs, and nothing past it.
+ *
+ * Naming the five letters is the one thing the page cannot show by itself. Y is
+ * printed like any other consonant, and a reader who has decided Y counts will
+ * spend the sheet looking for a blank that is not there. Everything else the
+ * row says for itself: a rule under a gap is somewhere to write.
+ */
+export const MISSING_VOWELS_INSTRUCTION =
+  'Write the missing vowels (A, E, I, O, U) on the lines.'
 
-export const LETTER_RANGE: Record<MvDifficulty, { min: number; max: number }> = {
-  relaxed: { min: 4, max: 8 },
-  classic: { min: 5, max: 10 },
-  challenge: { min: 6, max: 14 },
+export function missingVowelsInstruction(): string {
+  return MISSING_VOWELS_INSTRUCTION
 }
 
-const MAX_WORDS = 2
+/** Longest clue the printed column was planned for. */
+export const MAX_CLUE_CHARS = 42
+/** Below this a "clue" is a label, not a definition worth printing. */
+export const MIN_CLUE_CHARS = 8
 
-export function parseDifficulty(raw: unknown): MvDifficulty {
-  return parseRetirementDifficulty(raw)
+/**
+ * Ask the writer for this many extra candidates.
+ *
+ * Larger than the other games' over-request, and deliberately: the vowel-
+ * pattern gate in `pattern.ts` is the strictest filter any of these sheets
+ * applies, and it rejects perfectly good retirement words for sharing their
+ * blanks with a word the seller has never thought about. A second paid call
+ * costs far more than a longer list.
+ */
+export const CANDIDATE_OVERREQUEST = 16
+
+export function candidateCountFor(count: number): number {
+  return count + CANDIDATE_OVERREQUEST
 }
 
-export function clampItemCount(raw: unknown): number {
-  const n = Math.round(Number(raw ?? DEFAULT_ITEM_COUNT))
-  if (!Number.isFinite(n)) return DEFAULT_ITEM_COUNT
-  return Math.min(MAX_ITEM_COUNT, Math.max(MIN_ITEM_COUNT, n))
+/** Uppercase, single-spaced, letters only: "Road trip!" -> "ROAD TRIP". */
+export function normalizeAnswer(raw: unknown): string {
+  return answerWords(String(raw ?? '')).join(' ')
 }
 
-export function instructionFor(config: StudioConfig): string {
-  return config.showTitle === false
-    ? MISSING_VOWELS_INSTRUCTION_GENERIC
-    : MISSING_VOWELS_INSTRUCTION
+/**
+ * One line of sentence-case prose, no trailing stop.
+ *
+ * A full stop after a clue that sits under a row of writing rules reads as a
+ * stray mark at this size, and the clue is never a sentence to begin with.
+ */
+export function normalizeClue(raw: unknown): string {
+  const text = String(raw ?? '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[.…]+$/, '')
+    .trim()
+  if (!text) return ''
+  return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
-export function defaultTitleFor(config: StudioConfig): string | undefined {
-  if (String(config.title ?? '').trim()) return undefined
-  const theme = aiThemeLabel(config)
-  return theme ? `${MISSING_VOWELS_DEFAULT_TITLE}: ${theme}` : MISSING_VOWELS_DEFAULT_TITLE
-}
-
-export function isValidLetterCount(token: string, difficulty: MvDifficulty): boolean {
-  const { min, max } = LETTER_RANGE[difficulty]
-  return token.length >= min && token.length <= max
-}
-
-function titleCaseWord(word: string): string {
-  return word.charAt(0) + word.slice(1).toLowerCase()
-}
-
-function toDisplay(raw: string, words: string[]): string {
-  const trimmed = raw.trim()
-  if (/[a-z]/.test(trimmed) && /[A-Z]/.test(trimmed)) {
-    return trimmed.replace(/\s+/g, ' ')
+/**
+ * A clue that hands over the answer.
+ *
+ * Not just the word itself: a model asked to define GARDENING writes "where a
+ * gardener spends the morning" as often as not, and the consonants are already
+ * on the page — a solver who reads GARDEN in the clue has been handed the row
+ * rather than asked it. Comparing the first four letters catches the whole
+ * family without rejecting the honest near-misses a shorter prefix would.
+ */
+export function clueGivesAnswerAway(clue: string, answer: string): boolean {
+  const tokens = clue.toUpperCase().split(/[^A-Z]+/).filter(Boolean)
+  for (const word of answerWords(answer)) {
+    const stem = word.slice(0, 4)
+    if (stem.length < 4) {
+      if (tokens.includes(word)) return true
+      continue
+    }
+    if (tokens.some((token) => token.startsWith(stem))) return true
   }
-  return words.map(titleCaseWord).join(' ')
+  return false
 }
 
-function isUnsafeAnswer(display: string): boolean {
-  return hasMedicalClaim(display) || hasTrademarkHint(display) || hasAgeStereotype(display)
+export function isValidClue(clue: string, answer: string): boolean {
+  if (clue.length < MIN_CLUE_CHARS || clue.length > MAX_CLUE_CHARS) return false
+  if (clueGivesAnswerAway(clue, answer)) return false
+  return !isUnsafeCopy(clue)
 }
 
-/** GARDEN / GARDENER / GARDENING — skip inflected copies of a shorter answer. */
+export function isValidAnswerShape(
+  answer: string,
+  level: MissingVowelsLevel,
+): boolean {
+  const words = answerWords(answer)
+  if (words.length < 1 || words.length > level.maxWords) return false
+  const letters = letterToken(answer)
+  return letters.length >= level.minLetters && letters.length <= level.maxLetters
+}
+
+/**
+ * Everything that has to be true of one printed row.
+ *
+ * The pattern check is the one that decides whether the sheet is honest: blanks
+ * a second common word could fill have two right answers, and the solution page
+ * prints only one of them — so they never reach the page, clue or no clue.
+ */
+export function isValidMissingVowelsItem(
+  item: MissingVowelsItem,
+  level: MissingVowelsLevel,
+  index: VowelPatternIndex = loadVowelPatternIndex(),
+): boolean {
+  if (!/^[A-Z]+(?: [A-Z]+)*$/.test(item.answer)) return false
+  if (!isValidAnswerShape(item.answer, level)) return false
+  if (!isPlayableAnswer(item.answer)) return false
+  if (isUnsafeCopy(item.answer)) return false
+  if (!isValidClue(item.clue, item.answer)) return false
+  return hasUniqueAnswerFill(item.answer, index)
+}
+
+/**
+ * GARDEN / GARDENING — two rows off one stem read as the same puzzle twice.
+ *
+ * Their blanks differ, so neither the answer check nor the mask check catches
+ * it, but a reader who solved G_RD_N four rows ago is not being asked anything
+ * new by G_RD_N_NG.
+ */
 export function isNearDuplicate(a: string, b: string): boolean {
-  if (a === b) return true
-  const shorter = a.length <= b.length ? a : b
-  const longer = a.length > b.length ? a : b
+  const left = letterToken(a)
+  const right = letterToken(b)
+  if (left === right) return true
+  const shorter = left.length <= right.length ? left : right
+  const longer = left.length > right.length ? left : right
   if (shorter.length < 4) return false
   return longer.startsWith(shorter)
 }
 
-export function normalizeCandidate(raw: unknown): MissingVowelItem | null {
-  if (raw && typeof raw === 'object' && 'answer' in raw) {
-    return normalizeCandidate(String((raw as { answer: unknown }).answer))
-  }
-  const text = String(raw ?? '').trim()
-  if (!text) return null
-  const words = text
-    .toUpperCase()
-    .replace(/[^A-Z\s]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .split(' ')
-    .filter(Boolean)
-  if (words.length < 1 || words.length > MAX_WORDS) return null
-  if (words.some((word) => word.length < 1)) return null
-  const token = letterToken(words.join(''))
-  if (!token) return null
-  const display = toDisplay(text, words)
-  if (isUnsafeAnswer(display)) return null
-  const masked = maskVowels(words.join(' '))
-  const item: MissingVowelItem = { display, token, masked }
-  if (!isPlayableMask(item)) return null
-  return item
-}
+/**
+ * Normalize -> gate -> dedupe -> take `count`.
+ *
+ * Rows are deduped three ways because they can collide three ways: the same
+ * answer twice, two answers that print the same row of blanks, and two answers
+ * off one stem. The middle one is the one a reader notices — two identical
+ * prompts with different answers on the key is a sheet that looks misprinted.
+ */
+export function selectAiItems(
+  remote: readonly MissingVowelsClue[] | undefined,
+  options: { count: number; level: MissingVowelsLevel; index?: VowelPatternIndex },
+): MissingVowelsItem[] {
+  const { count, level } = options
+  const index = options.index ?? loadVowelPatternIndex()
+  const out: MissingVowelsItem[] = []
+  const seenAnswers = new Set<string>()
+  const seenMasks = new Set<string>()
 
-function prefersSingleWord(difficulty: MvDifficulty, item: MissingVowelItem): boolean {
-  if (difficulty !== 'relaxed') return true
-  return !item.display.includes(' ')
+  for (const raw of remote ?? []) {
+    const item: MissingVowelsItem = {
+      answer: normalizeAnswer(raw?.answer),
+      clue: normalizeClue(raw?.clue),
+    }
+    if (!isValidMissingVowelsItem(item, level, index)) continue
+    if (seenAnswers.has(item.answer)) continue
+    const mask = maskedText(item.answer)
+    if (seenMasks.has(mask)) continue
+    if (out.some((prev) => isNearDuplicate(prev.answer, item.answer))) continue
+    seenAnswers.add(item.answer)
+    seenMasks.add(mask)
+    out.push(item)
+    if (out.length >= count) break
+  }
+  return out
 }
 
 /**
- * Normalize → length → safety → unique token → unique mask → near-dupe → take count.
+ * The hardest page these settings could be handed.
+ *
+ * The form has to report how many rows a page holds before a single word
+ * exists, so it measures against the worst admissible row: the longest answer
+ * the band allows, split into as many words as the level permits — a word gap
+ * is wider than a letter slot, so a phrase is the wide case — beside the
+ * longest clue the column accepts. Anything `isValidMissingVowelsItem` lets
+ * through fits wherever this one does, which is what makes the form's note a
+ * promise rather than a guess.
  */
-export function selectAiItems(
-  remote: readonly unknown[] | undefined,
-  options: { count: number; difficulty: MvDifficulty },
-): MissingVowelItem[] {
-  const { count, difficulty } = options
-  const accepted: MissingVowelItem[] = []
-  const tokens = new Set<string>()
-  const masks = new Set<string>()
-
-  for (const raw of remote ?? []) {
-    const item = normalizeCandidate(raw)
-    if (!item) continue
-    if (!isValidLetterCount(item.token, difficulty)) continue
-    if (tokens.has(item.token) || masks.has(item.masked)) continue
-    if (accepted.some((prev) => isNearDuplicate(prev.token, item.token))) continue
-    tokens.add(item.token)
-    masks.add(item.masked)
-    accepted.push(item)
-  }
-
-  const preferred = accepted.filter((item) => prefersSingleWord(difficulty, item))
-  const pool = preferred.length >= count ? preferred : accepted
-  return pool.slice(0, count)
-}
-
-export function shuffleItems(items: MissingVowelItem[], rng: StudioRng): MissingVowelItem[] {
-  return rng.shuffle(items)
-}
-
-export function minPuzzleFont(printStyle: RetirementPrintStyle): number {
-  return printStyle === 'standard' ? 12 : 16
+export function worstCaseItems(
+  level: MissingVowelsLevel,
+  count: number,
+): MissingVowelsItem[] {
+  // "Wandering" is an ordinary-width run in a serif face: no narrow stems to
+  // flatter the measurement, no double-width m/w to make it pessimistic.
+  const clue = 'Wandering '.repeat(8).slice(0, MAX_CLUE_CHARS).trim()
+  const words = Math.max(1, level.maxWords)
+  const tail = Math.floor(level.maxLetters / words)
+  const answer = Array.from({ length: words }, (_, i) =>
+    'N'.repeat(i === 0 ? level.maxLetters - tail * (words - 1) : tail),
+  ).join(' ')
+  return Array.from({ length: Math.max(1, count) }, () => ({ answer, clue }))
 }

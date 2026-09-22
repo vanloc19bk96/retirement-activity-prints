@@ -11,72 +11,126 @@ import {
 import {
   STUDIO_ANSWER_INK_MONO,
   STUDIO_ANSWER_INK_MONO_TEMPLATES,
-  STUDIO_CONTENT_SAFE_INSET_X,
 } from '@/constants/studio.constants'
 import { buildAnswerPage, harvestAnswers } from '../studio-answer-key'
-import { contentBox, insetHorizontal, drawHeader } from '../studio-layout'
-import type { StudioTag } from '../studio-fabric-builders'
+import { DPI } from '@/types/canvas-settings.types'
 import type {
   StudioConfig,
   StudioFabricObject,
   StudioGenerateContext,
 } from '@/types/studio-template.types'
-import { maskVowels } from './mask'
+import { missingVowelsFixtureResponse } from './fixture'
 import {
-  LETTER_RANGE,
+  MAX_CLUE_CHARS,
   MISSING_VOWELS_DEFAULT_TITLE,
   MISSING_VOWELS_INSTRUCTION,
-  clampItemCount,
-  defaultTitleFor,
+  clueGivesAnswerAway,
   isNearDuplicate,
-  parseDifficulty,
+  isValidMissingVowelsItem,
+  normalizeAnswer,
+  normalizeClue,
   selectAiItems,
+  worstCaseItems,
 } from './content'
-import { candidateRequestCount } from './prefetch'
+import { isVowel, letterToken, maskedText, toSlots } from './mask'
+import {
+  buildVowelPatternIndexForTests,
+  hasUniqueAnswerFill,
+  vowelPattern,
+} from './pattern'
+import {
+  MISSING_VOWELS_LEVELS,
+  parseMissingVowelsLevel,
+  type MissingVowelsLevelId,
+} from './levels'
+import {
+  SLOT_MIN_W,
+  missingVowelsPrintNote,
+  missingVowelsWorstCasePlan,
+} from './layout'
 import { validateMissingVowelsConfig } from './config'
 
-function flattenObjects(objects: StudioFabricObject[]): StudioFabricObject[] {
-  return objects.flatMap((obj) => [obj, ...flattenObjects(obj.objects ?? [])])
-}
+const remote = missingVowelsFixtureResponse()
 
-const AI_ITEMS = [
-  'TRAVEL',
-  'GARDEN',
-  'PENSION',
-  'LEISURE',
-  'CRUISE',
-  'FAMILY',
-  'MEMORY',
-  'HOBBY',
-  'RELAX',
-  'PICNIC',
-  'SUNSET',
-  'FRIENDS',
-  'NATURE',
-  'READING',
-  'SAILING',
-  'FREEDOM',
-  'JOURNEY',
-  'WEEKEND',
-  'BUCKET',
-  'SOCIAL',
-  'OUTING',
-  'COMFORT',
-]
-
-const remote = { items: AI_ITEMS }
-
-const CTX = (): StudioGenerateContext => ({
+const CTX = (over: Partial<StudioGenerateContext> = {}): StudioGenerateContext => ({
   ...STUDIO_TEST_CTX,
   remoteData: remote,
+  ...over,
 })
 
 const base: StudioConfig = {
   ...buildDefaultConfig(missingVowelsTemplate),
   seed: 42,
   fontFamily: 'PT Serif',
-  itemCount: 12,
-  difficulty: 'classic',
+}
+
+/**
+ * The same page with its heading spelled out.
+ *
+ * Generate fills a blank title from the theme, so a config that leaves it blank
+ * measures against a body taller than the one the page really lays out in. Any
+ * test that compares the form's promise with the printed page has to hold both
+ * sides to the same header.
+ */
+const titled: StudioConfig = { ...base, title: 'Missing Vowels' }
+
+/** A real KDP interior page: DPI 96, inside margin 0.375", the rest 0.25". */
+const kdpCtx = (wIn: number, hIn: number): StudioGenerateContext => ({
+  pageWidth: Math.round(wIn * DPI),
+  pageHeight: Math.round(hIn * DPI),
+  margin: {
+    top: Math.round(0.25 * DPI),
+    right: Math.round(0.25 * DPI),
+    bottom: Math.round(0.25 * DPI),
+    left: Math.round(0.375 * DPI),
+  },
+  seed: 4242,
+  instanceId: 'kdp',
+  remoteData: remote,
+})
+
+const KDP_TRIMS: ReadonlyArray<readonly [number, number]> = [
+  [5, 8],
+  [5.5, 8.5],
+  [6, 9],
+  [7.5, 9.25],
+  [8.5, 11],
+]
+
+function flatten(objects: readonly StudioFabricObject[]): StudioFabricObject[] {
+  return objects.flatMap((obj) => [obj, ...flatten(obj.objects ?? [])])
+}
+
+/** Row groups, in the order the page drew them. */
+function rowGroups(objects: readonly StudioFabricObject[]): StudioFabricObject[] {
+  return objects.filter(
+    (obj) => obj.type === 'group' && (obj.objects ?? []).some(isSlotLetter),
+  )
+}
+
+function isSlotLetter(obj: StudioFabricObject): boolean {
+  if (obj.type !== 'textbox') return false
+  if (obj.studioRole !== 'prompt' && obj.studioRole !== 'answer') return false
+  return /^[A-Z]$/.test(String(obj.text ?? ''))
+}
+
+/** The letters of one printed row, left to right, prompts and answers alike. */
+function rowLetters(group: StudioFabricObject): StudioFabricObject[] {
+  return (group.objects ?? [])
+    .filter(isSlotLetter)
+    .toSorted((a, b) => a.left - b.left)
+}
+
+/** The clue printed under one row. */
+function rowClue(group: StudioFabricObject): string {
+  const texts = (group.objects ?? []).filter(
+    (obj) =>
+      obj.type === 'textbox' &&
+      obj.studioRole === 'prompt' &&
+      !isSlotLetter(obj) &&
+      !/^\d+\.$/.test(String(obj.text ?? '').trim()),
+  )
+  return String(texts.at(-1)?.text ?? '').replace(/\n/g, ' ')
 }
 
 runGeneratorContractTests(missingVowelsTemplate, {
@@ -86,241 +140,382 @@ assertGeneratorEntropy(missingVowelsTemplate, {
   contextOverrides: { remoteData: remote },
 })
 
-describe('missing-vowels', () => {
+describe('missing-vowels rows', () => {
   it('is registered as monochrome answer ink', () => {
     expect(STUDIO_ANSWER_INK_MONO_TEMPLATES.has('missing-vowels')).toBe(true)
   })
 
-  it('emits exact itemCount hidden answers', () => {
+  it('prints every consonant and hides every vowel, slot by slot', () => {
+    resetObjectCounter()
+    const [page] = missingVowelsTemplate.generate(base, CTX())
+    const rows = rowGroups(page!.objects)
+    expect(rows.length).toBeGreaterThan(0)
+
+    for (const row of rows) {
+      for (const letter of rowLetters(row)) {
+        const text = String(letter.text)
+        if (isVowel(text)) {
+          expect(letter.studioRole, `${text} should be hidden`).toBe('answer')
+          expect(letter.visible).toBe(false)
+        } else {
+          expect(letter.studioRole, `${text} should be printed`).toBe('prompt')
+          expect(letter.visible).not.toBe(false)
+        }
+      }
+    }
+  })
+
+  it('restores each row of blanks to exactly its own answer', () => {
+    resetObjectCounter()
+    const [page] = missingVowelsTemplate.generate(base, CTX())
+    const answers = new Set(remote.items.map((item) => item.answer.replace(/ /g, '')))
+
+    for (const row of rowGroups(page!.objects)) {
+      const restored = rowLetters(row)
+        .map((obj) => String(obj.text))
+        .join('')
+      expect(answers.has(restored), `${restored} is not one of the answers`).toBe(true)
+      // And the blanks are exactly the vowels of that answer — nothing printed
+      // that should have been written, nothing hidden that should have printed.
+      const blanks = rowLetters(row)
+        .map((obj) => (obj.studioRole === 'answer' ? '_' : String(obj.text)))
+        .join('')
+      expect(blanks).toBe(maskedText(restored))
+    }
+  })
+
+  it('draws one writing rule for every blank, and none for a word gap', () => {
+    resetObjectCounter()
+    // Classic is the level that prints phrases, so it is the one with gaps.
+    const [page] = missingVowelsTemplate.generate({ ...base, level: 'classic' }, CTX())
+    for (const row of rowGroups(page!.objects)) {
+      const blanks = rowLetters(row).filter((obj) => obj.studioRole === 'answer')
+      const rules = (row.objects ?? []).filter(
+        (obj) => obj.type === 'rect' && obj.studioRole === 'structure',
+      )
+      expect(rules.length).toBe(blanks.length)
+    }
+  })
+
+  it('gives every row a clue that never contains its own answer', () => {
+    resetObjectCounter()
+    const [page] = missingVowelsTemplate.generate(base, CTX())
+    for (const row of rowGroups(page!.objects)) {
+      const clue = rowClue(row).trim()
+      const answer = rowLetters(row)
+        .map((obj) => String(obj.text))
+        .join('')
+      expect(clue.length).toBeGreaterThan(0)
+      expect(clue.length).toBeLessThanOrEqual(MAX_CLUE_CHARS + 2)
+      expect(clueGivesAnswerAway(clue, answer)).toBe(false)
+    }
+  })
+
+  it('never prints the same answer or the same row of blanks twice', () => {
+    for (const seed of [1, 42, 777, 20_260_922]) {
+      resetObjectCounter()
+      const [page] = missingVowelsTemplate.generate(
+        { ...base, seed },
+        CTX({ seed }),
+      )
+      const rows = rowGroups(page!.objects).map((row) =>
+        rowLetters(row)
+          .map((obj) => String(obj.text))
+          .join(''),
+      )
+      expect(new Set(rows).size).toBe(rows.length)
+      expect(new Set(rows.map(maskedText)).size).toBe(rows.length)
+    }
+  })
+})
+
+describe('missing-vowels solution page', () => {
+  it('is the puzzle page with the vowels written into their own blanks', () => {
+    resetObjectCounter()
+    const [page] = missingVowelsTemplate.generate(base, CTX())
+    const key = buildAnswerPage(page!.answerSourceObjects!, STUDIO_ANSWER_INK_MONO)
+
+    const puzzleRows = rowGroups(page!.objects)
+    const keyRows = rowGroups(key)
+    expect(keyRows.length).toBe(puzzleRows.length)
+
+    for (let i = 0; i < keyRows.length; i++) {
+      const puzzle = rowLetters(puzzleRows[i]!)
+      const solved = rowLetters(keyRows[i]!)
+      expect(solved.length).toBe(puzzle.length)
+      for (let j = 0; j < solved.length; j++) {
+        // Same letter, same slot — the key is the page, filled in.
+        expect(String(solved[j]!.text)).toBe(String(puzzle[j]!.text))
+        expect(solved[j]!.left).toBe(puzzle[j]!.left)
+        expect(solved[j]!.visible).not.toBe(false)
+      }
+      expect(rowClue(keyRows[i]!)).toBe(rowClue(puzzleRows[i]!))
+    }
+  })
+
+  it('reveals a hidden answer for every vowel on the page', () => {
     resetObjectCounter()
     const [page] = missingVowelsTemplate.generate(base, CTX())
     const answers = harvestAnswers(page!.objects)
-    expect(answers.length).toBe(12)
+    expect(answers.length).toBeGreaterThan(0)
+    expect(answers.every((obj) => obj.visible === false)).toBe(true)
+    expect(answers.every((obj) => isVowel(String(obj.text)))).toBe(true)
     expect(missingVowelsTemplate.producesAnswerKey).toBe(true)
   })
 
-  it('masks every A/E/I/O/U and keeps Y visible', () => {
-    resetObjectCounter()
-    const words = ['HAPPY', 'CRUISE', 'GARDEN', 'FAMILY', 'PICNIC', 'SUNSET', 'TRAVEL', 'MEMORY']
-    const [page] = missingVowelsTemplate.generate(
-      { ...base, itemCount: words.length },
-      { ...CTX(), remoteData: { items: words } },
-    )
-    const nested = flattenObjects(page!.objects)
-    const prompts = nested.filter((o) => o.studioRole === 'prompt')
-    const answers = harvestAnswers(page!.objects)
-    expect(prompts.length).toBe(answers.length)
-    for (let i = 0; i < prompts.length; i++) {
-      const prompt = String(prompts[i]!.text ?? '').replace(/\u00A0/g, ' ')
-      const answer = String(answers[i]!.text ?? '').replace(/\u00A0/g, ' ').trim()
-      expect(prompt).toBe(maskVowels(answer))
-      expect(prompt.includes('Y') || !answer.includes('Y')).toBe(true)
-    }
-    const happy = prompts.map((o) => String(o.text ?? '').replace(/\u00A0/g, ' '))
-    expect(happy).toContain('H_PPY')
-  })
-
-  it('allows short two-word phrases', () => {
-    resetObjectCounter()
-    const items = [
-      'ROAD TRIP',
-      'FREE TIME',
-      'TEA TIME',
-      'CRUISE',
-      'GARDEN',
-      'FAMILY',
-      'PICNIC',
-      'SUNSET',
-    ]
-    const [page] = missingVowelsTemplate.generate(
-      { ...base, itemCount: 8 },
-      { ...CTX(), remoteData: { items } },
-    )
-    const answers = harvestAnswers(page!.objects).map((o) =>
-      String(o.text ?? '').replace(/\u00A0/g, ' ').trim(),
-    )
-    expect(answers).toEqual(expect.arrayContaining(['ROAD TRIP', 'FREE TIME']))
-    const prompts = flattenObjects(page!.objects)
-      .filter((o) => o.studioRole === 'prompt')
-      .map((o) => String(o.text ?? '').replace(/\u00A0/g, ' '))
-    expect(prompts).toContain('R__D TR_P')
-  })
-
-  it('drops duplicate masked forms and near-duplicate stems', () => {
-    const selected = selectAiItems(
-      [
-        'BOAT',
-        'BEAT',
-        'BAIT',
-        'GARDEN',
-        'GARDENER',
-        'CRUISE',
-        'FAMILY',
-        'PICNIC',
-        'SUNSET',
-        'TRAVEL',
-        'MEMORY',
-        'RELAX',
-      ],
-      { count: 8, difficulty: 'relaxed' },
-    )
-    const tokens = selected.map((item) => item.token)
-    expect(tokens).toContain('BOAT')
-    expect(tokens).not.toContain('BEAT')
-    expect(tokens.filter((t) => t.startsWith('GARDEN')).length).toBe(1)
-    const masks = new Set(selected.map((item) => item.masked))
-    expect(masks.size).toBe(selected.length)
-  })
-
-  it('fits the max 18-item layout inside the safe area', () => {
-    resetObjectCounter()
-    const config = { ...base, itemCount: 18 }
-    const ctx = CTX()
-    const [page] = missingVowelsTemplate.generate(config, ctx)
-    expect(harvestAnswers(page!.objects).length).toBe(18)
-    assertObjectsInSafeMargin(page!.objects, ctx)
-    if (page!.answerSourceObjects) {
-      assertObjectsInSafeMargin(page!.answerSourceObjects, ctx)
-    }
-  })
-
-  it('puts index and masked prompt on a shared baseline', () => {
-    resetObjectCounter()
-    const [page] = missingVowelsTemplate.generate({ ...base, itemCount: 18 }, CTX())
-    const nested = flattenObjects(page!.objects)
-    const prompts = nested.filter((o) => o.studioRole === 'prompt')
-    const indexes = nested.filter(
-      (o) => o.studioRole === 'decoration' && /^\d+\.$/.test(String(o.text ?? '')),
-    )
-    expect(indexes.length).toBe(prompts.length)
-    expect(prompts.length).toBe(18)
-    for (let i = 0; i < prompts.length; i++) {
-      expect(prompts[i]!.originY).toBe('bottom')
-      expect(indexes[i]!.originY).toBe('bottom')
-      expect(indexes[i]!.top).toBe(prompts[i]!.top)
-    }
-  })
-
-  it('keeps 18-item write-in lines off the cell floor', () => {
-    resetObjectCounter()
-    const [page] = missingVowelsTemplate.generate({ ...base, itemCount: 18 }, CTX())
-    const grid = page!.objects.find(
-      (o) => o.type === 'group' && (o.objects ?? []).some((c) => c.studioRole === 'prompt'),
-    )!
-    const rows = 9
-    const cellH = grid.height! / rows
-    const lines = flattenObjects([grid]).filter((o) => o.type === 'line' && o.studioRole === 'structure')
-    expect(lines.length).toBe(18)
-    for (const line of lines) {
-      // Group children are stored relative to the group center.
-      const localY = Number(line.y1) + grid.height! / 2
-      const row = Math.min(rows - 1, Math.max(0, Math.floor(localY / cellH)))
-      const cellBottom = (row + 1) * cellH
-      expect(cellBottom - localY).toBeGreaterThanOrEqual(12)
-      expect(localY - row * cellH).toBeGreaterThan(cellH * 0.4)
-    }
-  })
-
-  it('puzzle and answer key share the same answers in order', () => {
+  it('drops the instruction strip but keeps the clues', () => {
     resetObjectCounter()
     const [page] = missingVowelsTemplate.generate(base, CTX())
-    const puzzleAnswers = harvestAnswers(page!.objects).map((o) =>
-      String(o.text ?? '').trim(),
-    )
-    const keyAnswers = harvestAnswers(page!.answerSourceObjects ?? []).map((o) =>
-      String(o.text ?? '').trim(),
-    )
-    expect(keyAnswers).toEqual(puzzleAnswers)
-
-    const answerPage = buildAnswerPage(
-      page!.answerSourceObjects ?? page!.objects,
-      STUDIO_ANSWER_INK_MONO,
-    )
-    const nested = flattenObjects(answerPage)
-    expect(nested.filter((o) => o.studioRole === 'prompt')).toHaveLength(0)
-    expect(nested.filter((o) => o.type === 'line')).toHaveLength(0)
-    expect(harvestAnswers(answerPage).every((o) => o.fill === STUDIO_ANSWER_INK_MONO)).toBe(
-      true,
-    )
-  })
-
-  it('centers the solution grid in the answer-key body', () => {
-    resetObjectCounter()
-    const ctx = CTX()
-    const config = { ...base, showTitle: true, title: 'Missing Vowels: Travel Dreams' }
-    const [page] = missingVowelsTemplate.generate(config, ctx)
-    const keyObjects = buildAnswerPage(
-      page!.answerSourceObjects ?? page!.objects,
-      STUDIO_ANSWER_INK_MONO,
-    )
-    const grid = keyObjects.find(
-      (o) => o.type === 'group' && (o.objects ?? []).some((c) => c.studioRole === 'answer'),
-    )!
-    const tag: StudioTag = {
-      templateKey: 'missing-vowels',
-      instanceId: ctx.instanceId,
-      pageRole: 'single',
+    const keyText = flatten(page!.answerSourceObjects!)
+      .map((obj) => String(obj.text ?? ''))
+      .join(' ')
+    expect(keyText).not.toContain('Write the missing vowels')
+    for (const row of rowGroups(page!.objects)) {
+      expect(keyText).toContain(rowClue(row))
     }
-    const field = drawHeader(
-      insetHorizontal(contentBox(ctx), STUDIO_CONTENT_SAFE_INSET_X),
-      config,
-      tag,
-      '',
-    ).body
-    const gridCenterX = grid.left! + grid.width! / 2
-    const gridCenterY = grid.top! + grid.height! / 2
-    expect(Math.abs(gridCenterX - (field.left + field.width / 2))).toBeLessThanOrEqual(2)
-    expect(Math.abs(gridCenterY - (field.top + field.height / 2))).toBeLessThanOrEqual(2)
+  })
+})
+
+describe('missing-vowels page fitting', () => {
+  it('stays inside the safe margin on every KDP trim and level', () => {
+    for (const [wIn, hIn] of KDP_TRIMS) {
+      for (const level of MISSING_VOWELS_LEVELS) {
+        for (const showTitle of [false, true]) {
+          const ctx = kdpCtx(wIn, hIn)
+          resetObjectCounter()
+          const pages = missingVowelsTemplate.generate(
+            { ...base, level: level.id, showTitle, title: showTitle ? 'Game 1' : '' },
+            ctx,
+          )
+          for (const page of pages) {
+            assertObjectsInSafeMargin(page.objects, ctx)
+            assertObjectsInSafeMargin(
+              buildAnswerPage(page.answerSourceObjects ?? page.objects, STUDIO_ANSWER_INK_MONO),
+              ctx,
+            )
+          }
+        }
+      }
+    }
   })
 
-  it('shows an error page instead of bundled words when AI content is missing', () => {
-    resetObjectCounter()
-    const [page] = missingVowelsTemplate.generate(base, { ...STUDIO_TEST_CTX })
-    expect(harvestAnswers(page!.objects)).toHaveLength(0)
-    const texts = flattenObjects(page!.objects).map((o) => String(o.text ?? ''))
-    expect(texts.some((t) => /unable to create/i.test(t))).toBe(true)
+  it('prints a real page at every level on the smallest trim it sells', () => {
+    const ctx = kdpCtx(5, 8)
+    for (const level of MISSING_VOWELS_LEVELS) {
+      resetObjectCounter()
+      const [page] = missingVowelsTemplate.generate({ ...base, level: level.id }, ctx)
+      const rows = rowGroups(page!.objects)
+      expect(rows.length, `${level.id} on 5 x 8`).toBeGreaterThanOrEqual(4)
+    }
   })
 
-  it('requires custom theme text when Write my own theme is on', () => {
-    expect(
-      validateMissingVowelsConfig({
-        ...base,
-        writeOwnTheme: true,
-        customTheme: '',
-      }),
-    ).toMatchObject({ field: 'customTheme' })
+  it('keeps blanks wide enough to write a letter in', () => {
+    for (const [wIn, hIn] of KDP_TRIMS) {
+      for (const level of MISSING_VOWELS_LEVELS) {
+        const ctx = kdpCtx(wIn, hIn)
+        const plan = missingVowelsWorstCasePlan({
+          level,
+          page: ctx,
+          config: titled,
+          instruction: MISSING_VOWELS_INSTRUCTION,
+          font: 'PT Serif',
+        })
+        expect(plan, `${level.id} on ${wIn}x${hIn}`).not.toBeNull()
+        expect(plan!.metrics.slotW).toBeGreaterThanOrEqual(SLOT_MIN_W)
+      }
+    }
   })
 
-  it('defaults title from the retirement theme', () => {
-    expect(defaultTitleFor({ ...base, title: '' })).toBe(
-      `${MISSING_VOWELS_DEFAULT_TITLE}: Life After Work`,
-    )
-    expect(MISSING_VOWELS_INSTRUCTION).toMatch(/missing vowels/i)
+  it('uses both columns of a wide page at every level', () => {
+    // A single column of long words down the left half of a US Letter sheet
+    // wastes the page — the level bands are set so a second column fits.
+    for (const level of MISSING_VOWELS_LEVELS) {
+      const plan = missingVowelsWorstCasePlan({
+        level,
+        page: kdpCtx(8.5, 11),
+        config: titled,
+        instruction: MISSING_VOWELS_INSTRUCTION,
+        font: 'PT Serif',
+      })
+      expect(plan!.columns, `${level.id} on 8.5 x 11`).toBe(2)
+    }
   })
 
-  it('clamps itemCount and asks for itemCount×2 candidates', () => {
-    expect(clampItemCount(3)).toBe(8)
-    expect(clampItemCount(99)).toBe(18)
-    expect(candidateRequestCount(12)).toBe(24)
+  it('holds every page of one run to the same shape and count', () => {
+    const ctx = kdpCtx(6, 9)
+    const counts = new Set<number>()
+    const pitches = new Set<number>()
+    for (let seed = 1; seed <= 8; seed++) {
+      resetObjectCounter()
+      const [page] = missingVowelsTemplate.generate(
+        { ...base, seed },
+        { ...ctx, seed },
+      )
+      const rows = rowGroups(page!.objects)
+      counts.add(rows.length)
+      pitches.add(Number(rowLetters(rows[0]!)[0]!.fontSize))
+    }
+    expect(counts.size, 'every page of one run holds the same count').toBe(1)
+    expect(pitches.size, 'every page of one run sets at the same size').toBe(1)
   })
 
-  it('difficulty letter ranges match the spec', () => {
-    expect(LETTER_RANGE[parseDifficulty('relaxed')]).toEqual({ min: 4, max: 8 })
-    expect(LETTER_RANGE.classic).toEqual({ min: 5, max: 10 })
-    expect(LETTER_RANGE.challenge).toEqual({ min: 6, max: 14 })
+  it('never promises the form more puzzles than the page prints', () => {
+    for (const [wIn, hIn] of KDP_TRIMS) {
+      for (const level of MISSING_VOWELS_LEVELS) {
+        const ctx = kdpCtx(wIn, hIn)
+        const promised = missingVowelsWorstCasePlan({
+          level,
+          page: ctx,
+          config: titled,
+          instruction: MISSING_VOWELS_INSTRUCTION,
+          font: 'PT Serif',
+        })!
+        resetObjectCounter()
+        const [page] = missingVowelsTemplate.generate(
+          { ...titled, level: level.id },
+          ctx,
+        )
+        expect(rowGroups(page!.objects).length).toBe(promised.itemCount)
+      }
+    }
+  })
+
+  it('reports what the chosen trim will actually print', () => {
+    const note = missingVowelsPrintNote({
+      level: parseMissingVowelsLevel(titled),
+      page: kdpCtx(8.5, 11),
+      config: titled,
+      instruction: MISSING_VOWELS_INSTRUCTION,
+      font: 'PT Serif',
+    })
+    expect(note).toMatch(/\d+ puzzles a page/)
+    expect(note).toMatch(/letters at \d+ pt/)
+    expect(note).toContain('answer page')
+  })
+})
+
+describe('missing-vowels content gates', () => {
+  const level = MISSING_VOWELS_LEVELS.find((l) => l.id === 'classic')!
+
+  it('rejects an answer whose blanks fit a second common word', () => {
+    // C_L_ND_R is CALENDAR and COLANDER; the key can only be right about one.
+    const index = buildVowelPatternIndexForTests(['CALENDAR', 'COLANDER', 'PICNIC'])
+    expect(hasUniqueAnswerFill('CALENDAR', index)).toBe(false)
+    expect(hasUniqueAnswerFill('PICNIC', index)).toBe(true)
+    expect(vowelPattern('CALENDAR')).toBe('C.L.ND.R')
+  })
+
+  it('checks a phrase one word at a time', () => {
+    const index = buildVowelPatternIndexForTests(['TIME', 'TOME', 'FREE', 'CLUB', 'BOOK'])
+    expect(hasUniqueAnswerFill('FREE TIME', index)).toBe(false)
+    expect(hasUniqueAnswerFill('BOOK CLUB', index)).toBe(true)
+  })
+
+  it('refuses rows with too few blanks or too little word left', () => {
+    const pool = [
+      { answer: 'RHYTHMS', clue: 'Beats in a piece of music' },
+      { answer: 'PICNIC', clue: 'Lunch on a rug in the park' },
+    ]
+    const picked = selectAiItems(pool, { count: 2, level })
+    expect(picked.map((item) => item.answer)).toEqual(['PICNIC'])
+  })
+
+  it('refuses a clue that carries its own answer', () => {
+    expect(clueGivesAnswerAway('Where a gardener works', 'GARDENING')).toBe(true)
+    expect(clueGivesAnswerAway('Where the roses grow', 'GARDENING')).toBe(false)
+    expect(clueGivesAnswerAway('A club for readers', 'BOOK CLUB')).toBe(true)
+  })
+
+  it('drops a second row built off the same stem', () => {
     expect(isNearDuplicate('GARDEN', 'GARDENING')).toBe(true)
-    expect(isNearDuplicate('CRUISE', 'GARDEN')).toBe(false)
+    expect(isNearDuplicate('READING', 'REUNION')).toBe(false)
+    const picked = selectAiItems(
+      [
+        { answer: 'PAINTING', clue: 'Brush, easel and a quiet hour' },
+        { answer: 'PAINT', clue: 'What the brush carries' },
+        { answer: 'PICNIC', clue: 'Lunch on a rug in the park' },
+      ],
+      { count: 3, level },
+    )
+    expect(picked.map((item) => item.answer)).toEqual(['PAINTING', 'PICNIC'])
   })
 
-  it('exposes retirement theme fields and no custom word list', () => {
-    const keys = missingVowelsTemplate.configSchema.map((f) => f.key)
-    expect(keys).toContain('presetThemeId')
-    expect(keys).toContain('retirementCategory')
-    expect(keys).toContain('printStyle')
-    expect(keys).not.toContain('showLengthHint')
-    expect(keys).not.toContain('wordList')
-    expect(buildDefaultConfig(missingVowelsTemplate).presetThemeId).toBe('life-after-work')
-    expect(buildDefaultConfig(missingVowelsTemplate).difficulty).toBe('classic')
-    expect(buildDefaultConfig(missingVowelsTemplate).printStyle).toBe('large-print')
+  it('normalizes what the writer sent into what the page prints', () => {
+    expect(normalizeAnswer(' road trip! ')).toBe('ROAD TRIP')
+    expect(normalizeClue('  a quiet hour.  ')).toBe('A quiet hour')
+    expect(maskedText('ROAD TRIP')).toBe('R__D TR_P')
+    expect(letterToken('Road Trip')).toBe('ROADTRIP')
+    expect(toSlots('AT ONE').filter((slot) => slot.gap).length).toBe(1)
+  })
+
+  it('holds every fixture row to the gate the page applies', () => {
+    for (const item of remote.items) {
+      const fits = MISSING_VOWELS_LEVELS.some((l) =>
+        isValidMissingVowelsItem({ answer: item.answer, clue: item.clue }, l),
+      )
+      expect(fits, `${item.answer} — ${item.clue}`).toBe(true)
+    }
+  })
+
+  it('probes the widest row a level can be handed', () => {
+    for (const l of MISSING_VOWELS_LEVELS) {
+      const [worst] = worstCaseItems(l, 3)
+      expect(letterToken(worst!.answer).length).toBe(l.maxLetters)
+      expect(worst!.answer.split(' ').length).toBe(l.maxWords)
+      expect(worst!.clue.length).toBeLessThanOrEqual(MAX_CLUE_CHARS)
+    }
+  })
+})
+
+describe('missing-vowels form', () => {
+  it('asks two questions and derives the rest from the page', () => {
+    const keys = missingVowelsTemplate.configSchema.map((field) => field.key)
+    expect(keys).toEqual(['theme', 'customTheme', 'level'])
+    // Everything the old form asked about the page is gone.
+    for (const dropped of ['itemCount', 'printStyle', 'difficulty', 'retirementCategory']) {
+      expect(keys).not.toContain(dropped)
+    }
+  })
+
+  it('defaults to a rotating theme and the everyday level', () => {
+    const config = buildDefaultConfig(missingVowelsTemplate)
+    expect(config.theme).toBe('mixed')
+    expect(config.level).toBe('classic')
+    expect(missingVowelsTemplate.defaultPageTitle).toBe(MISSING_VOWELS_DEFAULT_TITLE)
+  })
+
+  it('reads the levels a sheet was saved with before the ladder existed', () => {
+    const legacy: Array<[unknown, MissingVowelsLevelId]> = [
+      ['relaxed', 'gentle'],
+      ['easy', 'gentle'],
+      ['classic', 'classic'],
+      ['challenge', 'challenging'],
+      ['hard', 'challenging'],
+    ]
+    for (const [difficulty, expected] of legacy) {
+      expect(parseMissingVowelsLevel({ difficulty }).id).toBe(expected)
+    }
+    expect(parseMissingVowelsLevel({}).id).toBe('classic')
+  })
+
+  it('only asks for a typed theme when the seller chose to type one', () => {
+    expect(validateMissingVowelsConfig({ theme: 'mixed' })).toBeNull()
+    expect(validateMissingVowelsConfig({ theme: 'custom', customTheme: '' })).toEqual({
+      field: 'customTheme',
+      message: 'Enter a theme for the words.',
+    })
+    expect(
+      validateMissingVowelsConfig({ theme: 'custom', customTheme: 'canal weekends' }),
+    ).toBeNull()
+  })
+
+  it('says so rather than printing a broken page when nothing usable came back', () => {
+    resetObjectCounter()
+    const [page] = missingVowelsTemplate.generate(base, CTX({ remoteData: { items: [] } }))
+    const text = flatten(page!.objects)
+      .map((obj) => String(obj.text ?? ''))
+      .join(' ')
+    expect(text).toContain('Could not write enough retirement words')
+    expect(rowGroups(page!.objects).length).toBe(0)
   })
 })

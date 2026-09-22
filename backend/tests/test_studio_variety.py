@@ -108,19 +108,23 @@ def test_at_seed_keeps_the_bucket_and_changes_the_draw() -> None:
 
 # ------------------------------------------------- end-to-end through a service
 
+def _item(answer: str, clue: str) -> dict[str, str]:
+    return {"answer": answer, "clue": clue}
+
+
 _ITEMS = [
-    "tiger",
-    "eagle",
-    "ocean",
-    "bread",
-    "river",
-    "apple",
-    "zither",
-    "melon",
-    "chair",
-    "table",
-    "plant",
-    "cloud",
+    _item("TIGER", "Big cat with stripes"),
+    _item("EAGLE", "Bird of prey on high"),
+    _item("OCEAN", "Water between continents"),
+    _item("BREAD", "It comes out of the oven"),
+    _item("RIVER", "Water running to the sea"),
+    _item("APPLE", "Fruit picked in autumn"),
+    _item("ZITHER", "Strings plucked on a flat board"),
+    _item("MELON", "Sweet fruit with many seeds"),
+    _item("CHAIR", "Something to sit on"),
+    _item("TABLE", "Four legs and a flat top"),
+    _item("PLANT", "It grows on the windowsill"),
+    _item("CLOUD", "Grey shape before the rain"),
 ]
 _PAYLOAD = {"items": _ITEMS}
 
@@ -142,7 +146,7 @@ def test_a_second_generation_is_told_what_the_first_one_printed(
         lambda _uid: None,
     )
 
-    req = MissingVowelsRequest(itemCount=12, seed=1)
+    req = MissingVowelsRequest(count=12, minLetters=5, maxLetters=8, seed=1)
     asyncio.run(generate_missing_vowels(req, user_id="user-1"))
     assert "ZITHER" not in prompts[0]
 
@@ -171,7 +175,7 @@ def test_another_user_does_not_inherit_the_first_users_list(
         lambda _uid: None,
     )
 
-    req = MissingVowelsRequest(itemCount=12, seed=1)
+    req = MissingVowelsRequest(count=12, minLetters=5, maxLetters=8, seed=1)
     asyncio.run(generate_missing_vowels(req, user_id="user-1"))
     asyncio.run(generate_missing_vowels(req, user_id="user-2"))
     assert "ZITHER" not in prompts[1]
@@ -194,6 +198,6 @@ def test_the_client_avoid_list_reaches_the_prompt(
         lambda _uid: None,
     )
 
-    req = MissingVowelsRequest(itemCount=12, seed=1, avoid=["Boats"])
+    req = MissingVowelsRequest(count=12, minLetters=5, maxLetters=8, seed=1, avoid=["Boats"])
     asyncio.run(generate_missing_vowels(req, user_id="user-1"))
     assert "Boats" in prompts[0]
