@@ -6,13 +6,14 @@ import {
 } from '../studio-variety'
 import type { StudioConfig } from '@/types/studio-template.types'
 import type { HiddenMessageResponse } from '@/types/studio-hidden-message.types'
+import { resolveHiddenMessageTheme } from './config'
 import {
   HIDDEN_MESSAGE_AI_EMPTY_MESSAGE,
   parseCustomMessage,
   parseDifficulty,
   parsePrintStyle,
-  parseTheme,
   parseTone,
+  parseWordsFrom,
   validatePayload,
 } from './content'
 import { tryBuildHiddenMessagePuzzle } from './place'
@@ -27,9 +28,10 @@ export async function hiddenMessagePrefetch(
   const difficulty = parseDifficulty(config.difficulty)
   const printStyle = parsePrintStyle(config.printStyle)
   const tone = parseTone(config.tone)
-  const themeRaw = parseTheme(config.theme)
+  const wordsFrom = parseWordsFrom(config.wordsFrom)
+  const themeRaw = resolveHiddenMessageTheme(config)
   const theme = filterUnsafeThemeCopy(themeRaw) ?? themeRaw
-  const custom = parseCustomMessage(config.customMessage)
+  const custom = wordsFrom === 'custom-saying' ? parseCustomMessage(config.customMessage) : null
   const varietyKey = studioVarietyKey(
     'hidden-message-word-search',
     theme || 'default',

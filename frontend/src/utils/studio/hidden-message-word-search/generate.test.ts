@@ -13,7 +13,7 @@ import {
   STUDIO_ANSWER_INK_MONO_TEMPLATES,
 } from '@/constants/studio.constants'
 import { buildAnswerPage } from '../studio-answer-key'
-import type { StudioConfig, StudioGenerateContext } from '@/types/studio-template.types'
+import type { StudioConfig, StudioFabricObject, StudioGenerateContext } from '@/types/studio-template.types'
 import {
   DIFFICULTY_PRESETS,
   HIDDEN_MESSAGE_DEFAULT_TITLE,
@@ -32,6 +32,7 @@ import { countExactOccurrences } from './verify'
 import { directionsForDifficulty } from '@/utils/puzzles/word-search-core'
 import { hugTextBoxWidth } from '../studio-text-metrics'
 import { FIXTURE_MESSAGE, FIXTURE_WORDS } from './fixture'
+import { wordSearchTemplate } from '../retirement-word-search/generate'
 
 const remote = { message: FIXTURE_MESSAGE, words: FIXTURE_WORDS }
 
@@ -163,7 +164,7 @@ describe('hidden-message-word-search', () => {
 
   it('accepts a custom saying and still packs the grid', () => {
     const custom = 'NO MORE ALARM CLOCKS NOW'
-    const config = { ...base, customMessage: custom, difficulty: 'easy' }
+    const config = { ...base, wordsFrom: 'custom-saying', customMessage: custom, difficulty: 'easy' }
     resetObjectCounter()
     const [page] = hiddenMessageWordSearchTemplate.generate(config, {
       ...CTX(),
@@ -225,7 +226,138 @@ describe('hidden-message-word-search', () => {
   })
 
   it('validates custom saying length in the form', () => {
-    expect(validateHiddenMessageConfig({ ...base, customMessage: 'too short' })).not.toBeNull()
-    expect(validateHiddenMessageConfig({ ...base, customMessage: FIXTURE_MESSAGE })).toBeNull()
+    expect(
+      validateHiddenMessageConfig({
+        ...base,
+        wordsFrom: 'custom-saying',
+        customMessage: 'too short',
+      }),
+    ).not.toBeNull()
+    expect(
+      validateHiddenMessageConfig({
+        ...base,
+        wordsFrom: 'custom-saying',
+        customMessage: FIXTURE_MESSAGE,
+      }),
+    ).toBeNull()
+  })
+
+  it('validates the AI theme when wordsFrom is ai-theme', () => {
+    expect(
+      validateHiddenMessageConfig({ ...base, wordsFrom: 'ai-theme', theme: '' }),
+    ).not.toBeNull()
+    expect(
+      validateHiddenMessageConfig({ ...base, wordsFrom: 'ai-theme', theme: 'Gardening' }),
+    ).toBeNull()
+  })
+
+  it('defaults to a valid preset theme when wordsFrom is theme', () => {
+    expect(validateHiddenMessageConfig({ ...base, wordsFrom: 'theme' })).toBeNull()
+  })
+
+  it('paints leftover message letters under the answer highlights', () => {
+    resetObjectCounter()
+    const page = hiddenMessageWordSearchTemplate.generate(
+      { ...base, showTitle: true, title: 'Game 1' },
+      CTX(),
+    )[0]!
+    const grid = page.answerSourceObjects?.find(
+      (obj) =>
+        obj.type === 'group' && (obj.objects ?? []).some((child) => child.studioRole === 'answer'),
+    )
+    const children = grid?.objects ?? []
+    const lastLetter = children.findLastIndex((child) => child.studioRole === 'prompt')
+    const firstCapsule = children.findIndex((child) => child.studioRole === 'answer')
+    expect(lastLetter).toBeGreaterThanOrEqual(0)
+    expect(firstCapsule).toBeGreaterThan(lastLetter)
+  })
+
+  it('keeps the large-print word bank readable (above the KDP floor)', () => {
+    const flat = (objects: StudioFabricObject[]) => {
+      const out: StudioFabricObject[] = []
+      const walk = (list: StudioFabricObject[]) => {
+        for (const obj of list) {
+          out.push(obj)
+          if (Array.isArray(obj.objects)) walk(obj.objects)
+        }
+      }
+      walk(objects)
+      return out
+    }
+    for (const difficulty of ['easy', 'medium', 'hard'] as const) {
+      resetObjectCounter()
+      const [page] = hiddenMessageWordSearchTemplate.generate(
+        { ...base, difficulty, printStyle: 'large-print' },
+        LARGE_CTX(),
+      )
+      // Bank entries are multi-letter runs; single letters are the grid.
+      const bankFonts = flat(page!.objects)
+        .filter((obj) => obj.studioRole === 'prompt' && String(obj.text ?? '').length > 1)
+        .map((obj) => Number(obj.fontSize))
+      expect(bankFonts.length).toBeGreaterThan(0)
+      // The bank must sit comfortably above the 14 pt KDP large-print floor,
+      // not be clamped to it by a starved band.
+      expect(Math.min(...bankFonts)).toBeGreaterThan(14)
+    }
+  })
+
+  it('spaces grid letters like word search', () => {
+    const titled = { showTitle: true, title: 'Game 1', fontFamily: 'PT Serif', seed: 42 }
+    const compare = (pageWidth: number, pageHeight: number) => {
+      const page = {
+        pageWidth,
+        pageHeight,
+        margin: { top: 24, right: 24, bottom: 24, left: 36 },
+        seed: 42,
+        instanceId: 'letter-size',
+      }
+      resetObjectCounter()
+      const wordSearch = wordSearchTemplate.generate(
+        { ...buildDefaultConfig(wordSearchTemplate), ...titled, printStyle: 'large-print', difficulty: 'medium' },
+        { ...page, remoteData: { words: FIXTURE_WORDS } },
+      )
+      resetObjectCounter()
+      const hidden = hiddenMessageWordSearchTemplate.generate(
+        { ...base, ...titled, printStyle: 'large-print', difficulty: 'medium' },
+        { ...page, remoteData: remote },
+      )
+      assertObjectsInSafeMargin(hidden[0]!.objects, page)
+      const flat = (objects: StudioFabricObject[]) => {
+        const texts: StudioFabricObject[] = []
+        const walk = (list: StudioFabricObject[]) => {
+          for (const obj of list) {
+            texts.push(obj)
+            if (Array.isArray(obj.objects)) walk(obj.objects)
+          }
+        }
+        walk(objects)
+        return texts
+      }
+      const gridFont = (objects: StudioFabricObject[]) => {
+        const hit = flat(objects).find(
+          (obj) => obj.studioRole === 'prompt' && String(obj.text ?? '').length === 1,
+        )
+        return Number(hit?.fontSize ?? 0)
+      }
+      const cellStep = (objects: StudioFabricObject[]) => {
+        const xs = [
+          ...new Set(
+            flat(objects)
+              .filter((obj) => obj.studioRole === 'prompt' && String(obj.text ?? '').length === 1)
+              .map((obj) => Number(obj.left)),
+          ),
+        ].sort((a, b) => a - b)
+        return (xs[1] ?? 0) - (xs[0] ?? 0)
+      }
+      const wordFont = gridFont(wordSearch[0]!.objects)
+      const hiddenFont = gridFont(hidden[0]!.objects)
+      const wordStep = cellStep(wordSearch[0]!.objects)
+      const hiddenStep = cellStep(hidden[0]!.objects)
+      expect(wordStep).toBeGreaterThan(0)
+      expect(hiddenStep).toBeGreaterThan(0)
+      expect(Math.abs(hiddenFont / hiddenStep - wordFont / wordStep)).toBeLessThanOrEqual(0.04)
+    }
+    compare(Math.round(8.5 * 96), Math.round(11 * 96))
+    compare(Math.round(7.5 * 96), Math.round(9.25 * 96))
   })
 })

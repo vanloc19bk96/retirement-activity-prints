@@ -23,6 +23,9 @@ export const DEFAULT_THEME = 'Life after work'
 export const DEFAULT_TONE: HiddenMessageTone = 'heartfelt'
 export const DEFAULT_DIFFICULTY: HiddenMessageDifficulty = 'medium'
 
+export type HiddenMessageWordsFrom = 'theme' | 'ai-theme' | 'custom-saying'
+export const DEFAULT_WORDS_FROM: HiddenMessageWordsFrom = 'theme'
+
 export const HIDDEN_MESSAGE_DEFAULT_TITLE = 'Hidden Message Word Search'
 export const HIDDEN_MESSAGE_INSTRUCTION =
   'Find every word in the list. The letters left over, read from left to right, reveal a secret retirement saying.'
@@ -95,6 +98,12 @@ export function parseDifficulty(raw: unknown): HiddenMessageDifficulty {
   const value = String(raw ?? DEFAULT_DIFFICULTY)
   if (value === 'easy' || value === 'medium' || value === 'hard') return value
   return DEFAULT_DIFFICULTY
+}
+
+export function parseWordsFrom(raw: unknown): HiddenMessageWordsFrom {
+  const value = String(raw ?? DEFAULT_WORDS_FROM)
+  if (value === 'ai-theme' || value === 'custom-saying') return value
+  return DEFAULT_WORDS_FROM
 }
 
 export function parseTheme(raw: unknown): string {

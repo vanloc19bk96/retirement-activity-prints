@@ -29,6 +29,7 @@ describe('hiddenMessagePrefetch', () => {
       {
         ...buildDefaultConfig(hiddenMessageWordSearchTemplate),
         seed: 42,
+        wordsFrom: 'ai-theme',
         theme: 'Life after work',
         difficulty: 'easy',
       },
@@ -48,6 +49,7 @@ describe('hiddenMessagePrefetch', () => {
         {
           ...buildDefaultConfig(hiddenMessageWordSearchTemplate),
           seed: 1,
+          wordsFrom: 'ai-theme',
           theme: 'Life after work',
         },
         new AbortController().signal,

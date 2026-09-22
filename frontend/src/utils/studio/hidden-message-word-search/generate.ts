@@ -19,6 +19,7 @@ import {
   parseCustomMessage,
   parseDifficulty,
   parsePrintStyle,
+  parseWordsFrom,
   validatePayload,
 } from './content'
 import { drawHiddenMessagePuzzle } from './draw'
@@ -53,7 +54,8 @@ function layoutPage(options: {
 function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageOutput[] {
   const difficulty = parseDifficulty(config.difficulty)
   const printStyle = parsePrintStyle(config.printStyle)
-  const custom = parseCustomMessage(config.customMessage)
+  const wordsFrom = parseWordsFrom(config.wordsFrom)
+  const custom = wordsFrom === 'custom-saying' ? parseCustomMessage(config.customMessage) : null
   const validated = validatePayload(ctx.remoteData, difficulty, custom?.display, printStyle)
   if (!validated) {
     throw new Error(HIDDEN_MESSAGE_AI_EMPTY_MESSAGE)

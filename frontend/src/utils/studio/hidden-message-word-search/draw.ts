@@ -4,6 +4,7 @@ import {
   boxCenterY,
   estimateTextBoxWidth,
   toNonBreakingSpaces,
+  unionObjectBounds,
   type Box,
 } from '../studio-layout'
 import {
@@ -12,6 +13,7 @@ import {
   type FontSpec,
 } from '../studio-text-metrics'
 import {
+  buildGroup,
   buildRect,
   buildText,
   type StudioTag,
@@ -23,6 +25,7 @@ import {
 import {
   drawLetterGrid,
   drawWordList,
+  minimumWordListHeight,
 } from '../retirement-word-search/draw'
 import type { RetirementPrintStyle } from './content'
 import type { HiddenMessagePuzzle } from './place'
@@ -31,6 +34,8 @@ const STACK_GAP = 12
 /** Wide enough for senior handwriting (not cramped squares). */
 const SLOT_EM = 1.45
 const RULE_RATIO = 0.9
+/** Hairline write-in rule — filled bar, not a stroked rect. */
+const RULE_HEIGHT = 1
 const WORD_GAP_RATIO = 0.55
 /** Flatter than cryptogram — only a write-in rule, no cipher code below. */
 const LINE_H_RATIO = 1.7
@@ -39,6 +44,8 @@ const KDP_LARGE_PRINT_MIN = 14
 const KDP_LARGE_PRINT_GRID_MIN = 16
 const LARGE_PRINT_LETTER_SCALE = 0.68
 const STANDARD_LETTER_SCALE = 0.55
+/** Matches retirement word search: pad so answer strokes stay inside the grid band. */
+const GRID_BAND_PAD = 20
 
 function asWordSearch(puzzle: HiddenMessagePuzzle) {
   return {
@@ -163,7 +170,8 @@ function drawMessageWritingLines(options: {
 
   const layout = fitMessageLayout(area, words, printStyle)
   const top = area.top + Math.max(0, (area.height - layout.height) / 2)
-  const objects: StudioFabricObject[] = []
+  const rules: StudioFabricObject[] = []
+  const answers: StudioFabricObject[] = []
   let letterIndex = 0
 
   layout.lines.forEach((line, row) => {
@@ -178,13 +186,13 @@ function drawMessageWritingLines(options: {
       for (const letter of word) {
         const centerX = cursor + layout.slotW / 2
         const ruleW = Math.round(layout.slotW * RULE_RATIO)
-        objects.push(
+        rules.push(
           buildRect(
             {
               left: Math.round(centerX - ruleW / 2),
               top: ruleY,
               width: ruleW,
-              height: printStyle === 'large-print' ? 3 : 2,
+              height: RULE_HEIGHT,
               fill: STUDIO_INK,
               stroke: 'transparent',
               strokeWidth: 0,
@@ -195,7 +203,7 @@ function drawMessageWritingLines(options: {
         )
         const answer = letters[letterIndex] ?? letter
         letterIndex += 1
-        objects.push(
+        answers.push(
           buildText(
             {
               left: centerX,
@@ -218,7 +226,10 @@ function drawMessageWritingLines(options: {
       if (w < line.length - 1) cursor += layout.wordGap
     }
   })
-  return objects
+
+  const bounds = unionObjectBounds(rules)
+  if (!bounds) return answers
+  return [buildGroup(rules, bounds, tag, 'structure'), ...answers]
 }
 
 function fitSayingLine(options: {
@@ -292,17 +303,41 @@ function drawMessageText(options: {
   )
 }
 
-/** Prefer large grid + readable bank; writing lines only need a short band. */
-function listShareFor(wordCount: number, printStyle: RetirementPrintStyle): number {
-  if (printStyle === 'large-print') {
-    if (wordCount >= 14) return 0.32
-    if (wordCount >= 10) return 0.3
-    return 0.28
-  }
-  if (wordCount >= 24) return 0.3
-  if (wordCount >= 16) return 0.28
-  if (wordCount >= 10) return 0.26
-  return 0.22
+/** Same list share word search uses for this grid size, so letter size can match. */
+function classicListShare(gridSize: number, printStyle: RetirementPrintStyle): number {
+  if (printStyle === 'standard' || gridSize >= 13) return 0.34
+  return 0.3
+}
+
+/** Letter size a classic word search would paint for this field and grid. */
+function classicLetterSize(
+  field: Box,
+  gridSize: number,
+  printStyle: RetirementPrintStyle,
+): number {
+  const gridShare = Math.max(
+    0,
+    Math.min(field.height * (1 - classicListShare(gridSize, printStyle)) - STACK_GAP, field.width),
+  )
+  const inner = Math.max(0, Math.min(field.width, gridShare) - GRID_BAND_PAD)
+  const cell = Math.floor(inner / Math.max(1, gridSize))
+  const scale = printStyle === 'large-print' ? LARGE_PRINT_LETTER_SCALE : STANDARD_LETTER_SCALE
+  const min = printStyle === 'large-print' ? KDP_LARGE_PRINT_GRID_MIN : 14
+  return Math.max(min, Math.floor(Math.max(0, cell) * scale))
+}
+
+/**
+ * Grid band whose cells hold `fontSize` at the word-search fill (`letterScale`),
+ * so the gap between capitals matches a classic word search — not a packed cell.
+ */
+function gridBandForFont(
+  fontSize: number,
+  gridSize: number,
+  fieldWidth: number,
+  letterScale: number,
+): number {
+  const cell = Math.max(1, Math.ceil(fontSize / letterScale))
+  return Math.min(fieldWidth, cell * gridSize + GRID_BAND_PAD)
 }
 
 function measureMessageBand(
@@ -335,6 +370,10 @@ export function drawHiddenMessagePuzzle(options: {
   const letterScale = printStyle === 'large-print' ? LARGE_PRINT_LETTER_SCALE : STANDARD_LETTER_SCALE
   const minLetterSize = printStyle === 'large-print' ? KDP_LARGE_PRINT_GRID_MIN : 14
   const bankMinFont = printStyle === 'large-print' ? KDP_LARGE_PRINT_MIN : 11
+  const classicSize = classicLetterSize(field, puzzle.size, printStyle)
+  // Font follows the cell at the word-search fill. Do not pass a larger
+  // preferred size — that packs capitals up to 92% of a short cell.
+  const letterStyle = { letterScale, minLetterSize }
 
   if (forAnswerKey) {
     const gap = STACK_GAP
@@ -353,10 +392,7 @@ export function drawHiddenMessagePuzzle(options: {
       height: msgH,
     }
     return [
-      drawLetterGrid(core, gridArea, font, tag, 'center', leftoverSet(puzzle), {
-        letterScale,
-        minLetterSize,
-      }),
+      drawLetterGrid(core, gridArea, font, tag, 'center', leftoverSet(puzzle), letterStyle),
       drawMessageText({ area: msgArea, text: puzzle.messageDisplay, font, tag, printStyle }),
     ]
   }
@@ -367,12 +403,15 @@ export function drawHiddenMessagePuzzle(options: {
   const maxMsgShare = printStyle === 'large-print' ? 0.16 : 0.14
   const maxMsgH = Math.max(48, Math.floor(field.height * maxMsgShare))
   const msgH = Math.min(maxMsgH, measureMessageBand(field.width, words, maxMsgH, printStyle))
-  const restH = Math.max(0, field.height - msgH - gap * 2)
-  const listShare = listShareFor(puzzle.words.length, printStyle)
-  const listH = Math.floor(restH * listShare)
-  const gridH = Math.min(field.width, Math.max(0, restH - listH))
-  const stackH = gridH + gap + listH + gap + msgH
-  const stackTop = field.top + Math.max(0, (field.height - stackH) / 2)
+  const room = Math.max(0, field.height - msgH - gap * 2)
+  // Grow the grid until capitals sit at the word-search fill. The bank keeps
+  // only the height it needs so those cells can open up.
+  const bankTextRatio = 1
+  const minList = minimumWordListHeight(puzzle.words.length, bankMinFont, bankTextRatio)
+  const minGrid = gridBandForFont(classicSize, puzzle.size, field.width, letterScale)
+  const gridH = Math.min(field.width, minGrid, Math.max(0, room - minList))
+  const listH = Math.max(0, room - gridH)
+  const stackTop = field.top
 
   const gridArea: Box = { left: field.left, top: stackTop, width: field.width, height: gridH }
   const listArea: Box = {
@@ -389,12 +428,15 @@ export function drawHiddenMessagePuzzle(options: {
   }
 
   return [
-    drawLetterGrid(core, gridArea, font, tag, 'center', undefined, {
-      letterScale,
-      minLetterSize,
-    }),
+    drawLetterGrid(core, gridArea, font, tag, 'center', undefined, letterStyle),
     ...drawWordList(alphabeticalDisplays(puzzle), listArea, font, tag, {
       minFontSize: bankMinFont,
+      // All-caps bank; the line box is already one em, so the row can use the full height.
+      textHeightRatio: bankTextRatio,
+      // The grid keeps its classic-word-search fill, so the bank band is short.
+      // Fit the column count to that band so words fill it instead of shrinking
+      // every entry to the KDP floor.
+      maximizeFont: true,
     }),
     ...drawMessageWritingLines({
       area: msgArea,
