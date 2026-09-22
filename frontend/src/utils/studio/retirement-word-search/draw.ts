@@ -5,12 +5,16 @@ import {
   boxCenterX,
   boxCenterY,
   estimateTextBoxWidth,
-  fitFontSizeToWidth,
   unionObjectBounds,
   columns,
   rows,
   type Box,
 } from '../studio-layout'
+import {
+  hugTextBoxWidth,
+  measureRunWidth,
+  type FontSpec,
+} from '../studio-text-metrics'
 import {
   buildText,
   buildRect,
@@ -41,6 +45,25 @@ const LIST_ROW_GAP = 6
 const WORD_BANK_TEXT_HEIGHT_RATIO = 1.35
 const WORD_BANK_GROUP_PAD = 4
 const WORD_BANK_LABEL = 'Words to find:'
+
+/**
+ * Largest font size (≤ preferred, ≥ minimum) whose real canvas-measured width
+ * still fits `maxWidth` on one line. Falls back to `minimum` when even that
+ * doesn't fit — still the best available, and the caller has already tried to
+ * buy back room by shrinking the column count before reaching this floor.
+ */
+function fitWordFontSize(
+  word: string,
+  maxWidth: number,
+  preferred: number,
+  minimum: number,
+  spec: FontSpec,
+): number {
+  for (let size = preferred; size > minimum; size--) {
+    if (measureRunWidth(word, size, spec) <= maxWidth) return size
+  }
+  return minimum
+}
 
 function snapGridInField(
   field: Box,
@@ -135,6 +158,10 @@ export function drawLetterGrid(
   for (let r = 0; r < puzzle.size; r++) {
     for (let c = 0; c < puzzle.size; c++) {
       const cell = g.cellBox(r, c)
+      const letter = puzzle.grid[r]![c]!
+      // Shaped puzzles keep a square coordinate system but leave cells outside
+      // the mask blank. Do not draw glyphs or shading in those cells.
+      if (!letter) continue
       if (shadedCells?.has(`${r},${c}`)) {
         parts.push(
           buildRect(
@@ -152,7 +179,6 @@ export function drawLetterGrid(
           ),
         )
       }
-      const letter = puzzle.grid[r]![c]!
       parts.push(
         buildText(
           {
@@ -237,7 +263,27 @@ export function drawWordList(
   const displayWords = words
   if (displayWords.length === 0 || listBox.height < 12) return objects
 
-  const colCount = Math.min(wordBankColumnCount(displayWords.length), displayWords.length)
+  // Fabric wraps a Textbox against its *actual* rendered glyph width, which the
+  // hand-rolled per-char estimate above only approximates. A word the estimate
+  // says fits can still be measured wider by the real font and get soft-wrapped
+  // onto a second line, so column/font fitting below uses real canvas metrics.
+  const spec: FontSpec = { fontFamily: font, fontWeight: 'normal' }
+
+  let colCount = Math.min(wordBankColumnCount(displayWords.length), displayWords.length)
+  // wordBankColumnCount only looks at word count. A long word/phrase can still
+  // be wider than one line at minFontSize once split across that many
+  // columns — Fabric then soft-wraps it inside its own textbox. Give up
+  // columns (down to 1) until the widest bank entry provably fits on one line.
+  const widestAtMinFont = displayWords.reduce(
+    (max, word) => Math.max(max, measureRunWidth(word, minFontSize, spec)),
+    0,
+  )
+  while (colCount > 1) {
+    const tryColBoxes = columns(listBox, colCount, LIST_GUTTER)
+    const tryColInnerW = Math.max(8, tryColBoxes[0]!.width - LIST_CELL_PAD_X * 2)
+    if (widestAtMinFont <= tryColInnerW) break
+    colCount -= 1
+  }
   const rowsPerCol = Math.ceil(displayWords.length / colCount)
   // Equal columns across the safe band — no shrink-wrap past the edges.
   const colBoxes = columns(listBox, colCount, LIST_GUTTER)
@@ -254,7 +300,7 @@ export function drawWordList(
   )
   // Longest bank word must fit its column on one line — never wrap or clip.
   const wordSize = displayWords.reduce(
-    (size, word) => Math.min(size, fitFontSizeToWidth(word, colInnerW, rowFitSize, minFontSize)),
+    (size, word) => Math.min(size, fitWordFontSize(word, colInnerW, rowFitSize, minFontSize, spec)),
     rowFitSize,
   )
   const wordBoxHeight = Math.ceil(wordSize * WORD_BANK_TEXT_HEIGHT_RATIO)
@@ -279,7 +325,7 @@ export function drawWordList(
           fontFamily: font,
           fontSize: wordSize,
           fontWeight: 'normal',
-          width: estimateTextBoxWidth(word, wordSize, cell.width),
+          width: hugTextBoxWidth(word, wordSize, cell.width, spec),
           height: wordBoxHeight,
           textAlign: 'center',
           originX: 'center',
@@ -318,11 +364,17 @@ export function drawWordSearchPuzzle(options: {
   tag: StudioTag
   /** Solution page: grid only, optically centered in the body. */
   forAnswerKey?: boolean
+  printStyle?: 'large-print' | 'standard'
 }): StudioFabricObject[] {
-  const { field, puzzle, font, tag, forAnswerKey = false } = options
+  const { field, puzzle, font, tag, forAnswerKey = false, printStyle = 'large-print' } = options
+  const letterStyle =
+    printStyle === 'large-print'
+      ? { letterScale: 0.68, minLetterSize: 16 }
+      : { letterScale: 0.55, minLetterSize: 14 }
+  const bankMinFont = printStyle === 'large-print' ? 14 : 11
 
   if (forAnswerKey) {
-    return [drawLetterGrid(puzzle, field, font, tag, 'center')]
+    return [drawLetterGrid(puzzle, field, font, tag, 'center', undefined, letterStyle)]
   }
 
   const gap = 12
@@ -348,7 +400,13 @@ export function drawWordSearchPuzzle(options: {
     puzzle.displays.length === puzzle.words.length ? puzzle.displays : puzzle.words
 
   return [
-    drawLetterGrid(puzzle, gridArea, font, tag, 'top'),
-    ...drawWordList(bankWords, listArea, font, tag),
+    drawLetterGrid(puzzle, gridArea, font, tag, 'top', undefined, letterStyle),
+    ...drawWordList(
+      [...bankWords].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' })),
+      listArea,
+      font,
+      tag,
+      { minFontSize: bankMinFont },
+    ),
   ]
 }

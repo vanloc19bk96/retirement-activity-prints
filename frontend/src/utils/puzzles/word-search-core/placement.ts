@@ -45,6 +45,9 @@ const DIRS_HARD: readonly Dir[] = [
 ]
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+const BLOCKED_CELL = '\u0000'
+
+export type WordSearchCellMask = readonly (readonly boolean[])[]
 
 /**
  * Cap DFS work so dense custom lists (14–15 grids, hard dirs) cannot freeze the UI.
@@ -134,8 +137,10 @@ export function sanitizeWords(raw: unknown, gridSize: number): string[] {
   return sanitizeWordEntries(raw, { gridSize }).map((e) => e.token)
 }
 
-function emptyGrid(size: number): (string | null)[][] {
-  return Array.from({ length: size }, () => Array.from({ length: size }, () => null))
+function emptyGrid(size: number, mask?: WordSearchCellMask): (string | null)[][] {
+  return Array.from({ length: size }, (_, r) =>
+    Array.from({ length: size }, (_, c) => (mask && !mask[r]?.[c] ? BLOCKED_CELL : null)),
+  )
 }
 
 function canPlace(
@@ -175,7 +180,9 @@ function writeWord(
 
 function fillEmptyCells(grid: (string | null)[][], rng: StudioRng): string[][] {
   return grid.map((row) =>
-    row.map((cell) => cell ?? LETTERS[rng.int(0, LETTERS.length - 1)]!),
+    row.map((cell) =>
+      cell === BLOCKED_CELL ? '' : (cell ?? LETTERS[rng.int(0, LETTERS.length - 1)]!),
+    ),
   )
 }
 
@@ -223,13 +230,14 @@ export function buildWordSearch(
   allowReverse: boolean,
   rng: StudioRng,
   nodeBudget: NodeBudget = { remaining: MAX_BACKTRACK_NODES },
+  mask?: WordSearchCellMask,
 ): { grid: string[][]; placements: Placement[] } | null {
   if (words.length === 0) return null
   if (words.some((w) => w.length > size)) return null
   if (nodeBudget.remaining <= 0) return null
 
   const sorted = [...words].sort((a, b) => b.length - a.length || a.localeCompare(b))
-  const grid = emptyGrid(size)
+  const grid = emptyGrid(size, mask)
   const placements: Placement[] = []
   const targets = mixTargets({
     wordCount: sorted.length,
@@ -285,6 +293,29 @@ export function buildWordSearch(
 
   if (!place(0)) return null
   return { grid: fillEmptyCells(grid, rng), placements }
+}
+
+/**
+ * Public masked variant used by shaped word-search sheets. The classic API
+ * remains unchanged for existing callers and hidden-message puzzles.
+ */
+export function buildMaskedWordSearch(
+  words: string[],
+  size: number,
+  directions: readonly Dir[],
+  allowReverse: boolean,
+  rng: StudioRng,
+  mask: WordSearchCellMask,
+): { grid: string[][]; placements: Placement[] } | null {
+  return buildWordSearch(
+    words,
+    size,
+    directions,
+    allowReverse,
+    rng,
+    { remaining: MAX_BACKTRACK_NODES },
+    mask,
+  )
 }
 
 function tryBuildWordSearch(

@@ -1,557 +1,245 @@
-import { describe, it, expect } from 'vitest'
-import { wordSearchTemplate } from './generate'
-import {
-  buildWordSearch,
-  countPuzzleMix,
-  directionsForDifficulty,
-  placementMatchesWord,
-  resolveWordSearch,
-  sanitizeWordEntries,
-  sanitizeWordEntry,
-  sanitizeWords,
-} from '@/utils/puzzles/word-search-core'
-import { interleavedCandidateStarts, mixTargets } from '@/utils/puzzles/word-search-core'
-import { createRng } from '../studio-rng'
+import { describe, expect, it } from 'vitest'
 import { buildDefaultConfig, getStudioTemplate } from '@/constants/studio-templates'
 import {
   STUDIO_ANSWER_INK,
   STUDIO_ANSWER_INK_MONO,
   STUDIO_ANSWER_INK_MONO_TEMPLATES,
-  STUDIO_CONTENT_SAFE_INSET_X,
 } from '@/constants/studio.constants'
-import { resetObjectCounter, type StudioTag } from '../studio-fabric-builders'
-import { contentBox, insetHorizontal, drawHeader } from '../studio-layout'
-import { runGeneratorContractTests } from '../studio-generator-test'
+import type {
+  StudioFabricObject,
+  StudioGenerateContext,
+} from '@/types/studio-template.types'
+import { directionsForDifficulty } from '@/utils/puzzles/word-search-core'
 import { buildAnswerPage, harvestAnswers } from '../studio-answer-key'
-import type { StudioFabricObject, StudioGenerateContext } from '@/types/studio-template.types'
-import { parseWordCount, wordBankColumnCount } from './config'
+import {
+  assertObjectsInSafeMargin,
+  runGeneratorContractTests,
+  STUDIO_TEST_CTX,
+} from '../studio-generator-test'
+import { resetObjectCounter } from '../studio-fabric-builders'
+import { countExactOccurrences } from '../hidden-message-word-search/verify'
+import { FIXTURE_WORDS } from '../hidden-message-word-search/fixture'
+import {
+  WORD_SEARCH_BUILD_ERROR,
+  WORD_SEARCH_DEFAULT_TITLE,
+  WORD_SEARCH_INSTRUCTION,
+  difficultyPreset,
+  filterWordPool,
+  minValidPoolSize,
+} from './content'
+import { tryBuildClassicWordSearch } from './place'
+import { wordSearchTemplate } from './generate'
 
-const AI_WORDS = [
-  'TIGER',
-  'LION',
-  'ZEBRA',
-  'HORSE',
-  'MOUSE',
-  'EAGLE',
-  'SNAKE',
-  'WHALE',
-  'SHARK',
-  'PANDA',
-  'KOALA',
-  'CAMEL',
-  'LLAMA',
-  'GOOSE',
-  'SWIFT',
-  'ROBIN',
-  'OTTER',
-  'BISON',
-  'MOOSE',
-  'FINCH',
-]
+const AI_WORDS = FIXTURE_WORDS.slice(0, 30)
+const remote = { words: AI_WORDS }
 
-const CTX = (remoteData?: { items: string[] }): StudioGenerateContext => ({
+const CTX = (remoteData: unknown = remote): StudioGenerateContext => ({
   pageWidth: 2550,
   pageHeight: 3300,
   margin: { top: 150, right: 150, bottom: 150, left: 225 },
   seed: 42,
-  instanceId: 'test-run',
-  remoteData: remoteData ?? { items: AI_WORDS },
+  instanceId: 'word-search-test',
+  remoteData,
 })
 
 const base = {
   ...buildDefaultConfig(wordSearchTemplate),
   seed: 42,
-  fontFamily: 'Inter',
-  source: 'ai',
+  fontFamily: 'PT Serif',
 }
 
 function flatten(objects: StudioFabricObject[]): StudioFabricObject[] {
-  return objects.flatMap((o) =>
-    o.type === 'group' && o.objects ? flatten(o.objects) : [o],
+  return objects.flatMap((object) =>
+    object.type === 'group' && object.objects ? flatten(object.objects) : [object],
   )
 }
 
 runGeneratorContractTests(wordSearchTemplate, {
-  configOverrides: { source: 'custom', words: AI_WORDS.slice(0, 12) },
+  contextOverrides: { remoteData: remote },
 })
 
-describe('retirement-word-search', () => {
-  it('defaults to AI source and classic / large-print', () => {
+describe('word-search retirement edition', () => {
+  it('uses the new convention fields and removes Memory-only controls', () => {
     const defaults = buildDefaultConfig(wordSearchTemplate)
-    expect(defaults.source).toBe('ai')
-    expect(defaults.writeOwnTheme).toBe(false)
-    expect(defaults.retirementCategory).toBe('retirement-life')
-    expect(defaults.presetThemeId).toBe('life-after-work')
-    expect(defaults.difficulty).toBe('classic')
-    expect(defaults.printStyle).toBe('large-print')
-    expect(defaults.gridSize).toBe('auto')
-    expect(defaults.wordCount).toBe('auto')
+    expect(defaults).toMatchObject({
+      theme: 'Life after work',
+      tone: 'heartfelt',
+      difficulty: 'medium',
+      printStyle: 'large-print',
+      shape: 'square',
+      customWords: [],
+    })
+    const keys = new Set(wordSearchTemplate.configSchema.map((field) => field.key))
+    for (const key of ['source', 'writeOwnTheme', 'retirementCategory', 'presetThemeId', 'gridSize', 'wordCount', 'words']) {
+      expect(keys.has(key)).toBe(false)
+    }
+    expect(wordSearchTemplate.defaultPageTitle).toBe(WORD_SEARCH_DEFAULT_TITLE)
   })
 
-  it('is deterministic', () => {
-    resetObjectCounter()
-    const a = wordSearchTemplate.generate(base, CTX())
-    resetObjectCounter()
-    const b = wordSearchTemplate.generate(base, CTX())
-    expect(a).toEqual(b)
+  it('matches Hidden Message grid and word-count presets', () => {
+    expect(difficultyPreset('easy', 'large-print')).toEqual({ gridSize: 10, listedWords: 12 })
+    expect(difficultyPreset('medium', 'large-print')).toEqual({ gridSize: 12, listedWords: 14 })
+    expect(difficultyPreset('hard', 'large-print')).toEqual({ gridSize: 13, listedWords: 16 })
+    expect(difficultyPreset('easy', 'standard')).toEqual({ gridSize: 12, listedWords: 18 })
+    expect(difficultyPreset('medium', 'standard')).toEqual({ gridSize: 13, listedWords: 22 })
+    expect(difficultyPreset('hard', 'standard')).toEqual({ gridSize: 15, listedWords: 28 })
+    expect(minValidPoolSize('medium', 'large-print')).toBe(20)
   })
 
-  it('different seeds give different puzzles', () => {
-    resetObjectCounter()
-    const a = JSON.stringify(wordSearchTemplate.generate(base, CTX()))
-    resetObjectCounter()
-    const b = JSON.stringify(
-      wordSearchTemplate.generate({ ...base, seed: 7 }, { ...CTX(), seed: 7 }),
-    )
-    expect(a).not.toEqual(b)
-  })
-
-  it('custom words all appear in the grid', () => {
-    const words = ['CAT', 'DOG', 'BIRD', 'FISH', 'MOUSE']
-    const res = buildWordSearch(
-      words,
-      10,
-      directionsForDifficulty('medium'),
-      false,
-      createRng(1),
-    )
-    expect(res).not.toBeNull()
-    for (const word of words) {
-      expect(res!.placements.some((p) => p.word === word)).toBe(true)
-      expect(placementMatchesWord(res!.grid, res!.placements.find((p) => p.word === word)!)).toBe(
-        true,
-      )
+  it('places every listed word exactly once using only allowed directions', () => {
+    for (const printStyle of ['large-print', 'standard'] as const) {
+      for (const difficulty of ['easy', 'medium', 'hard'] as const) {
+        const preset = difficultyPreset(difficulty, printStyle)
+        const entries = filterWordPool(FIXTURE_WORDS, preset.gridSize)
+        const puzzle = tryBuildClassicWordSearch({
+          entries,
+          difficulty,
+          printStyle,
+          seed: 17,
+        })
+        expect(puzzle).not.toBeNull()
+        expect(puzzle!.size).toBe(preset.gridSize)
+        expect(puzzle!.words.length).toBe(preset.listedWords)
+        const dirs = directionsForDifficulty(difficulty)
+        const allowed = new Set(dirs.map((dir) => dir.name))
+        for (const placement of puzzle!.placements) {
+          expect(allowed.has(placement.dir.name)).toBe(true)
+          expect(countExactOccurrences(puzzle!.grid, placement.word, dirs)).toBe(1)
+        }
+      }
     }
   })
 
-  it('resolveWordSearch clue list equals placed words', () => {
-    const puzzle = resolveWordSearch({
-      words: AI_WORDS.slice(0, 12),
-      gridSize: 12,
-      difficulty: 'medium',
-      rng: createRng(42),
-    })
-    expect(puzzle.words.length).toBe(puzzle.placements.length)
-    expect(puzzle.displays.length).toBe(puzzle.words.length)
-    const placed = new Set(puzzle.placements.map((p) => p.word))
-    expect([...placed].sort()).toEqual([...puzzle.words].sort())
+  it('is deterministic and changes with the seed', () => {
+    const entries = filterWordPool(AI_WORDS, 12)
+    const options = {
+      entries,
+      difficulty: 'medium' as const,
+      printStyle: 'large-print' as const,
+      seed: 88,
+    }
+    expect(tryBuildClassicWordSearch(options)).toEqual(tryBuildClassicWordSearch(options))
+    expect(tryBuildClassicWordSearch(options)?.grid).not.toEqual(
+      tryBuildClassicWordSearch({ ...options, seed: 89 })?.grid,
+    )
   })
 
-  it('sanitizeWordEntry keeps multi-word display and compact token', () => {
-    expect(sanitizeWordEntry('Road Trip', { gridSize: 12 })).toEqual({
-      display: 'Road Trip',
-      token: 'ROADTRIP',
-    })
-    expect(sanitizeWordEntry('café', { gridSize: 12 })).toBeNull()
+  it('supports shaped masks and falls back without changing preset size', () => {
+    const entries = filterWordPool(AI_WORDS, 12)
+    for (const shape of ['circle', 'diamond', 'heart'] as const) {
+      const puzzle = tryBuildClassicWordSearch({
+        entries,
+        difficulty: 'medium',
+        printStyle: 'large-print',
+        shape,
+        seed: 23,
+      })
+      expect(puzzle).not.toBeNull()
+      expect(puzzle!.size).toBe(12)
+      expect(puzzle!.words.length).toBeGreaterThanOrEqual(12)
+      if (puzzle!.shape !== 'square') {
+        expect(puzzle!.grid.flat().some((cell) => cell === '')).toBe(true)
+      }
+    }
   })
 
-  it('prints multi-word phrases in the bank, not the token', () => {
+  it('normalizes phrases for the grid and keeps display spaces in an alphabetical bank', () => {
+    const customWords = [
+      'Road Trip', 'Free Time', 'Garden', 'Travel', 'Relax', 'Pension',
+      'Hammock', 'Family', 'Sunset', 'Friends', 'Nature', 'Reading',
+    ]
     resetObjectCounter()
     const [page] = wordSearchTemplate.generate(
-      {
-        ...base,
-        source: 'custom',
-        words: ['Road Trip', 'Free Time', 'Garden', 'Travel', 'Relax'],
-        difficulty: 'classic',
-        gridSize: 12,
-      },
-      CTX(),
+      { ...base, difficulty: 'easy', customWords },
+      CTX(undefined),
     )
-    const printed = flatten(page!.objects)
-      .filter((o) => o.type === 'textbox')
-      .map((o) => String(o.text ?? ''))
-    expect(printed).toContain('Road Trip')
-    expect(printed).toContain('Free Time')
-    expect(printed).not.toContain('ROADTRIP')
-  })
-
-  it('medium prefers some diagonals; hard prefers diagonals + backwards', () => {
-    const words = AI_WORDS.slice(0, 12)
-    const medium = resolveWordSearch({
-      words,
-      gridSize: 12,
-      difficulty: 'medium',
-      rng: createRng(3),
-    })
-    const hard = resolveWordSearch({
-      words,
-      gridSize: 14,
-      difficulty: 'hard',
-      rng: createRng(3),
-    })
-    const mediumMix = countPuzzleMix(medium.grid, medium.placements)
-    const hardMix = countPuzzleMix(hard.grid, hard.placements)
-    const mediumTargets = mixTargets({
-      wordCount: medium.words.length,
-      hasDiagonal: true,
-      allowReverse: false,
-    })
-    const hardTargets = mixTargets({
-      wordCount: hard.words.length,
-      hasDiagonal: true,
-      allowReverse: true,
-    })
-    expect(mediumMix.diagonal).toBeGreaterThanOrEqual(Math.min(1, mediumTargets.minDiagonal))
-    expect(hardMix.backwards).toBeGreaterThanOrEqual(Math.min(1, hardTargets.minBackwards))
-  })
-
-  it('interleaved starts keep diagonal dirs in the early mix', () => {
-    const dirs = directionsForDifficulty('medium')
-    const starts = interleavedCandidateStarts('TIGER', 12, dirs, createRng(1), true)
-    const firstDiagonalAt = starts.findIndex((s) => s.dir.dr !== 0 && s.dir.dc !== 0)
-    expect(firstDiagonalAt).toBeGreaterThanOrEqual(0)
-    expect(firstDiagonalAt).toBeLessThan(starts.length / 2)
-  })
-
-  it('dense hard placement finishes quickly', () => {
-    const animals = [
-      'TIGER', 'LION', 'ZEBRA', 'HORSE', 'MOUSE', 'EAGLE', 'SNAKE', 'WHALE',
-      'SHARK', 'PANDA', 'KOALA', 'CAMEL', 'LLAMA', 'GOOSE', 'SWIFT', 'ROBIN',
-      'OTTER', 'BISON', 'MOOSE', 'FINCH', 'CRANE', 'HERON', 'RAVEN', 'QUAIL',
-    ]
-    const t0 = performance.now()
-    const puzzle = resolveWordSearch({
-      words: animals,
-      gridSize: 15,
-      difficulty: 'hard',
-      rng: createRng(42),
-    })
-    expect(performance.now() - t0).toBeLessThan(500)
-    expect(puzzle.words.length).toBeGreaterThanOrEqual(16)
-  })
-
-  it('word list matches placed words with display casing', () => {
-    resetObjectCounter()
-    const cfg = {
-      ...base,
-      source: 'custom',
-      words: ['ALPHA', 'BETA', 'GAMMA', 'DELTA', 'OMEGA'],
-      gridSize: 12,
-      difficulty: 'classic',
-    }
-    const [page] = wordSearchTemplate.generate(cfg, CTX())
-    const prompts = flatten(page!.objects)
-      .filter((o) => o.studioRole === 'prompt' && o.type === 'textbox')
-      .map((o) => String(o.text ?? ''))
-    const listed = ['ALPHA', 'BETA', 'GAMMA', 'DELTA', 'OMEGA'].filter((w) =>
-      prompts.includes(w),
+    const text = flatten(page!.objects)
+      .filter((object) => object.type === 'textbox')
+      .map((object) => String(object.text ?? ''))
+    expect(text).toContain('Road Trip')
+    expect(text).toContain('Free Time')
+    expect(text).not.toContain('ROADTRIP')
+    const printedBank = text.filter((value) => customWords.includes(value))
+    expect(printedBank).toEqual(
+      [...printedBank].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' })),
     )
-    expect(listed.sort()).toEqual(['ALPHA', 'BETA', 'DELTA', 'GAMMA', 'OMEGA'])
-    expect(harvestAnswers(page!.objects).length).toBe(5)
   })
 
-  it('every difficulty and AI / custom generate', () => {
-    for (const difficulty of ['relaxed', 'classic', 'challenge'] as const) {
-      resetObjectCounter()
-      expect(() =>
-        wordSearchTemplate.generate({ ...base, source: 'ai', difficulty }, CTX()),
-      ).not.toThrow()
-    }
-    resetObjectCounter()
-    expect(() =>
-      wordSearchTemplate.generate(
-        {
-          ...base,
-          source: 'custom',
-          words: ['ALPHA', 'BETA', 'GAMMA', 'DELTA', 'OMEGA'],
-        },
-        CTX(),
-      ),
-    ).not.toThrow()
+  it('customWords skips AI and passes the same safety filters', async () => {
+    const customWords = ['LEVEL', 'REST', 'RESTAURANT', 'Disney', 'Garden', 'Road Trip']
+    const filtered = filterWordPool(customWords, 12).map((entry) => entry.token)
+    expect(filtered).not.toContain('LEVEL')
+    expect(filtered).not.toContain('REST')
+    expect(filtered).not.toContain('DISNEY')
+    expect(filtered).toContain('RESTAURANT')
+    await expect(
+      wordSearchTemplate.prefetch?.({ customWords: ['Garden', 'Travel', 'Relax'] }, new AbortController().signal),
+    ).resolves.toBeUndefined()
   })
 
-  it('auto-adds a solution page (no form toggles)', () => {
-    expect(wordSearchTemplate.producesAnswerKey).toBe(true)
-    const registered = getStudioTemplate('word-search')
-    const regKeys = new Set(registered!.configSchema.map((f) => f.key))
-    expect(regKeys.has('includeAnswerKey')).toBe(false)
-    expect(regKeys.has('answerKeyForAll')).toBe(false)
-  })
-
-  it('groups the letter grid and word bank into movable units', () => {
+  it('renders the exact instruction and omits bank/instruction from the solution', () => {
     resetObjectCounter()
     const [page] = wordSearchTemplate.generate(base, CTX())
-    const groups = page!.objects.filter((o) => o.type === 'group')
-    expect(groups.length).toBe(2)
+    const puzzleText = flatten(page!.objects).map((object) => String(object.text ?? ''))
+    expect(puzzleText).toContain(WORD_SEARCH_INSTRUCTION)
+
+    const key = buildAnswerPage(
+      page!.answerSourceObjects ?? page!.objects,
+      STUDIO_ANSWER_INK_MONO,
+    )
+    const keyText = flatten(key).map((object) => String(object.text ?? ''))
+    expect(keyText).not.toContain(WORD_SEARCH_INSTRUCTION)
+    expect(keyText.some((value) => /^Words to find:/i.test(value))).toBe(false)
   })
 
-  it('centers the grid in the content area', () => {
-    resetObjectCounter()
-    const ctx = CTX()
-    const [page] = wordSearchTemplate.generate(base, ctx)
-    const grid = page!.objects.find(
-      (o) => o.type === 'group' && (o.objects ?? []).some((c) => c.studioRole === 'answer'),
-    )!
-    const contentLeft = ctx.margin.left + STUDIO_CONTENT_SAFE_INSET_X
-    const contentRight = ctx.pageWidth - ctx.margin.right - STUDIO_CONTENT_SAFE_INSET_X
-    const contentCenterX = (contentLeft + contentRight) / 2
-    const gridCenterX = grid.left! + grid.width! / 2
-    expect(Math.abs(gridCenterX - contentCenterX)).toBeLessThanOrEqual(2)
-  })
-
-  it('max density stays inside safe margin', () => {
-    resetObjectCounter()
-    expect(() =>
-      wordSearchTemplate.generate(
-        {
-          ...base,
-          gridSize: 15,
-          wordCount: 16,
-          difficulty: 'challenge',
-        },
-        CTX(),
-      ),
-    ).not.toThrow()
-  })
-
-  it('answer key uses black ink, not blue', () => {
+  it('keeps puzzle and answer key print-safe with monochrome capsules', () => {
     expect(STUDIO_ANSWER_INK_MONO_TEMPLATES.has('word-search')).toBe(true)
     resetObjectCounter()
-    const [page] = wordSearchTemplate.generate(base, CTX())
-    const keyObjects = buildAnswerPage(
-      page!.answerSourceObjects ?? page!.objects,
-      STUDIO_ANSWER_INK_MONO,
-    )
-    const answers = harvestAnswers(keyObjects).filter((o) => o.type === 'rect')
-    expect(answers.length).toBeGreaterThan(0)
-    expect(answers.every((o) => o.fill === 'transparent')).toBe(true)
-    expect(answers.every((o) => o.stroke === STUDIO_ANSWER_INK_MONO)).toBe(true)
-    expect(answers.every((o) => o.stroke !== STUDIO_ANSWER_INK)).toBe(true)
-  })
-
-  it('centers the solution grid in the answer-key body', () => {
-    resetObjectCounter()
-    const ctx = CTX()
-    const config = { ...base, showTitle: true, title: 'Travel' }
-    const [page] = wordSearchTemplate.generate(config, ctx)
-    expect(page!.answerSourceObjects?.length).toBeGreaterThan(0)
-    const keyObjects = buildAnswerPage(
-      page!.answerSourceObjects ?? page!.objects,
-      STUDIO_ANSWER_INK_MONO,
-    )
-    const grid = keyObjects.find(
-      (o) => o.type === 'group' && (o.objects ?? []).some((c) => c.studioRole === 'answer'),
-    )!
-    const tag: StudioTag = {
-      templateKey: 'word-search',
-      instanceId: 'test-run',
-      pageRole: 'single',
-    }
-    const field = drawHeader(
-      insetHorizontal(contentBox(ctx), STUDIO_CONTENT_SAFE_INSET_X),
-      config,
-      tag,
-      '',
-    ).body
-    const gridCenterX = grid.left! + grid.width! / 2
-    const gridCenterY = grid.top! + grid.height! / 2
-    expect(Math.abs(gridCenterX - (field.left + field.width / 2))).toBeLessThanOrEqual(2)
-    expect(Math.abs(gridCenterY - (field.top + field.height / 2))).toBeLessThanOrEqual(2)
-  })
-
-  it('instruction matches difficulty labels', () => {
-    resetObjectCounter()
-    const [relaxed] = wordSearchTemplate.generate(
-      { ...base, difficulty: 'relaxed', showInstructions: true },
-      CTX(),
-    )
-    const relaxedText = flatten(relaxed!.objects)
-      .filter((o) => o.type === 'textbox')
-      .map((o) => String(o.text ?? ''))
-      .join(' ')
-    expect(relaxedText).toContain('across or down')
-
-    resetObjectCounter()
-    const [challenge] = wordSearchTemplate.generate(
-      { ...base, difficulty: 'challenge', showInstructions: true },
-      CTX(),
-    )
-    const challengeText = flatten(challenge!.objects)
-      .filter((o) => o.type === 'textbox')
-      .map((o) => String(o.text ?? ''))
-      .join(' ')
-    expect(challengeText).toContain('backwards')
-  })
-
-  it('sanitizeWords uppercases, strips junk, and dedupes', () => {
-    expect(
-      sanitizeWords(['cat', 'Cat', 'd0g!', 'AB', 'BIRD', 'TOOLONGWORDXYZ'], 8),
-    ).toEqual(['CAT', 'BIRD'])
-  })
-
-  it('validateConfig allows blank AI theme when writing own theme', () => {
-    expect(
-      wordSearchTemplate.validateConfig?.({
-        ...base,
-        source: 'ai',
-        writeOwnTheme: true,
-        customTheme: '   ',
-      }),
-    ).toBeNull()
-    expect(
-      wordSearchTemplate.validateConfig?.({
-        ...base,
-        source: 'ai',
-        writeOwnTheme: false,
-        retirementCategory: 'travel-adventure',
-        presetThemeId: 'travel-dreams',
-      }),
-    ).toBeNull()
-    expect(
-      wordSearchTemplate.validateConfig?.({
-        ...base,
-        source: 'custom',
-        words: ['CAT', 'DOG', 'BIRD'],
-      }),
-    ).toBeNull()
-    expect(
-      wordSearchTemplate.validateConfig?.({
-        ...base,
-        source: 'ai',
-        writeOwnTheme: true,
-        customTheme: 'x'.repeat(121),
-      }),
-    ).toMatchObject({ field: 'customTheme' })
-  })
-
-  it('validateConfig rejects too few custom words', () => {
-    expect(
-      wordSearchTemplate.validateConfig?.({
-        ...base,
-        source: 'custom',
-        words: ['CAT'],
-      }),
-    ).toMatchObject({ field: 'words' })
-  })
-
-  it('blocks generate when custom words exceed the grid packing budget', () => {
-    const longList = [
-      'ALPHA', 'BRAVO', 'CHARLIE', 'DELTA', 'ECHO', 'FOXTROT', 'GOLF', 'HOTEL',
-      'INDIA', 'JULIET', 'KILO', 'LIMA', 'MIKE', 'NOVEMBER', 'OSCAR', 'PAPA',
-      'QUEBEC', 'ROMEO', 'SIERRA', 'TANGO', 'UNIFORM', 'VICTOR', 'WHISKEY',
-      'XRAY', 'YANKEE',
-    ]
-    expect(
-      wordSearchTemplate.validateConfig?.({
-        ...base,
-        source: 'custom',
-        gridSize: 10,
-        words: longList,
-      }),
-    ).toMatchObject({
-      field: 'words',
-      message: expect.stringMatching(/fits at most 11 words/),
-    })
-  })
-
-  it('blocks generate when wordCount exceeds the grid packing budget', () => {
-    expect(
-      wordSearchTemplate.validateConfig?.({
-        ...base,
-        source: 'ai',
-        customTheme: 'animals',
-        gridSize: 10,
-        wordCount: 20,
-      }),
-    ).toMatchObject({
-      field: 'wordCount',
-      message: expect.stringMatching(/fits at most 11 words/),
-    })
-  })
-
-  it('soft-warns short custom words', () => {
-    const wordsField = wordSearchTemplate.configSchema.find((f) => f.key === 'words')
-    expect(
-      wordsField?.warningWhen?.({
-        source: 'custom',
-        difficulty: 'classic',
-        printStyle: 'large-print',
-        gridSize: 12,
-        words: ['CAT', 'DOG', 'BIRD', 'FISH'],
-      }),
-    ).toMatch(/Short words/)
-  })
-
-  it('source options are AI and custom only; AI shows theme picker', () => {
-    const sourceField = wordSearchTemplate.configSchema.find((f) => f.key === 'source')
-    expect(sourceField?.options?.map((o) => o.value)).toEqual(['ai', 'custom'])
-    expect(wordSearchTemplate.configSchema.some((f) => f.key === 'presetThemeId')).toBe(true)
-    expect(wordSearchTemplate.configSchema.some((f) => f.key === 'writeOwnTheme')).toBe(true)
-    const themeField = wordSearchTemplate.configSchema.find((f) => f.key === 'presetThemeId')
-    expect(themeField?.visibleWhen?.({ source: 'ai', writeOwnTheme: false })).toBe(true)
-    expect(themeField?.visibleWhen?.({ source: 'ai', writeOwnTheme: true })).toBe(false)
-    const customField = wordSearchTemplate.configSchema.find((f) => f.key === 'customTheme')
-    expect(customField?.visibleWhen?.({ source: 'ai', writeOwnTheme: true })).toBe(true)
-    expect(customField?.visibleWhen?.({ source: 'ai', writeOwnTheme: false })).toBe(false)
-  })
-
-  it('prefetches only in AI mode', async () => {
-    const signal = new AbortController().signal
-    expect(await wordSearchTemplate.prefetch?.({ source: 'custom' }, signal)).toBeUndefined()
-  })
-
-  it('prints AI words with display casing', () => {
-    resetObjectCounter()
-    const items = ['TROWEL', 'RAKE', 'HOSE', 'SPADE', 'SEEDS', 'MULCH']
     const [page] = wordSearchTemplate.generate(
-      { ...base, source: 'ai', wordCount: 6 },
-      CTX({ items }),
+      { ...base, difficulty: 'hard', printStyle: 'standard' },
+      CTX(),
     )
-    const printed = flatten(page!.objects)
-      .filter((o) => o.type === 'textbox')
-      .map((o) => String(o.text ?? ''))
-    expect(items.every((word) => printed.includes(word))).toBe(true)
-  })
-
-  it('only offers balanced word-bank counts in the select', () => {
-    const field = wordSearchTemplate.configSchema.find((f) => f.key === 'wordCount')
-    const numeric = (field?.options ?? [])
-      .map((o) => o.value)
-      .filter((v): v is number => typeof v === 'number')
-    expect(numeric).toEqual([6, 8, 9, 12, 16])
-    for (const n of numeric) {
-      expect(n % wordBankColumnCount(n)).toBe(0)
-    }
-  })
-
-  it('snaps legacy unbalanced wordCount to a balanced fill', () => {
-    expect(parseWordCount(5, 'classic', 12)).toBe(6)
-    expect(parseWordCount(14, 'challenge', 15)).toBe(16)
-    expect(parseWordCount(10, 'classic', 12)).toBe(9)
-  })
-
-  it('omits the word bank from the solution page', () => {
-    resetObjectCounter()
-    const [page] = wordSearchTemplate.generate(base, CTX())
-    const keyObjects = buildAnswerPage(
+    assertObjectsInSafeMargin(page!.objects, CTX())
+    const key = buildAnswerPage(
       page!.answerSourceObjects ?? page!.objects,
       STUDIO_ANSWER_INK_MONO,
     )
-    const keyText = flatten(keyObjects)
-      .filter((o) => o.type === 'textbox')
-      .map((o) => String(o.text ?? ''))
-    expect(keyText.some((t) => /^Words to find:/i.test(t))).toBe(false)
-    expect(harvestAnswers(keyObjects).length).toBeGreaterThan(0)
+    assertObjectsInSafeMargin(key, CTX())
+    const answers = harvestAnswers(key).filter((object) => object.type === 'rect')
+    expect(answers.length).toBeGreaterThan(0)
+    expect(answers.every((object) => object.stroke === STUDIO_ANSWER_INK_MONO)).toBe(true)
+    expect(answers.every((object) => object.stroke !== STUDIO_ANSWER_INK)).toBe(true)
   })
 
-  it('throws a clear message when the AI call returned nothing', () => {
-    resetObjectCounter()
+  it('validates custom words and exposes automatic answer keys', () => {
+    expect(
+      wordSearchTemplate.validateConfig?.({ ...base, customWords: ['LEVEL', 'Disney'] }),
+    ).toMatchObject({ field: 'customWords' })
+    expect(
+      wordSearchTemplate.validateConfig?.({
+        ...base,
+        customWords: ['Road Trip', 'Garden', 'Travel'],
+      }),
+    ).toBeNull()
+    expect(wordSearchTemplate.producesAnswerKey).toBe(true)
+    const registered = getStudioTemplate('word-search')!
+    expect(registered.configSchema.some((field) => field.key === 'includeAnswerKey')).toBe(false)
+  })
+
+  it('uses the final spec error for invalid or missing AI data', () => {
     expect(() =>
-      wordSearchTemplate.generate(
-        { ...base, source: 'ai' },
-        { ...CTX(), remoteData: undefined },
-      ),
-    ).toThrow(/enough retirement-themed words/)
+      wordSearchTemplate.generate(base, { ...CTX(), remoteData: undefined }),
+    ).toThrow(
+      WORD_SEARCH_BUILD_ERROR,
+    )
   })
 
-  it('sanitizeWordEntries preserves order and display', () => {
-    const entries = sanitizeWordEntries(['Road Trip', 'road trip', 'Garden'], {
-      gridSize: 12,
-      minLetters: 4,
+  it('keeps compact contract fixtures inside the shared safe area', () => {
+    resetObjectCounter()
+    const pages = wordSearchTemplate.generate(base, {
+      ...STUDIO_TEST_CTX,
+      remoteData: remote,
     })
-    expect(entries).toEqual([
-      { display: 'Road Trip', token: 'ROADTRIP' },
-      { display: 'Garden', token: 'GARDEN' },
-    ])
+    for (const page of pages) assertObjectsInSafeMargin(page.objects, STUDIO_TEST_CTX)
   })
 })

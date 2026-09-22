@@ -1,41 +1,46 @@
 export {
   AI_THEME_MAX_LENGTH,
-  MAX_GRID,
-  MAX_WORDS,
-  MIN_GRID,
+  DEFAULT_THEME as WORD_SEARCH_DEFAULT_AI_THEME,
+  MAX_WORD_LETTERS,
   MIN_WORD_LETTERS,
-  MIN_WORDS,
-  RETIREMENT_DEFAULT_AI_THEME as WORD_SEARCH_DEFAULT_AI_THEME,
-  aiThemeLabel,
+  difficultyPreset,
+  filterWordPool,
+  hasCustomWords,
+  parseDifficulty,
   parsePrintStyle,
-  parseRetirementDifficulty,
-  parseSource,
-  toEngineDifficulty,
+  parseShape,
+  parseTheme,
+  parseTone,
+} from '../retirement-word-search/content'
+export {
+  WORD_SEARCH_CONFIG_SCHEMA,
   validateRetirementWordSearchConfig as validateWordSearchConfig,
 } from '../retirement-word-search/config'
+export type { WordSearchShape } from '../retirement-word-search/content'
 export type {
-  RetirementWordSearchSource as WordSearchSource,
-  RetirementDifficulty,
-  RetirementPrintStyle,
-} from '../retirement-word-search/config'
+  StudioWordSearchDifficulty,
+  WordSearchPrintStyle,
+  WordSearchTone,
+} from '@/types/studio-word-search.types'
 
 import {
-  parseGridSize as parseGridSizeFull,
+  difficultyPreset,
+  parseDifficulty,
   parsePrintStyle,
-  parseRetirementDifficulty,
-  parseWordCount as parseWordCountFull,
-  toEngineDifficulty,
-} from '../retirement-word-search/config'
+} from '../retirement-word-search/content'
 
-/** Back-compat: single-arg parsers used by older helpers. */
-export function parseGridSize(raw: unknown): number {
-  return parseGridSizeFull(raw, parseRetirementDifficulty('classic'), parsePrintStyle('large-print'))
+/** Compatibility helpers retained for older imports. */
+export function parseGridSize(_raw?: unknown): number {
+  return difficultyPreset('medium', 'large-print').gridSize
 }
 
-export function parseWordCount(raw: unknown): number {
-  return parseWordCountFull(raw, parseRetirementDifficulty('classic'), parseGridSize(12))
+export function parseWordCount(_raw?: unknown): number {
+  return difficultyPreset('medium', 'large-print').listedWords
 }
 
-export function parseDifficulty(raw: unknown) {
-  return toEngineDifficulty(parseRetirementDifficulty(raw))
+export function presetFromConfig(config: Record<string, unknown>) {
+  return difficultyPreset(
+    parseDifficulty(config.difficulty),
+    parsePrintStyle(config.printStyle),
+  )
 }

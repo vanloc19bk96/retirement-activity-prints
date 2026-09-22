@@ -8,6 +8,7 @@ export type {
 
 export {
   buildWordSearch,
+  buildMaskedWordSearch,
   countPuzzleMix,
   directionsForDifficulty,
   packingBudget,
@@ -19,6 +20,7 @@ export {
   sanitizeWordEntry,
   sanitizeWords,
 } from './placement'
+export type { WordSearchCellMask } from './placement'
 
 export {
   interleavedCandidateStarts,
