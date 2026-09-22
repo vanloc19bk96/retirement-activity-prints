@@ -151,14 +151,6 @@ function shouldOmitFromAnswerPage(obj: StudioFabricObject): boolean {
   if (obj.studioTemplateKey === 'sudoku' && obj.studioRole === 'prompt') {
     return true
   }
-  // Anagram sheets: keep the grid; drop puzzle write-in lines under revealed answers.
-  if (
-    obj.studioTemplateKey === 'retirement-anagram' &&
-    obj.studioRole === 'structure' &&
-    isFabricType(obj, 'line')
-  ) {
-    return true
-  }
   // Hidden-message write-in boxes live on the puzzle; the key prints the saying.
   if (
     obj.studioTemplateKey === 'hidden-message-word-search' &&

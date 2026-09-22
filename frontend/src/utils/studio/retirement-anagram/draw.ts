@@ -1,207 +1,138 @@
 import type { StudioFabricObject } from '@/types/studio-template.types'
+import { STUDIO_INK, STUDIO_INK_MUTED } from '@/constants/studio.constants'
 import {
-  boxCenterX,
-  boxCenterY,
-  estimateTextBoxWidth,
-  estimateSpacedRunWidth,
-  fitFontSizeToWidth,
-  insetBox,
-  toNonBreakingSpaces,
-  type Box,
-} from '../studio-layout'
-import {
-  buildText,
-  buildLine,
   buildGroup,
+  buildRect,
+  buildText,
   type StudioTag,
 } from '../studio-fabric-builders'
-import { drawGridLines } from '../studio-grid-rules'
+import { unionObjectBounds, type Box } from '../studio-layout'
+import { fabricTextHeight, hugTextBoxWidth } from '../studio-text-metrics'
 import {
-  STUDIO_BODY_SIZE,
-  STUDIO_INK_MUTED,
-  STUDIO_RULE_MEDIUM,
-  STUDIO_STROKE_HAIRLINE,
-} from '@/constants/studio.constants'
+  CLUE_LINE_HEIGHT,
+  RULE_HEIGHT,
+  RULE_RATIO,
+  spacedLetters,
+  spacedRunWidth,
+  type AnagramMetrics,
+  type AnagramPagePlan,
+} from './layout'
 
-export interface AnagramItem {
+/** One printed row: the letters as shuffled, the clue, and the answer beneath. */
+export interface AnagramPuzzleItem {
   answer: string
+  clue: string
   scrambled: string
 }
 
-/** Breathing room from safe edges — matches other dense studio grids. */
-const STROKE_INSET = 16
-const HEADER_ROWS = 1
-const CELL_PAD = 12
-const INDEX_GAP = 8
-const INDEX_W = 40
-const PREFERRED_ROW_H = STUDIO_BODY_SIZE * 2.2
-const MIN_SCRAMBLE_SIZE = 12
-const LABEL_SIZE = STUDIO_BODY_SIZE * 0.65
-const COLS = 2
+/** Letter written on a slot, against slot pitch. Air either side of the glyph. */
+const ANSWER_LETTER_RATIO = 0.74
+/** Lift of a written letter off its rule, so the glyph does not sit on the ink. */
+const ANSWER_LIFT_RATIO = 0.1
 
-interface AnagramTable {
-  cols: number
-  rows: number
-  cellW: number
-  cellH: number
-  bounds: Box
-  cellBox: (row: number, col: number) => Box
-}
-
-/** Centered 2-col table — integer cells, re-centered in field. */
-function fitAnagramTable(field: Box, dataRows: number): AnagramTable {
-  const rows = Math.max(1, dataRows) + HEADER_ROWS
-  const cellW = Math.max(1, Math.floor(field.width / COLS))
-  // Prefer readable rows, but always shrink to fit the field (dense sheets).
-  const cellH = Math.max(
-    1,
-    Math.floor(Math.min(PREFERRED_ROW_H, field.height / rows)),
-  )
-  const gridW = cellW * COLS
-  const gridH = cellH * rows
-  const left = Math.round(field.left + (field.width - gridW) / 2)
-  const top = Math.round(field.top + (field.height - gridH) / 2)
-  return {
-    cols: COLS,
-    rows,
-    cellW,
-    cellH,
-    bounds: { left, top, width: gridW, height: gridH },
-    cellBox: (row, col) => ({
-      left: left + col * cellW,
-      top: top + row * cellH,
-      width: cellW,
-      height: cellH,
-    }),
-  }
-}
-
-function spacedScramble(scrambled: string): string {
-  return toNonBreakingSpaces(scrambled.split('').join(' '))
-}
-
-/** Shrink spaced letter runs so they stay one line in the prompt column. */
-function fitScrambleSize(text: string, maxWidth: number, preferred: number): number {
-  if (maxWidth <= 0) return MIN_SCRAMBLE_SIZE
-  let units = 0
-  for (const ch of text) {
-    units += ch === ' ' || ch === '\u00a0' ? 0.3 : 0.62
-  }
-  const fitted = (maxWidth - 4) / Math.max(units, 1)
-  return Math.max(MIN_SCRAMBLE_SIZE, Math.min(preferred, fitted))
-}
-
-function sharedScrambleSize(items: AnagramItem[], promptMaxW: number, rowH: number): number {
-  const preferred = Math.min(STUDIO_BODY_SIZE * 1.1, Math.floor(rowH * 0.55))
-  let size = preferred
-  for (const item of items) {
-    size = Math.min(size, fitScrambleSize(spacedScramble(item.scrambled), promptMaxW, preferred))
-  }
-  return size
-}
-
-function pushHeaderLabel(
+/**
+ * One row of slots: a rule per letter, and the answer written above them.
+ *
+ * The answer is drawn either way. The first letter prints when the level gives
+ * it away — it is part of the puzzle — and every other letter is a hidden
+ * `answer`, which is what lets the editor reveal a single sheet in place
+ * without regenerating it, and what makes the solution page a picture of this
+ * same page with the words written in.
+ */
+function drawAnswerSlots(
   objects: StudioFabricObject[],
-  cell: Box,
-  label: string,
-  font: string,
-  tag: StudioTag,
+  options: {
+    bandLeft: number
+    ruleY: number
+    item: AnagramPuzzleItem
+    metrics: AnagramMetrics
+    font: string
+    tag: StudioTag
+    firstLetterGiven: boolean
+  },
 ): void {
-  const maxW = Math.max(24, cell.width - CELL_PAD * 2)
-  objects.push(
+  const { bandLeft, ruleY, item, metrics, font, tag, firstLetterGiven } = options
+  const { slotW } = metrics
+  const ruleW = Math.round(slotW * RULE_RATIO)
+  const letterSize = Math.max(1, Math.round(slotW * ANSWER_LETTER_RATIO))
+  const lift = Math.round(slotW * ANSWER_LIFT_RATIO)
+
+  for (let i = 0; i < item.answer.length; i++) {
+    const slotLeft = bandLeft + i * slotW
+    const centerX = slotLeft + slotW / 2
+    objects.push(
+      buildRect(
+        {
+          left: Math.round(centerX - ruleW / 2),
+          top: ruleY,
+          width: ruleW,
+          height: RULE_HEIGHT,
+          fill: STUDIO_INK,
+          stroke: 'transparent',
+          strokeWidth: 0,
+        },
+        tag,
+        'structure',
+      ),
+    )
+
+    const letter = item.answer[i]!
+    const isGiven = firstLetterGiven && i === 0
+    objects.push(
+      buildText(
+        {
+          left: centerX,
+          top: ruleY - lift,
+          text: letter,
+          width: hugTextBoxWidth(letter, letterSize, slotW, { fontFamily: font }),
+          fontFamily: font,
+          fontSize: letterSize,
+          fill: STUDIO_INK,
+          textAlign: 'center',
+          originX: 'center',
+          originY: 'bottom',
+          lineHeight: 1,
+        },
+        tag,
+        isGiven ? 'prompt' : 'answer',
+      ),
+    )
+  }
+}
+
+function buildRowGroup(options: {
+  item: AnagramPuzzleItem
+  clueLines: readonly string[]
+  index: number
+  /** Left edge of this row's column, where the row number sits. */
+  left: number
+  plan: AnagramPagePlan
+  top: number
+  font: string
+  tag: StudioTag
+  firstLetterGiven: boolean
+}): StudioFabricObject | null {
+  const { item, clueLines, index, left, plan, top, font, tag, firstLetterGiven } =
+    options
+  const { metrics, bandWidth, rowHeight } = plan
+  const spec = { fontFamily: font }
+  const bandLeft = left + metrics.indexW
+  const parts: StudioFabricObject[] = []
+
+  // The number sits on the scrambled letters rather than at the top of the row,
+  // so a reader's eye runs "1. — letters" as one line and the clue reads as a
+  // note underneath it.
+  const label = `${index + 1}.`
+  parts.push(
     buildText(
       {
-        left: boxCenterX(cell),
-        top: boxCenterY(cell),
+        left,
+        top: top + fabricTextHeight(1, metrics.scrambleFont) / 2,
         text: label,
-        width: estimateTextBoxWidth(label, LABEL_SIZE, maxW),
+        width: hugTextBoxWidth(label, metrics.indexFont, metrics.indexW, spec),
         fontFamily: font,
-        fontSize: LABEL_SIZE,
+        fontSize: metrics.indexFont,
         fill: STUDIO_INK_MUTED,
-        textAlign: 'center',
-        originX: 'center',
-        originY: 'center',
-      },
-      tag,
-      'decoration',
-    ),
-  )
-}
-
-/** Bottom of the vertically-centered scramble run — writing line shares this Y. */
-function scrambleBaselineY(cell: Box, fontSize: number): number {
-  return Math.round(boxCenterY(cell) + fontSize / 2)
-}
-
-/** Puzzle-only write-in rule — omitted on the answer-key page; sits on scramble baseline. */
-function pushAnswerLine(
-  objects: StudioFabricObject[],
-  cell: Box,
-  tag: StudioTag,
-  fontSize: number,
-): void {
-  const y = scrambleBaselineY(cell, fontSize)
-  objects.push(
-    buildLine(
-      {
-        x1: cell.left + CELL_PAD,
-        y1: y,
-        x2: cell.left + cell.width - CELL_PAD,
-        y2: y,
-        stroke: STUDIO_RULE_MEDIUM,
-        strokeWidth: STUDIO_STROKE_HAIRLINE,
-      },
-      tag,
-      'structure',
-    ),
-  )
-}
-
-function pushScrambleRow(
-  objects: StudioFabricObject[],
-  cell: Box,
-  item: AnagramItem,
-  index: number,
-  style: { font: string; scrambleSize: number; labelSize: number; tag: StudioTag },
-): void {
-  const { font, scrambleSize, labelSize, tag } = style
-  // Same midY + originY center so index and word stay optically level despite size gap.
-  const midY = boxCenterY(cell)
-  const label = `${index}.`
-  const scramble = spacedScramble(item.scrambled)
-  const contentMaxW = Math.max(24, cell.width - CELL_PAD * 2)
-  const scrambleMaxW = Math.max(24, contentMaxW - INDEX_W - INDEX_GAP)
-  const labelW = estimateTextBoxWidth(label, labelSize, INDEX_W)
-  const scrambleW = estimateSpacedRunWidth(scramble, scrambleSize, scrambleMaxW)
-  const blockW = labelW + INDEX_GAP + scrambleW
-  const blockLeft = boxCenterX(cell) - blockW / 2
-
-  objects.push(
-    buildText(
-      {
-        left: blockLeft,
-        top: midY,
-        text: label,
-        width: labelW,
-        fontFamily: font,
-        fontSize: labelSize,
-        fill: STUDIO_INK_MUTED,
-        originY: 'center',
-        lineHeight: 1,
-      },
-      tag,
-      'decoration',
-    ),
-  )
-  objects.push(
-    buildText(
-      {
-        left: blockLeft + labelW + INDEX_GAP,
-        top: midY,
-        text: scramble,
-        width: scrambleW,
-        fontFamily: font,
-        fontSize: scrambleSize,
         originY: 'center',
         lineHeight: 1,
       },
@@ -209,103 +140,124 @@ function pushScrambleRow(
       'prompt',
     ),
   )
-}
 
-function pushAnswerText(
-  objects: StudioFabricObject[],
-  cell: Box,
-  answer: string,
-  font: string,
-  fontSize: number,
-  tag: StudioTag,
-): void {
-  const answerMaxW = Math.max(24, cell.width - CELL_PAD * 2 - 4)
-  const answerSize = fitFontSizeToWidth(answer, answerMaxW, fontSize, 10)
-  objects.push(
+  const scramble = spacedLetters(item.scrambled)
+  parts.push(
     buildText(
       {
-        left: boxCenterX(cell),
-        // Same baseline as the write-in rule / scramble letters.
-        top: scrambleBaselineY(cell, fontSize),
-        text: answer,
-        width: estimateTextBoxWidth(answer, answerSize, answerMaxW),
+        left: bandLeft,
+        top,
+        text: scramble,
+        width: spacedRunWidth(item.scrambled, metrics.scrambleFont, bandWidth, spec),
         fontFamily: font,
-        fontSize: answerSize,
-        textAlign: 'center',
-        originX: 'center',
-        originY: 'bottom',
+        fontSize: metrics.scrambleFont,
+        fill: STUDIO_INK,
+        fontWeight: 700,
         lineHeight: 1,
       },
       tag,
-      'answer',
+      'prompt',
     ),
   )
+
+  // Pre-broken to the column and set in a box wider than the breaks, so Fabric
+  // has no reason to re-wrap the clue into a line the row did not reserve.
+  parts.push(
+    buildText(
+      {
+        left: bandLeft,
+        top: top + fabricTextHeight(1, metrics.scrambleFont) + metrics.clueGap,
+        text: clueLines.join('\n'),
+        width: bandWidth,
+        fontFamily: font,
+        fontSize: metrics.clueFont,
+        fill: STUDIO_INK_MUTED,
+        lineHeight: CLUE_LINE_HEIGHT,
+      },
+      tag,
+      'prompt',
+    ),
+  )
+
+  drawAnswerSlots(parts, {
+    bandLeft,
+    ruleY: top + rowHeight - RULE_HEIGHT,
+    item,
+    metrics,
+    font,
+    tag,
+    firstLetterGiven,
+  })
+
+  const bounds = unionObjectBounds(parts)
+  if (!bounds) return null
+  return buildGroup(parts, bounds, tag, 'structure')
 }
 
 export interface DrawAnagramOptions {
-  forAnswerKey?: boolean
-  /** Left column header. Default: Letters */
-  scrambleHeader?: string
-  /** Right column header on the puzzle page. Default: Your answer */
-  answerHeader?: string
-  /** Right column header on the answer-key page. Default: Answer */
-  answerKeyHeader?: string
+  field: Box
+  plan: AnagramPagePlan
+  items: readonly AnagramPuzzleItem[]
+  font: string
+  tag: StudioTag
+  firstLetterGiven: boolean
 }
 
-/** Digit-span-style 2-col table: Letters | Your answer (Answer on the key). */
-export function drawAnagramItems(
+/**
+ * Lay the rows out in the body column.
+ *
+ * Two things happen here that a plain top-left stack does not do.
+ *
+ * Leftover height is spread between the rows before the block is centred, up to
+ * one gutter each. Centring alone leaves a page of six short words as a clump
+ * in the middle with a hand's width of white above and below it; spreading
+ * first is what makes a printed page look composed.
+ *
+ * And the columns are centred on their *drawn* width rather than filling the
+ * band. A row is a block — letters, clue, slots — perhaps two thirds as wide as
+ * the page measure, and anchoring that block to the left margin is what made
+ * the old sheet look as though it had slipped off the page.
+ *
+ * Numbering runs down a column before moving across, so a solver reads 1, 2, 3
+ * in the order a hand moves down the page.
+ */
+export function drawAnagramRows(
   objects: StudioFabricObject[],
-  field: Box,
-  items: AnagramItem[],
-  font: string,
-  tag: StudioTag,
-  options?: DrawAnagramOptions,
+  options: DrawAnagramOptions,
 ): void {
-  if (items.length === 0) return
+  const { field, plan, items, font, tag, firstLetterGiven } = options
+  const { metrics, rowHeight, itemCount, columns, rowsPerColumn } = plan
+  if (itemCount === 0) return
 
-  const forAnswerKey = options?.forAnswerKey === true
-  const scrambleHeader = options?.scrambleHeader ?? 'Letters'
-  const answerHeader = options?.answerHeader ?? 'Your answer'
-  const answerKeyHeader = options?.answerKeyHeader ?? 'Answer'
-  const tableField = insetBox(field, STROKE_INSET)
-  const table = fitAnagramTable(tableField, items.length)
-  const promptMaxW = Math.max(24, table.cellW - CELL_PAD * 2 - INDEX_W - INDEX_GAP)
-  const scrambleSize = sharedScrambleSize(items, promptMaxW, table.cellH)
-  const labelSize = fitFontSizeToWidth(`${items.length}.`, INDEX_W, scrambleSize * 0.9, 10)
-  const gridObjects: StudioFabricObject[] = []
+  const usableHeight = Math.max(0, field.height - plan.bottomGuard)
+  const content = rowHeight * rowsPerColumn
+  const gaps = Math.max(0, rowsPerColumn - 1)
+  const slack = Math.max(0, usableHeight - content - metrics.gutter * gaps)
+  const spread = gaps > 0 ? Math.min(slack / (gaps + 1), metrics.gutter) : 0
+  const gutter = metrics.gutter + spread
+  const stackH = content + gutter * gaps
+  const stackTop = field.top + Math.max(0, (usableHeight - stackH) / 2)
 
-  pushHeaderLabel(gridObjects, table.cellBox(0, 0), scrambleHeader, font, tag)
-  pushHeaderLabel(
-    gridObjects,
-    table.cellBox(0, 1),
-    forAnswerKey ? answerKeyHeader : answerHeader,
-    font,
-    tag,
-  )
+  const totalWidth =
+    plan.columnWidth * columns + plan.columnGutter * Math.max(0, columns - 1)
+  const originX = field.left + Math.max(0, (field.width - totalWidth) / 2)
 
-  for (let i = 0; i < items.length; i++) {
+  for (let i = 0; i < itemCount; i++) {
     const item = items[i]
     if (!item) continue
-    const row = i + HEADER_ROWS
-    const scrambleCell = table.cellBox(row, 0)
-    const answerCell = table.cellBox(row, 1)
-    pushScrambleRow(gridObjects, scrambleCell, item, i + 1, {
+    const column = Math.floor(i / rowsPerColumn)
+    const rowInColumn = i % rowsPerColumn
+    const group = buildRowGroup({
+      item,
+      clueLines: plan.rows[i]?.clueLines ?? [item.clue],
+      index: i,
+      left: originX + column * (plan.columnWidth + plan.columnGutter),
+      plan,
+      top: stackTop + rowInColumn * (rowHeight + gutter),
       font,
-      scrambleSize,
-      labelSize,
       tag,
+      firstLetterGiven,
     })
-    // Puzzle write-in rules only — omitted on the answer-key layout.
-    if (!forAnswerKey) {
-      pushAnswerLine(gridObjects, answerCell, tag, scrambleSize)
-    }
-    pushAnswerText(gridObjects, answerCell, item.answer, font, scrambleSize, tag)
+    if (group) objects.push(group)
   }
-
-  gridObjects.push(
-    ...drawGridLines(table.bounds, table.cellW, table.cols, table.rows, tag, {
-      rowPitch: table.cellH,
-    }),
-  )
-  objects.push(buildGroup(gridObjects, table.bounds, tag))
 }

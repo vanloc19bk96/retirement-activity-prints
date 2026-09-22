@@ -113,3 +113,17 @@ export function hasUniqueAnagram(word: string, index: AnagramIndex): boolean {
   const peers = anagramsOf(answer, index)
   return peers.length <= 1 || (peers.length === 1 && peers[0] === answer)
 }
+
+/**
+ * True when the run is itself a dictionary word.
+ *
+ * Any permutation of a word shares its letter bucket, so the bucket for the
+ * scramble is the bucket for the answer — and the scramble is a real word
+ * exactly when it appears in it. Used to reject a shuffle that reads as
+ * something else: a solver handed SILENT for LISTEN has been given a wrong
+ * answer in the prompt, and no clue makes that fair.
+ */
+export function isDictionaryWord(word: string, index: AnagramIndex): boolean {
+  const run = word.toUpperCase().replace(/[^A-Z]/g, '')
+  return anagramsOf(run, index).includes(run)
+}

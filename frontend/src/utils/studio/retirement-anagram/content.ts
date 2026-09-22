@@ -1,142 +1,166 @@
-import type { StudioConfig } from '@/types/studio-template.types'
-import {
-  hasUniqueAnagram,
-  loadAnagramIndex,
-  type AnagramIndex,
-} from './scramble'
+import type {
+  RetirementAnagramClue,
+  RetirementAnagramItem,
+} from '@/types/studio-retirement-anagram.types'
+import { isUnsafeCopy } from '../retirement-word-search/content-quality'
+import { hasUniqueAnagram, loadAnagramIndex, type AnagramIndex } from './scramble'
+import type { AnagramLevel } from './levels'
 
-export type AnagramDifficulty = 'easy' | 'medium' | 'hard'
+export type { RetirementAnagramItem }
 
-export const RETIREMENT_ANAGRAM_DEFAULT_TITLE = 'Retirement Anagrams'
-export const RETIREMENT_ANAGRAM_INSTRUCTION =
-  'Unscramble the letters to reveal each retirement-themed word.'
+export const RETIREMENT_ANAGRAM_DEFAULT_TITLE = 'Anagrams'
+
 export const RETIREMENT_ANAGRAM_AI_EMPTY_MESSAGE =
-  'Unable to create enough high-quality retirement words. Try again or choose a broader topic.'
+  'Could not write enough retirement words for this theme. Try again, or pick a broader theme.'
 
-export const CUSTOM_TOPIC_VALUE = 'custom'
-export const CUSTOM_TOPIC_MAX_LENGTH = 120
-export const DEFAULT_TOPIC = 'retirement-life'
-export const MIN_ITEM_COUNT = 8
-export const MAX_ITEM_COUNT = 20
-export const DEFAULT_ITEM_COUNT = 12
-/** Spec: ask AI for itemCount + 5 candidates. */
-export const CANDIDATE_OVERREQUEST = 5
-
-export const LENGTH_RANGE: Record<AnagramDifficulty, { min: number; max: number }> = {
-  easy: { min: 4, max: 6 },
-  medium: { min: 5, max: 8 },
-  hard: { min: 7, max: 11 },
-}
-
-const TOPIC_OPTIONS: { value: string; label: string }[] = [
-  { value: 'retirement-life', label: 'Retirement Life' },
-  { value: 'travel-vacations', label: 'Travel & Vacations' },
-  { value: 'hobbies-leisure', label: 'Hobbies & Leisure' },
-  { value: 'gardening', label: 'Gardening' },
-  { value: 'family-grandchildren', label: 'Family & Grandchildren' },
-  { value: 'health-wellness', label: 'Health & Wellness' },
-  { value: 'relaxation', label: 'Relaxation' },
-  { value: 'bucket-list', label: 'Bucket List' },
-  { value: 'volunteering', label: 'Volunteering' },
-  { value: 'home-lifestyle', label: 'Home & Lifestyle' },
-  { value: 'memories-nostalgia', label: 'Memories & Nostalgia' },
-  { value: CUSTOM_TOPIC_VALUE, label: 'Custom Topic' },
-]
-
-const TOPIC_LABEL_BY_VALUE = new Map(TOPIC_OPTIONS.map((t) => [t.value, t.label]))
-
-export function topicSelectOptions() {
-  return TOPIC_OPTIONS.map((t) => ({ label: t.label, value: t.value }))
-}
-
-export function parseTopic(raw: unknown): string {
-  const value = String(raw ?? DEFAULT_TOPIC).trim()
-  return TOPIC_LABEL_BY_VALUE.has(value) ? value : DEFAULT_TOPIC
-}
-
-export function isCustomTopic(config: StudioConfig): boolean {
-  return parseTopic(config.topic) === CUSTOM_TOPIC_VALUE
-}
-
-export function parseDifficulty(raw: unknown): AnagramDifficulty {
-  return raw === 'easy' || raw === 'hard' ? raw : 'medium'
-}
-
-export function clampItemCount(raw: unknown): number {
-  const n = Math.round(Number(raw ?? DEFAULT_ITEM_COUNT))
-  if (!Number.isFinite(n)) return DEFAULT_ITEM_COUNT
-  return Math.min(MAX_ITEM_COUNT, Math.max(MIN_ITEM_COUNT, n))
-}
-
-export function resolveCustomTopicText(config: StudioConfig): string {
-  return String(config.customTopic ?? '')
-    .trim()
-    .slice(0, CUSTOM_TOPIC_MAX_LENGTH)
-}
-
-/** Display label for titles / variety keys. */
-export function topicLabel(config: StudioConfig): string {
-  if (isCustomTopic(config)) {
-    const custom = resolveCustomTopicText(config)
-    if (!custom) return 'Custom Topic'
-    return custom.charAt(0).toUpperCase() + custom.slice(1)
+/**
+ * The instruction a solver actually needs, and nothing past it.
+ *
+ * "Write one letter per line" was in an earlier draft and is gone: a row of
+ * separate short rules already says it, and the strip is not free. It sits
+ * above the puzzle on every page, and on a 5 x 8 trim a second wrapped line
+ * costs a whole word off the sheet — a worse deal for the reader than the
+ * sentence was ever worth.
+ *
+ * The gentle level spends that room on the one thing the page cannot show by
+ * itself: an unexplained letter already sitting in the first slot reads like a
+ * misprint rather than a head start.
+ */
+export function anagramInstruction(level: AnagramLevel): string {
+  if (level.firstLetterGiven) {
+    return 'Use the clue to unscramble each word. The first letter is given.'
   }
-  return TOPIC_LABEL_BY_VALUE.get(parseTopic(config.topic)) ?? 'Retirement Life'
+  return 'Use the clue to unscramble each word.'
 }
 
-/** Prompt string sent to the AI endpoint. */
-export function resolveTopicPrompt(config: StudioConfig): string {
-  if (isCustomTopic(config)) {
-    return resolveCustomTopicText(config) || 'Retirement Life'
-  }
-  return topicLabel(config)
+/** Longest clue the printed column was planned for. */
+export const MAX_CLUE_CHARS = 42
+/** Below this a "clue" is a label, not a definition worth printing. */
+export const MIN_CLUE_CHARS = 8
+
+/** Ask the writer for this many extra candidates — filtering costs some. */
+export const CANDIDATE_OVERREQUEST = 8
+
+export function candidateCountFor(count: number): number {
+  return count + CANDIDATE_OVERREQUEST
 }
 
-export function normalizeWord(raw: string): string {
+export function normalizeWord(raw: unknown): string {
   return String(raw ?? '')
     .toUpperCase()
     .replace(/[^A-Z]/g, '')
 }
 
-export function isValidWordLength(word: string, difficulty: AnagramDifficulty): boolean {
-  const { min, max } = LENGTH_RANGE[difficulty]
-  return word.length >= min && word.length <= max
+/**
+ * One line of sentence-case prose, no trailing stop.
+ *
+ * A full stop after a clue that sits above a row of writing lines reads as a
+ * stray mark at this size, and the clue is never a sentence to begin with.
+ */
+export function normalizeClue(raw: unknown): string {
+  const text = String(raw ?? '')
+    .replace(/\s+/g, ' ')
+    .replace(/[.…]+$/, '')
+    .trim()
+  if (!text) return ''
+  return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
 /**
- * Normalize → validate length → dedupe → unique-anagram filter → take `count`.
- * Returns up to `count` words; caller decides whether that is enough.
+ * A clue that hands over the answer.
+ *
+ * Not just the word itself: a language model asked to define GARDENING writes
+ * "where a gardener spends the morning" as often as not, and a reader who sees
+ * the stem has been given the anagram rather than asked it. Comparing the
+ * first four letters catches the whole family — GARDEN, GARDENER, GARDENS —
+ * without rejecting the honest near-misses a shorter prefix would.
  */
-export function selectAiWords(
-  remote: readonly string[] | undefined,
-  options: {
-    count: number
-    difficulty: AnagramDifficulty
-    index?: AnagramIndex
-  },
-): string[] {
-  const { count, difficulty } = options
+export function clueGivesAnswerAway(clue: string, answer: string): boolean {
+  const stem = answer.slice(0, 4)
+  if (stem.length < 4) return clue.toUpperCase().includes(answer)
+  for (const token of clue.toUpperCase().split(/[^A-Z]+/)) {
+    if (token.startsWith(stem)) return true
+  }
+  return false
+}
+
+export function isValidClue(clue: string, answer: string): boolean {
+  if (clue.length < MIN_CLUE_CHARS || clue.length > MAX_CLUE_CHARS) return false
+  if (clueGivesAnswerAway(clue, answer)) return false
+  return !isUnsafeCopy(clue)
+}
+
+export function isValidWordLength(word: string, level: AnagramLevel): boolean {
+  return word.length >= level.minLetters && word.length <= level.maxLetters
+}
+
+/**
+ * Everything that has to be true of one printed row.
+ *
+ * The letter-set check is the one that decides whether the sheet is honest. A
+ * word whose letters also spell another common word has two right answers, and
+ * the answer page prints only one of them — so it never reaches the page, clue
+ * or no clue.
+ */
+export function isValidAnagramItem(
+  item: RetirementAnagramItem,
+  level: AnagramLevel,
+  index: AnagramIndex = loadAnagramIndex(),
+): boolean {
+  if (!isValidWordLength(item.answer, level)) return false
+  if (!/^[A-Z]+$/.test(item.answer)) return false
+  if (isUnsafeCopy(item.answer)) return false
+  if (!isValidClue(item.clue, item.answer)) return false
+  return hasUniqueAnagram(item.answer, index)
+}
+
+/**
+ * Normalize → gate → dedupe → take `count`.
+ *
+ * Words are deduped by their letter *set*, not their spelling: two rows whose
+ * letters sort to the same key print two scrambles a reader cannot tell apart,
+ * and one of their answers will look wrong on the solution page.
+ */
+export function selectAiItems(
+  remote: readonly RetirementAnagramClue[] | undefined,
+  options: { count: number; level: AnagramLevel; index?: AnagramIndex },
+): RetirementAnagramItem[] {
+  const { count, level } = options
   const index = options.index ?? loadAnagramIndex()
-  const out: string[] = []
-  const seen = new Set<string>()
+  const out: RetirementAnagramItem[] = []
+  const seenLetters = new Set<string>()
 
   for (const raw of remote ?? []) {
-    const word = normalizeWord(raw)
-    if (!word || seen.has(word)) continue
-    if (!isValidWordLength(word, difficulty)) continue
-    if (!hasUniqueAnagram(word, index)) continue
-    seen.add(word)
-    out.push(word)
+    const item: RetirementAnagramItem = {
+      answer: normalizeWord(raw?.word),
+      clue: normalizeClue(raw?.clue),
+    }
+    if (!isValidAnagramItem(item, level, index)) continue
+    const key = [...item.answer].sort().join('')
+    if (seenLetters.has(key)) continue
+    seenLetters.add(key)
+    out.push(item)
     if (out.length >= count) break
   }
   return out
 }
 
-export function defaultTitleFor(config: StudioConfig): string | undefined {
-  if (String(config.title ?? '').trim()) return undefined
-  const topic = parseTopic(config.topic)
-  if (topic === DEFAULT_TOPIC || topic === CUSTOM_TOPIC_VALUE) {
-    return RETIREMENT_ANAGRAM_DEFAULT_TITLE
-  }
-  return `Unscramble: ${topicLabel(config)}`
+/**
+ * The hardest page these settings could be handed.
+ *
+ * The form has to report how many words a page holds before a single word
+ * exists, so it measures against the worst admissible row: the longest answer
+ * the band allows, beside the longest clue the column accepts. Anything
+ * `isValidAnagramItem` lets through fits wherever this one does, which is what
+ * makes the form's note a promise rather than a guess.
+ */
+export function worstCaseItems(
+  level: AnagramLevel,
+  count: number,
+): RetirementAnagramItem[] {
+  // "Wandering" is an ordinary-width run in a serif face: no narrow stems to
+  // flatter the measurement, no double-width m/w to make it pessimistic.
+  const clue = 'Wandering '.repeat(8).slice(0, MAX_CLUE_CHARS).trim()
+  const answer = 'N'.repeat(level.maxLetters)
+  return Array.from({ length: Math.max(1, count) }, () => ({ answer, clue }))
 }

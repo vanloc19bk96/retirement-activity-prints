@@ -1,39 +1,58 @@
 import { generateRetirementAnagram } from '@/api/studio-retirement-anagram.api'
+import type { StudioConfig } from '@/types/studio-template.types'
+import type { RetirementAnagramResponse } from '@/types/studio-retirement-anagram.types'
 import {
   rememberStudioContent,
   studioAvoidList,
   studioVarietyKey,
 } from '../studio-variety'
-import type { StudioConfig } from '@/types/studio-template.types'
-import type { RetirementAnagramResponse } from '@/types/studio-retirement-anagram.types'
 import {
-  CANDIDATE_OVERREQUEST,
-  CUSTOM_TOPIC_MAX_LENGTH,
+  AI_THEME_MAX_LENGTH,
+  resolveRetirementTheme,
+} from '../_shared/retirement-theme-config'
+import { filterUnsafeThemeCopy } from '../retirement-word-search/content-quality'
+import {
+  MAX_CLUE_CHARS,
   RETIREMENT_ANAGRAM_AI_EMPTY_MESSAGE,
-  clampItemCount,
-  parseDifficulty,
-  resolveTopicPrompt,
-  selectAiWords,
-  topicLabel,
+  candidateCountFor,
+  selectAiItems,
 } from './content'
+import { parseAnagramLevel } from './levels'
+import { ANAGRAM_THEME_SALT } from './theme'
 
-/** Spec: retry AI once with a different variety seed if the first pass is short. */
-const MAX_AI_ATTEMPTS = 2
+const MAX_AI_ATTEMPTS = 3
 
 /**
- * AI-only prefetch — no animal / bundled theme fallback.
- * Retries once, then fails visibly.
+ * AI-only — there is no bundled word bank behind this.
+ *
+ * A packaged list would make every seller's book draw on the same few hundred
+ * words, which is the fastest way to two KDP titles that look copied from each
+ * other. Retrying with an avoid list and then failing visibly is the honest
+ * alternative.
+ *
+ * Asks for the level's target count even though the page may print fewer: the
+ * page size is not known here, and over-requesting costs one field in the same
+ * call. Rejected words join the avoid list, so the retry is asked for something
+ * new rather than being handed the same pool twice.
  */
 export async function retirementAnagramPrefetch(
   config: StudioConfig,
   signal: AbortSignal,
 ): Promise<RetirementAnagramResponse> {
-  const need = clampItemCount(config.itemCount)
-  const difficulty = parseDifficulty(config.difficulty)
-  const topic = resolveTopicPrompt(config).slice(0, CUSTOM_TOPIC_MAX_LENGTH)
-  const label = topicLabel(config) || topic
-  const varietyKey = studioVarietyKey('retirement-anagram', label, difficulty)
   const seed = Number(config.seed ?? 1)
+  const level = parseAnagramLevel(config)
+  const theme = resolveRetirementTheme(config, seed, ANAGRAM_THEME_SALT)
+  const need = level.targetItems
+
+  const promptTheme = (filterUnsafeThemeCopy(theme.prompt) ?? theme.prompt).slice(
+    0,
+    AI_THEME_MAX_LENGTH,
+  )
+  const varietyKey = studioVarietyKey(
+    'retirement-anagram',
+    theme.label || promptTheme,
+    level.id,
+  )
 
   const rejected: string[] = []
   let lastError: unknown
@@ -42,20 +61,28 @@ export async function retirementAnagramPrefetch(
     try {
       const remote = await generateRetirementAnagram(
         {
-          topic,
-          itemCount: need,
-          difficulty,
+          theme: promptTheme,
+          count: candidateCountFor(need),
+          minLetters: level.minLetters,
+          maxLetters: level.maxLetters,
+          maxClueChars: MAX_CLUE_CHARS,
           seed: seed + attempt * 97,
           avoid: [...studioAvoidList(varietyKey), ...rejected],
         },
         signal,
       )
-      const items = selectAiWords(remote.items, { count: need, difficulty })
+      const items = selectAiItems(remote.items, {
+        count: candidateCountFor(need),
+        level,
+      })
       if (items.length >= need) {
-        rememberStudioContent(varietyKey, items)
-        return { items }
+        rememberStudioContent(
+          varietyKey,
+          items.map((item) => item.answer),
+        )
+        return { items: items.map((item) => ({ word: item.answer, clue: item.clue })) }
       }
-      rejected.push(...items)
+      rejected.push(...items.map((item) => item.answer))
     } catch (error) {
       if (signal.aborted) throw error
       lastError = error
@@ -67,9 +94,4 @@ export async function retirementAnagramPrefetch(
     throw new Error(lastError.message.trim())
   }
   throw new Error(RETIREMENT_ANAGRAM_AI_EMPTY_MESSAGE)
-}
-
-/** Exposed for tests — confirms we still over-request on the wire via backend. */
-export function candidateRequestCount(itemCount: number): number {
-  return itemCount + CANDIDATE_OVERREQUEST
 }

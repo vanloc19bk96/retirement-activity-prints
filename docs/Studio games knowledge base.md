@@ -104,9 +104,21 @@ no letter ever stands for itself. Pick a theme for AI-written sayings or
 bring your own.
 Pages: 1 · Answer key: yes · AI content: yes
 
-### Retirement Anagrams (`retirement-anagram`)
-Unscramble retirement-themed words — work, hobbies, family, travel. AI writes
-a fresh list each page so a long book does not repeat.
+### Anagrams (`retirement-anagram`)
+Unscramble retirement-themed words. Each row prints the shuffled letters, a
+short clue underneath, and one writing rule per letter of the answer — the clue
+is what makes the answer unique and the puzzle solvable, so it is never
+optional. Pick a theme (shared with the crossword and cryptogram, so a book can
+run three games on one theme, or rotate a fresh theme per page) and a level:
+Gentle (4–6 letters, first letter filled in), Classic (5–8), or Challenging
+(6–10, every letter shuffled out of its seat). Word count, letter size, clue
+size and whether the words run in one column or two are not settings — the page
+derives them from the trim in Settings and the form reports what that produced
+(a 6×9 holds about 5 words in one column; an 8.5×11 holds about 12 in two).
+Every page of one run is pinned to the same pitch and column count, so a book
+does not mix 16pt and 21pt pages. The solution page is the same page with the
+words written onto the lines. AI writes fresh words and clues each page so a
+long book does not repeat.
 Pages: 1 · Answer key: yes · AI content: yes
 
 ### Missing Vowels (`missing-vowels`)
@@ -136,7 +148,7 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 | hidden-message-word-search | Hidden Message Word Search | word | 1 | yes | yes |
 | crossword | Crossword | word | 1 | yes | yes |
 | cryptogram | Cryptogram | word | 1 | yes | yes |
-| retirement-anagram | Retirement Anagrams | word | 1 | yes | yes |
+| retirement-anagram | Anagrams | word | 1 | yes | yes |
 | missing-vowels | Missing Vowels | word | 1 | yes | yes |
 | maze | Maze | spatial | 1 | yes | no |
 

@@ -1,21 +1,18 @@
 {
-  "_comment": "Retirement Anagram word generation. lengthByDifficulty mirrors frontend content.ts. overRequest=5 so we ask itemCount+5. varietyAngles rotate by seed for the one retry.",
+  "_comment": "Retirement Anagram word + clue generation. The letter band and the clue budget arrive on the request because the page fixes both before a word exists (frontend levels.ts / layout.ts). varietyAngles rotate by seed so two sellers on one theme get different word sets.",
   "limits": {
-    "overRequest": 5,
     "rateLimitPerWindow": 60,
     "maxOutputTokens": 4096,
     "minWordLetters": 4,
-    "maxWordLetters": 11
-  },
-  "lengthByDifficulty": {
-    "easy": [4, 6],
-    "medium": [5, 8],
-    "hard": [7, 11]
+    "maxWordLetters": 10,
+    "minClueChars": 8,
+    "maxClueChars": 60,
+    "clueStemLetters": 4
   },
   "locale": {
     "nativeLocales": ["en"],
-    "nativeLine": "- Write in clear English.",
-    "otherLine": "- Write words in language locale '{locale}'."
+    "nativeLine": "- Write in clear English for adults and retirees.",
+    "otherLine": "- Write the words and clues in language locale '{locale}'."
   },
   "varietyAngles": [
     "everyday retirement lifestyle words",

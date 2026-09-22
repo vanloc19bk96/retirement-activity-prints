@@ -240,14 +240,22 @@ export function resolveRetirementTheme(
   return { label, prompt: `${label} retirement lifestyle`, custom: false }
 }
 
-/** Validation for the flat picker — the category → theme form has its own above. */
+/**
+ * Validation for the flat picker — the category → theme form has its own above.
+ *
+ * `subject` is what the theme will be written into on this game's page, so the
+ * empty-field message names it. "Enter a theme for the sayings" under a form
+ * that prints scrambled words tells a seller the panel belongs to some other
+ * game.
+ */
 export function validateRetirementThemeChoice(
   config: StudioConfig,
+  subject = 'sayings',
 ): StudioConfigValidationError | null {
   if (!isCustomRetirementTheme(config)) return null
   const typed = String(config.customTheme ?? '').trim()
   if (!typed) {
-    return { field: 'customTheme', message: 'Enter a theme for the sayings.' }
+    return { field: 'customTheme', message: `Enter a theme for the ${subject}.` }
   }
   if (typed.length > AI_THEME_MAX_LENGTH) {
     return {
