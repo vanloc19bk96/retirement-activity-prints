@@ -1,5 +1,7 @@
 import type { WordSearchPuzzle } from '@/utils/puzzles/word-search-core'
-import { findAccidentalDuplicates, placementsIntact } from '@/utils/puzzles/word-search-core'
+import { countTokenReadings, placementsIntact } from '@/utils/puzzles/word-search-core'
+import { isUnsafeCopy } from './content-quality'
+import { LETTER_MIN, type WordSearchPagePlan } from './layout'
 
 export interface KdpPreflightResult {
   ok: boolean
@@ -8,46 +10,77 @@ export interface KdpPreflightResult {
 }
 
 /**
- * Lightweight KDP / print preflight before a sheet is considered export-ready.
- * Hard errors block generate; warnings are soft quality notes.
+ * The last gate before a sheet is considered export-ready.
+ *
+ * Fit, safe area and type size are already structural: the grid is built at a
+ * pitch chosen from the large-print floor, and a word too wide for its bank
+ * column never reaches the page. What is left is the part a reader only
+ * discovers after spending twenty minutes with a pencil — a word that is not
+ * in the grid, a word that is in it twice, or a key that circles something
+ * else. Every one of those is a refund, so none of them may print.
  */
 export function runWordSearchKdpPreflight(options: {
   puzzle: WordSearchPuzzle
-  gridSize: number
-  printStyle: 'large-print' | 'standard'
+  plan: WordSearchPagePlan
 }): KdpPreflightResult {
-  const { puzzle, gridSize, printStyle } = options
+  const { puzzle, plan } = options
   const warnings: string[] = []
   const errors: string[] = []
 
   if (puzzle.words.length === 0) {
-    errors.push('No words were placed — try a broader theme or custom list.')
+    errors.push('No words were placed in the grid.')
+    return { ok: false, warnings, errors }
   }
 
-  if (puzzle.words.length !== puzzle.placements.length) {
-    errors.push('Clue list does not match placed words (orphan risk).')
+  if (puzzle.words.length !== puzzle.displays.length) {
+    errors.push('The word list and its printed labels do not line up.')
   }
 
+  if (new Set(puzzle.words).size !== puzzle.words.length) {
+    errors.push('The same word is listed twice.')
+  }
+
+  // Every listed word has a placement, and every placement is still spelled by
+  // the grid it was written into — the filler pass must not have overwritten it.
+  const placed = new Set(puzzle.placements.map((placement) => placement.word))
+  if (puzzle.words.some((token) => !placed.has(token))) {
+    errors.push('A listed word was never placed in the grid.')
+  }
+  if (puzzle.placements.length !== puzzle.words.length) {
+    errors.push('The grid holds a placement that is not on the word list.')
+  }
   if (!placementsIntact(puzzle)) {
     errors.push('A placed word no longer matches the grid.')
   }
 
-  if (puzzle.size < gridSize && printStyle === 'large-print') {
-    warnings.push(
-      `Grid grew beyond the requested ${gridSize}×${gridSize} to fit longer words.`,
-    )
+  // The answer key circles one path per word, so there must only be one.
+  for (const token of puzzle.words) {
+    if (countTokenReadings(puzzle.grid, token) !== 1) {
+      errors.push('A listed word reads in more than one place in the grid.')
+      break
+    }
   }
 
-  const accidental = findAccidentalDuplicates(puzzle)
-  if (accidental.length > 0) {
-    warnings.push(
-      `Short or common words may appear more than once: ${accidental.slice(0, 3).join(', ')}.`,
-    )
+  if (puzzle.size !== plan.gridSide) {
+    errors.push('The grid is not the size this page was laid out for.')
+  }
+  if (puzzle.words.some((token) => token.length > puzzle.size)) {
+    errors.push('A listed word is longer than the grid is wide.')
   }
 
-  const uniqueTokens = new Set(puzzle.words)
-  if (uniqueTokens.size !== puzzle.words.length) {
-    errors.push('Duplicate target words in the clue list.')
+  if (plan.letterFont < LETTER_MIN) {
+    errors.push('Grid letters must stay at large-print size.')
+  }
+
+  const unsafe = puzzle.displays.filter((display) => isUnsafeCopy(display))
+  if (unsafe.length > 0) {
+    errors.push('A listed word is not suitable for a published activity book.')
+  }
+
+  if (puzzle.words.length < plan.wordCount) {
+    warnings.push(
+      `Printed ${puzzle.words.length} of the ${plan.wordCount} words this page was sized for.`,
+    )
   }
 
   return { ok: errors.length === 0, warnings, errors }

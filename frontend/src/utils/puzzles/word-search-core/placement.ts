@@ -1,12 +1,15 @@
 import type { StudioRng } from '@/utils/studio/studio-rng'
 import {
+  diagonalFamily,
   interleavedCandidateStarts,
   isBackwardsWrite,
+  isBackslashDir,
   isDiagonalDir,
-  isLongForDiagonal,
+  isSlashDir,
   meetsMix,
   mixScore,
   mixTargets,
+  preferredDiagonalFamily,
   type PlacementMix,
 } from './mix'
 import type {
@@ -205,13 +208,17 @@ export function placementMatchesWord(grid: string[][], placement: Placement): bo
 export function countPuzzleMix(grid: string[][], placements: Placement[]): PlacementMix {
   let diagonal = 0
   let backwards = 0
+  let slash = 0
+  let backslash = 0
   for (const placement of placements) {
     if (isDiagonalDir(placement.dir)) diagonal += 1
+    if (isSlashDir(placement.dir)) slash += 1
+    if (isBackslashDir(placement.dir)) backslash += 1
     if (isBackwardsWrite(placement.dir, readWord(grid, placement), placement.word)) {
       backwards += 1
     }
   }
-  return { diagonal, backwards }
+  return { diagonal, backwards, slash, backslash }
 }
 
 function spendNode(budget: NodeBudget): boolean {
@@ -242,10 +249,14 @@ export function buildWordSearch(
   const targets = mixTargets({
     wordCount: sorted.length,
     hasDiagonal: directions.some(isDiagonalDir),
+    hasSlash: directions.some(isSlashDir),
+    hasBackslash: directions.some(isBackslashDir),
     allowReverse,
   })
   let diagonalCount = 0
   let backwardsCount = 0
+  let slashCount = 0
+  let backslashCount = 0
 
   function place(index: number): boolean {
     if (index === sorted.length) return true
@@ -254,10 +265,16 @@ export function buildWordSearch(
     const original = sorted[index]!
     const reversed = reverseWord(original)
     const remaining = sorted.length - index
-    const needDiagonal = targets.minDiagonal - diagonalCount
     const needBackwards = targets.minBackwards - backwardsCount
-    const preferDiagonal =
-      needDiagonal > 0 && (!isLongForDiagonal(original.length, size) || needDiagonal >= remaining)
+    const { preferDiagonal, preferFamily } = preferredDiagonalFamily({
+      wordLength: original.length,
+      gridSize: size,
+      remaining,
+      targets,
+      diagonalCount,
+      slashCount,
+      backslashCount,
+    })
     const preferBackwards = needBackwards > 0
     // Try both orientations on hard — a single coin-flip dead-end used to
     // force deep backtracking (UI jank on dense 14–15 lists).
@@ -271,20 +288,26 @@ export function buildWordSearch(
         directions,
         rng,
         preferDiagonal,
+        preferFamily,
       )
       for (const start of starts) {
         if (!spendNode(nodeBudget)) return false
         if (!canPlace(grid, toWrite, start.r, start.c, start.dir)) continue
         const undo = writeWord(grid, toWrite, start.r, start.c, start.dir)
         const placedDiagonal = isDiagonalDir(start.dir)
+        const placedFamily = diagonalFamily(start.dir)
         const placedBackwards = isBackwardsWrite(start.dir, toWrite, original)
         if (placedDiagonal) diagonalCount += 1
+        if (placedFamily === 'slash') slashCount += 1
+        if (placedFamily === 'backslash') backslashCount += 1
         if (placedBackwards) backwardsCount += 1
         placements.push({ word: original, r: start.r, c: start.c, dir: start.dir })
         if (place(index + 1)) return true
         undo()
         placements.pop()
         if (placedDiagonal) diagonalCount -= 1
+        if (placedFamily === 'slash') slashCount -= 1
+        if (placedFamily === 'backslash') backslashCount -= 1
         if (placedBackwards) backwardsCount -= 1
       }
     }
@@ -330,6 +353,8 @@ function tryBuildWordSearch(
   const targets = mixTargets({
     wordCount: words.length,
     hasDiagonal: directions.some(isDiagonalDir),
+    hasSlash: directions.some(isSlashDir),
+    hasBackslash: directions.some(isBackslashDir),
     allowReverse,
   })
   let best: { grid: string[][]; placements: Placement[] } | null = null

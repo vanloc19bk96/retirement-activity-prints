@@ -3,7 +3,7 @@ import {
   type WordEntry,
 } from '@/utils/puzzles/word-search-core'
 import { hasMedicalClaim, hasTrademarkHint } from '../retirement-word-search/content-quality'
-import type { RetirementPrintStyle } from '../retirement-word-search/config'
+import type { RetirementPrintStyle } from '../_shared/retirement-theme-config'
 import type {
   HiddenMessageDifficulty,
   HiddenMessageTone,

@@ -8,6 +8,7 @@ import {
   unionObjectBounds,
   columns,
   rows,
+  toNonBreakingSpaces,
   type Box,
 } from '../studio-layout'
 import {
@@ -28,10 +29,9 @@ import {
   STUDIO_BODY_SIZE,
 } from '@/constants/studio.constants'
 import type { Placement, WordSearchPuzzle } from '@/utils/puzzles/word-search-core'
-import { wordBankColumnCount } from './config'
 
 /** Room for capsule stroke past cell edges (esp. diagonals). */
-const ANSWER_STROKE_PAD = 10
+export const ANSWER_STROKE_PAD = 10
 const LIST_GUTTER = 16
 const LIST_LABEL_GAP = 10
 /** Keep word-bank glyphs inside the safe box (ascent/descent + estimate slack). */
@@ -42,9 +42,57 @@ const LIST_ROW_GAP = 6
  * Fabric Textbox paints taller than `fontSize` (metrics / line box). Group
  * bounds that assume height === fontSize clip capitals like “H” on the last row.
  */
-const WORD_BANK_TEXT_HEIGHT_RATIO = 1.35
+export const WORD_BANK_TEXT_HEIGHT_RATIO = 1.35
 const WORD_BANK_GROUP_PAD = 4
 const WORD_BANK_LABEL = 'Words to find:'
+
+/** Columns a bank of this many words reads best in, before width is considered. */
+export function wordBankColumnCount(wordCount: number): number {
+  if (wordCount <= 8) return 2
+  if (wordCount <= 14) return 3
+  return 4
+}
+
+/**
+ * Usable width of one bank column — the measure a single entry must fit on.
+ *
+ * Mirrors exactly what `drawWordList` lays out below, so the page planner and
+ * the drawing code can never disagree about how many columns the bank holds.
+ */
+export function bankColumnInnerWidth(bandWidth: number, colCount: number): number {
+  const safeWidth = Math.max(0, bandWidth - LIST_EDGE_PAD * 2)
+  const colWidth = (safeWidth - LIST_GUTTER * (colCount - 1)) / colCount
+  return Math.max(8, colWidth - LIST_CELL_PAD_X * 2)
+}
+
+/**
+ * Shortest band that holds `rowCount` rows plus the label, at `minFontSize`.
+ *
+ * The label size is bounded above by `drawWordList`'s own formula, so the
+ * reservation is never short of what the label actually takes.
+ */
+export function bankBandHeight(
+  rowCount: number,
+  minFontSize: number,
+  textHeightRatio: number = WORD_BANK_TEXT_HEIGHT_RATIO,
+): number {
+  const count = Math.max(1, rowCount)
+  const labelSize = Math.max(STUDIO_BODY_SIZE - 4, minFontSize)
+  const rowHeight = Math.ceil(minFontSize * textHeightRatio)
+  const listBox = count * rowHeight + Math.max(0, count - 1) * LIST_ROW_GAP
+  return listBox + labelSize + LIST_LABEL_GAP + LIST_EDGE_PAD * 2
+}
+
+/** Shortest band that fits every word at `minFontSize` without rows overlapping. */
+export function minimumWordListHeight(
+  wordCount: number,
+  minFontSize: number,
+  textHeightRatio: number,
+): number {
+  const count = Math.max(1, wordCount)
+  const columnCount = Math.min(wordBankColumnCount(count), count)
+  return bankBandHeight(Math.ceil(count / columnCount), minFontSize, textHeightRatio)
+}
 
 /**
  * Largest font size (≤ preferred, ≥ minimum) whose real canvas-measured width
@@ -170,7 +218,7 @@ export function drawLetterGrid(
     for (let c = 0; c < puzzle.size; c++) {
       const cell = g.cellBox(r, c)
       const letter = puzzle.grid[r]![c]!
-      // Shaped puzzles keep a square coordinate system but leave cells outside
+      // Masked puzzles keep a square coordinate system but leave cells outside
       // the mask blank. Do not draw glyphs or shading in those cells.
       if (!letter) continue
       if (shadedCells?.has(`${r},${c}`)) {
@@ -223,28 +271,6 @@ export function drawLetterGrid(
     height: g.bounds.height + pad * 2,
   }
   return buildGroup(parts, groupBounds, tag)
-}
-
-/** Same list fraction word search uses so a sister puzzle can match its bank. */
-export function wordSearchListShare(wordCount: number): number {
-  if (wordCount >= 16) return 0.34
-  if (wordCount >= 10) return 0.3
-  return 0.26
-}
-
-/** Shortest band that fits every word at `minFontSize` without rows overlapping. */
-export function minimumWordListHeight(
-  wordCount: number,
-  minFontSize: number,
-  textHeightRatio: number,
-): number {
-  const count = Math.max(1, wordCount)
-  const columnCount = Math.min(wordBankColumnCount(count), count)
-  const rowCount = Math.ceil(count / columnCount)
-  const labelSize = Math.min(STUDIO_BODY_SIZE - 4, Math.max(14, minFontSize))
-  const rowHeight = Math.ceil(minFontSize * textHeightRatio)
-  const listBox = rowCount * rowHeight + Math.max(0, rowCount - 1) * LIST_ROW_GAP
-  return listBox + labelSize + LIST_LABEL_GAP + LIST_EDGE_PAD * 2
 }
 
 interface BankColumnLayout {
@@ -311,9 +337,7 @@ function fitBankColumns(options: BankFitOptions): BankColumnLayout {
   // be wider than one line once split across that many columns — Fabric then
   // soft-wraps it. Give up columns until the widest entry provably fits.
   while (colCount > 1) {
-    const tryColBoxes = columns(listBox, colCount, LIST_GUTTER)
-    const tryColInnerW = Math.max(8, tryColBoxes[0]!.width - LIST_CELL_PAD_X * 2)
-    if (widest <= tryColInnerW) break
+    if (widest <= bankColumnInnerWidth(listBox.width + LIST_EDGE_PAD * 2, colCount)) break
     colCount -= 1
   }
   return buildBankColumnLayout({ ...options, colCount })
@@ -422,7 +446,9 @@ export function drawWordList(
       width: colInnerW,
       height: rowBoxes[row]!.height,
     }
-    const word = displayWords[i]!
+    // Fabric Textbox wraps at regular spaces. "Dewy Grass" must print as one
+    // bank line — lock the gap with NBSP, the same way headings stay one line.
+    const word = toNonBreakingSpaces(displayWords[i]!)
     wordParts.push(
       buildText(
         {
@@ -462,57 +488,4 @@ export function drawWordList(
     )
   }
   return objects
-}
-
-export function drawWordSearchPuzzle(options: {
-  field: Box
-  puzzle: WordSearchPuzzle
-  font: string
-  tag: StudioTag
-  /** Solution page: grid only, optically centered in the body. */
-  forAnswerKey?: boolean
-  printStyle?: 'large-print' | 'standard'
-}): StudioFabricObject[] {
-  const { field, puzzle, font, tag, forAnswerKey = false, printStyle = 'large-print' } = options
-  const letterStyle =
-    printStyle === 'large-print'
-      ? { letterScale: 0.68, minLetterSize: 16 }
-      : { letterScale: 0.55, minLetterSize: 14 }
-  const bankMinFont = printStyle === 'large-print' ? 14 : 11
-
-  if (forAnswerKey) {
-    return [drawLetterGrid(puzzle, field, font, tag, 'center', undefined, letterStyle)]
-  }
-
-  const gap = 12
-  // Dense banks need more list height so long words stay inside the safe area.
-  const listShare = wordSearchListShare(puzzle.words.length)
-  const gridShare = Math.min(field.height * (1 - listShare) - gap, field.width)
-  const gridArea: Box = {
-    left: field.left,
-    top: field.top,
-    width: field.width,
-    height: Math.max(0, gridShare),
-  }
-  const listArea: Box = {
-    left: field.left,
-    top: field.top + gridShare + gap,
-    width: field.width,
-    height: Math.max(0, field.height - gridShare - gap),
-  }
-
-  // Pack to top of body so the grid sits close under the instruction.
-  const bankWords =
-    puzzle.displays.length === puzzle.words.length ? puzzle.displays : puzzle.words
-
-  return [
-    drawLetterGrid(puzzle, gridArea, font, tag, 'top', undefined, letterStyle),
-    ...drawWordList(
-      [...bankWords].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' })),
-      listArea,
-      font,
-      tag,
-      { minFontSize: bankMinFont },
-    ),
-  ]
 }

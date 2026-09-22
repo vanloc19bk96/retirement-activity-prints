@@ -1,4 +1,12 @@
-"""Generate a retirement word-search pool via Gemini."""
+"""Generate a retirement word-search pool via Gemini.
+
+Every entry here is printed inside a grid and sold on KDP, so the gates below
+drop three kinds of word rather than set them: copy that puts a title at risk
+(brands, health claims, finance advice), copy that talks down to the reader the
+book is for, and words the puzzle itself cannot be honest about — palindromes
+and words nested inside other words, both of which give a grid two right
+answers and an answer key that circles one.
+"""
 
 from __future__ import annotations
 
@@ -34,11 +42,12 @@ from app.services.studio_variety import VarietyScope, bucket_key, remember, with
 logger = logging.getLogger(__name__)
 
 GAME = "word-search"
-FINAL_ERROR = "Could not build a word search. Try a broader theme or a different tone."
+FINAL_ERROR = "Could not build a word search. Try again, or pick a broader theme."
 _LETTER_RE = re.compile(r"[^A-Z]")
 _MEDICAL_RE = re.compile(
     r"\bprevent\s+dementia\b|\breverse\s+aging\b|\bcure\s+memory\s+loss\b|"
-    r"\btreat\s+alzheimer|\bcure\s+alzheimer|\banti[\s-]?aging\s+cure\b",
+    r"\btreat\s+alzheimer|\bcure\s+alzheimer|\banti[\s-]?aging\s+cure\b|"
+    r"\bmemory\s+loss\b",
     re.IGNORECASE,
 )
 _BRAND_RE = re.compile(
@@ -49,6 +58,13 @@ _BRAND_RE = re.compile(
 _FINANCE_RE = re.compile(
     r"\bguaranteed\s+(return|income|profit)|\binvest\s+now\b|\bget[\s-]?rich\b|"
     r"\bcrypto|\bbitcoin\b|\bday[\s-]?trad|\bpenny\s+stock|\bno[\s-]?risk\s+invest",
+    re.IGNORECASE,
+)
+# Mirrors AGE_STEREOTYPE_PATTERNS in
+# frontend/src/utils/studio/retirement-word-search/content-quality.ts.
+_STEREOTYPE_RE = re.compile(
+    r"\bfrail\b|\bforgetful\b|\bsenile\b|\bold[\s-]?timer\b|\bdecline\b|"
+    r"\bfeeble\b|\buseless\b",
     re.IGNORECASE,
 )
 
@@ -85,12 +101,20 @@ def _check_rate_limit(user_id: str) -> None:
 
 
 def _scope(req: WordSearchRequest, user_id: str, seed: int) -> VarietyScope:
+    """Same theme and letter band is what risks repeating an earlier page."""
     return VarietyScope(
         game=GAME,
         user_id=user_id,
-        bucket=bucket_key(req.theme, req.tone, req.difficulty, req.print_style),
+        bucket=bucket_key(req.theme, str(req.min_letters), str(req.max_letters)),
         seed=seed,
     )
+
+
+def _letter_band(req: WordSearchRequest) -> tuple[int, int]:
+    """The request's band, clamped to what any grid this app draws can hold."""
+    low = max(int_value(_limits(), "minWordLetters"), req.min_letters)
+    high = min(int_value(_limits(), "maxWordLetters"), req.max_letters)
+    return low, max(low, high)
 
 
 def _letter_token(text: str) -> str:
@@ -99,32 +123,35 @@ def _letter_token(text: str) -> str:
 
 def _is_unsafe(text: str) -> bool:
     return bool(
-        _MEDICAL_RE.search(text) or _BRAND_RE.search(text) or _FINANCE_RE.search(text)
+        _MEDICAL_RE.search(text)
+        or _BRAND_RE.search(text)
+        or _FINANCE_RE.search(text)
+        or _STEREOTYPE_RE.search(text)
     )
 
 
-def _normalize_word(raw: Any) -> tuple[str, str] | None:
+def _normalize_word(raw: Any, *, low: int, high: int) -> tuple[str, str] | None:
     display = re.sub(r"\s+", " ", str(raw or "").strip())
     if not display:
         return None
     token = _letter_token(display)
-    low = int_value(_limits(), "minWordLetters")
-    high = int_value(_limits(), "maxWordLetters")
     if len(token) < low or len(token) > high:
         return None
-    letters_only = re.sub(r"[\s'\u2019-]", "", display.upper())
+    letters_only = re.sub(r"[\s'’-]", "", display.upper())
     if letters_only != token:
         return None
+    # A palindrome reads the same in both directions, so the grid holds two
+    # correct answers and the key can only circle one of them.
     if token == token[::-1] or _is_unsafe(display):
         return None
     return display, token
 
 
-def filter_word_pool(raw_words: list[Any]) -> list[str]:
+def filter_word_pool(raw_words: list[Any], *, low: int, high: int, cap: int) -> list[str]:
     seen: set[str] = set()
     entries: list[tuple[str, str]] = []
     for raw in raw_words:
-        normalized = _normalize_word(raw)
+        normalized = _normalize_word(raw, low=low, high=high)
         if normalized is None:
             continue
         display, token = normalized
@@ -133,22 +160,24 @@ def filter_word_pool(raw_words: list[Any]) -> list[str]:
         seen.add(token)
         entries.append((display, token))
 
+    # Longest first, so GARDENING survives and the GARDEN nested inside it goes.
     entries.sort(key=lambda item: (-len(item[1]), item[1]))
     kept: list[tuple[str, str]] = []
     for display, token in entries:
         if any(token in other_token for _other_display, other_token in kept):
             continue
         kept.append((display, token))
-    cap = int_value(_limits(), "poolSize")
     return [display for display, _token in kept[:cap]]
 
 
 def _min_pool(req: WordSearchRequest) -> int:
-    listed = {
-        "large-print": {"easy": 12, "medium": 14, "hard": 16},
-        "standard": {"easy": 18, "medium": 22, "hard": 28},
-    }[req.print_style][req.difficulty]
-    return min(int_value(_limits(), "poolSize"), listed + 6)
+    """Below this the page cannot fill its word bank, so the attempt is wasted.
+
+    The client already over-requests: ``count`` is the candidate budget, not the
+    number of words that print. Two thirds of it is what the page needs once its
+    own gates — grid width, bank column width — have run.
+    """
+    return max(8, (req.count * 2) // 3)
 
 
 def _parse_payload(raw: str) -> list[Any]:
@@ -160,29 +189,29 @@ def _parse_payload(raw: str) -> list[Any]:
 
 
 def _build_prompt(req: WordSearchRequest, *, seed: int | None = None) -> str:
-    want = int_value(_limits(), "poolSize")
-    low = int_value(_limits(), "minWordLetters")
-    high = int_value(_limits(), "maxWordLetters")
-    tone = str(section(_config(), "tones")[req.tone])
+    low, high = _letter_band(req)
+    want = min(int_value(_limits(), "poolSize"), req.count)
     prompt_seed = req.seed if seed is None else seed
     angle = rotate(string_list(_config(), "varietyAngles"), prompt_seed)
     language = locale_line(section(_config(), "locale"), req.locale)
     return f"""Create a pool of {want} retirement words or short phrases for a word search.
 Theme: {req.theme.strip()}
-Tone: {tone}
 Variety angle: {angle}
-Print style: {req.print_style}. Difficulty: {req.difficulty}.
+
+Length (hard constraint — count the letters before writing):
+- {low} to {high} letters once spaces, apostrophes and hyphens are removed.
 
 Rules:
-- Every entry clearly fits the user's theme and tone.
+- Every entry clearly fits the theme, and is warm and positive about later life.
 - Familiar vocabulary an older adult would recognise on sight.
-- Each entry has {low} to {high} letters after spaces, apostrophes, and hyphens are removed.
-- Use letters A-Z only. Short phrases are welcome; preserve their spaces for display.
-- No duplicates, palindromes, or entry contained inside another entry.
+- Letters A-Z only. Two-word phrases are welcome; keep their space for display.
+- Write each entry in Title Case, the way it should print in the word list.
+- No duplicates, no palindromes, and no entry contained inside another entry.
 - No brand names, copyrighted characters, health claims, or finance advice.
+- Nothing about frailty, memory loss or decline. This book is for its reader.
 {language}
 
-Return JSON only: {{ "words": ["FREE TIME", "GARDEN", "TRAVEL"] }}
+Return JSON only: {{ "words": ["Free Time", "Garden", "Travel"] }}
 """
 
 
@@ -201,6 +230,8 @@ async def generate_word_search(
     _check_rate_limit(user_id)
     started = time.perf_counter()
     attempts = int_value(_limits(), "maxAttempts")
+    low, high = _letter_band(req)
+    cap = min(int_value(_limits(), "poolSize"), req.count)
 
     for attempt in range(attempts):
         seed = req.seed + attempt * 97
@@ -212,7 +243,7 @@ async def generate_word_search(
         )
         try:
             raw = await _call_gemini(prompt)
-            words = filter_word_pool(_parse_payload(raw))
+            words = filter_word_pool(_parse_payload(raw), low=low, high=high, cap=cap)
         except Exception as exc:
             logger.warning(
                 "studio_word_search_attempt_failed attempt=%s error=%s",
@@ -223,20 +254,24 @@ async def generate_word_search(
 
         if len(words) < _min_pool(req):
             logger.warning(
-                "studio_word_search_pool_too_small attempt=%s got=%s need=%s",
+                "studio_word_search_pool_too_small attempt=%s got=%s need=%s band=%s-%s",
                 attempt + 1,
                 len(words),
                 _min_pool(req),
+                low,
+                high,
             )
             continue
 
         result = WordSearchResponse(words=words)
         remember(scope, result.words)
         logger.info(
-            "studio_word_search_generated model=%s latency_ms=%s words=%s theme=%s",
+            "studio_word_search_generated model=%s latency_ms=%s words=%s band=%s-%s theme=%s",
             settings.STUDIO_GEMINI_MODEL,
             int((time.perf_counter() - started) * 1000),
             len(result.words),
+            low,
+            high,
             req.theme[:40],
         )
         return result
@@ -252,5 +287,7 @@ def parse_payload_for_tests(raw: str) -> list[Any]:
     return _parse_payload(raw)
 
 
-def filter_word_pool_for_tests(raw_words: list[Any]) -> list[str]:
-    return filter_word_pool(raw_words)
+def filter_word_pool_for_tests(
+    raw_words: list[Any], *, low: int = 4, high: int = 9, cap: int = 30
+) -> list[str]:
+    return filter_word_pool(raw_words, low=low, high=high, cap=cap)

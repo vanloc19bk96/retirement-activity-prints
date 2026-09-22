@@ -23,17 +23,22 @@ export {
 export type { WordSearchCellMask } from './placement'
 
 export {
+  diagonalFamily,
   interleavedCandidateStarts,
+  isBackslashDir,
   isBackwardsWrite,
   isDiagonalDir,
   isLongForDiagonal,
+  isSlashDir,
   meetsMix,
   mixScore,
   mixTargets,
+  preferredDiagonalFamily,
 } from './mix'
-export type { PlacementMix, MixTargets } from './mix'
+export type { DiagonalFamily, PlacementMix, MixTargets } from './mix'
 
 export {
+  countTokenReadings,
   findAccidentalDuplicates,
   placementKey,
   placementsIntact,

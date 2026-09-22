@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { buildDefaultConfig } from '@/constants/studio-templates'
-import { FIXTURE_WORDS } from '../hidden-message-word-search/fixture'
-import { WORD_SEARCH_BUILD_ERROR } from './content'
+import { clearStudioRecentContent } from '../studio-variety'
+import { RETIREMENT_THEME_CUSTOM } from '../_shared/retirement-theme-config'
+import { WORD_SEARCH_AI_EMPTY_MESSAGE } from './content'
+import { WORD_SEARCH_FIXTURE_POOL } from './fixture'
 
 vi.mock('@/api/studio-word-search.api', () => ({
   generateWordSearchWords: vi.fn(),
@@ -9,54 +11,86 @@ vi.mock('@/api/studio-word-search.api', () => ({
 
 import { generateWordSearchWords } from '@/api/studio-word-search.api'
 import { wordSearchTemplate } from './generate'
-import { retirementWordSearchPrefetch } from './prefetch'
+import { wordSearchPrefetch } from './prefetch'
 
 const generateMock = vi.mocked(generateWordSearchWords)
 
-describe('retirementWordSearchPrefetch', () => {
-  beforeEach(() => generateMock.mockReset())
+const signal = () => new AbortController().signal
 
-  it('sends convention fields and retries with seed +97', async () => {
+describe('wordSearchPrefetch', () => {
+  beforeEach(() => {
+    generateMock.mockReset()
+    clearStudioRecentContent()
+  })
+
+  it('asks for the level’s letter band and retries with seed + 97', async () => {
     generateMock
-      .mockResolvedValueOnce({ words: ['TEA'] })
-      .mockResolvedValueOnce({ words: FIXTURE_WORDS.slice(0, 30) })
+      .mockResolvedValueOnce({ words: ['Tea', 'Nap'] })
+      .mockResolvedValueOnce({ words: WORD_SEARCH_FIXTURE_POOL })
 
-    const config = {
-      ...buildDefaultConfig(wordSearchTemplate),
-      wordsFrom: 'ai-theme',
-      theme: 'Retiring nurse',
-      tone: 'funny',
-      difficulty: 'easy',
-      printStyle: 'standard',
-      seed: 11,
-      locale: 'en',
-    }
-    const result = await retirementWordSearchPrefetch(
-      config,
-      new AbortController().signal,
+    const result = await wordSearchPrefetch(
+      {
+        ...buildDefaultConfig(wordSearchTemplate),
+        theme: RETIREMENT_THEME_CUSTOM,
+        customTheme: 'Retiring nurse',
+        level: 'gentle',
+        seed: 11,
+        locale: 'en',
+      },
+      signal(),
     )
-    expect(result.words.length).toBe(30)
+
+    expect(result.words.length).toBeGreaterThanOrEqual(10)
     expect(generateMock).toHaveBeenCalledTimes(2)
     expect(generateMock.mock.calls[0]![0]).toMatchObject({
       theme: 'Retiring nurse',
-      tone: 'funny',
-      difficulty: 'easy',
-      printStyle: 'standard',
+      minLetters: 4,
+      maxLetters: 7,
       seed: 11,
       locale: 'en',
       avoid: expect.any(Array),
     })
     expect(generateMock.mock.calls[1]![0].seed).toBe(108)
+    // Every entry is inside the band it asked for.
+    for (const word of result.words) {
+      const letters = word.replace(/[^A-Za-z]/g, '')
+      expect(letters.length).toBeGreaterThanOrEqual(4)
+      expect(letters.length).toBeLessThanOrEqual(7)
+    }
   })
 
-  it('returns the final spec error after three unusable pools', async () => {
-    generateMock.mockResolvedValue({ words: ['TEA'] })
+  it('tells the retry not to repeat the words the first attempt already used', async () => {
+    generateMock
+      .mockResolvedValueOnce({ words: ['Garden', 'Travel'] })
+      .mockResolvedValueOnce({ words: WORD_SEARCH_FIXTURE_POOL })
+
+    await wordSearchPrefetch(
+      { ...buildDefaultConfig(wordSearchTemplate), seed: 3 },
+      signal(),
+    )
+    expect(generateMock.mock.calls[1]![0].avoid).toEqual(
+      expect.arrayContaining(['Garden', 'Travel']),
+    )
+  })
+
+  it('gives up with the spec message after three unusable pools', async () => {
+    generateMock.mockResolvedValue({ words: ['Tea'] })
     await expect(
-      retirementWordSearchPrefetch(
-        buildDefaultConfig(wordSearchTemplate),
-        new AbortController().signal,
+      wordSearchPrefetch(
+        { ...buildDefaultConfig(wordSearchTemplate), seed: 5 },
+        signal(),
       ),
-    ).rejects.toThrow(WORD_SEARCH_BUILD_ERROR)
+    ).rejects.toThrow(WORD_SEARCH_AI_EMPTY_MESSAGE)
     expect(generateMock).toHaveBeenCalledTimes(3)
+  })
+
+  it('surfaces the service’s own message when the call itself failed', async () => {
+    generateMock.mockRejectedValue(new Error('Too many requests. Try again shortly.'))
+    await expect(
+      wordSearchPrefetch(
+        { ...buildDefaultConfig(wordSearchTemplate), seed: 5 },
+        signal(),
+      ),
+    ).rejects.toThrow('Too many requests')
   })
 })

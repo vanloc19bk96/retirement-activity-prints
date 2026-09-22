@@ -12,6 +12,19 @@ const SCAN_DIRS: readonly Dir[] = [
   { dr: -1, dc: 1, name: 'NE' },
 ]
 
+/**
+ * Every way `token` reads in the grid, counted over all eight headings.
+ *
+ * Deliberately blind to the difficulty's allowed directions. A solver scans
+ * the whole grid with their eyes, not with the direction set the generator
+ * used, so a second reading of a listed word is a second correct answer even
+ * when the puzzle never meant to offer it — and the answer key circles only
+ * one of them.
+ */
+export function countTokenReadings(grid: string[][], token: string): number {
+  return countTokenOccurrences(grid, token)
+}
+
 function countTokenOccurrences(grid: string[][], token: string): number {
   const size = grid.length
   let count = 0

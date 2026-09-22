@@ -3,161 +3,90 @@ import type {
   StudioConfigField,
   StudioConfigValidationError,
 } from '@/types/studio-template.types'
-import { themeIpWarning } from '../crossword/content-quality'
-import { allThemeSelectOptions, defaultThemeId, getRetirementTheme } from './retirement-themes'
 import {
   AI_THEME_MAX_LENGTH,
-  DEFAULT_DIFFICULTY,
-  DEFAULT_PRINT_STYLE,
-  DEFAULT_THEME,
-  DEFAULT_WORDS_FROM,
-  difficultyPreset,
-  filterWordPool,
-  parseDifficulty,
-  parsePrintStyle,
-  parseTheme,
-  parseWordsFrom,
-} from './content'
+  RETIREMENT_THEME_MIXED,
+  isCustomRetirementTheme,
+  parseRetirementThemeChoice,
+  retirementThemeSelectOptions,
+} from '../_shared/retirement-theme-config'
+import { themeIpWarning } from './content-quality'
+import { wordSearchPrintNote } from './layout'
+import {
+  DEFAULT_WORD_SEARCH_LEVEL_ID,
+  WORD_SEARCH_LEVEL_OPTIONS,
+  parseWordSearchLevel,
+  wordSearchInstruction,
+} from './levels'
 
-export type { WordSearchShape } from './content'
-export type { WordSearchPrintStyle as RetirementPrintStyle } from '@/types/studio-word-search.types'
+export { wordSearchInstruction as instructionFor }
 
-export function wordBankColumnCount(wordCount: number): number {
-  if (wordCount <= 8) return 2
-  if (wordCount <= 14) return 3
-  return 4
-}
-
-/** @deprecated Word counts now come from the difficulty/print preset. */
-export function parseWordCount(
-  _raw: unknown,
-  difficulty: 'easy' | 'medium' | 'hard' | 'relaxed' | 'classic' | 'challenge' = 'medium',
-  _gridSize?: number,
-): number {
-  const current =
-    difficulty === 'relaxed' ? 'easy' : difficulty === 'challenge' ? 'hard' : difficulty === 'classic' ? 'medium' : difficulty
-  return difficultyPreset(current, 'large-print').listedWords
-}
-
+/**
+ * Two questions, and both are about the puzzle rather than the page.
+ *
+ * What it no longer asks for — where the words come from, a category behind
+ * the theme list, a print style, a difficulty, and a hand-typed word list — is
+ * either fixed (every page is large print), part of the level, or derived from
+ * the page size in `layout.ts`. Grid size and word count were never on the
+ * form at all: they came from a table that could not see the trim, which is
+ * how the same 12 x 12 grid ended up on a 5 x 8 interior and on 8.5 x 11.
+ *
+ * The level's help line reports what those decisions produced on the page size
+ * currently set in Settings, so nothing the form decided stays hidden.
+ */
 export const WORD_SEARCH_CONFIG_SCHEMA: StudioConfigField[] = [
   {
-    key: 'wordsFrom',
-    label: 'Words from',
-    type: 'select',
-    default: DEFAULT_WORDS_FROM,
-    options: [
-      { label: 'A theme', value: 'theme' },
-      { label: 'AI theme', value: 'ai-theme' },
-      { label: 'Your own words', value: 'own-words' },
-    ],
-    help: 'Pick a ready-made retirement theme, describe your own theme for AI, or type your own word list.',
-  },
-  {
-    key: 'presetThemeId',
+    key: 'theme',
     label: 'Theme',
     type: 'select',
-    default: defaultThemeId('retirement-life'),
-    options: allThemeSelectOptions(),
-    visibleWhen: (config) => parseWordsFrom(config.wordsFrom) === 'theme',
-    help: 'AI invents fresh retirement words and short phrases for this theme.',
+    default: RETIREMENT_THEME_MIXED,
+    options: retirementThemeSelectOptions(),
+    helpWhen: (config) =>
+      parseRetirementThemeChoice(config) === RETIREMENT_THEME_MIXED
+        ? 'A different retirement theme each page — the right pick for a whole book.'
+        : 'Fresh words are written for this theme every time.',
   },
   {
-    key: 'theme',
+    key: 'customTheme',
     label: 'Your theme',
     type: 'text',
-    default: DEFAULT_THEME,
+    default: '',
     max: AI_THEME_MAX_LENGTH,
-    visibleWhen: (config) => parseWordsFrom(config.wordsFrom) === 'ai-theme',
-    help: `What the word list is about (e.g. Life after work). Max ${AI_THEME_MAX_LENGTH} characters.`,
-    warningWhen: (config) => themeIpWarning(String(config.theme ?? '')),
+    placeholder: 'e.g. Weekends in the garden',
+    visibleWhen: isCustomRetirementTheme,
+    help: `What the words should be about. Max ${AI_THEME_MAX_LENGTH} characters.`,
+    warningWhen: (config) => themeIpWarning(String(config.customTheme ?? '')),
   },
   {
-    key: 'difficulty',
-    label: 'Difficulty',
+    key: 'level',
+    label: 'Puzzle level',
     type: 'select',
-    default: DEFAULT_DIFFICULTY,
-    options: [
-      { label: 'Easy (across and down)', value: 'easy' },
-      { label: 'Medium (plus diagonal)', value: 'medium' },
-      { label: 'Hard (all directions)', value: 'hard' },
-    ],
-  },
-  {
-    key: 'printStyle',
-    label: 'Print style',
-    type: 'select',
-    default: DEFAULT_PRINT_STYLE,
-    options: [
-      { label: 'Large print (default)', value: 'large-print' },
-      { label: 'Standard', value: 'standard' },
-    ],
-    help: 'Large print uses a smaller grid and fewer words so letters stay KDP-readable.',
-  },
-  {
-    key: 'customWords',
-    label: 'Your words',
-    type: 'wordList',
-    default: [],
-    placeholder: 'One word or short phrase per line',
-    visibleWhen: (config) => parseWordsFrom(config.wordsFrom) === 'own-words',
-    helpWhen: (config) => {
-      const preset = difficultyPreset(
-        parseDifficulty(config.difficulty),
-        parsePrintStyle(config.printStyle),
-      )
-      return `Entries use 3–${Math.min(11, preset.gridSize)} letters after spaces and punctuation are removed.`
-    },
+    default: DEFAULT_WORD_SEARCH_LEVEL_ID,
+    options: WORD_SEARCH_LEVEL_OPTIONS,
+    helpWhen: (config, layout) =>
+      wordSearchPrintNote(
+        parseWordSearchLevel(config),
+        layout,
+        config,
+        wordSearchInstruction(config),
+      ),
   },
 ]
 
-export function validateRetirementWordSearchConfig(
+export function validateWordSearchConfig(
   config: StudioConfig,
 ): StudioConfigValidationError | null {
-  const wordsFrom = parseWordsFrom(config.wordsFrom)
-  const difficulty = parseDifficulty(config.difficulty)
-  const printStyle = parsePrintStyle(config.printStyle)
+  if (!isCustomRetirementTheme(config)) return null
 
-  if (wordsFrom === 'own-words') {
-    const preset = difficultyPreset(difficulty, printStyle)
-    const entries = filterWordPool(config.customWords, preset.gridSize)
-    if (entries.length < 3) {
-      return {
-        field: 'customWords',
-        message: `Enter at least 3 safe, distinct words (3–${Math.min(11, preset.gridSize)} letters).`,
-      }
-    }
-    return null
+  const typed = String(config.customTheme ?? '').trim()
+  if (!typed) {
+    return { field: 'customTheme', message: 'Enter a theme for the words.' }
   }
-
-  if (wordsFrom === 'ai-theme') {
-    const theme = parseTheme(config.theme)
-    if (!theme) {
-      return { field: 'theme', message: 'Enter a theme for the word list.' }
+  if (typed.length > AI_THEME_MAX_LENGTH) {
+    return {
+      field: 'customTheme',
+      message: `Keep the theme under ${AI_THEME_MAX_LENGTH} characters.`,
     }
-    if (String(config.theme ?? '').trim().length > AI_THEME_MAX_LENGTH) {
-      return {
-        field: 'theme',
-        message: `Keep the theme under ${AI_THEME_MAX_LENGTH} characters.`,
-      }
-    }
-    return null
-  }
-
-  if (!getRetirementTheme(resolveWordSearchPresetThemeId(config))) {
-    return { field: 'presetThemeId', message: 'Choose a retirement theme.' }
   }
   return null
-}
-
-/** Preset theme id, ignoring category (word search shows one flat theme list). */
-export function resolveWordSearchPresetThemeId(config: StudioConfig): string {
-  const raw = String(config.presetThemeId ?? '').trim()
-  return getRetirementTheme(raw) ? raw : defaultThemeId('retirement-life')
-}
-
-/** Resolves the plain-text theme sent to the AI, based on `wordsFrom`. */
-export function resolveWordSearchTheme(config: StudioConfig): string {
-  const wordsFrom = parseWordsFrom(config.wordsFrom)
-  if (wordsFrom === 'ai-theme') return parseTheme(config.theme)
-  return getRetirementTheme(resolveWordSearchPresetThemeId(config))?.label ?? DEFAULT_THEME
 }

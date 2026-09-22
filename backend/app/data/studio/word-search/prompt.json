@@ -1,18 +1,12 @@
 {
-  "_comment": "Retirement word search word-pool generation.",
+  "_comment": "Retirement word search pool generation. The letter band comes from the request, not from here: it is the level's band in frontend/src/utils/studio/retirement-word-search/levels.ts, and a word outside it is a word the grid cannot hold. minWordLetters/maxWordLetters are the hard bounds any request must stay inside. varietyAngles rotate by seed.",
   "limits": {
     "rateLimitPerWindow": 60,
     "maxOutputTokens": 4096,
     "maxAttempts": 3,
     "poolSize": 30,
     "minWordLetters": 3,
-    "maxWordLetters": 11
-  },
-  "tones": {
-    "funny": "light and witty retirement humor, playful but never mean",
-    "heartfelt": "warm, sincere, and kind",
-    "classy": "elegant, dignified, and quietly proud",
-    "sassy": "cheeky and playful while still kind"
+    "maxWordLetters": 12
   },
   "locale": {
     "nativeLocales": ["en"],
@@ -27,6 +21,10 @@
     "family and grandchildren moments",
     "quiet hobbies and slow mornings",
     "friendship and coffee catch-ups",
-    "home comforts and favourite chairs"
+    "home comforts and favourite chairs",
+    "cooking for pleasure, not the clock",
+    "walking, swimming and gentle exercise",
+    "books, music and things learned late",
+    "celebrations and the farewell party"
   ]
 }
