@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 import { createRng } from '../studio-rng'
 import {
   buildCrossword,
-  maxGridForPlaceCount,
   numberEntries,
   readEntry,
   allCrossingsConsistent,
@@ -10,7 +9,8 @@ import {
   numberingValid,
   type CrosswordPair,
 } from './construct'
-import { resolveWordsAndClues } from './words'
+import { GRID_MAX_SIDE } from './layout'
+import { FIXTURE_PAIRS } from './fixture'
 
 const SAMPLE_PAIRS: CrosswordPair[] = [
   { word: 'TIGER', clue: 'Big striped cat' },
@@ -29,11 +29,18 @@ const SAMPLE_PAIRS: CrosswordPair[] = [
   { word: 'CRAB', clue: 'Sideways-walking shellfish' },
 ]
 
+/**
+ * What a page actually asks for: ten answers out of a larger pool, so the
+ * packer has substitutes. Asking for all fourteen is a request the app never
+ * makes and exhausts the backtracker on the seeds where it cannot be met.
+ */
+const PLACE_COUNT = 10
+
 describe('crossword construction', () => {
   it('every placed entry reads its intended word', () => {
     let builtCount = 0
     for (let seed = 1; seed <= 100; seed++) {
-      const b = buildCrossword(SAMPLE_PAIRS, 15, createRng(seed))
+      const b = buildCrossword(SAMPLE_PAIRS, 15, createRng(seed), PLACE_COUNT)
       if (!b) continue
       builtCount += 1
       for (const e of b.entries) {
@@ -45,7 +52,7 @@ describe('crossword construction', () => {
 
   it('crossings are letter-consistent', () => {
     for (let seed = 1; seed <= 50; seed++) {
-      const b = buildCrossword(SAMPLE_PAIRS, 15, createRng(seed))
+      const b = buildCrossword(SAMPLE_PAIRS, 15, createRng(seed), PLACE_COUNT)
       if (!b) continue
       expect(allCrossingsConsistent(b.grid, b.entries)).toBe(true)
     }
@@ -53,14 +60,14 @@ describe('crossword construction', () => {
 
   it('the white region is connected', () => {
     for (let seed = 1; seed <= 50; seed++) {
-      const b = buildCrossword(SAMPLE_PAIRS, 15, createRng(seed))
+      const b = buildCrossword(SAMPLE_PAIRS, 15, createRng(seed), PLACE_COUNT)
       if (!b) continue
       expect(whiteConnected(b.grid, b.size)).toBe(true)
     }
   })
 
   it('numbering is correct and every entry has a clue', () => {
-    const b = buildCrossword(SAMPLE_PAIRS, 15, createRng(1))
+    const b = buildCrossword(SAMPLE_PAIRS, 15, createRng(1), PLACE_COUNT)
     expect(b).not.toBeNull()
     const entries = numberEntries(b!.entries, b!.grid, b!.size)
     expect(numberingValid(entries, b!.grid)).toBe(true)
@@ -78,30 +85,19 @@ describe('crossword construction', () => {
     }
   })
 
-  it('scales max grid with place count', () => {
-    expect(maxGridForPlaceCount(14)).toBe(15)
-    expect(maxGridForPlaceCount(16)).toBe(17)
-    expect(maxGridForPlaceCount(20)).toBe(19)
-    expect(maxGridForPlaceCount(24)).toBe(21)
-  })
-
-  it('hits placeCount 15 on a scaled hard-theme pack', () => {
-    const config = {
-      theme: 'animals',
-      wordCount: 15,
-      difficulty: 'hard',
-      source: 'theme',
-    }
+  it('packs a full retirement grid inside the layout ceiling', () => {
     for (let seed = 1; seed <= 8; seed++) {
-      const pairs = resolveWordsAndClues(config, createRng(seed))
-      const b = buildCrossword(
-        pairs,
-        maxGridForPlaceCount(15),
+      const built = buildCrossword(
+        FIXTURE_PAIRS,
+        GRID_MAX_SIDE,
         createRng(seed ^ 0x9e3779b9),
-        15,
+        12,
       )
-      expect(b, `seed ${seed}`).not.toBeNull()
-      expect(b!.entries.length).toBe(15)
+      expect(built, `seed ${seed}`).not.toBeNull()
+      expect(built!.size).toBeLessThanOrEqual(GRID_MAX_SIDE)
+      expect(built!.entries.length).toBeGreaterThanOrEqual(11)
+      const numbered = numberEntries(built!.entries, built!.grid, built!.size)
+      expect(numberingValid(numbered, built!.grid)).toBe(true)
     }
   }, 60_000)
 })

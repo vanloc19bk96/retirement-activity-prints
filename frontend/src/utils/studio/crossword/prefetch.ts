@@ -5,17 +5,8 @@ import {
   studioVarietyKey,
 } from '../studio-variety'
 import type { StudioConfig } from '@/types/studio-template.types'
-import {
-  aiThemeLabel,
-  candidatePoolSize,
-  clueMaxChars,
-  letterBoundsForDifficulty,
-  parseAnswerCount,
-  parsePrintStyle,
-  parseRetirementDifficulty,
-  resolveAiThemePrompt,
-  toApiDifficulty,
-} from './config'
+import { parseCrosswordLevel, type CrosswordLevel } from './levels'
+import { resolveCrosswordTheme } from './theme'
 import {
   filterUnsafeThemeCopy,
   isValidClueText,
@@ -25,13 +16,24 @@ import { selectCrosswordCandidates } from './candidate-selector'
 import type { CrosswordPair } from './types'
 
 export const CROSSWORD_AI_EMPTY_MESSAGE =
-  "We couldn't create enough high-quality crossword content for this theme. Try again or choose a broader retirement theme."
+  "We couldn't write enough clear crossword clues for this theme. Try again, or pick a broader retirement theme."
 
 const MAX_AI_ATTEMPTS = 3
 
+/**
+ * Ask for far more answers than the grid needs.
+ *
+ * The packer drops any answer that will not interlock, so a pool the size of
+ * the target produces a thin grid whenever two or three words share no letters
+ * with the rest. Oversampling is cheap — it is one field in the same request.
+ */
+export function candidatePoolSize(targetCount: number): number {
+  return Math.max(Math.ceil(targetCount * 2.5), targetCount + 12)
+}
+
 function pairsFromAiClues(
   items: { word: string; clue: string }[],
-  options: { minLetters: number; maxLetters: number; maxClueChars: number },
+  level: CrosswordLevel,
 ): CrosswordPair[] {
   const seen = new Set<string>()
   const out: CrosswordPair[] = []
@@ -39,10 +41,10 @@ function pairsFromAiClues(
     const normalized = normalizeAnswerDisplay(item.word)
     if (!normalized) continue
     const { token } = normalized
-    if (token.length < options.minLetters || token.length > options.maxLetters) continue
+    if (token.length < level.minLetters || token.length > level.maxLetters) continue
     if (seen.has(token)) continue
     const clue = String(item.clue ?? '').trim()
-    if (!isValidClueText(clue, token, options.maxClueChars)) continue
+    if (!isValidClueText(clue, token, level.clueMaxChars)) continue
     seen.add(token)
     out.push({ word: token, clue })
   }
@@ -50,25 +52,27 @@ function pairsFromAiClues(
 }
 
 /**
- * AI-only prefetch — no bundled theme fallback, no length-hint clues.
- * Retries up to 3 times with avoid lists, then fails visibly.
+ * AI-only: there is no bundled answer pool behind this.
+ *
+ * A packaged word list would make every seller's book draw on the same few
+ * hundred answers, which is the fastest way to two KDP titles that look
+ * copied from each other. Retrying with an avoid list and then failing
+ * visibly is the honest alternative.
  */
 export async function crosswordPrefetch(
   config: StudioConfig,
   signal: AbortSignal,
 ): Promise<CrosswordPair[]> {
   const seed = Number(config.seed ?? 1)
-  const difficulty = parseRetirementDifficulty(config.difficulty)
-  const printStyle = parsePrintStyle(config.printStyle)
-  const bounds = letterBoundsForDifficulty(difficulty)
-  const targetCount = parseAnswerCount(config.answerCount ?? config.wordCount, difficulty, printStyle)
+  const level = parseCrosswordLevel(config)
+  const theme = resolveCrosswordTheme(config, seed)
+  // The page may print fewer than the level's target; asking for the target
+  // keeps the pool generous either way.
+  const targetCount = level.targetAnswers
   const poolSize = candidatePoolSize(targetCount)
-  const maxClueChars = clueMaxChars(difficulty)
 
-  const themeRaw = resolveAiThemePrompt(config)
-  const theme = filterUnsafeThemeCopy(themeRaw) ?? themeRaw
-  const label = aiThemeLabel(config) || theme
-  const varietyKey = studioVarietyKey('crossword', label, difficulty)
+  const promptTheme = filterUnsafeThemeCopy(theme.prompt) ?? theme.prompt
+  const varietyKey = studioVarietyKey('crossword', theme.label || promptTheme, level.id)
 
   const rejected: string[] = []
   let lastError: unknown
@@ -77,22 +81,19 @@ export async function crosswordPrefetch(
     try {
       const response = await generateCrosswordClues(
         {
-          theme,
+          theme: promptTheme,
           itemCount: poolSize,
-          minLetters: bounds.min,
-          maxLetters: bounds.max,
-          difficulty: toApiDifficulty(difficulty),
+          minLetters: level.minLetters,
+          maxLetters: level.maxLetters,
+          difficulty: level.apiDifficulty,
+          maxClueChars: level.clueMaxChars,
           seed: seed + attempt * 97,
           avoid: [...studioAvoidList(varietyKey), ...rejected],
         },
         signal,
       )
       const pairs = selectCrosswordCandidates(
-        pairsFromAiClues(response.clues, {
-          minLetters: bounds.min,
-          maxLetters: bounds.max,
-          maxClueChars,
-        }),
+        pairsFromAiClues(response.clues, level),
         targetCount,
       )
       if (pairs.length >= Math.max(4, Math.ceil(targetCount * 0.75))) {
@@ -102,7 +103,7 @@ export async function crosswordPrefetch(
         )
         return pairs
       }
-      rejected.push(...pairs.map((p) => p.word))
+      rejected.push(...pairs.map((pair) => pair.word))
     } catch (error) {
       if (signal.aborted) throw error
       lastError = error

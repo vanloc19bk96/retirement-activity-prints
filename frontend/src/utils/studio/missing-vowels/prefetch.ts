@@ -12,7 +12,7 @@ import {
   categoryLabel,
   parseWriteOwnTheme,
   resolveAiThemePrompt,
-} from '../crossword/config'
+} from '../_shared/retirement-theme-config'
 import { filterUnsafeThemeCopy } from '../crossword/content-quality'
 import { parseRetirementCategory } from '../retirement-word-search/retirement-themes'
 import {

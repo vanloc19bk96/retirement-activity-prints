@@ -4,7 +4,7 @@ import {
   aiThemeLabel,
   parseRetirementDifficulty,
   type RetirementPrintStyle,
-} from '../crossword/config'
+} from '../_shared/retirement-theme-config'
 import {
   hasAgeStereotype,
   hasMedicalClaim,

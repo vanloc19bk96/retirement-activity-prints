@@ -272,29 +272,37 @@ function cloneWorkGrid(grid: (string | null)[][]): (string | null)[][] {
   return grid.map((row) => row.slice())
 }
 
+/**
+ * Order the pool for one packing attempt.
+ *
+ * Longest first is what makes packing fast — a long word laid early gives
+ * every later word somewhere to cross — so that ordering is kept. Words of
+ * equal length are shuffled, which is where the variety comes from: returning
+ * one fixed order meant attempt 0 was identical for every seed, and attempt 0
+ * is the attempt that usually succeeds, so two pages built from one candidate
+ * pool came out as the same grid. Later attempts additionally rotate which
+ * word seeds the grid, so a pool whose longest word will not interlock is not
+ * retried against itself.
+ */
 function buildWordOrder(
   sorted: CrosswordPair[],
   attempt: number,
   rng: StudioRng,
 ): CrosswordPair[] {
-  if (attempt === 0) return sorted
-  // Rotate seed word without re-sorting (re-sort wiped diversity before).
-  const seedIndex = attempt % sorted.length
-  const seed = sorted[seedIndex]!
-  const rest = rng.shuffle(sorted.filter((_, i) => i !== seedIndex))
-  return [seed, ...rest]
-}
+  const byLength = new Map<number, CrosswordPair[]>()
+  for (const pair of sorted) {
+    const bucket = byLength.get(pair.word.length)
+    if (bucket) bucket.push(pair)
+    else byLength.set(pair.word.length, [pair])
+  }
+  const order = [...byLength.keys()]
+    .sort((a, b) => b - a)
+    .flatMap((length) => rng.shuffle(byLength.get(length)!))
 
-/**
- * Dense interlocking needs a larger canvas as answer count grows.
- * Theme slider caps at 15 (17×17); larger sizes remain for long custom lists.
- */
-export function maxGridForPlaceCount(placeCount: number): number {
-  const n = Math.max(4, Math.floor(placeCount))
-  if (n <= 14) return 15
-  if (n <= 16) return 17
-  if (n <= 20) return 19
-  return 21
+  if (attempt === 0) return order
+  const seedIndex = attempt % order.length
+  const seed = order[seedIndex]!
+  return [seed, ...order.filter((_, i) => i !== seedIndex)]
 }
 
 /**

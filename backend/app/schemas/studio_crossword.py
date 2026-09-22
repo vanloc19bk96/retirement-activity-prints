@@ -18,6 +18,9 @@ class CrosswordCluesRequest(StudioVarietyRequest):
     min_letters: int = Field(default=4, ge=3, le=12, alias="minLetters")
     max_letters: int = Field(default=12, ge=3, le=12, alias="maxLetters")
     difficulty: Literal["easy", "medium", "hard"] = "medium"
+    # Printed clue lists are set two to a column in large print; a clue past
+    # this runs to a third line and pushes the grid down the page.
+    max_clue_chars: int = Field(default=60, ge=24, le=120, alias="maxClueChars")
     seed: int = Field(default=1, ge=0)
     locale: str = Field(default="en", max_length=8)
 

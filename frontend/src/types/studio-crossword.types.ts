@@ -7,6 +7,8 @@ export interface CrosswordCluesRequest {
   minLetters?: number
   maxLetters?: number
   difficulty: 'easy' | 'medium' | 'hard'
+  /** Clue length the printed column was planned for; longer clues are dropped. */
+  maxClueChars?: number
   seed: number
   /** Recently printed labels for this template + theme; the model is told not to reuse them. */
   avoid?: string[]

@@ -13,7 +13,7 @@ import {
   STUDIO_BODY_SIZE,
   STUDIO_CONTENT_SAFE_INSET_X,
 } from '@/constants/studio.constants'
-import { parsePrintStyle } from '../crossword/config'
+import { parsePrintStyle } from '../_shared/retirement-theme-config'
 import {
   MISSING_VOWELS_CONFIG_SCHEMA,
   validateMissingVowelsConfig,

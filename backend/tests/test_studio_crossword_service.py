@@ -55,3 +55,29 @@ def test_parse_theme_mode_accepts_open_word_list() -> None:
     assert len(clues) == 6
     assert clues[0].word == "SHELL"
     assert clues[0].clue == "Beach find"
+
+
+def test_parse_theme_mode_drops_clues_past_the_printed_budget() -> None:
+    """The client sizes a clue column before it asks; a clue that would not fit
+    it is dropped while substitutes are still available."""
+    raw = """
+    {
+      "clues": [
+        { "word": "GARDEN", "clue": "A place to grow flowers and vegetables all summer long" },
+        { "word": "CRUISE", "clue": "A vacation taken by ship" },
+        { "word": "PICNIC", "clue": "An outdoor meal on a blanket" },
+        { "word": "SUNSET", "clue": "Evening colors in the sky" },
+        { "word": "MARKET", "clue": "Place where people buy goods" }
+      ]
+    }
+    """
+    clues = parse_clues_json_for_tests(
+        raw,
+        None,
+        min_letters=4,
+        max_letters=9,
+        want=4,
+        max_clue_chars=44,
+    )
+    assert [c.word for c in clues] == ["CRUISE", "PICNIC", "SUNSET", "MARKET"]
+    assert all(len(c.clue) <= 44 for c in clues)

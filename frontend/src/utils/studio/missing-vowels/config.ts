@@ -8,8 +8,8 @@ import {
   categorySelectOptions,
   parseWriteOwnTheme,
   themeSelectOptions,
-  validateRetirementCrosswordConfig,
-} from '../crossword/config'
+  validateRetirementThemeConfig,
+} from '../_shared/retirement-theme-config'
 import { themeIpWarning } from '../crossword/content-quality'
 import { parseRetirementCategory } from '../retirement-word-search/retirement-themes'
 import { DEFAULT_ITEM_COUNT, MAX_ITEM_COUNT, MIN_ITEM_COUNT } from './content'
@@ -88,5 +88,5 @@ export const MISSING_VOWELS_CONFIG_SCHEMA: StudioConfigField[] = [
 export function validateMissingVowelsConfig(
   config: StudioConfig,
 ): StudioConfigValidationError | null {
-  return validateRetirementCrosswordConfig(config)
+  return validateRetirementThemeConfig(config)
 }

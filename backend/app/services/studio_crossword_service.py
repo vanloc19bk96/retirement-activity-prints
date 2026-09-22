@@ -134,7 +134,8 @@ Rules:
   slogans, politics, medical claims, or adult content.
 - Positive, respectful tone — never age stereotypes (frail, senile, useless).
 - Distinct answers — avoid near-duplicates (TRAVEL / TRAVELING).
-- Clue is 2–10 words, concise for a printed clue list.
+- Clue is 2–10 words and at most {req.max_clue_chars} characters — it is set
+  in large print, two lists to a page.
 - The clue must not contain the answer or an obvious stem (travel/traveler).
 - Exactly one intended answer; avoid ambiguous multi-answer clues.
 {_locale_line(req.locale)}
@@ -184,6 +185,7 @@ def _parse_pair_items(
     min_letters: int,
     max_letters: int,
     want: int,
+    max_clue_chars: int,
 ) -> list[CrosswordClueItem]:
     raw_clues = data.get("clues")
     if not isinstance(raw_clues, list) or not raw_clues:
@@ -205,6 +207,10 @@ def _parse_pair_items(
         if expected_set is not None and word not in expected_set:
             continue
         if not clue or _clue_echoes_word(word, clue):
+            continue
+        # The caller sized a printed column for this; a longer clue is a
+        # layout problem downstream, so drop it while substitutes remain.
+        if len(clue) > max_clue_chars:
             continue
         if word in by_word:
             continue
@@ -236,6 +242,7 @@ def _parse_clues_json(
     min_letters: int,
     max_letters: int,
     want: int,
+    max_clue_chars: int,
 ) -> list[CrosswordClueItem]:
     data = parse_json_object(raw)
     return _parse_pair_items(
@@ -244,6 +251,7 @@ def _parse_clues_json(
         min_letters=min_letters,
         max_letters=max_letters,
         want=want,
+        max_clue_chars=max_clue_chars,
     )
 
 
@@ -302,6 +310,7 @@ async def generate_crossword_clues(
             min_letters=min_letters,
             max_letters=max_letters,
             want=want,
+            max_clue_chars=req.max_clue_chars,
         )
     except CrosswordClueGenerationError:
         raise
@@ -345,6 +354,7 @@ def parse_clues_json_for_tests(
     min_letters: int = 3,
     max_letters: int = 12,
     want: int = 14,
+    max_clue_chars: int = 60,
 ) -> list[CrosswordClueItem]:
     return _parse_clues_json(
         raw,
@@ -352,4 +362,5 @@ def parse_clues_json_for_tests(
         min_letters=min_letters,
         max_letters=max_letters,
         want=want,
+        max_clue_chars=max_clue_chars,
     )

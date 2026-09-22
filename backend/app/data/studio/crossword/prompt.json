@@ -7,11 +7,13 @@
     "maxWordLetters": 12
   },
   "locale": {
-    "nativeLocales": ["en"],
+    "nativeLocales": [
+      "en"
+    ],
     "nativeLine": "- Write in clear English for adults and retirees.",
     "otherLine": "- Write clues in language locale '{locale}'."
   },
-  "difficultyLine": "Difficulty '{difficulty}': easy/relaxed = shorter common words (4–8 letters) + direct clues; medium/classic = everyday words (4–10) + clear descriptive clues; hard/challenge = longer words (5–12) + moderately indirect but fair clues — never obscure trivia.",
+  "difficultyLine": "Difficulty '{difficulty}': easy/relaxed = the plainest everyday word that fits, with a direct definition clue; medium/classic = everyday words with clear descriptive clues; hard/challenge = fuller vocabulary with fair, slightly indirect clues — never obscure trivia, wordplay or cryptic constructions. Answer length is set by the minLetters/maxLetters range above, not by difficulty.",
   "varietyAngles": [
     "everyday retirement hobbies",
     "travel and getaways",
