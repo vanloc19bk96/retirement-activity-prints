@@ -214,12 +214,33 @@ export const crosswordTemplate: StudioTemplateDefinition = {
   prefetch: crosswordPrefetch,
   validateConfig: validateCrosswordConfig,
   thumbnail: `<svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg">
-    <g fill="none" stroke="currentColor" stroke-width="1">
-      <path d="M12 4h24v8h8v8h-8v8H20v-8h-8v-8h8z"/>
-      <path d="M20 4v28M28 4v28M36 12v16M12 12h32M12 20h32M20 28h24"/>
+    <g fill="currentColor">
+      <rect x="17.6" y="2" width="4.8" height="0.8"/><rect x="37.6" y="2" width="4.8" height="0.8"/>
+      <rect x="17.6" y="5.6" width="4.8" height="0.8"/><rect x="37.6" y="5.6" width="4.8" height="0.8"/>
+      <rect x="17.6" y="9.6" width="4.8" height="0.8"/><rect x="25.6" y="9.6" width="4.8" height="0.8"/>
+      <rect x="37.6" y="9.6" width="4.8" height="0.8"/>
+      <rect x="17.6" y="13.6" width="4.8" height="0.8"/><rect x="25.6" y="13.6" width="4.8" height="0.8"/>
+      <rect x="37.6" y="13.6" width="4.8" height="0.8"/><rect x="45.6" y="13.6" width="4.4" height="0.8"/>
+      <rect x="17.6" y="17.6" width="4.8" height="0.8"/><rect x="25.6" y="17.6" width="4.8" height="0.8"/>
+      <rect x="37.6" y="17.6" width="4.8" height="0.8"/><rect x="45.6" y="17.6" width="4.4" height="0.8"/>
+      <rect x="14" y="21.6" width="28.4" height="0.8"/><rect x="45.6" y="21.6" width="4.4" height="0.8"/>
+      <rect x="14" y="25.6" width="28.4" height="0.8"/><rect x="45.6" y="25.6" width="4.4" height="0.8"/>
+      <rect x="17.6" y="29.6" width="4.8" height="0.8"/><rect x="25.6" y="29.6" width="4.8" height="0.8"/>
+      <rect x="37.6" y="29.6" width="4.8" height="0.8"/><rect x="45.6" y="29.6" width="4.4" height="0.8"/>
+      <rect x="21.6" y="33.6" width="28.4" height="0.8"/><rect x="21.6" y="37.2" width="28.4" height="0.8"/>
+      <rect x="14" y="21.6" width="0.8" height="4.8"/>
+      <rect x="17.6" y="2" width="0.8" height="28.4"/><rect x="21.6" y="2" width="0.8" height="28.4"/>
+      <rect x="21.6" y="33.6" width="0.8" height="4.4"/>
+      <rect x="25.6" y="9.6" width="0.8" height="28.4"/><rect x="29.6" y="9.6" width="0.8" height="28.4"/>
+      <rect x="33.6" y="21.6" width="0.8" height="4.8"/><rect x="33.6" y="33.6" width="0.8" height="4.4"/>
+      <rect x="37.6" y="2" width="0.8" height="28.4"/><rect x="37.6" y="33.6" width="0.8" height="4.4"/>
+      <rect x="41.6" y="2" width="0.8" height="28.4"/><rect x="41.6" y="33.6" width="0.8" height="4.4"/>
+      <rect x="45.6" y="13.6" width="0.8" height="24.4"/><rect x="49.2" y="13.6" width="0.8" height="24.4"/>
     </g>
-    <g font-size="4" fill="currentColor" font-family="sans-serif">
-      <text x="13" y="9">1</text><text x="21" y="9">2</text><text x="29" y="9">3</text>
+    <g font-size="3" fill="currentColor" font-family="sans-serif">
+      <text x="18.4" y="4.6">1</text><text x="38.4" y="4.6">2</text>
+      <text x="26.4" y="12.6">3</text><text x="46.4" y="16.6">4</text>
+      <text x="14.4" y="24.6">5</text><text x="22.4" y="36.6">6</text>
     </g>
   </svg>`,
   configSchema: CROSSWORD_CONFIG_SCHEMA,

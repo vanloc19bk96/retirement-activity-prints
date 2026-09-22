@@ -8,6 +8,7 @@ sold on KDP.
 from __future__ import annotations
 
 import logging
+import math
 import re
 import time
 from functools import lru_cache
@@ -28,6 +29,7 @@ from app.services.studio_gemini import (
     parse_string_items,
 )
 from app.services.prompt_data import (
+    float_value,
     int_value,
     load_config,
     locale_line,
@@ -118,10 +120,14 @@ def _build_prompt(req: CryptogramRequest) -> str:
     want = _candidate_count(req.item_count)
     # Letter budgets are what the sheet actually enforces; word counts are the
     # handle a model can steer by, so give both.
-    min_words = max(
-        int_value(limits, "minWords"),
-        round(min_letters / int_value(limits, "minWordsLettersPerWord")),
-    )
+    #
+    # The floor is derived from the *longest* saying in the band, not the
+    # shortest. A slot is half an inch wide and a word cannot be broken across
+    # printed lines, so the page's capacity turns on how the letters are
+    # divided: fifty-two letters as five ten-letter words take five lines where
+    # eleven ordinary words take three. Asking for the word count up front is
+    # what lets the sheet promise a puzzle count before any saying exists.
+    min_words = max(int_value(limits, "minWords"), _min_words(max_letters))
     max_words = min(
         int_value(limits, "maxWords"),
         max(min_words + 1, round(max_letters / int_value(limits, "maxWordsLettersPerWord"))),
@@ -152,6 +158,18 @@ def _letter_count(text: str) -> int:
     return sum(1 for ch in text if ch != " ")
 
 
+def _min_words(letters: int) -> int:
+    """Fewest words a saying of this many letters may use.
+
+    Mirrors ``MAX_AVERAGE_WORD_LETTERS`` in
+    ``frontend/src/utils/studio/cryptogram/content.ts``. English prose averages
+    nearer four and a half letters a word, so this turns almost no real saying
+    away — it only rules out the long-worded shapes the page cannot set.
+    """
+    average = float_value(_limits(), "maxAverageWordLetters")
+    return math.ceil(letters / average)
+
+
 def _normalize_sayings(
     raw_items: list[Any], *, min_letters: int, max_letters: int, want: int
 ) -> list[str]:
@@ -173,6 +191,10 @@ def _normalize_sayings(
             continue
         letters = _letter_count(text)
         if letters < min_letters or letters > max_letters:
+            continue
+        # Same rule the sheet applies. Dropping these here rather than letting
+        # the page do it keeps the candidate budget spent on usable sayings.
+        if len(words) < _min_words(letters):
             continue
         seen.add(text)
         out.append(text)

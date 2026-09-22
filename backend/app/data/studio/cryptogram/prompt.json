@@ -1,12 +1,12 @@
 {
-  "_comment": "Retirement Cryptogram saying generation. letterRange mirrors LENGTH_RANGE in frontend content.ts. candidateCounts: need 1→5, 2→8, 3→10, 4→12, 5→14, 6→16. varietyAngles rotate by seed.",
+  "_comment": "Retirement Cryptogram saying generation. letterRange, maxWordLetters and maxAverageWordLetters mirror frontend/src/utils/studio/cryptogram/content.ts — a saying the page cannot set is worse than one never written. candidateCounts: need 1→5, 2→8, 3→10, 4→12, 5→14, 6→16. varietyAngles rotate by seed.",
   "limits": {
     "minWords": 4,
     "maxWords": 12,
-    "maxWordLetters": 12,
+    "maxWordLetters": 10,
     "overRequest": 7,
     "rateLimitPerWindow": 60,
-    "minWordsLettersPerWord": 6,
+    "maxAverageWordLetters": 6.5,
     "maxWordsLettersPerWord": 4
   },
   "candidateCounts": {

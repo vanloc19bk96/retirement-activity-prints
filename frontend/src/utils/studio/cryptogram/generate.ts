@@ -5,45 +5,53 @@ import type {
   StudioPageOutput,
   StudioFabricObject,
 } from '@/types/studio-template.types'
-import { createRng, deriveSeed } from '../studio-rng'
-import { boxCenterX, contentBox, insetHorizontal, drawHeader } from '../studio-layout'
-import { buildText, type StudioTag } from '../studio-fabric-builders'
 import {
   STUDIO_BODY_SIZE,
-  STUDIO_CONTENT_SAFE_INSET_X,
   STUDIO_DIGIT_FONT,
 } from '@/constants/studio.constants'
 import { kickOffFontFamilyLoading } from '@/utils/font-loader'
 import type { CryptogramResponse } from '@/types/studio-cryptogram.types'
-import { SLOT_WIDTH_EM, buildCipher } from './cipher'
-import { CRYPTOGRAM_CONFIG_SCHEMA } from './config'
+import { createRng, deriveSeed } from '../studio-rng'
+import { boxCenterX, drawHeader } from '../studio-layout'
+import { buildText, type StudioTag } from '../studio-fabric-builders'
+import { resolveRetirementTheme } from '../_shared/retirement-theme-config'
+import { buildCipher } from './cipher'
 import {
-  CRYPTOGRAM_AI_EMPTY_MESSAGE,
-  CRYPTOGRAM_DEFAULT_TITLE,
-  CRYPTOGRAM_INSTRUCTION,
-  MAX_SLOT_FONT,
-  defaultTitleFor,
-  minSlotFont,
-  parseLength,
-  parsePrintStyle,
-  puzzleCountFor,
-  selectAiSayings,
+  CRYPTOGRAM_CONFIG_SCHEMA,
+  instructionFor,
   validateCryptogramConfig,
-} from './content'
+} from './config'
+import { CRYPTOGRAM_AI_EMPTY_MESSAGE, selectAiSayings } from './content'
 import { drawCryptograms, type CryptogramPuzzle } from './draw'
+import { pickStarterLetters } from './hints'
 import { runCryptogramKdpPreflight } from './kdp-preflight'
 import {
-  CRYPTOGRAM_BAND_GUTTER,
-  CRYPTOGRAM_INDEX_W,
-  countFittingSayings,
+  cryptogramBodyField,
+  cryptogramContentBox,
+  cryptogramWorstCasePlan,
+  planCryptogramPage,
+  type CryptogramPagePlan,
 } from './layout'
+import { parseCryptogramLevel, type CryptogramLevel } from './levels'
 import { cryptogramPrefetch } from './prefetch'
+import { CRYPTOGRAM_THEME_SALT } from './theme'
 
 export { validateCryptogramConfig }
 
-function withDefaultTitle(config: StudioConfig): StudioConfig {
-  const title = defaultTitleFor(config)
-  return title ? { ...config, title } : config
+const PAGE_TOO_SMALL_MESSAGE =
+  'This page size is too small for a cryptogram at this level. Pick a larger page in Settings, or a gentler level.'
+
+/**
+ * Blank heading falls back to the theme, so a seller sees what the page is.
+ *
+ * Only when the page is meant to carry a heading at all: turning "Page title"
+ * off hands generate a blank title, and a blank title is not an invitation to
+ * supply one.
+ */
+function withThemeTitle(config: StudioConfig, themeLabel: string): StudioConfig {
+  if (config.showTitle === false) return config
+  if (String(config.title ?? '').trim()) return config
+  return themeLabel ? { ...config, title: themeLabel } : config
 }
 
 function errorPage(
@@ -52,9 +60,12 @@ function errorPage(
   tag: StudioTag,
   message: string,
 ): StudioPageOutput {
-  const content = insetHorizontal(contentBox(ctx), STUDIO_CONTENT_SAFE_INSET_X)
-  const header = drawHeader(content, config, tag, CRYPTOGRAM_INSTRUCTION)
-  const fontSize = STUDIO_BODY_SIZE - 4
+  const header = drawHeader(
+    cryptogramContentBox(ctx),
+    config,
+    tag,
+    instructionFor(config),
+  )
   return {
     pageRole: 'single',
     objects: [
@@ -65,7 +76,7 @@ function errorPage(
           top: header.body.top + header.body.height * 0.35,
           text: message,
           fontFamily: String(config.fontFamily),
-          fontSize,
+          fontSize: STUDIO_BODY_SIZE - 4,
           width: header.body.width * 0.85,
           textAlign: 'center',
           originX: 'center',
@@ -77,120 +88,151 @@ function errorPage(
   }
 }
 
-function layoutPage(options: {
+/**
+ * One puzzle per saying: its own cipher, and the letters the level gives away.
+ *
+ * Each cipher is derived from the sheet's seed rather than drawn from one
+ * stream, so puzzle 2 is the same puzzle whether or not puzzle 1 was dropped
+ * for not fitting the page.
+ */
+function buildPuzzles(
+  sayings: readonly string[],
+  ctx: StudioGenerateContext,
+  level: CryptogramLevel,
+): CryptogramPuzzle[] {
+  return sayings.map((plain, i) => ({
+    plain,
+    cipher: buildCipher(createRng(deriveSeed(ctx.seed, `cipher:${i}`))),
+    starters: pickStarterLetters(plain, level.starterLetters),
+  }))
+}
+
+function layoutPuzzlePage(options: {
   config: StudioConfig
   ctx: StudioGenerateContext
   tag: StudioTag
-  puzzles: CryptogramPuzzle[]
+  plan: CryptogramPagePlan
+  puzzles: readonly CryptogramPuzzle[]
   font: string
   instruction: string
-  minFont: number
-  maxFont: number
-}): { objects: StudioFabricObject[]; fontSizes: number[] } {
-  const { config, ctx, tag, puzzles, font, instruction, minFont, maxFont } = options
-  const content = insetHorizontal(contentBox(ctx), STUDIO_CONTENT_SAFE_INSET_X)
-  const header = drawHeader(content, config, tag, instruction)
+  forAnswerKey?: boolean
+}): StudioFabricObject[] {
+  const { config, ctx, tag, plan, puzzles, font, instruction, forAnswerKey } = options
+  const header = drawHeader(cryptogramContentBox(ctx), config, tag, instruction)
   const objects = [...header.objects]
-  const fontSizes = drawCryptograms(objects, {
+  drawCryptograms(objects, {
     field: header.body,
+    plan,
     puzzles,
     font,
     codeFont: STUDIO_DIGIT_FONT,
     tag,
-    minFont,
-    maxFont,
+    forAnswerKey,
   })
-  return { objects, fontSizes }
+  return objects
 }
 
-function puzzlesFromRemote(
-  config: StudioConfig,
-  ctx: StudioGenerateContext,
-): CryptogramPuzzle[] {
-  const length = parseLength(config.length)
-  const need = puzzleCountFor(config)
-  const remote = ctx.remoteData as CryptogramResponse | undefined
-  const quotes = selectAiSayings(remote?.items, { count: need, length }).slice(0, need)
-  return quotes.map((plain, i) => {
-    const rng = createRng(deriveSeed(ctx.seed, `cipher:${i}`))
-    return { plain, cipher: buildCipher(rng) }
+function layoutSolutionPage(options: {
+  config: StudioConfig
+  ctx: StudioGenerateContext
+  tag: StudioTag
+  plan: CryptogramPagePlan
+  puzzles: readonly CryptogramPuzzle[]
+  font: string
+}): StudioFabricObject[] {
+  // Same slot grid as the puzzle, every letter filled — a page of numbered
+  // sentences leaves most of the sheet empty.
+  return layoutPuzzlePage({
+    ...options,
+    instruction: '',
+    forAnswerKey: true,
+    puzzles: options.puzzles.map((puzzle) => ({
+      ...puzzle,
+      starters: new Set<string>(),
+    })),
   })
-}
-
-function fitPuzzles(
-  puzzles: CryptogramPuzzle[],
-  ctx: StudioGenerateContext,
-  config: StudioConfig,
-  tag: StudioTag,
-  minFont: number,
-): CryptogramPuzzle[] {
-  const content = insetHorizontal(contentBox(ctx), STUDIO_CONTENT_SAFE_INSET_X)
-  const header = drawHeader(content, config, tag, CRYPTOGRAM_INSTRUCTION)
-  const n = countFittingSayings({
-    sayings: puzzles.map((p) => p.plain),
-    bandWidth: header.body.width - CRYPTOGRAM_INDEX_W,
-    fieldHeight: header.body.height,
-    slotEm: SLOT_WIDTH_EM,
-    minFont,
-    maxFont: MAX_SLOT_FONT,
-    bandGutter: CRYPTOGRAM_BAND_GUTTER,
-  })
-  return puzzles.slice(0, n)
 }
 
 function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageOutput[] {
   const font = String(config.fontFamily)
   void kickOffFontFamilyLoading(STUDIO_DIGIT_FONT)
 
-  const length = parseLength(config.length)
-  const printStyle = parsePrintStyle(config.printStyle)
-  const minFont = minSlotFont(printStyle)
-  const pageConfig = withDefaultTitle(config)
+  const level = parseCryptogramLevel(config)
+  const theme = resolveRetirementTheme(config, ctx.seed, CRYPTOGRAM_THEME_SALT)
+  const pageConfig = withThemeTitle(config, theme.label)
+  const instruction = instructionFor(pageConfig)
+
   const tag: StudioTag = {
     templateKey: 'cryptogram',
     instanceId: ctx.instanceId,
     pageRole: 'single',
   }
 
-  const built = puzzlesFromRemote(config, ctx)
-  if (built.length === 0) {
+  const remote = ctx.remoteData as CryptogramResponse | undefined
+  const sayings = selectAiSayings(remote?.items, {
+    count: level.targetPuzzles,
+    length: level.length,
+  })
+  if (sayings.length === 0) {
     return [errorPage(ctx, pageConfig, tag, CRYPTOGRAM_AI_EMPTY_MESSAGE)]
   }
 
-  const puzzles = fitPuzzles(built, ctx, pageConfig, tag, minFont)
-  if (puzzles.length === 0) {
-    return [errorPage(ctx, pageConfig, tag, CRYPTOGRAM_AI_EMPTY_MESSAGE)]
-  }
-
-  const showInstructions = config.showInstructions !== false
-  const instruction = showInstructions ? CRYPTOGRAM_INSTRUCTION : ''
-  const layout = {
+  // Measured against the heading and instruction this page will really carry,
+  // so the count the form promised is the count the page prints — and so every
+  // page of one book run holds the same number of puzzles, whether its sayings
+  // came back long or short.
+  const promised = cryptogramWorstCasePlan({
+    level,
+    page: ctx,
     config: pageConfig,
-    ctx,
-    tag,
-    puzzles,
-    font,
-    minFont,
-    maxFont: MAX_SLOT_FONT,
+    instruction,
+  })
+  if (!promised) {
+    return [errorPage(ctx, pageConfig, tag, PAGE_TOO_SMALL_MESSAGE)]
   }
-  const puzzlePage = layoutPage({ ...layout, instruction })
-  const answerPage = layoutPage({ ...layout, instruction: '' })
+
+  const plan = planCryptogramPage({
+    field: cryptogramBodyField(ctx, pageConfig, instruction),
+    sayings,
+    target: promised.puzzleCount,
+  })
+  if (!plan) {
+    return [errorPage(ctx, pageConfig, tag, PAGE_TOO_SMALL_MESSAGE)]
+  }
+
+  const puzzles = buildPuzzles(sayings.slice(0, plan.puzzleCount), ctx, level)
 
   const preflight = runCryptogramKdpPreflight({
     puzzles,
-    length,
-    minFont,
-    fontSizes: puzzlePage.fontSizes,
+    length: level.length,
+    metrics: plan.metrics,
   })
   if (!preflight.ok) {
-    return [errorPage(ctx, pageConfig, tag, preflight.errors[0] ?? CRYPTOGRAM_AI_EMPTY_MESSAGE)]
+    return [
+      errorPage(ctx, pageConfig, tag, preflight.errors[0] ?? CRYPTOGRAM_AI_EMPTY_MESSAGE),
+    ]
   }
 
   return [
     {
       pageRole: 'single',
-      objects: puzzlePage.objects,
-      answerSourceObjects: answerPage.objects,
+      objects: layoutPuzzlePage({
+        config: pageConfig,
+        ctx,
+        tag,
+        plan,
+        puzzles,
+        font,
+        instruction,
+      }),
+      answerSourceObjects: layoutSolutionPage({
+        config: pageConfig,
+        ctx,
+        tag,
+        plan,
+        puzzles,
+        font,
+      }),
     },
   ]
 }
@@ -200,20 +242,24 @@ export const cryptogramTemplate: StudioTemplateDefinition = {
   label: 'Cryptogram',
   category: 'word',
   description:
-    'Large-print retirement cryptogram. AI writes original coded sayings for any retirement theme. Includes an answer key.',
+    'A large-print retirement cryptogram: pick a theme and a level, and the saying length, letter size and number of puzzles are sized for your page. Includes an answer page.',
   pageCount: 1,
   producesAnswerKey: true,
-  defaultPageTitle: CRYPTOGRAM_DEFAULT_TITLE,
-  validateConfig: validateCryptogramConfig,
   prefetch: cryptogramPrefetch,
+  validateConfig: validateCryptogramConfig,
   thumbnail: `<svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg">
-    <g stroke="currentColor" stroke-width="1">
+    <g stroke="currentColor" stroke-width="1" stroke-linecap="round">
       <path d="M6 16h7M16 16h7M26 16h7M40 16h7M50 16h7"/>
       <path d="M6 30h7M16 30h7M26 30h7M36 30h7M46 30h7"/>
     </g>
-    <g font-family="monospace" font-size="6" fill="currentColor" text-anchor="middle">
+    <g font-family="sans-serif" font-size="6" fill="currentColor" text-anchor="middle">
       <text x="9.5" y="24">Q</text><text x="19.5" y="24">M</text><text x="29.5" y="24">B</text>
       <text x="43.5" y="24">X</text><text x="53.5" y="24">K</text>
+      <text x="9.5" y="38">F</text><text x="19.5" y="38">T</text><text x="29.5" y="38">R</text>
+      <text x="39.5" y="38">W</text><text x="49.5" y="38">P</text>
+    </g>
+    <g font-family="serif" font-size="7" fill="currentColor" text-anchor="middle">
+      <text x="19.5" y="14">E</text><text x="53.5" y="14">E</text>
     </g>
   </svg>`,
   configSchema: CRYPTOGRAM_CONFIG_SCHEMA,

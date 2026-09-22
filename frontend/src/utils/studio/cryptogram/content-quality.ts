@@ -80,11 +80,42 @@ export function themeIpWarning(theme: string): string | null {
   )
 }
 
-/** Exact match or the same first three words — blocks copycat openings. */
+/** Words too common to count as shared content between two sayings. */
+const STOP_WORDS = new Set([
+  'A', 'AN', 'AND', 'ARE', 'AS', 'AT', 'BE', 'BUT', 'BY', 'FOR', 'FROM', 'IN',
+  'IS', 'IT', 'OF', 'ON', 'OR', 'THAT', 'THE', 'TO', 'WITH', 'YOU', 'YOUR',
+])
+
+function contentWords(saying: string): Set<string> {
+  return new Set(saying.split(' ').filter((word) => word && !STOP_WORDS.has(word)))
+}
+
+/** Share of the shorter saying's content words that the longer one also uses. */
+const NEAR_DUPLICATE_OVERLAP = 0.6
+
+/**
+ * Two sayings a buyer would read as the same one.
+ *
+ * Exact text and a shared three-word opening catch the copycat phrasings a
+ * language model falls into when asked twice for the same theme. The overlap
+ * test catches the rest: "QUIET MORNINGS ARE THE BEST PART OF RETIREMENT" and
+ * "THE BEST PART OF RETIREMENT IS QUIET MORNINGS" share no opening and every
+ * idea, and a book that prints both looks padded.
+ */
 export function isNearDuplicateSaying(a: string, b: string): boolean {
   if (a === b) return true
   const wordsA = a.split(' ').filter(Boolean)
   const wordsB = b.split(' ').filter(Boolean)
   if (wordsA.length < 3 || wordsB.length < 3) return false
-  return wordsA.slice(0, 3).join(' ') === wordsB.slice(0, 3).join(' ')
+  if (wordsA.slice(0, 3).join(' ') === wordsB.slice(0, 3).join(' ')) return true
+
+  const setA = contentWords(a)
+  const setB = contentWords(b)
+  const smaller = Math.min(setA.size, setB.size)
+  if (smaller === 0) return false
+  let shared = 0
+  for (const word of setA) {
+    if (setB.has(word)) shared++
+  }
+  return shared / smaller >= NEAR_DUPLICATE_OVERLAP
 }

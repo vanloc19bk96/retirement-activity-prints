@@ -56,6 +56,30 @@ def test_normalize_drops_duplicates_and_single_words() -> None:
     assert len(items) == 1
 
 
+def test_normalize_drops_long_worded_sayings() -> None:
+    """A page cannot break a word across lines, so shapes it cannot set are dropped."""
+    # 36 letters in five words: legal length, but an average the sheet refuses.
+    long_worded = "retirement mornings deliver genuine calm"
+    items = normalize_sayings_for_tests([long_worded, KIND_WORD], want=5, **MEDIUM)
+    assert items == [KIND_WORD_UPPER]
+
+
+def test_normalize_drops_words_past_the_slot_cap() -> None:
+    over_cap = "celebrations outdoors with old friends and a good meal"
+    items = normalize_sayings_for_tests([over_cap, KIND_WORD], want=5, **MEDIUM)
+    assert items == [KIND_WORD_UPPER]
+
+
+def test_prompt_asks_for_the_word_count_the_page_can_set() -> None:
+    """Word floors come from the band's longest saying, not its shortest."""
+    prompt = build_prompt_for_tests(
+        CryptogramRequest(theme="gardening", length="medium", seed=2)
+    )
+    assert "roughly 8-12 words" in prompt
+    assert "No word longer than" in prompt
+    assert "10" in prompt.split("No word longer than", 1)[1][:40]
+
+
 def test_normalize_stops_at_want() -> None:
     items = normalize_sayings_for_tests(VALID_SAYINGS, want=2, **MEDIUM)
     assert len(items) == 2

@@ -1,39 +1,51 @@
 import { generateCryptogram } from '@/api/studio-cryptogram.api'
+import type { StudioConfig } from '@/types/studio-template.types'
+import type { CryptogramResponse } from '@/types/studio-cryptogram.types'
 import {
   rememberStudioContent,
   studioAvoidList,
   studioVarietyKey,
 } from '../studio-variety'
-import type { StudioConfig } from '@/types/studio-template.types'
-import type { CryptogramResponse } from '@/types/studio-cryptogram.types'
 import {
   AI_THEME_MAX_LENGTH,
+  resolveRetirementTheme,
+} from '../_shared/retirement-theme-config'
+import {
   CRYPTOGRAM_AI_EMPTY_MESSAGE,
-  parseLength,
-  puzzleCountFor,
-  resolveAiThemePrompt,
+  candidateCountFor,
   selectAiSayings,
-  aiThemeLabel,
 } from './content'
 import { filterUnsafeThemeCopy } from './content-quality'
+import { CRYPTOGRAM_THEME_SALT } from './theme'
+import { parseCryptogramLevel } from './levels'
 
 const MAX_AI_ATTEMPTS = 3
 
 /**
- * AI-only prefetch — no bundled saying bank.
- * Retries up to 3 times with avoid lists, then fails visibly.
+ * AI-only — there is no bundled saying bank behind this.
+ *
+ * A packaged list would make every seller's book draw on the same few hundred
+ * lines, which is the fastest way to two KDP titles that look copied from each
+ * other. Retrying with an avoid list and then failing visibly is the honest
+ * alternative.
+ *
+ * Asks for the level's target count even though the page may print fewer: the
+ * page size is not known here, and over-requesting costs one field in the same
+ * call.
  */
 export async function cryptogramPrefetch(
   config: StudioConfig,
   signal: AbortSignal,
 ): Promise<CryptogramResponse> {
-  const need = puzzleCountFor(config)
-  const length = parseLength(config.length)
-  const themeRaw = resolveAiThemePrompt(config).slice(0, AI_THEME_MAX_LENGTH)
-  const theme = filterUnsafeThemeCopy(themeRaw) ?? themeRaw
-  const label = aiThemeLabel(config) || theme
-  const varietyKey = studioVarietyKey('cryptogram', label, length)
   const seed = Number(config.seed ?? 1)
+  const level = parseCryptogramLevel(config)
+  const theme = resolveRetirementTheme(config, seed, CRYPTOGRAM_THEME_SALT)
+  const need = level.targetPuzzles
+
+  const promptTheme = (
+    filterUnsafeThemeCopy(theme.prompt) ?? theme.prompt
+  ).slice(0, AI_THEME_MAX_LENGTH)
+  const varietyKey = studioVarietyKey('cryptogram', theme.label || promptTheme, level.id)
 
   const rejected: string[] = []
   let lastError: unknown
@@ -42,18 +54,18 @@ export async function cryptogramPrefetch(
     try {
       const remote = await generateCryptogram(
         {
-          theme,
+          theme: promptTheme,
           itemCount: need,
-          length,
+          length: level.length,
           seed: seed + attempt * 97,
           avoid: [...studioAvoidList(varietyKey), ...rejected],
         },
         signal,
       )
-      const items = selectAiSayings(remote.items, { count: need, length })
+      const items = selectAiSayings(remote.items, { count: need, length: level.length })
       if (items.length >= need) {
         rememberStudioContent(varietyKey, items)
-        return { items }
+        return { items: items.slice(0, candidateCountFor(need)) }
       }
       rejected.push(...items)
     } catch (error) {

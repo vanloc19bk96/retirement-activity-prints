@@ -4,8 +4,10 @@ import {
   withStudioPageHeader,
 } from './studio-page-header'
 import { clampStudioConfigToSchema, resolveStudioConfigField } from './studio-config-fields'
-import { getStudioTemplate, buildDefaultConfig } from '@/constants/studio-templates'
+import { measureHeaderHeight } from './studio-layout'
+import { buildDefaultConfig, STUDIO_TEMPLATES } from '@/constants/studio-templates'
 import { DPI } from '@/types/canvas-settings.types'
+import type { StudioConfigField } from '@/types/studio-template.types'
 
 const LAYOUT = {
   pageWidth: Math.round(6 * DPI),
@@ -18,8 +20,35 @@ const LAYOUT = {
   },
 }
 
-const template = getStudioTemplate('cryptogram')!
-const puzzleCountField = template.configSchema.find((f) => f.key === 'puzzleCount')!
+const INSTRUCTION = 'Fit as many rows as the page allows.'
+const ROW_HEIGHT = 40
+
+/**
+ * A stand-in for any layout-aware count field.
+ *
+ * Written here rather than borrowed from whichever game happens to expose a
+ * `maxWhen` today: this file is about the page-header contract, and a game
+ * simplifying its form should not be able to delete the test for it.
+ */
+const rowCountField: StudioConfigField = {
+  key: 'rowCount',
+  label: 'Rows',
+  type: 'number',
+  default: 1,
+  min: 1,
+  step: 1,
+  maxWhen: (config, layout) => {
+    if (!layout) return 20
+    const body =
+      layout.pageHeight -
+      layout.margin.top -
+      layout.margin.bottom -
+      measureHeaderHeight(config, INSTRUCTION)
+    return Math.max(1, Math.floor(body / ROW_HEIGHT))
+  },
+}
+
+const schema: StudioConfigField[] = [rowCountField]
 
 describe('withStudioPageHeader', () => {
   it('stands in a heading when the run auto-numbers a blank title', () => {
@@ -45,18 +74,27 @@ describe('withStudioPageHeader', () => {
 })
 
 describe('page header and layout-aware max', () => {
-  const base = { ...buildDefaultConfig(template), fontFamily: 'Inter' }
+  const base = { fontFamily: 'Inter', showInstructions: true }
 
-  it('enables Page title by default', () => {
-    expect(buildDefaultConfig(template).showTitle).toBe(true)
+  it('enables Page title by default on every template', () => {
+    for (const template of STUDIO_TEMPLATES) {
+      expect(buildDefaultConfig(template).showTitle, template.key).toBe(true)
+    }
   })
 
   it('reports the same max to the form as it clamps to', () => {
-    const draft = { ...base, puzzleCount: 8 }
+    const draft = { ...base, rowCount: 99 }
     const bounds = withStudioPageHeader(draft, { showTitle: true })
-    const shown = resolveStudioConfigField(puzzleCountField, bounds, LAYOUT).max
-    expect(
-      clampStudioConfigToSchema(template.configSchema, draft, LAYOUT, bounds).puzzleCount,
-    ).toBe(shown)
+    const shown = resolveStudioConfigField(rowCountField, bounds, LAYOUT).max
+    expect(clampStudioConfigToSchema(schema, draft, LAYOUT, bounds).rowCount).toBe(shown)
+  })
+
+  it('measures the heading out of the body a blank auto-numbered title still prints', () => {
+    const draft = { ...base, rowCount: 99 }
+    const titled = withStudioPageHeader(draft, { showTitle: true, title: '' })
+    const untitled = withStudioPageHeader(draft, { showTitle: false })
+    const withHeading = resolveStudioConfigField(rowCountField, titled, LAYOUT).max!
+    const without = resolveStudioConfigField(rowCountField, untitled, LAYOUT).max!
+    expect(withHeading).toBeLessThan(without)
   })
 })
