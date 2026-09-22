@@ -1,19 +1,14 @@
 {
-  "_comment": "Hidden Message Word Search. Pool is always 40. listedWords+8 is the minimum after filters. Message letter count excludes spaces and punctuation.",
+  "_comment": "Hidden Message Word Search. Both letter bands come from the request, not from here: they are the level's bands in frontend/src/utils/studio/hidden-message-word-search/levels.ts. A hidden-message grid is filled exactly, so a saying outside the requested band cannot be laid out at all. minWordLetters/maxWordLetters and minMessageLetters/maxMessageLetters below are the hard bounds any request is clamped into. varietyAngles rotate by seed.",
   "limits": {
     "rateLimitPerWindow": 60,
     "maxOutputTokens": 4096,
     "maxAttempts": 3,
     "poolSize": 40,
     "minWordLetters": 3,
-    "maxWordLetters": 11,
-    "minMessageLetters": 15,
-    "maxMessageLetters": 35
-  },
-  "listedWordsByDifficulty": {
-    "easy": 18,
-    "medium": 22,
-    "hard": 28
+    "maxWordLetters": 12,
+    "minMessageLetters": 10,
+    "maxMessageLetters": 48
   },
   "tones": {
     "funny": "light, witty retirement humor — playful, never mean",
@@ -34,6 +29,10 @@
     "family and grandchildren moments",
     "quiet hobbies and slow mornings",
     "friendship and coffee catch-ups",
-    "home comforts and favourite chairs"
+    "home comforts and favourite chairs",
+    "cooking for pleasure, not the clock",
+    "walking, swimming and gentle exercise",
+    "books, music and things learned late",
+    "celebrations and the farewell party"
   ]
 }

@@ -3,147 +3,141 @@ import type {
   StudioConfigField,
   StudioConfigValidationError,
 } from '@/types/studio-template.types'
-import { themeIpWarning } from '../crossword/content-quality'
-import {
-  allThemeSelectOptions,
-  defaultThemeId,
-  getRetirementTheme,
-} from '../retirement-word-search/retirement-themes'
 import {
   AI_THEME_MAX_LENGTH,
+  RETIREMENT_THEME_MIXED,
+  isCustomRetirementTheme,
+  parseRetirementThemeChoice,
+  retirementThemeSelectOptions,
+} from '../_shared/retirement-theme-config'
+import { themeIpWarning } from '../retirement-word-search/content-quality'
+import {
   CUSTOM_MESSAGE_MAX_LENGTH,
-  DEFAULT_THEME,
-  DEFAULT_DIFFICULTY,
-  DEFAULT_WORDS_FROM,
+  letterToken,
   parseCustomMessage,
-  parseDifficulty,
-  parsePrintStyle,
-  parseTheme,
-  parseWordsFrom,
+  resolveTypedMessage,
 } from './content'
+import { hiddenMessagePrintNote } from './layout'
+import {
+  DEFAULT_HIDDEN_MESSAGE_LEVEL_ID,
+  HIDDEN_MESSAGE_LEVEL_OPTIONS,
+  hiddenMessageInstruction,
+  parseHiddenMessageLevel,
+} from './levels'
 
+export { hiddenMessageInstruction as instructionFor }
+
+/**
+ * Three questions, and the third is optional.
+ *
+ * What the form no longer asks for: where the words come from, a category
+ * behind the theme list, a difficulty, a print style, and a three-way mode
+ * switch whose only job was to reveal one of the other fields. Print style is
+ * gone because every page is large print. Grid size, word count, letter size
+ * and the length of the word bank were never questions a seller could answer
+ * anyway — they came from a table that could not see the trim, and they now
+ * come from `layout.ts`, which can.
+ *
+ * "Your own message" earns its place by being the reason this game exists
+ * rather than the plain word search: a page whose leftover letters spell the
+ * retiree's own name is the one page of the book that gets kept. It is one
+ * optional text box instead of the mode switch plus the field it used to
+ * reveal, and left blank it simply means the AI writes the saying.
+ *
+ * The level's help line reports what those decisions produced on the page size
+ * currently set in Settings, so nothing the form decided stays hidden.
+ */
 export const HIDDEN_MESSAGE_CONFIG_SCHEMA: StudioConfigField[] = [
   {
-    key: 'wordsFrom',
-    label: 'Words from',
-    type: 'select',
-    default: DEFAULT_WORDS_FROM,
-    options: [
-      { label: 'A theme', value: 'theme' },
-      { label: 'AI theme', value: 'ai-theme' },
-      { label: 'Custom saying', value: 'custom-saying' },
-    ],
-    help: 'Pick a ready-made retirement theme, describe your own theme for AI, or write your own secret saying.',
-  },
-  {
-    key: 'presetThemeId',
+    key: 'theme',
     label: 'Theme',
     type: 'select',
-    default: defaultThemeId('retirement-life'),
-    options: allThemeSelectOptions(),
-    visibleWhen: (config) => parseWordsFrom(config.wordsFrom) === 'theme',
-    help: 'AI invents fresh retirement words and a saying for this theme.',
+    default: RETIREMENT_THEME_MIXED,
+    options: retirementThemeSelectOptions(),
+    helpWhen: (config) =>
+      parseRetirementThemeChoice(config) === RETIREMENT_THEME_MIXED
+        ? 'A different retirement theme each page — the right pick for a whole book.'
+        : 'Fresh words and a fresh saying are written for this theme every time.',
   },
   {
-    key: 'theme',
+    key: 'customTheme',
     label: 'Your theme',
     type: 'text',
-    default: DEFAULT_THEME,
+    default: '',
     max: AI_THEME_MAX_LENGTH,
-    visibleWhen: (config) => parseWordsFrom(config.wordsFrom) === 'ai-theme',
-    help: `What the words and saying are about (e.g. Life after work). Max ${AI_THEME_MAX_LENGTH} characters.`,
-    warningWhen: (c) => themeIpWarning(String(c.theme ?? '')),
+    placeholder: 'e.g. Weekends in the garden',
+    visibleWhen: isCustomRetirementTheme,
+    help: `What the words and the saying should be about. Max ${AI_THEME_MAX_LENGTH} characters.`,
+    warningWhen: (config) => themeIpWarning(String(config.customTheme ?? '')),
   },
   {
-    key: 'difficulty',
-    label: 'Difficulty',
+    key: 'level',
+    label: 'Puzzle level',
     type: 'select',
-    default: DEFAULT_DIFFICULTY,
-    options: [
-      { label: 'Easy (across and down)', value: 'easy' },
-      { label: 'Medium (plus diagonal)', value: 'medium' },
-      { label: 'Hard (all directions)', value: 'hard' },
-    ],
-  },
-  {
-    key: 'printStyle',
-    label: 'Print style',
-    type: 'select',
-    default: 'large-print',
-    options: [
-      { label: 'Large print (default)', value: 'large-print' },
-      { label: 'Standard', value: 'standard' },
-    ],
-    help: 'Large print uses a smaller grid and fewer words so letters stay KDP-readable (14 pt+).',
+    default: DEFAULT_HIDDEN_MESSAGE_LEVEL_ID,
+    options: HIDDEN_MESSAGE_LEVEL_OPTIONS,
+    helpWhen: (config, layout) =>
+      hiddenMessagePrintNote(
+        parseHiddenMessageLevel(config),
+        layout,
+        config,
+        hiddenMessageInstruction(config),
+      ),
   },
   {
     key: 'customMessage',
-    label: 'Your secret saying',
+    label: 'Your own message',
     type: 'text',
     default: '',
     max: CUSTOM_MESSAGE_MAX_LENGTH,
-    visibleWhen: (config) => parseWordsFrom(config.wordsFrom) === 'custom-saying',
-    help: 'The grid words are generated for you — just type the saying to hide. 15–35 letters, not counting spaces or punctuation.',
+    placeholder: 'e.g. Happy retirement Margaret',
+    helpWhen: (config) => {
+      const level = parseHiddenMessageLevel(config)
+      const band = `${level.minMessageLetters}–${level.maxMessageLetters} letters`
+      if (!resolveTypedMessage(config)) {
+        return `Leave blank and a fresh saying is written for each page. Or hide your own — ${band}, not counting spaces.`
+      }
+      // A book run repeats one typed message on every page. Say so once, here,
+      // rather than letting a seller find out at proof stage.
+      return `Hidden on every page this game makes — best for a single keepsake page. ${band}, not counting spaces.`
+    },
   },
 ]
 
 export function validateHiddenMessageConfig(
   config: StudioConfig,
 ): StudioConfigValidationError | null {
-  const wordsFrom = parseWordsFrom(config.wordsFrom)
-  void parseDifficulty(config.difficulty)
-  void parsePrintStyle(config.printStyle)
-
-  if (wordsFrom === 'custom-saying') {
-    const rawCustom = String(config.customMessage ?? '').trim()
-    if (!rawCustom) {
-      return { field: 'customMessage', message: 'Enter your secret saying.' }
+  if (isCustomRetirementTheme(config)) {
+    const typed = String(config.customTheme ?? '').trim()
+    if (!typed) {
+      return { field: 'customTheme', message: 'Enter a theme for the words and saying.' }
     }
-    if (rawCustom.length > CUSTOM_MESSAGE_MAX_LENGTH) {
+    if (typed.length > AI_THEME_MAX_LENGTH) {
       return {
-        field: 'customMessage',
-        message: `Keep the saying under ${CUSTOM_MESSAGE_MAX_LENGTH} characters.`,
-      }
-    }
-    if (!parseCustomMessage(rawCustom)) {
-      return {
-        field: 'customMessage',
-        message: 'The secret saying must be 15–35 letters (not counting spaces or punctuation).',
-      }
-    }
-    return null
-  }
-
-  if (wordsFrom === 'ai-theme') {
-    const theme = parseTheme(config.theme)
-    if (!theme) {
-      return { field: 'theme', message: 'Enter a theme for the words and saying.' }
-    }
-    if (String(config.theme ?? '').trim().length > AI_THEME_MAX_LENGTH) {
-      return {
-        field: 'theme',
+        field: 'customTheme',
         message: `Keep the theme under ${AI_THEME_MAX_LENGTH} characters.`,
       }
     }
-    return null
   }
 
-  if (!getRetirementTheme(resolveHiddenMessagePresetThemeId(config))) {
-    return { field: 'presetThemeId', message: 'Choose a retirement theme.' }
+  const typedMessage = resolveTypedMessage(config)
+  if (!typedMessage) return null
+
+  const level = parseHiddenMessageLevel(config)
+  if (typedMessage.length > CUSTOM_MESSAGE_MAX_LENGTH) {
+    return {
+      field: 'customMessage',
+      message: `Keep the message under ${CUSTOM_MESSAGE_MAX_LENGTH} characters.`,
+    }
+  }
+  if (!parseCustomMessage(typedMessage, level)) {
+    const letters = letterToken(typedMessage).length
+    return {
+      field: 'customMessage',
+      message:
+        `This message has ${letters} letters. At this level it needs ` +
+        `${level.minMessageLetters}–${level.maxMessageLetters}, not counting spaces or punctuation.`,
+    }
   }
   return null
-}
-
-/** Preset theme id, defaulting to the first retirement-life theme when unset/unknown. */
-export function resolveHiddenMessagePresetThemeId(config: StudioConfig): string {
-  const raw = String(config.presetThemeId ?? '').trim()
-  return getRetirementTheme(raw) ? raw : defaultThemeId('retirement-life')
-}
-
-/** Resolves the plain-text theme sent to the AI, based on `wordsFrom`. */
-export function resolveHiddenMessageTheme(config: StudioConfig): string {
-  const wordsFrom = parseWordsFrom(config.wordsFrom)
-  if (wordsFrom === 'ai-theme') return parseTheme(config.theme)
-  if (wordsFrom === 'custom-saying') return DEFAULT_THEME
-  return getRetirementTheme(resolveHiddenMessagePresetThemeId(config))?.label ?? DEFAULT_THEME
 }
