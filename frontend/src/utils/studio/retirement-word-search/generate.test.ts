@@ -62,15 +62,24 @@ describe('word-search retirement edition', () => {
   it('uses the new convention fields and removes Memory-only controls', () => {
     const defaults = buildDefaultConfig(wordSearchTemplate)
     expect(defaults).toMatchObject({
+      wordsFrom: 'theme',
+      presetThemeId: 'life-after-work',
       theme: 'Life after work',
-      tone: 'heartfelt',
       difficulty: 'medium',
       printStyle: 'large-print',
-      shape: 'square',
       customWords: [],
     })
     const keys = new Set(wordSearchTemplate.configSchema.map((field) => field.key))
-    for (const key of ['source', 'writeOwnTheme', 'retirementCategory', 'presetThemeId', 'gridSize', 'wordCount', 'words']) {
+    for (const key of [
+      'source',
+      'writeOwnTheme',
+      'retirementCategory',
+      'gridSize',
+      'wordCount',
+      'words',
+      'tone',
+      'shape',
+    ]) {
       expect(keys.has(key)).toBe(false)
     }
     expect(wordSearchTemplate.defaultPageTitle).toBe(WORD_SEARCH_DEFAULT_TITLE)
@@ -213,11 +222,16 @@ describe('word-search retirement edition', () => {
 
   it('validates custom words and exposes automatic answer keys', () => {
     expect(
-      wordSearchTemplate.validateConfig?.({ ...base, customWords: ['LEVEL', 'Disney'] }),
+      wordSearchTemplate.validateConfig?.({
+        ...base,
+        wordsFrom: 'own-words',
+        customWords: ['LEVEL', 'Disney'],
+      }),
     ).toMatchObject({ field: 'customWords' })
     expect(
       wordSearchTemplate.validateConfig?.({
         ...base,
+        wordsFrom: 'own-words',
         customWords: ['Road Trip', 'Garden', 'Travel'],
       }),
     ).toBeNull()

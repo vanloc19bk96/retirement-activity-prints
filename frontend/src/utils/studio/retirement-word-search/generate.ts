@@ -133,7 +133,7 @@ export const wordSearchTemplate: StudioTemplateDefinition = {
   label: 'Word Search',
   category: 'word',
   description:
-    'A retirement-themed word search with large-print and standard layouts, optional puzzle shapes, and an automatic answer key.',
+    'A retirement-themed word search with large-print and standard layouts and an automatic answer key.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: WORD_SEARCH_DEFAULT_TITLE,

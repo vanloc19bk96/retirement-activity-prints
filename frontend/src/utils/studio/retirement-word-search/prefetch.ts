@@ -7,12 +7,12 @@ import {
   studioVarietyKey,
 } from '../studio-variety'
 import { filterUnsafeThemeCopy } from '../crossword/content-quality'
+import { resolveWordSearchTheme } from './config'
 import {
   WORD_SEARCH_BUILD_ERROR,
   parseDifficulty,
   parsePrintStyle,
   parseShape,
-  parseTheme,
   parseTone,
   validatePayload,
 } from './content'
@@ -28,7 +28,7 @@ export async function retirementWordSearchPrefetch(
   const printStyle = parsePrintStyle(config.printStyle)
   const shape = parseShape(config.shape)
   const tone = parseTone(config.tone)
-  const themeRaw = parseTheme(config.theme)
+  const themeRaw = resolveWordSearchTheme(config)
   const theme = filterUnsafeThemeCopy(themeRaw) ?? themeRaw
   const seed = Number(config.seed ?? 1)
   const locale = String(config.locale ?? 'en')

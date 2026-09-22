@@ -23,6 +23,7 @@ describe('retirementWordSearchPrefetch', () => {
 
     const config = {
       ...buildDefaultConfig(wordSearchTemplate),
+      wordsFrom: 'ai-theme',
       theme: 'Retiring nurse',
       tone: 'funny',
       difficulty: 'easy',

@@ -11,6 +11,7 @@ import type {
 import { isPalindrome, isUnsafeCopy } from '../hidden-message-word-search/content'
 
 export type WordSearchShape = 'square' | 'circle' | 'diamond' | 'heart'
+export type WordSearchWordsFrom = 'theme' | 'ai-theme' | 'own-words'
 
 export const AI_THEME_MAX_LENGTH = 120
 export const MIN_WORD_LETTERS = 3
@@ -21,10 +22,11 @@ export const DEFAULT_TONE: WordSearchTone = 'heartfelt'
 export const DEFAULT_DIFFICULTY: StudioWordSearchDifficulty = 'medium'
 export const DEFAULT_PRINT_STYLE: WordSearchPrintStyle = 'large-print'
 export const DEFAULT_SHAPE: WordSearchShape = 'square'
+export const DEFAULT_WORDS_FROM: WordSearchWordsFrom = 'theme'
 export const WORD_SEARCH_DEFAULT_TITLE = 'Word Search'
 export const WORD_SEARCH_INSTRUCTION = 'Find and circle every word in the list.'
 export const WORD_SEARCH_BUILD_ERROR =
-  'Could not build a word search. Try a broader theme or a different tone.'
+  'Could not build a word search. Try a broader theme or fewer custom words.'
 
 const LARGE_PRINT_PRESETS: Record<
   StudioWordSearchDifficulty,
@@ -73,6 +75,12 @@ export function parseShape(raw: unknown): WordSearchShape {
   const value = String(raw ?? DEFAULT_SHAPE)
   if (value === 'circle' || value === 'diamond' || value === 'heart') return value
   return DEFAULT_SHAPE
+}
+
+export function parseWordsFrom(raw: unknown): WordSearchWordsFrom {
+  const value = String(raw ?? DEFAULT_WORDS_FROM)
+  if (value === 'ai-theme' || value === 'own-words') return value
+  return DEFAULT_WORDS_FROM
 }
 
 export function difficultyPreset(

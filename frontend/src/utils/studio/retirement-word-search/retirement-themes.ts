@@ -119,6 +119,11 @@ export function defaultThemeId(category: RetirementThemeCategory): string {
   return themesForCategory(category)[0]?.id ?? RETIREMENT_THEMES[0]!.id
 }
 
+/** Flat theme picker (no category grouping) — every preset in one list. */
+export function allThemeSelectOptions(): { label: string; value: string }[] {
+  return RETIREMENT_THEMES.map((t) => ({ label: t.label, value: t.id }))
+}
+
 export function parseRetirementCategory(raw: unknown): RetirementThemeCategory {
   const value = String(raw ?? '')
   if (RETIREMENT_CATEGORIES.some((c) => c.id === value)) {
