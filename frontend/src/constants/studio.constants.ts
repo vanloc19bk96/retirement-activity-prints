@@ -28,6 +28,7 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'missing-vowels',
   'cryptogram',
   'fallen-phrase',
+  'phrase-finder',
   'maze',
 ])
 

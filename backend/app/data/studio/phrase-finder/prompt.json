@@ -1,0 +1,51 @@
+{
+  "_comment": "Retirement Phrase Finder generation. The page prints a phrase as one blank per letter, with a small share of the letters filled in, so a phrase is only usable if it wraps into the column AND has somewhere fair to put those letters. Every saying is written fresh rather than quoted, which is why each one must arrive with a clue: blanks plus a few given letters do not single out one wording of a sentence nobody has heard before, and the answer page prints exactly one. `bands` mirrors BANDS in frontend/src/utils/studio/phrase-finder/content.ts and must be edited in both places together. minShortWordShare is the gate that looks like style and is not: a phrase built from two- and three-letter words has almost no room for a given letter, because no word may be more than half filled in, so the page would print a wall of blanks. maxWordLetters is the longest word the narrowest KDP trim can set, since a word is never broken across rows. maxMarks caps the punctuation because every mark is a glyph set between two writing rules. clueStemLetters is how much of a content word a clue may echo before it is handing the answer over. candidateCounts over-request so the page can discard. varietyAngles rotate by seed.",
+  "limits": {
+    "maxWordLetters": 10,
+    "minLongWords": 2,
+    "longWordLetters": 6,
+    "maxMarks": 3,
+    "minClueChars": 12,
+    "clueStemLetters": 4,
+    "clueContentWordLetters": 4,
+    "overRequest": 8,
+    "rateLimitPerWindow": 60,
+    "maxOutputTokens": 4096
+  },
+  "candidateCounts": {
+    "1": 8,
+    "2": 11,
+    "3": 14,
+    "4": 16,
+    "5": 18,
+    "6": 20
+  },
+  "bands": {
+    "short": { "minLetters": 20, "maxLetters": 32, "minWords": 5, "maxWords": 9 },
+    "medium": { "minLetters": 32, "maxLetters": 46, "minWords": 8, "maxWords": 13 },
+    "long": { "minLetters": 46, "maxLetters": 60, "minWords": 11, "maxWords": 16 }
+  },
+  "locale": {
+    "nativeLocales": ["en"],
+    "nativeLine": "- Write in clear, plain English.",
+    "otherLine": "- Write the sayings and the clues in language locale '{locale}'."
+  },
+  "varietyAngles": [
+    "free time after work",
+    "slow mornings at home",
+    "travel still to take",
+    "garden days and quiet hobbies",
+    "friendship that lasted past the job",
+    "family around the table",
+    "a new chapter without hurry",
+    "road trips and weekend getaways",
+    "reading in a favourite chair",
+    "cooking for pleasure not the clock",
+    "farewell to the office",
+    "memory lane without sadness",
+    "celebrations with people you love",
+    "walking outside with no commute",
+    "creative time that is finally yours",
+    "rest that is earned and welcome"
+  ]
+}

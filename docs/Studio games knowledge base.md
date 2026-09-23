@@ -160,6 +160,46 @@ no letter ever stands for itself. Pick a theme for AI-written sayings or
 bring your own.
 Pages: 1 · Answer key: yes · AI content: yes
 
+### Phrase Finder (`phrase-finder`)
+A retirement saying printed as one blank per letter, with a small share of the
+letters already filled in where they belong, under a short clue that points to
+it. A solver reads the clue, then works from the given letters, the word
+lengths, the word breaks and the punctuation. The clue is what makes the answer
+unique and the puzzle solvable, so it is never optional: these sayings are
+written fresh for a theme rather than quoted from anywhere a solver could
+already know, so blanks and a third of the letters do not single out one
+wording — several plain English sentences fit the same row, and the answer page
+prints exactly one of them. A clue runs to at most 48 characters, never reuses a
+word of its own saying (or one sharing its first four letters), never appears
+over two puzzles on a page, and never sets below 14 pt; a phrase whose clue is
+missing, over-long or self-answering is dropped rather than printed. There is no
+cipher beyond that: the shape of the phrase is the rest of the puzzle, which is
+why the word gap is drawn far wider than a letter blank and why an apostrophe or
+a hyphen prints at its own narrower pitch — a reader who counts a gap or a mark
+as a blank is solving a different phrase from the one on the page. Pick a theme (shared with
+the crossword, cryptogram and anagrams, so a book can run four games on one
+theme, or rotate a fresh theme per page) and a level: Gentle (short phrases, up
+to 40% of the letters given), Classic, or Challenging (the longest phrases, up
+to 24%). Which letters are given is never a setting: the budget is spent one
+word at a time, longest word first, so no word is more than half filled in, no
+word is left with fewer than two blanks, no two given letters in a word sit side
+by side, and a word of six letters or more is never left without a foothold — a
+page that gave its budget to THE and OF while leaving the nine-letter word blank
+is the failure this game is most likely to print, and the preflight refuses it.
+How many phrases a page holds, how big the letters set and where the rows break
+are not settings — the page derives them from the trim in Settings and the form
+reports what that produced (a 6x9 holds two classic phrases; an 8.5x11 holds
+three). Letters never set below 16 pt and blanks never get narrower than a hand
+can write in. Every page of one run is pinned to the same pitch and puzzle count
+so a book does not mix sizes. Given letters are told apart by being printed at
+all, never by colour, so the page survives a black-and-white interior and a
+photocopy. The solution page is the same rows with every letter written onto its
+own blank, drawn from the same model as the puzzle, so the key cannot disagree
+with the page — and it keeps the clues, so a reader checking a row sees what it
+answered. AI writes fresh phrases and clues each page so a long book does not
+repeat.
+Pages: 1 · Answer key: yes · AI content: yes
+
 ### Anagrams (`retirement-anagram`)
 Unscramble retirement-themed words. Each row prints the shuffled letters, a
 short clue underneath, and one writing rule per letter of the answer — the clue
@@ -224,6 +264,7 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 | crossword | Crossword | word | 1 | yes | yes |
 | codeword | Codeword | word | 1 | yes | no |
 | cryptogram | Cryptogram | word | 1 | yes | yes |
+| phrase-finder | Phrase Finder | word | 1 | yes | yes |
 | retirement-anagram | Anagrams | word | 1 | yes | yes |
 | missing-vowels | Missing Vowels | word | 1 | yes | yes |
 | maze | Maze | spatial | 1 | yes | no |

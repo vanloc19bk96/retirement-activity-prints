@@ -17,6 +17,9 @@ from app.api.routes.studio_cryptogram import router as studio_cryptogram_router
 from app.api.routes.studio_fallen_phrase import (
     router as studio_fallen_phrase_router,
 )
+from app.api.routes.studio_phrase_finder import (
+    router as studio_phrase_finder_router,
+)
 from app.api.routes.studio_retirement_anagram import (
     router as studio_retirement_anagram_router,
 )
@@ -51,6 +54,7 @@ router.include_router(studio_crossword_router)
 router.include_router(studio_missing_vowels_router)
 router.include_router(studio_cryptogram_router)
 router.include_router(studio_fallen_phrase_router)
+router.include_router(studio_phrase_finder_router)
 router.include_router(studio_retirement_anagram_router)
 router.include_router(studio_riddle_scramble_router)
 router.include_router(studio_theme_words_router)
