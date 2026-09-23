@@ -23,6 +23,7 @@ import { mazeTemplate } from '@/utils/studio/maze/generate'
 import { hiddenMessageWordSearchTemplate } from '@/utils/studio/hidden-message-word-search/generate'
 import { triviaClueWordSearchTemplate } from '@/utils/studio/trivia-clue-word-search/generate'
 import { atoZWordSearchTemplate } from '@/utils/studio/a-to-z-word-search/generate'
+import { wordWheelTemplate } from '@/utils/studio/word-wheel/generate'
 
 /**
  * Card order in the Studio panel. Grouped by category in the same order as
@@ -43,6 +44,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   fallenPhraseTemplate,
   phraseFinderTemplate,
   retirementAnagramTemplate,
+  wordWheelTemplate,
   riddleScrambleTemplate,
   missingVowelsTemplate,
 

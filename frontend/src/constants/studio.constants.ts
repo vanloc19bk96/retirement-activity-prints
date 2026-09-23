@@ -24,6 +24,7 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'crossword',
   'codeword',
   'retirement-anagram',
+  'word-wheel',
   'riddle-scramble',
   'missing-vowels',
   'cryptogram',
