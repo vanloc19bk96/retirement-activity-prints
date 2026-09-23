@@ -1,0 +1,33 @@
+{
+  "_comment": "Trivia Clue Word Search. The letter band and the clue-length budget come from the request, not from here: they are the level's numbers in frontend/src/utils/studio/trivia-clue-word-search/levels.ts, and the clue budget is the width of the printed clue column. minWordLetters/maxWordLetters and maxClueChars below are the hard bounds any request is clamped into. varietyAngles rotate by seed so two sellers on one theme do not get one set of clues.",
+  "limits": {
+    "rateLimitPerWindow": 60,
+    "maxOutputTokens": 4096,
+    "maxAttempts": 3,
+    "poolSize": 32,
+    "minWordLetters": 4,
+    "maxWordLetters": 10,
+    "minClueChars": 12,
+    "maxClueChars": 80
+  },
+  "difficultyLine": "Difficulty '{difficulty}': easy = the plainest everyday answer, with a direct one-step clue a reader knows on sight; medium = everyday answers with clear descriptive clues; hard = fuller vocabulary with fair, slightly indirect clues. Never cryptic wordplay, never a date, a name or a statistic to recall. Answer length is set by the letter range above, not by difficulty.",
+  "locale": {
+    "nativeLocales": ["en"],
+    "nativeLine": "- Write in clear English for adults and retirees.",
+    "otherLine": "- Write the clues in language locale '{locale}'."
+  },
+  "varietyAngles": [
+    "everyday life after work",
+    "weekends with no alarm clock",
+    "garden, porch and neighbourhood days",
+    "travel and unhurried outings",
+    "family and grandchildren moments",
+    "quiet hobbies and slow mornings",
+    "friendship and coffee catch-ups",
+    "home comforts and favourite chairs",
+    "cooking for pleasure, not the clock",
+    "walking, swimming and gentle exercise",
+    "books, music and things learned late",
+    "celebrations and the farewell party"
+  ]
+}

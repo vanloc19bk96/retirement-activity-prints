@@ -14,10 +14,12 @@ import {
 } from '@/utils/studio/studio-instance-pages'
 import { yieldToMainThread } from '@/utils/yield-to-main-thread'
 import { ensureFontFamilyLoaded } from '@/utils/font-loader'
+import { clearStudioTextMetricsCache } from '@/utils/studio/studio-text-metrics'
 import {
   STUDIO_ANSWER_INK,
   STUDIO_ANSWER_INK_MONO,
   STUDIO_ANSWER_INK_MONO_TEMPLATES,
+  STUDIO_DEFAULT_FONT,
 } from '@/constants/studio.constants'
 import type {
   StudioConfig,
@@ -64,6 +66,37 @@ function answerInkForTemplate(templateKey: string): string {
   return STUDIO_ANSWER_INK_MONO_TEMPLATES.has(templateKey)
     ? STUDIO_ANSWER_INK_MONO
     : STUDIO_ANSWER_INK
+}
+
+const primedFontFamilies = new Set<string>()
+
+/**
+ * Get the page's own face in the browser before anything is measured with it.
+ *
+ * Generators break their own lines — a clue list, a crossword column, a maze
+ * label — and then reserve exactly the height those lines came to. The widths
+ * behind that decision come from `ctx.measureText`, which silently answers with
+ * whatever face is available at the time: a Google font is fetched lazily, so
+ * the first sheet a seller generates is planned on fallback metrics and drawn,
+ * moments later, in the real face. Every line that fitted by a hair then
+ * re-wraps on the canvas into a line nobody left room for, and it prints on top
+ * of the next one.
+ *
+ * The cache is dropped as well as the face loaded, because a run that measured
+ * against the fallback has already filed those widths under the real font's
+ * name and would hand the same wrong numbers to every later sheet.
+ *
+ * Whether the load was needed is tracked here rather than asked of
+ * `document.fonts.check`, which answers true for a family it has never heard
+ * of — and before the stylesheet is appended, a Google font is exactly that.
+ * The load itself is memoised per family, so this costs one await per family
+ * per session.
+ */
+async function primeStudioTextMetrics(fontFamily: string): Promise<void> {
+  if (primedFontFamilies.has(fontFamily)) return
+  await ensureFontFamilyLoaded(fontFamily)
+  primedFontFamilies.add(fontFamily)
+  clearStudioTextMetricsCache()
 }
 
 export async function runStudioGenerateOnce(options: {
@@ -129,6 +162,9 @@ export async function runStudioGenerateOnce(options: {
     setError(`Unknown template: ${req.templateKey}`)
     return null
   }
+
+  await primeStudioTextMetrics(String(req.config.fontFamily ?? STUDIO_DEFAULT_FONT))
+  if (signal.aborted) return null
 
   const firstMargin = resolveStudioMarginForPage({
     pageIndex: req.startPageIndex,

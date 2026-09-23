@@ -77,7 +77,7 @@ Pages: 1 · Answer key: yes · AI content: no
 
 ---
 
-## Word (6 games)
+## Word (7 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -92,6 +92,15 @@ saying on the writing lines under the grid (one line per letter). Pick a theme
 and tone, or type your own saying and let AI write only the words. Print style
 defaults to large print (smaller grid / fewer words) for Amazon KDP readability.
 Pages: 1 · Answer key: yes (marks every word, shades leftover cells, prints the saying) · AI content: yes
+
+### Trivia Clue Word Search (`trivia-clue-word-search`)
+A large-print word search driven by trivia. Every answer has a numbered clue
+printed under the grid with its letter count — work the answer out, then find
+it hidden in the letters. Answers are always single words, so the printed count
+matches the cells exactly. Pick a theme and a level; the grid size, clue count,
+clue column and every type size are fitted to the page in Settings, and the
+level's help line reports what came out. Needs a 5.5 x 8.5 interior or larger.
+Pages: 1 · Answer key: yes (circles every answer, lists them under the same numbers) · AI content: yes
 
 ### Crossword (`crossword`)
 A classic crossword. Solve the clues to fill interlocking words. Pick a
@@ -163,10 +172,11 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 | sudoku | Sudoku | logic | 1 | yes | no |
 | word-search | Word Search | word | 1 | yes | yes |
 | hidden-message-word-search | Hidden Message Word Search | word | 1 | yes | yes |
+| trivia-clue-word-search | Trivia Clue Word Search | word | 1 | yes | yes |
 | crossword | Crossword | word | 1 | yes | yes |
 | cryptogram | Cryptogram | word | 1 | yes | yes |
 | retirement-anagram | Anagrams | word | 1 | yes | yes |
 | missing-vowels | Missing Vowels | word | 1 | yes | yes |
 | maze | Maze | spatial | 1 | yes | no |
 
-**Total: 8 games** (1 logic · 6 word · 1 spatial).
+**Total: 9 games** (1 logic · 7 word · 1 spatial).

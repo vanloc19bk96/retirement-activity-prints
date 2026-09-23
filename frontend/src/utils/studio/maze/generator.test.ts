@@ -4,16 +4,18 @@ import {
   buildMaze,
   carveMaze,
   countDeadEnds,
+  countTurns,
   hasWall,
   isPerfectMaze,
   solveMaze,
+  type MazeCell,
   type MazeGrid,
+  type MazePuzzle,
 } from './generator'
-
-const DIFFICULTIES = ['easy', 'medium', 'hard'] as const
+import { MAZE_LEVELS } from './levels'
 
 /** Walks the solution and asserts every step crosses an opening, not a wall. */
-function pathIsWalkable(g: MazeGrid, path: { r: number; c: number }[]): boolean {
+function pathIsWalkable(g: MazeGrid, path: readonly MazeCell[]): boolean {
   for (let i = 1; i < path.length; i++) {
     const a = path[i - 1]!
     const b = path[i]!
@@ -26,99 +28,163 @@ function pathIsWalkable(g: MazeGrid, path: { r: number; c: number }[]): boolean 
   return true
 }
 
-describe('maze generator', () => {
-  it('carves a perfect maze (one route between any two cells)', () => {
+const maze = (seed: number, levelIndex = 1, rows = 16, cols = 14): MazePuzzle =>
+  buildMaze({
+    rows,
+    cols,
+    profile: MAZE_LEVELS[levelIndex]!.profile,
+    rng: createRng(seed),
+  })
+
+describe('maze carving', () => {
+  it('carves a perfect maze — one route between any two cells', () => {
     for (let seed = 1; seed <= 20; seed++) {
-      const g = carveMaze(12, 10, 0.5, createRng(seed))
-      expect(isPerfectMaze(g)).toBe(true)
+      expect(isPerfectMaze(carveMaze(12, 10, 0.5, createRng(seed)))).toBe(true)
     }
   })
 
-  it('keeps the outer border closed apart from the two openings', () => {
-    const puzzle = buildMaze(14, 10, 'medium', createRng(9))
-    const openTop = puzzle.hWalls[0]!.filter((w) => !w).length
-    const openBottom = puzzle.hWalls[puzzle.rows]!.filter((w) => !w).length
-    expect(openTop).toBe(1)
-    expect(openBottom).toBe(1)
-    expect(puzzle.vWalls.every((row) => row[0] === true)).toBe(true)
-    expect(puzzle.vWalls.every((row) => row[puzzle.cols] === true)).toBe(true)
-  })
-
-  it('stays perfect after the entrance and exit are opened', () => {
-    const puzzle = buildMaze(16, 12, 'hard', createRng(3))
-    expect(isPerfectMaze(puzzle)).toBe(true)
-  })
-
-  it('solves start to finish through open corridors only', () => {
-    for (const difficulty of DIFFICULTIES) {
-      const puzzle = buildMaze(14, 11, difficulty, createRng(77))
-      const first = puzzle.solution[0]!
-      const last = puzzle.solution[puzzle.solution.length - 1]!
-      expect(first).toEqual(puzzle.start)
-      expect(last).toEqual(puzzle.finish)
-      expect(pathIsWalkable(puzzle, puzzle.solution)).toBe(true)
+  it('stays perfect at every straightness a level asks for', () => {
+    for (const level of MAZE_LEVELS) {
+      const g = carveMaze(14, 12, level.profile.straightness, createRng(7))
+      expect(isPerfectMaze(g), level.id).toBe(true)
     }
   })
 
-  it('re-solving reproduces the same route (the solution is unique)', () => {
-    const puzzle = buildMaze(15, 12, 'medium', createRng(21))
-    expect(solveMaze(puzzle, puzzle.start, puzzle.finish)).toEqual(puzzle.solution)
+  it('finds the one path between two cells, and it is walkable', () => {
+    const g = carveMaze(12, 10, 0.5, createRng(3))
+    const path = solveMaze(g, { r: 0, c: 0 }, { r: 11, c: 9 })
+    expect(path.length).toBeGreaterThan(0)
+    expect(path[0]).toEqual({ r: 0, c: 0 })
+    expect(path[path.length - 1]).toEqual({ r: 11, c: 9 })
+    expect(pathIsWalkable(g, path)).toBe(true)
+    // A tree has no second route, so no cell can be visited twice.
+    expect(new Set(path.map((cell) => `${cell.r},${cell.c}`)).size).toBe(path.length)
+  })
+})
+
+describe('maze puzzles', () => {
+  it('is the same maze every time for one seed', () => {
+    expect(maze(2024)).toEqual(maze(2024))
   })
 
-  it('is deterministic for a given seed', () => {
-    const a = buildMaze(14, 10, 'medium', createRng(101))
-    const b = buildMaze(14, 10, 'medium', createRng(101))
-    expect(a).toEqual(b)
-  })
-
-  it('different seeds give different mazes', () => {
-    const a = JSON.stringify(buildMaze(14, 10, 'medium', createRng(1)))
-    const b = JSON.stringify(buildMaze(14, 10, 'medium', createRng(2)))
-    expect(a).not.toEqual(b)
-  })
-
-  // Reachable path lengths shrink as the grid grows, so difficulty is ranked
-  // within a batch of candidates — it has to order the same way at every size.
-  it.each([
-    [12, 8],
-    [20, 14],
-    [43, 26],
-  ])('difficulty orders the solution length on %ix%i', (rows, cols) => {
-    const ratio = (difficulty: (typeof DIFFICULTIES)[number]) => {
-      let total = 0
+  it('keeps exactly one way through, at every level', () => {
+    for (const [index, level] of MAZE_LEVELS.entries()) {
       for (let seed = 1; seed <= 8; seed++) {
-        const puzzle = buildMaze(rows, cols, difficulty, createRng(seed * 31))
-        total += puzzle.solution.length / (puzzle.rows * puzzle.cols)
+        const puzzle = maze(seed * 31, index)
+        expect(isPerfectMaze(puzzle), level.id).toBe(true)
+        expect(pathIsWalkable(puzzle, puzzle.solution), level.id).toBe(true)
+        expect(puzzle.solution[0]).toEqual(puzzle.start)
+        expect(puzzle.solution[puzzle.solution.length - 1]).toEqual(puzzle.finish)
       }
-      return total / 8
     }
-    const easy = ratio('easy')
-    const medium = ratio('medium')
-    const hard = ratio('hard')
-    expect(easy).toBeLessThan(medium)
-    expect(medium).toBeLessThan(hard)
   })
 
-  it('easy mazes have fewer dead ends than hard ones', () => {
-    const deadEnds = (difficulty: (typeof DIFFICULTIES)[number]) => {
-      let total = 0
+  it('opens the border once at the top and once at the bottom, nowhere else', () => {
+    for (let seed = 1; seed <= 10; seed++) {
+      const puzzle = maze(seed)
+      expect(puzzle.hWalls[0]!.filter((wall) => !wall)).toHaveLength(1)
+      expect(puzzle.hWalls[puzzle.rows]!.filter((wall) => !wall)).toHaveLength(1)
+      for (let r = 0; r < puzzle.rows; r++) {
+        expect(puzzle.vWalls[r]![0]).toBe(true)
+        expect(puzzle.vWalls[r]![puzzle.cols]).toBe(true)
+      }
+    }
+  })
+
+  it('sets the two openings a third of the width apart', () => {
+    for (let seed = 1; seed <= 20; seed++) {
+      const puzzle = maze(seed)
+      expect(Math.abs(puzzle.start.c - puzzle.finish.c)).toBeGreaterThanOrEqual(
+        Math.floor(puzzle.cols / 3),
+      )
+    }
+  })
+
+  it('moves the openings around, so a book does not open at the same spot twice', () => {
+    const pairs = new Set<string>()
+    for (let seed = 1; seed <= 20; seed++) {
+      const puzzle = maze(seed)
+      pairs.add(`${puzzle.start.c}-${puzzle.finish.c}`)
+    }
+    expect(pairs.size).toBeGreaterThan(10)
+  })
+
+  it('never prints a route a reader could solve by looking at it', () => {
+    for (const [index] of MAZE_LEVELS.entries()) {
       for (let seed = 1; seed <= 10; seed++) {
-        total += countDeadEnds(buildMaze(20, 14, difficulty, createRng(seed * 17)))
+        const puzzle = maze(seed * 17, index)
+        // A straight drop plus the sideways travel the openings force is the
+        // shortest route the grid can physically hold.
+        const shortest = puzzle.rows + Math.floor(puzzle.cols / 3)
+        expect(puzzle.solution.length).toBeGreaterThan(shortest)
       }
-      return total / 10
     }
-    expect(deadEnds('easy')).toBeLessThan(deadEnds('hard'))
   })
 
-  it('handles the smallest and largest shipped grids', () => {
-    for (const [rows, cols] of [
-      [4, 4],
-      [10, 12],
-      [52, 26],
-    ] as const) {
-      const puzzle = buildMaze(rows, cols, 'hard', createRng(5))
-      expect(isPerfectMaze(puzzle)).toBe(true)
-      expect(pathIsWalkable(puzzle, puzzle.solution)).toBe(true)
+  it('reaches the route length each level aims for', () => {
+    for (const [index, level] of MAZE_LEVELS.entries()) {
+      for (let seed = 1; seed <= 6; seed++) {
+        const puzzle = maze(seed * 13, index, 20, 16)
+        expect(
+          puzzle.solution.length,
+          `${level.id} seed ${seed}`,
+        ).toBeGreaterThanOrEqual(level.profile.minRouteFactor * (puzzle.rows + puzzle.cols))
+      }
     }
+  })
+
+  it('gets longer and busier as the level goes up', () => {
+    const measure = (index: number) => {
+      let route = 0
+      let deadEnds = 0
+      for (let seed = 1; seed <= 12; seed++) {
+        const puzzle = maze(seed * 7, index, 20, 16)
+        route += puzzle.solution.length
+        deadEnds += puzzle.deadEnds
+      }
+      return { route, deadEnds }
+    }
+    const gentle = measure(0)
+    const classic = measure(1)
+    const challenging = measure(2)
+
+    expect(gentle.route).toBeLessThan(classic.route)
+    expect(classic.route).toBeLessThan(challenging.route)
+    // Fewer places to go wrong is what "gentle" means to a solver.
+    expect(gentle.deadEnds).toBeLessThan(challenging.deadEnds)
+  })
+
+  it('carries straight on more often at the gentler levels', () => {
+    const turnShare = (index: number) => {
+      let turns = 0
+      let steps = 0
+      for (let seed = 1; seed <= 12; seed++) {
+        const puzzle = maze(seed * 5, index, 20, 16)
+        turns += countTurns(puzzle.solution)
+        steps += puzzle.solution.length
+      }
+      return turns / steps
+    }
+    expect(turnShare(0)).toBeLessThan(turnShare(2))
+  })
+
+  it('counts a dead end as a cell with one way out', () => {
+    const g = carveMaze(8, 8, 0.5, createRng(11))
+    const dead = countDeadEnds(g)
+    expect(dead).toBeGreaterThan(0)
+    expect(dead).toBeLessThan(8 * 8)
+  })
+
+  it('counts a straight run as one corner, not many', () => {
+    expect(
+      countTurns([
+        { r: 0, c: 0 },
+        { r: 1, c: 0 },
+        { r: 2, c: 0 },
+        { r: 3, c: 0 },
+        { r: 3, c: 1 },
+        { r: 3, c: 2 },
+      ]),
+    ).toBe(1)
   })
 })

@@ -1,65 +1,35 @@
 import type { StudioFabricObject } from '@/types/studio-template.types'
-import {
-  estimateTextBoxWidth,
-  insetBox,
-  unionObjectBounds,
-  type Box,
-} from '../studio-layout'
-import { snapGridInField } from '../studio-grid-rules'
+import { unionObjectBounds, type Box } from '../studio-layout'
+import { hugTextBoxWidth, fabricTextHeight, type FontSpec } from '../studio-text-metrics'
 import {
   buildRect,
-  buildLine,
+  buildCenteredLine,
   buildText,
+  buildPolygon,
   buildGroup,
   type StudioTag,
 } from '../studio-fabric-builders'
-import {
-  STUDIO_RULE_MEDIUM,
-  STUDIO_ANSWER_INK,
-  STUDIO_STROKE_HAIRLINE,
-  STUDIO_STROKE_NORMAL,
-} from '@/constants/studio.constants'
+import { STUDIO_INK, STUDIO_ANSWER_INK } from '@/constants/studio.constants'
 import type { MazeCell, MazePuzzle } from './generator'
+import type { MazePagePlan } from './layout'
 
-/** Breathing room from safe edges — same as Grid Copy. */
-const FIELD_INSET = 16
+/**
+ * The maze as ink on a black-and-white interior.
+ *
+ * Three decisions here are about the press rather than the screen. Walls are
+ * black, not the mid-grey the studio rules its cell grids in: a grey hairline
+ * survives a monitor and comes back off a print-on-demand press as a broken
+ * line, and a broken wall in a maze is not a lighter wall — it is a second way
+ * through. Wall bars are merged into runs, so a twenty-six column maze is a few
+ * hundred rectangles instead of two thousand. And the outer frame is drawn
+ * heavier than the corridors inside it, which is what turns the two gaps in it
+ * into an entrance and an exit rather than two places the printer missed.
+ */
 
-/** Start / Finish caption size. Small enough to sit outside the maze frame. */
-const LABEL_SIZE = 18
-const LABEL_GAP = 6
-/** Clearance above/below the frame for the solution path stubs. */
-const STUB_CLEARANCE = 8
+export const MAZE_WALL_INK = STUDIO_INK
 
-/** Vertical space captions (and path stubs) need above and below the maze. */
-export function mazeLabelBandHeight(showLabels: boolean): number {
-  return showLabels ? STUB_CLEARANCE + LABEL_GAP + LABEL_SIZE : STUB_CLEARANCE
-}
-
-/** Inset body used for sizing + drawing so stubs/walls clear the safe edge. */
-export function mazeContentField(area: Box): Box {
-  return insetBox(area, FIELD_INSET)
-}
-
-/** Grid box inside `area` after field inset + Start/Finish (or stub) bands. */
-export function mazeGridField(area: Box, showLabels: boolean): Box {
-  const field = mazeContentField(area)
-  const band = mazeLabelBandHeight(showLabels)
-  return {
-    ...field,
-    top: field.top + band,
-    height: Math.max(1, field.height - band * 2),
-  }
-}
-
-/** Cell size the maze would use if drawn in `area` (after inset + label bands). */
-export function cellForMazeField(
-  area: Box,
-  cols: number,
-  rows: number,
-  showLabels: boolean,
-): number {
-  return snapGridInField(mazeGridField(area, showLabels), cols, rows).cell
-}
+const START_LABEL = 'Start'
+const FINISH_LABEL = 'Finish'
 
 interface Run {
   from: number
@@ -95,7 +65,7 @@ function wallBar(
       top: Math.round(top),
       width: Math.round(width),
       height: Math.round(height),
-      fill: STUDIO_RULE_MEDIUM,
+      fill: MAZE_WALL_INK,
       stroke: 'transparent',
       strokeWidth: 0,
     },
@@ -106,25 +76,27 @@ function wallBar(
 
 /**
  * Wall bars are centred on the grid lines and over-run by half a thickness at
- * each end, so corners close without a notch.
+ * each end, so corners close without a notch. The four border lines take the
+ * heavier weight; everything inside takes the corridor weight.
  */
 function drawWalls(
   puzzle: MazePuzzle,
-  bounds: Box,
-  cell: number,
-  thickness: number,
+  grid: Box,
+  plan: MazePagePlan,
   tag: StudioTag,
 ): StudioFabricObject[] {
   const { rows, cols, hWalls, vWalls } = puzzle
-  const half = thickness / 2
+  const { cell, wallWidth, borderWidth } = plan.metrics
   const bars: StudioFabricObject[] = []
 
   for (let r = 0; r <= rows; r++) {
+    const thickness = r === 0 || r === rows ? borderWidth : wallWidth
+    const half = thickness / 2
     for (const run of collectRuns(cols, (c) => hWalls[r]![c]!)) {
       bars.push(
         wallBar(
-          bounds.left + run.from * cell - half,
-          bounds.top + r * cell - half,
+          grid.left + run.from * cell - half,
+          grid.top + r * cell - half,
           (run.to - run.from + 1) * cell + thickness,
           thickness,
           tag,
@@ -134,11 +106,13 @@ function drawWalls(
   }
 
   for (let c = 0; c <= cols; c++) {
+    const thickness = c === 0 || c === cols ? borderWidth : wallWidth
+    const half = thickness / 2
     for (const run of collectRuns(rows, (r) => vWalls[r]![c]!)) {
       bars.push(
         wallBar(
-          bounds.left + c * cell - half,
-          bounds.top + run.from * cell - half,
+          grid.left + c * cell - half,
+          grid.top + run.from * cell - half,
           thickness,
           (run.to - run.from + 1) * cell + thickness,
           tag,
@@ -155,10 +129,16 @@ interface Point {
   y: number
 }
 
-function cellCenter(bounds: Box, cell: number, at: MazeCell): Point {
+function cellCenterX(grid: Box, cell: number, at: MazeCell): number {
+  // Integer so the arrow tip and the route stroke share one centre. Rounding
+  // only the arrow's box left leaves the stroke half a pixel off on odd cells.
+  return Math.round(grid.left + at.c * cell + cell / 2)
+}
+
+function cellCenter(grid: Box, cell: number, at: MazeCell): Point {
   return {
-    x: bounds.left + at.c * cell + cell / 2,
-    y: bounds.top + at.r * cell + cell / 2,
+    x: cellCenterX(grid, cell, at),
+    y: Math.round(grid.top + at.r * cell + cell / 2),
   }
 }
 
@@ -181,45 +161,49 @@ function simplify(points: Point[]): Point[] {
 }
 
 /**
- * The solution route, hidden on the puzzle page and revealed on the key.
- * Drawn through corridor centres with round caps so it reads clearly against
- * the wall bars in black-and-white print.
+ * The solution route: hidden on the puzzle page, revealed on the key.
+ *
+ * Drawn through corridor centres with round caps and joins, so the corners
+ * read as a traced pencil line rather than as a chain of separate strokes. It
+ * runs out through both gaps to the outer edge of the frame and stops there —
+ * far enough to show which openings it used, not so far that it collides with
+ * the arrows the puzzle page prints above and below them.
  */
 function drawSolution(
   puzzle: MazePuzzle,
-  bounds: Box,
-  cell: number,
-  stub: number,
+  grid: Box,
+  plan: MazePagePlan,
   tag: StudioTag,
 ): StudioFabricObject[] {
-  const centers = puzzle.solution.map((at) => cellCenter(bounds, cell, at))
+  const { cell, routeWidth, inkPad } = plan.metrics
+  const centers = puzzle.solution.map((at) => cellCenter(grid, cell, at))
+  if (centers.length === 0) return []
+
   const first = centers[0]!
   const last = centers[centers.length - 1]!
   const points = simplify([
-    { x: first.x, y: bounds.top - stub },
+    { x: first.x, y: grid.top - inkPad },
     ...centers,
-    { x: last.x, y: bounds.top + puzzle.rows * cell + stub },
+    { x: last.x, y: grid.top + puzzle.rows * cell + inkPad },
   ])
 
-  // Lighter than the old wall-plus-padding weight so the route does not dominate.
-  const width = Math.max(
-    STUDIO_STROKE_HAIRLINE,
-    Math.min(STUDIO_STROKE_NORMAL, Math.round(cell * 0.1)),
-  )
   const segments: StudioFabricObject[] = []
   for (let i = 1; i < points.length; i++) {
     const a = points[i - 1]!
     const b = points[i]!
     segments.push(
-      buildLine(
+      // Left-origin Fabric lines paint half a stroke to the right of x1.
+      buildCenteredLine(
         {
           x1: a.x,
           y1: a.y,
           x2: b.x,
           y2: b.y,
           stroke: STUDIO_ANSWER_INK,
-          strokeWidth: width,
+          strokeWidth: routeWidth,
+          strokeUniform: true,
           strokeLineCap: 'round',
+          strokeLineJoin: 'round',
         },
         tag,
         'answer',
@@ -229,26 +213,60 @@ function drawSolution(
   return segments
 }
 
+/** Solid triangle pointing down the page — into the entrance, out of the exit. */
+function arrow(
+  centerX: number,
+  top: number,
+  plan: MazePagePlan,
+  tag: StudioTag,
+): StudioFabricObject {
+  const { arrowWidth, arrowHeight } = plan.metrics
+  return buildPolygon(
+    {
+      left: centerX - arrowWidth / 2,
+      top: Math.round(top),
+      points: [
+        { x: 0, y: 0 },
+        { x: arrowWidth, y: 0 },
+        { x: arrowWidth / 2, y: arrowHeight },
+      ],
+      fill: MAZE_WALL_INK,
+      stroke: 'transparent',
+      strokeWidth: 0,
+    },
+    tag,
+    'structure',
+  )
+}
+
+/**
+ * A caption over its opening, kept inside the block it belongs to.
+ *
+ * The openings sit wherever the puzzle put them, including hard against a
+ * corner, so the centre is clamped: a "Finish" hanging off the side of the
+ * maze reads as a stray word, and on a narrow trim it would reach the margin.
+ */
 function caption(
   text: string,
   centerX: number,
   top: number,
-  field: Box,
-  font: string,
+  block: Box,
+  plan: MazePagePlan,
+  spec: FontSpec,
   tag: StudioTag,
 ): StudioFabricObject {
-  const width = estimateTextBoxWidth(text, LABEL_SIZE, field.width)
-  // Openings sit at the grid corners — keep the caption inside the content column.
-  const min = field.left + width / 2
-  const max = field.left + field.width - width / 2
+  const width = hugTextBoxWidth(text, plan.metrics.labelFont, block.width, spec)
+  const min = block.left + width / 2
+  const max = block.left + block.width - width / 2
   return buildText(
     {
-      left: Math.min(Math.max(centerX, min), max),
-      top,
+      left: Math.round(Math.min(Math.max(centerX, min), max)),
+      top: Math.round(top),
       text,
       width,
-      fontSize: LABEL_SIZE,
-      fontFamily: font,
+      fontSize: plan.metrics.labelFont,
+      fontFamily: String(spec.fontFamily),
+      fontWeight: 700,
       textAlign: 'center',
       originX: 'center',
     },
@@ -257,56 +275,54 @@ function caption(
   )
 }
 
+/**
+ * One maze, drawn into the block `mazeBlockBox` reserved for it.
+ *
+ * Grouped, so a seller can pick the whole puzzle up and move it, and so the
+ * solution route travels with the maze it belongs to. Group bounds come from
+ * the drawn objects rather than from the plan: a round line cap reaches half a
+ * stroke past its endpoint, and bounds that ignored it would clip the route on
+ * the key.
+ */
 export function drawMaze(options: {
-  field: Box
+  block: Box
   puzzle: MazePuzzle
-  showLabels: boolean
+  plan: MazePagePlan
   font: string
   tag: StudioTag
-  /**
-   * Cap cell size (solution page). Keeps the maze the same size as the puzzle
-   * page while still centering in a taller no-instruction body.
-   */
-  maxCell?: number
 }): StudioFabricObject {
-  const { field: area, puzzle, showLabels, font, tag, maxCell } = options
-  const field = mazeContentField(area)
-  const band = mazeLabelBandHeight(showLabels)
-  const gridField = mazeGridField(area, showLabels)
+  const { block, puzzle, plan, font, tag } = options
+  const { cell, inkPad, labelBand, labelFont, labelGap, arrowGap, arrowHeight } =
+    plan.metrics
+  const spec: FontSpec = { fontFamily: font, fontWeight: 700 }
+  const labelHeight = Math.ceil(fabricTextHeight(1, labelFont))
 
-  const fitted = snapGridInField(gridField, puzzle.cols, puzzle.rows)
-  const cell =
-    maxCell !== undefined
-      ? Math.max(1, Math.min(fitted.cell, Math.floor(maxCell)))
-      : fitted.cell
-  const width = cell * puzzle.cols
-  const height = cell * puzzle.rows
-  const bounds: Box = {
-    left: Math.round(gridField.left + (gridField.width - width) / 2),
-    top: Math.round(gridField.top + (gridField.height - height) / 2),
-    width,
-    height,
+  const grid: Box = {
+    left: block.left + inkPad,
+    top: block.top + labelBand + inkPad,
+    width: cell * plan.cols,
+    height: cell * plan.rows,
   }
-
-  // Same mid-gray hairline weight as Grid Copy.
-  const thickness = STUDIO_STROKE_HAIRLINE
-  const startX = bounds.left + puzzle.start.c * cell + cell / 2
-  const finishX = bounds.left + puzzle.finish.c * cell + cell / 2
-  const gridBottom = bounds.top + puzzle.rows * cell
-  const stub = Math.min(STUB_CLEARANCE, Math.round(cell * 0.6))
+  const startX = cellCenterX(grid, cell, puzzle.start)
+  const finishX = cellCenterX(grid, cell, puzzle.finish)
+  const gridBottom = grid.top + grid.height
 
   const parts: StudioFabricObject[] = [
-    ...drawWalls(puzzle, bounds, cell, thickness, tag),
-    ...drawSolution(puzzle, bounds, cell, stub, tag),
+    ...drawWalls(puzzle, grid, plan, tag),
+    ...drawSolution(puzzle, grid, plan, tag),
+    caption(START_LABEL, startX, block.top, block, plan, spec, tag),
+    arrow(startX, block.top + labelHeight + labelGap, plan, tag),
+    arrow(finishX, gridBottom + inkPad + arrowGap, plan, tag),
+    caption(
+      FINISH_LABEL,
+      finishX,
+      gridBottom + inkPad + arrowGap + arrowHeight + labelGap,
+      block,
+      plan,
+      spec,
+      tag,
+    ),
   ]
 
-  if (showLabels) {
-    parts.push(
-      caption('Start', startX, bounds.top - band, field, font, tag),
-      caption('Finish', finishX, gridBottom + STUB_CLEARANCE + LABEL_GAP, field, font, tag),
-    )
-  }
-
-  const groupBounds = unionObjectBounds(parts) ?? bounds
-  return buildGroup(parts, groupBounds, tag)
+  return buildGroup(parts, unionObjectBounds(parts) ?? block, tag)
 }

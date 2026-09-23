@@ -106,7 +106,8 @@ function tryPlaceAt(options: {
   entries: readonly WordEntry[]
   count: number
   side: number
-  level: WordSearchLevel
+  /** Only the headings matter here — any level-shaped object will do. */
+  level: Pick<WordSearchLevel, 'directions'>
   seed: number
   attempts: number
 }): WordSearchPuzzle | null {
@@ -174,7 +175,12 @@ export function tryBuildWordSearch(options: {
   entries: readonly WordEntry[]
   wordCount: number
   gridSide: number
-  level: WordSearchLevel
+  /**
+   * Headings and the floor below which a sheet is too thin to print. Taken as
+   * a slice rather than a whole level so sibling games (trivia clues) can drive
+   * the same ladder from their own level table.
+   */
+  level: Pick<WordSearchLevel, 'directions' | 'minWords'>
   seed: number
 }): WordSearchPuzzle | null {
   const { entries, wordCount, gridSide, level, seed } = options
