@@ -1,0 +1,60 @@
+{
+  "_comment": "Retirement Fallen Phrase (quotefall) saying generation. A fallen phrase is set into a fixed grid of write-in boxes, so a saying is only usable if it wraps into that grid: `bands` mirrors BANDS in frontend/src/utils/studio/fallen-phrase/content.ts and must be edited in both places together. The word counts are the part that looks wrong and is not — a grid row is stretched at its word gaps, so a saying needs about three words per row before the wrap has enough joints to fill the width, which is why a short saying still asks for eight words. maxWordLetters is the narrowest grid any KDP trim prints, since a word is never broken across rows. candidateCounts: need 1 -> 10, so the page can discard the ones that will not grid. varietyAngles rotate by seed.",
+  "limits": {
+    "maxWordLetters": 10,
+    "overRequest": 9,
+    "rateLimitPerWindow": 60,
+    "maxOutputTokens": 2048
+  },
+  "candidateCounts": {
+    "1": 10,
+    "2": 14,
+    "3": 18
+  },
+  "bands": {
+    "short": {
+      "minLetters": 28,
+      "maxLetters": 34,
+      "minWords": 8,
+      "maxWords": 10,
+      "rows": 3
+    },
+    "medium": {
+      "minLetters": 38,
+      "maxLetters": 46,
+      "minWords": 11,
+      "maxWords": 14,
+      "rows": 4
+    },
+    "long": {
+      "minLetters": 48,
+      "maxLetters": 57,
+      "minWords": 14,
+      "maxWords": 17,
+      "rows": 5
+    }
+  },
+  "locale": {
+    "nativeLocales": ["en"],
+    "nativeLine": "- Write in clear, plain English.",
+    "otherLine": "- Write in language locale '{locale}'."
+  },
+  "varietyAngles": [
+    "free time after work",
+    "slow mornings at home",
+    "travel still to take",
+    "garden days and quiet hobbies",
+    "friendship that lasted past the job",
+    "family around the table",
+    "a new chapter without hurry",
+    "road trips and weekend getaways",
+    "reading in a favourite chair",
+    "cooking for pleasure not the clock",
+    "farewell to the office",
+    "memory lane without sadness",
+    "celebrations with people you love",
+    "walking outside with no commute",
+    "creative time that is finally yours",
+    "rest that is earned and welcome"
+  ]
+}

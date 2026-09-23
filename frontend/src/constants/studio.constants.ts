@@ -27,6 +27,7 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'riddle-scramble',
   'missing-vowels',
   'cryptogram',
+  'fallen-phrase',
   'maze',
 ])
 
