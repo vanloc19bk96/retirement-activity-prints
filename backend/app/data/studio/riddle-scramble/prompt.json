@@ -1,0 +1,35 @@
+{
+  "_comment": "Riddle Scramble: a pun riddle whose answer is spelled by one boxed letter from each scrambled word. The browser does the hard part — it matches answer letters to words and marks the positions (frontend riddle-scramble/build.ts) — so this prompt only has to supply riddles the page can use and a pool of theme words wide enough for that matching to succeed. Both come back in one call because a riddle with no words to spell it is not half a page, it is no page.",
+  "limits": {
+    "rateLimitPerWindow": 60,
+    "maxOutputTokens": 4096,
+    "minWordLetters": 4,
+    "maxWordLetters": 9,
+    "minClueChars": 8,
+    "maxClueChars": 40,
+    "clueStemLetters": 4,
+    "minRiddleChars": 16,
+    "maxRiddleChars": 80,
+    "minAnswerLetters": 4,
+    "maxAnswerLetters": 6,
+    "awkwardAnswerLetters": "JQXZ",
+    "minRiddles": 2
+  },
+  "locale": {
+    "nativeLocales": ["en"],
+    "nativeLine": "- Write in clear English for adults and retirees.",
+    "otherLine": "- Write the riddles, words and clues in language locale '{locale}'."
+  },
+  "varietyAngles": [
+    "the first week with nowhere to be",
+    "gardening and the back yard",
+    "travel, day trips and caravans",
+    "grandchildren and family Sundays",
+    "hobbies picked up late in life",
+    "the golf course and the bowls green",
+    "mornings that start with no alarm clock",
+    "the kitchen, baking and long lunches",
+    "books, crosswords and quiet afternoons",
+    "the local club, choir and volunteering"
+  ]
+}

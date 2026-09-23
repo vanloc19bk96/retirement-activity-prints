@@ -13,6 +13,7 @@ import { sudokuTemplate } from '@/utils/studio/sudoku/generate'
 import { wordSearchTemplate } from '@/utils/studio/retirement-word-search/generate'
 import { crosswordTemplate } from '@/utils/studio/crossword/generate'
 import { retirementAnagramTemplate } from '@/utils/studio/retirement-anagram/generate'
+import { riddleScrambleTemplate } from '@/utils/studio/riddle-scramble/generate'
 import { missingVowelsTemplate } from '@/utils/studio/missing-vowels/generate'
 import { cryptogramTemplate } from '@/utils/studio/cryptogram/generate'
 import { codewordTemplate } from '@/utils/studio/codeword/generate'
@@ -38,6 +39,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   codewordTemplate,
   cryptogramTemplate,
   retirementAnagramTemplate,
+  riddleScrambleTemplate,
   missingVowelsTemplate,
 
   // Spatial
