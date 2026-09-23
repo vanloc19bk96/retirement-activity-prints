@@ -24,6 +24,7 @@ import { hiddenMessageWordSearchTemplate } from '@/utils/studio/hidden-message-w
 import { triviaClueWordSearchTemplate } from '@/utils/studio/trivia-clue-word-search/generate'
 import { atoZWordSearchTemplate } from '@/utils/studio/a-to-z-word-search/generate'
 import { wordWheelTemplate } from '@/utils/studio/word-wheel/generate'
+import { pictureRebusTemplate } from '@/utils/studio/picture-rebus/generate'
 
 /**
  * Card order in the Studio panel. Grouped by category in the same order as
@@ -47,6 +48,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   wordWheelTemplate,
   riddleScrambleTemplate,
   missingVowelsTemplate,
+  pictureRebusTemplate,
 
   // Spatial
   mazeTemplate,
