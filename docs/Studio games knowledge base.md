@@ -77,7 +77,7 @@ Pages: 1 · Answer key: yes · AI content: no
 
 ---
 
-## Word (7 games)
+## Word (8 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -101,6 +101,25 @@ matches the cells exactly. Pick a theme and a level; the grid size, clue count,
 clue column and every type size are fitted to the page in Settings, and the
 level's help line reports what came out. Needs a 5.5 x 8.5 interior or larger.
 Pages: 1 · Answer key: yes (circles every answer, lists them under the same numbers) · AI content: yes
+
+### A to Z Word Search (`a-to-z-word-search`)
+Alphabet soup. Twenty-six words are hidden in one grid — one beginning with A,
+one with B, and so on to Z — and the page prints *only* the letters. There is no
+word bank: the alphabet under the grid is the clue list, and the solver's job is
+to find a word for every letter. Words come from a curated everyday-life lexicon
+(no theme picker — no single subject has a recognisable word for all twenty-six
+letters, and reaching for one is how a page ends up asking for XERISCAPE), drawn
+fresh per puzzle, so a long book does not repeat. Pick a level: Gentle (4–6
+letters, across and down), Classic (4–7, plus diagonals) or Challenging (4–9,
+all eight headings and some backwards). Grid size, cell pitch, type sizes and how
+many columns the letters and answers run in are not settings — the page derives
+them from the trim in Settings and the level's help line reports what came out
+(a 6 x 9 holds a 16 x 16 grid, an 8.5 x 11 an 18 x 18 at 17 pt). Needs a 6 x 9
+interior or larger; below that the form says so instead of printing a squint. The
+solution page is the same grid with every word circled, plus the A-to-Z list with
+each letter's word beside it — the only page of the pair that prints the words at
+all.
+Pages: 1 · Answer key: yes (circles every word, lists all twenty-six by letter) · AI content: no
 
 ### Crossword (`crossword`)
 A classic crossword. Solve the clues to fill interlocking words. Pick a
@@ -173,10 +192,11 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 | word-search | Word Search | word | 1 | yes | yes |
 | hidden-message-word-search | Hidden Message Word Search | word | 1 | yes | yes |
 | trivia-clue-word-search | Trivia Clue Word Search | word | 1 | yes | yes |
+| a-to-z-word-search | A to Z Word Search | word | 1 | yes | no |
 | crossword | Crossword | word | 1 | yes | yes |
 | cryptogram | Cryptogram | word | 1 | yes | yes |
 | retirement-anagram | Anagrams | word | 1 | yes | yes |
 | missing-vowels | Missing Vowels | word | 1 | yes | yes |
 | maze | Maze | spatial | 1 | yes | no |
 
-**Total: 9 games** (1 logic · 7 word · 1 spatial).
+**Total: 10 games** (1 logic · 8 word · 1 spatial).
