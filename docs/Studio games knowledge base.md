@@ -77,7 +77,7 @@ Pages: 1 · Answer key: yes · AI content: no
 
 ---
 
-## Word (8 games)
+## Word (9 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -125,6 +125,34 @@ Pages: 1 · Answer key: yes (circles every word, lists all twenty-six by letter)
 A classic crossword. Solve the clues to fill interlocking words. Pick a
 theme and let AI write the answers and clues, or supply your own words.
 Pages: 1 · Answer key: yes · AI content: yes
+
+### Codeword (`codeword`)
+A crossword grid with **no clues**. Every letter of the grid is replaced by a
+number, and the same number always stands for the same letter — crack the code
+and the words fall out. Two or three number-to-letter pairs are printed under
+the grid to start you off ("3 = A · 12 = E · 18 = T"); the rest of the alphabet
+has to be worked out from the words themselves. Under the starter line is a key
+strip: one writing box per number, with the starters already filled in, so the
+solver builds the code as they go instead of keeping it in a margin. Pick a
+theme (shared with the crossword, cryptogram, anagrams and missing vowels, so a
+book can run several games on one theme, or rotate a fresh theme per page) and a
+level: Gentle (about 10 words, 4–6 letters, three letters given), Classic (about
+13, 4–8) or Challenging (about 15, 4–9, only two letters given). There is no
+"write my own theme" box — this game has no clues for a model to write, so its
+words come from the bundled retirement wordlists and a typed theme would have
+nothing to read it.
+
+Words are single plain words only: no phrases, no hyphenates, no place names
+(a solver deduces a word from its letter pattern, and nobody deduces SANTORINI)
+and no brand names. Grid size, cell pitch, number size and the key strip's
+columns are not settings — the page derives them from the trim in Settings and
+the level's help line reports what came out (a 6 x 9 holds a 13 x 13 grid with
+numbers at 8 pt; an 8.5 x 11 a 15 x 15 at 10 pt). Cells never fall below a third
+of an inch, so there is always room to write a capital. Needs a 5.5 x 8.5
+interior or larger; below that the form says so instead of printing a squint.
+The solution page is the same grid with every letter written in and the key
+strip filled out — the finished grid and the whole code on one page.
+Pages: 1 · Answer key: yes (completed grid + full number-to-letter key) · AI content: no
 
 ### Cryptogram (`cryptogram`)
 Crack a coded saying in which every letter stands for a different one, and
@@ -194,9 +222,10 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 | trivia-clue-word-search | Trivia Clue Word Search | word | 1 | yes | yes |
 | a-to-z-word-search | A to Z Word Search | word | 1 | yes | no |
 | crossword | Crossword | word | 1 | yes | yes |
+| codeword | Codeword | word | 1 | yes | no |
 | cryptogram | Cryptogram | word | 1 | yes | yes |
 | retirement-anagram | Anagrams | word | 1 | yes | yes |
 | missing-vowels | Missing Vowels | word | 1 | yes | yes |
 | maze | Maze | spatial | 1 | yes | no |
 
-**Total: 10 games** (1 logic · 8 word · 1 spatial).
+**Total: 11 games** (1 logic · 9 word · 1 spatial).

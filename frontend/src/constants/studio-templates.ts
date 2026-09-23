@@ -15,6 +15,7 @@ import { crosswordTemplate } from '@/utils/studio/crossword/generate'
 import { retirementAnagramTemplate } from '@/utils/studio/retirement-anagram/generate'
 import { missingVowelsTemplate } from '@/utils/studio/missing-vowels/generate'
 import { cryptogramTemplate } from '@/utils/studio/cryptogram/generate'
+import { codewordTemplate } from '@/utils/studio/codeword/generate'
 import { mazeTemplate } from '@/utils/studio/maze/generate'
 import { hiddenMessageWordSearchTemplate } from '@/utils/studio/hidden-message-word-search/generate'
 import { triviaClueWordSearchTemplate } from '@/utils/studio/trivia-clue-word-search/generate'
@@ -34,6 +35,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   triviaClueWordSearchTemplate,
   atoZWordSearchTemplate,
   crosswordTemplate,
+  codewordTemplate,
   cryptogramTemplate,
   retirementAnagramTemplate,
   missingVowelsTemplate,

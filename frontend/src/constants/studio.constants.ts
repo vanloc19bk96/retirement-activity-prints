@@ -22,6 +22,7 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'trivia-clue-word-search',
   'a-to-z-word-search',
   'crossword',
+  'codeword',
   'retirement-anagram',
   'missing-vowels',
   'cryptogram',
