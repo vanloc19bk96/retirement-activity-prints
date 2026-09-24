@@ -33,6 +33,7 @@ from app.api.routes.studio_trivia_clues import router as studio_trivia_clues_rou
 from app.api.routes.studio_top_five_guess import router as studio_top_five_guess_router
 from app.api.routes.studio_would_you_rather import router as studio_would_you_rather_router
 from app.api.routes.studio_ever_or_never import router as studio_ever_or_never_router
+from app.api.routes.studio_retired_name import router as studio_retired_name_router
 
 router = APIRouter()
 
@@ -67,5 +68,6 @@ router.include_router(studio_trivia_clues_router)
 router.include_router(studio_top_five_guess_router)
 router.include_router(studio_would_you_rather_router)
 router.include_router(studio_ever_or_never_router)
+router.include_router(studio_retired_name_router)
 
 __all__ = ["router"]

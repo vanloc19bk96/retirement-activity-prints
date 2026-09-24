@@ -30,6 +30,7 @@ import { retirementBingoTemplate } from '@/utils/studio/retirement-bingo/generat
 import { topFiveGuessTemplate } from '@/utils/studio/top-five-guess/generate'
 import { wouldYouRatherTemplate } from '@/utils/studio/would-you-rather/generate'
 import { everOrNeverTemplate } from '@/utils/studio/ever-or-never/generate'
+import { retiredNameTemplate } from '@/utils/studio/retired-name/generate'
 
 /**
  * Card order in the Studio panel. Grouped by category in the same order as
@@ -59,6 +60,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   topFiveGuessTemplate,
   wouldYouRatherTemplate,
   everOrNeverTemplate,
+  retiredNameTemplate,
 
   // Spatial
   mazeTemplate,

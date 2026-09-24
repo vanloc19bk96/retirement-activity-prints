@@ -77,7 +77,7 @@ Pages: 1 · Answer key: yes · AI content: no
 
 ---
 
-## Word (11 games)
+## Word (12 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -346,6 +346,44 @@ themselves), what this seller's browser printed recently for the theme, and the
 server's recent memory for the seller; one that repeats any of them is dropped.
 Pages: 1 · Answer key: no · AI content: yes
 
+### What's Your Retired Name? (`retired-name`)
+A party and keepsake game built for retirement books. The reader finds the
+first letter of their first name in an A–Z table for a new first name, and
+their birth month in a January–December table for a new last name, then reads
+the two together: "Captain" + "Hammock Snoozer". Under the tables, a framed
+worked example does one lookup from the page's own tables ("Example: Kelly,
+born in August — K + August = Maestro Cruise Hopper"), and a line reads "My
+retired name: ____". There is no answer page.
+
+Settings: the theme only (the shared retirement picker; its default mixes a
+different retirement pastime into every last name, and a chosen theme shapes
+the last names while first names stay general). Everything else is derived
+from the trim and reported in the theme's help line: type size, whether the
+tables sit side by side or stacked, two to four letter columns and one to
+three month columns, full or short month names ("Sep" when "September" would
+cost more than about a point), and whether the example and write-in line fit.
+Nothing is set below 12 pt; a 6 x 9 prints at about 14 pt, a letter page at
+about 17 pt. A 5 x 8 trim is too narrow for 38 entries at that size, and the
+form says so rather than printing small type.
+
+Every pairing of the 26 × 12 must read as a real name, so the two lists are
+held to one shape rather than checked pair by pair: a first name is a
+gender-neutral title or cheerful nickname (one word, or a fixed two-word
+nickname that does not itself read like a surname, at most 10 characters); a
+last name is exactly two words, a leisure thing and the doer of it (the second
+word ends in -er / -or / -ist or is a word like Champ or Whiz, at most 16
+characters). AI writes fresh pools for every page, with spares. Each name gets
+its own brief, sampled by seed: a first-name kind and flavour, or one of ~100
+retirement pastimes (a facet of the theme when one is chosen). Names are
+validated in the API and again in the browser: shape, pronounceable words, no
+two sharing a word root within a list or across the two, and free of sensitive
+topics, age jokes, insults, gendered words, alcohol, brands and characters. A
+last name already printed in the book, recently in this browser, or recently
+by the server for this seller is dropped. First names are only ranked behind
+fresh ones, because good gender-neutral titles are finite. The table prints
+whole (26 letters, 12 months) or not at all.
+Pages: 1 · Answer key: no · AI content: yes
+
 ---
 
 ## Spatial (1 game)
@@ -375,6 +413,7 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 | top-five-guess | Top Five Guess | word | 1 | yes | yes |
 | would-you-rather | Would You Rather | word | 1 | no | yes |
 | ever-or-never | Ever or Never | word | 1 | no | yes |
+| retired-name | What's Your Retired Name? | word | 1 | no | yes |
 | maze | Maze | spatial | 1 | yes | no |
 
-**Total: 13 games** (1 logic · 11 word · 1 spatial).
+**Total: 14 games** (1 logic · 12 word · 1 spatial).
