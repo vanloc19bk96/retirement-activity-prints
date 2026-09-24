@@ -36,6 +36,7 @@ import { retireeQuizTemplate } from '@/utils/studio/what-kind-of-retiree/generat
 import { fillInFunniesTemplate } from '@/utils/studio/fill-in-funnies/generate'
 import { riddlesJokesTemplate } from '@/utils/studio/riddles-and-jokes/generate'
 import { priceCheckTemplate } from '@/utils/studio/price-check/generate'
+import { officeRelicsTemplate } from '@/utils/studio/office-relics/generate'
 
 /**
  * Card order in the Studio panel. Grouped by category in the same order as
@@ -71,6 +72,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   fillInFunniesTemplate,
   riddlesJokesTemplate,
   priceCheckTemplate,
+  officeRelicsTemplate,
 
   // Spatial
   mazeTemplate,

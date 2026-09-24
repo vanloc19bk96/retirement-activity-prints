@@ -36,6 +36,7 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'two-truths-and-a-fib',
   'riddles-and-jokes',
   'price-check',
+  'office-relics',
   'maze',
 ])
 

@@ -77,7 +77,7 @@ Pages: 1 · Answer key: yes · AI content: no
 
 ---
 
-## Word (17 games)
+## Word (18 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -697,6 +697,81 @@ already in the book. It also avoids near-repeats (the same item within three
 years, or at the same price) until a long book has used everything else.
 Pages: 1 · Answer key: yes (each question again, right letter ringed, fact beneath) · AI content: no
 
+### Office Relics (`office-relics`)
+A nostalgic picture game built for retirement books. Each numbered card shows a
+clean black line drawing of an office object from the 1940s to the 1990s (a
+typewriter, rotary phone, punch clock, slide rule, carousel slide projector,
+water cooler), with a writing line under it. The reader names each object. The
+answer page sets the same pictures under the same numbers, with each name
+written on its line and, beneath it in italics, the other names people use
+("Also: Rolodex, Card file"), so a right answer is never marked wrong. Nothing
+depends on colour.
+
+Settings: the level only. Gentle deals the objects most people still know on
+sight and adds a word bank (every answer on the page, alphabetised, in a framed
+box under the grid). Classic mixes those with objects anyone who worked through
+those years will remember. Challenging leans on rarer relics (mimeograph, memo
+spike, punch card, switchboard). Pictures per page, picture size, line weight
+and type size are not settings. The page derives them from the trim, and the
+level's help line reports the result: a 5 x 8 prints four pictures (about 1.6 x
+1.9 in), a 6 x 9 six (about 2.1 x 1.4 in) and an 8.5 x 11 nine (about 2.1 x 2.0
+in). A grid is only used when every picture box is at least 1.4 x 1.05 in, and a
+comfortable 1.7 x 1.25 in is tried first. Every page of a run is pinned to the
+same grid and pen. The answer page must fit too. On a narrow card a long name
+("Overhead projector") may take two lines on the key, and the writing room
+above every line is then sized for two, which also gives the reader more room.
+
+The pictures are not output from an image model, and they are not clip art or
+stock art. Each is an original vector drawing written as code for this game
+(`utils/studio/office-relics/drawings.ts`) from plain geometry: outlines at two ink weights, no shading, no text, no logos, no maker's
+shape or model detail, and the whole object in view. Each drawing leads with the
+cue that separates it from its nearest lookalike: the handset on a fax, the card
+slot and card rack on a punch clock, the fanned cards on a rotary card file.
+Pictures are framed on their measured ink, so a drawing is centred and sized by
+what the reader sees, and they export as the same vectors they are on screen.
+
+Every seller prints their own pictures. Each drawing has a few knobs that change
+how the object is built, never the cue that names it: three drawers or four,
+round keys or square, a dome or a wedge body, a bar, cup or knob handle, which
+way it faces (only where handedness does not matter; a typewriter's return
+lever and a dial's finger stop are never flipped). That gives 8 to 24 versions
+of every object, 569 in all. Each picture's version is dealt from a stream keyed
+by the seller's puzzle salt, the page seed and the object
+(`utils/studio/office-relics/variants.ts`). Two sellers' pages share about a
+quarter of their objects, since the catalog is the same, but only about 2.5% of
+their pictures are the same drawing. The page fingerprint names each picture's
+version. The browser also remembers which versions this seller printed lately
+and passes over them, so one seller's books do not repeat each other either.
+The page furniture is a per-account house style
+(`utils/studio/office-relics/style.ts`, 54 looks): rounded, square or
+double-ruled card frames, numbers as "1." or "1)", the word-bank heading, and
+one of three phrasings of the instruction. The style never changes the grid. The
+plan is fitted to the tallest phrasing, so the form's note holds for every
+seller.
+
+Every page is checked before it prints. Each object in the catalog (about fifty)
+has one printed answer (the kind of object, never a brand), its accepted
+aliases, a tier, a category, a decade and its lookalike groups. Objects a reader
+could confuse or name the same way (the two desk phones, the machines with two
+reels, the projectors) share a group, and two from one group never share a page.
+An alias may only be shared inside a group. A trade name that became the
+everyday word ("Rolodex") may be accepted as an alias but is never the printed
+answer. The preflight refuses a page with a missing or mismatched drawing, the
+same object twice, a lookalike pair, more than two objects of one category, an
+answer that does not fit its line, a word bank that does not list exactly the
+page's answers, or pictures below the size floor. After drawing, a second check
+proves every picture sits inside the page, clear of the other pictures and of
+every writing line. A page that fails either check becomes a plain message,
+never a broken sheet.
+
+Within a page, variety comes from the catalog and the deal. Each pick goes to a category the page has used least, and no
+decade fills more than half a page, so a page wanders the whole office. Each
+picture stamps its object's id on the page. A local, network-free prefetch reads
+those ids back, so a new page never shows an object already in the book; when a
+book has shown every object, the form says so. The browser also remembers what
+this seller printed recently, so the next book starts with different objects.
+Pages: 1 · Answer key: yes (each name on its line under the same picture, other accepted names beneath) · AI content: no
+
 ---
 
 ## Spatial (1 game)
@@ -732,6 +807,7 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 | fill-in-funnies | Fill-in Funnies | word | 2-3 | no | yes |
 | riddles-and-jokes | Riddles & Jokes | word | 1 | yes | yes |
 | price-check | Price Check: Then & Now | word | 1 | yes | no |
+| office-relics | Office Relics | word | 1 | yes | no |
 | maze | Maze | spatial | 1 | yes | no |
 
-**Total: 19 games** (1 logic · 17 word · 1 spatial).
+**Total: 20 games** (1 logic · 18 word · 1 spatial).
