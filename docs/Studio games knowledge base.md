@@ -77,7 +77,7 @@ Pages: 1 · Answer key: yes · AI content: no
 
 ---
 
-## Word (14 games)
+## Word (15 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -495,6 +495,71 @@ recently for the theme, or the server's recent memory for the seller is
 dropped.
 Pages: 4-6 (quiz pages, then scoring and results) · Answer key: no · AI content: yes
 
+### Fill-in Funnies: Retirement Edition (`fill-in-funnies`)
+A laugh-out-loud word game built for retirement books, parties and couples. It
+runs in two steps on separate pages, so the story cannot give the game away.
+**Step 1: Your Words** is a numbered list of prompts, each with a plain-language
+label, a short example in italics and a writing line: "Describing word — like
+“fluffy”", "Coworker’s name — real or made up", "Verb ending in -ing — like
+“juggling”". **Step 2: Your Story** is a short, original retirement story ("The
+Great Garage Tidy-Up", "Postcard From Paradise") with a numbered writing line
+for each blank. The reader copies word 3 onto blank 3, then reads the result
+aloud. A number can come back later in the story as a callback (the same
+friend's name twice). The page ends with "The End — now read it out loud!".
+Nothing depends on colour, and there is no answer page.
+
+Settings: the theme only (the shared retirement picker; its default lets every
+story pick its own situation). Story length, number of blanks, kinds of word,
+type size, list columns, blank width, and whether the story needs a second page
+are not settings. The page derives them from the trim, and the theme's help
+line reports what came out. A 6 x 9 prints the word list at 17-18 pt and a
+one-page story at 14 pt or larger. On a 5 x 8 a long story can continue onto a
+second story page rather than dropping below 14 pt. When it does, the page turns
+between paragraphs where it can and always carries at least four lines over.
+Hints and blank numbers never go below 11 pt, writing lines never get shorter
+than 1.25 in on the list or 1.1 in in the story, and the word list is sized for
+every kind of prompt so every activity in a run matches.
+
+Every story is checked before it prints. The service asks for 8-10 blanks and
+about 100 words in two to five short paragraphs with a title. Blanks are written
+[1], [2] … in order of first appearance, one kind per number from a fixed list
+of 21 kinds (noun, plural noun, verb, -ing verb, past-tense verb, describing
+word, -ly word, place, food, animal, household object, item of clothing,
+vehicle, job title, hobby, coworker's name, friend's name, number, silly sound,
+exclamation, silly word). The labels and hints printed on the list are the same
+text the writer is given, and a test keeps the two identical. A story is refused
+if:
+- a number is out of order, unused, has no kind, or is glued inside a word;
+- "a" or "an" sits before a blank (the reader's word may start with a vowel);
+- an article sits before a place or a name;
+- it has more than two callbacks;
+- one kind appears more than three times, or it uses fewer than six kinds
+  (so the list is never "Noun 1 … Noun 5");
+- a sentence or paragraph runs long;
+- it touches a sensitive topic (health, ageing, memory, money worries,
+  loneliness, death, politics, religion, alcohol, gambling), uses crude humour,
+  or names a brand, a celebrity, or a commercial fill-in-the-blank game.
+
+A blind second call then reads each story with its blanks unlabelled. It lists
+every word class that would read naturally at each blank, and a story survives
+only when every blank's kind fits. The same call also has to find the story
+complete (clear beginning and ending), funny (blanks on the punchlines) and
+suitable. If the check cannot run, no story is returned. The browser checks the
+same rules again, refuses any story without the service's `verified` mark, and
+the preflight proves every prompt has its blank before the pages are drawn.
+
+Variety comes from structure, not a bank of stories. Each story gets its own
+brief, sampled by seed: a situation (about 65: the retirement speech, a chaotic
+cruise, a pottery class, the neighbourhood bake-off…), a format (about 20: a
+diary entry, a postcard, sports commentary, a recipe, a voicemail…), a humour
+pattern and a suggested mix of blank kinds. Repeats are caught on content words:
+the same title, most of the story's words shared, or the same opening. So "On my
+first day of retirement" does not come back as "On my second day". A new story
+is checked against every Fill-in Funnies story already in the book (read back
+from the pages), what this browser printed recently for the theme, and the
+server's recent memory for the seller. One that repeats any of them is dropped.
+Pages: 2 (3 when a small trim continues the story) · Answer key: no · AI content: yes
+
 ---
 
 ## Spatial (1 game)
@@ -527,6 +592,7 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 | retired-name | What's Your Retired Name? | word | 1 | no | yes |
 | two-truths-and-a-fib | Two Truths and a Fib | word | 1 | yes | yes |
 | what-kind-of-retiree | What Kind of Retiree Are You? | word | 4-6 | no | yes |
+| fill-in-funnies | Fill-in Funnies | word | 2-3 | no | yes |
 | maze | Maze | spatial | 1 | yes | no |
 
-**Total: 16 games** (1 logic · 14 word · 1 spatial).
+**Total: 17 games** (1 logic · 15 word · 1 spatial).
