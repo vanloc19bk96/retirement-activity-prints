@@ -1,0 +1,61 @@
+{
+  "_comment": "Top Five Guess: one light retirement question and the five answers most people would give, ranked most to least likely. The question and answer budgets arrive on the request (frontend/src/utils/studio/top-five-guess/content.ts); the limits below are the hard bounds any request is clamped into. Points are never asked of the model: the page scores rank 1-5 as 5-4-3-2-1, so the ranking and the scores cannot disagree. blockedTerms keep sensitive topics and anything that reads as real polling data off the page. qualifierWords are dropped before two answers are compared, so MEETINGS and TOO MANY MEETINGS count as one answer.",
+  "limits": {
+    "rateLimitPerWindow": 40,
+    "maxOutputTokens": 4096,
+    "maxAttempts": 3,
+    "poolSize": 8,
+    "answersPerSet": 5,
+    "minQuestionChars": 24,
+    "maxQuestionChars": 100,
+    "maxQuestionWords": 16,
+    "minAnswerChars": 3,
+    "maxAnswerChars": 28,
+    "maxAnswerWords": 4,
+    "sharedAnswersPerQuestionPair": 2
+  },
+  "locale": {
+    "nativeLocales": ["en"],
+    "nativeLine": "- Write in clear, warm English for adults and retirees.",
+    "otherLine": "- Write the questions and answers in language locale '{locale}'."
+  },
+  "varietyAngles": [
+    "small everyday pleasures of a slower morning",
+    "leaving the office and the working week behind",
+    "hobbies people finally have time for",
+    "trips, outings and packing a suitcase",
+    "family visits and time with grandchildren",
+    "home comforts, the kitchen and the garden",
+    "friends, neighbours and catching up",
+    "the retirement party and the send-off",
+    "things people collect, fix or tidy",
+    "seasons, weather and time outdoors",
+    "treats, snacks and favourite meals",
+    "gentle routines and the perfect day off"
+  ],
+  "blockedTerms": [
+    "survey", "surveyed", "poll", "polled", "percent", "per cent", "respondents",
+    "we asked", "people said", "survey says", "family feud", "game show",
+    "death", "dead", "die", "dying", "funeral", "grave", "widow", "widower",
+    "illness", "disease", "cancer", "dementia", "alzheimer", "stroke", "surgery",
+    "hospital", "nursing home", "care home", "medication", "pills", "diagnosis",
+    "diet", "weight loss", "overweight", "fat", "wrinkles", "hearing aid", "dentures",
+    "incontinence", "bladder", "senior moment", "over the hill", "old fogey",
+    "divorce", "ex-wife", "ex-husband", "affair",
+    "election", "political", "democrat", "republican", "president",
+    "religion", "church", "prayer", "god",
+    "drunk", "hangover", "beer", "vodka", "whiskey", "cocktail",
+    "gamble", "gambling", "casino", "lottery", "bet",
+    "gun", "weapon", "war", "sex", "sexy",
+    "stupid", "idiot", "hate", "ugly", "crazy", "useless", "boring old"
+  ],
+  "qualifierWords": [
+    "a", "an", "the", "my", "your", "our", "their", "his", "her", "its",
+    "of", "to", "for", "at", "in", "on", "with", "and", "or", "from", "about",
+    "too", "so", "very", "really", "many", "much", "more", "lots", "lot",
+    "long", "endless", "constant", "daily", "every", "all", "those", "that", "this",
+    "early", "late", "bad", "boring", "annoying", "dull", "tedious", "awful",
+    "being", "having", "getting", "doing", "going", "making", "taking",
+    "good", "great", "nice", "favourite", "favorite", "new", "old", "own"
+  ]
+}

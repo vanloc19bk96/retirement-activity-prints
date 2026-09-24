@@ -32,6 +32,7 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'fallen-phrase',
   'phrase-finder',
   'picture-rebus',
+  'top-five-guess',
   'maze',
 ])
 

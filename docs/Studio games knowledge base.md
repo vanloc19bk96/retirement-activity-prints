@@ -241,6 +241,35 @@ same page with the vowels written into their own blanks. AI writes fresh words
 and clues each page so a long book does not repeat.
 Pages: 1 · Answer key: yes · AI content: yes
 
+### Top Five Guess (`top-five-guess`)
+A "guess the most likely answers" puzzle built for retirement books. Each block
+prints one light question — "Name something you will never miss about the
+office" — above five guess lines, each with a score blank, and a "Total ___ / 15"
+tally. The reader writes five guesses, then checks the answer page: the top
+answer scores 5 points, the next 4, down to 1 for the fifth. Points are fixed by
+rank, never written by the model, so the ranking and the scores cannot disagree
+and every page of a book scores alike. The answers are the set's intended answer
+order — the page never claims survey or poll results, and it uses its own
+neutral look rather than any TV show's board, wording or scoring.
+
+The only setting is the theme (the shared retirement picker, including "write my
+own"). Questions per page (one or two), line pitch and type sizes are derived
+from the trim in Settings, and the theme's help line reports what came out (a
+6 x 9 holds two questions at 14 pt; a 5 x 8 one at 19 pt). Guess lines never fall
+below 0.36 in and questions never below 14 pt. Every set is validated in the
+API and again in the browser before it reaches the page: exactly five answers,
+read in the model's order and never repaired (a bad answer drops the whole set
+rather than promoting a sixth); no two answers that are variations of one idea
+(MEETINGS / TOO MANY MEETINGS, ROAD TRAFFIC / RUSH HOUR TRAFFIC); no answer that
+repeats its question; no sensitive topics (health, death, politics, religion,
+alcohol, gambling, age jokes), brands or poll language; no question the seller's
+book already printed on that theme, and no two questions on a page that read as
+the same puzzle. A set whose question would need more lines than the block
+reserved, or whose answer cannot sit on one answer line, is passed over for the
+next. The answer page is drawn from the same sets: each question with its five
+answers ranked and their points beside them.
+Pages: 1 · Answer key: yes (ranked answers with points) · AI content: yes
+
 ---
 
 ## Spatial (1 game)
@@ -267,6 +296,7 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 | phrase-finder | Phrase Finder | word | 1 | yes | yes |
 | retirement-anagram | Anagrams | word | 1 | yes | yes |
 | missing-vowels | Missing Vowels | word | 1 | yes | yes |
+| top-five-guess | Top Five Guess | word | 1 | yes | yes |
 | maze | Maze | spatial | 1 | yes | no |
 
 **Total: 11 games** (1 logic · 9 word · 1 spatial).

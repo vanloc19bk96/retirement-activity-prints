@@ -30,6 +30,7 @@ from app.api.routes.studio_theme_words import router as studio_theme_words_route
 from app.api.routes.studio_hidden_message import router as studio_hidden_message_router
 from app.api.routes.studio_word_search import router as studio_word_search_router
 from app.api.routes.studio_trivia_clues import router as studio_trivia_clues_router
+from app.api.routes.studio_top_five_guess import router as studio_top_five_guess_router
 
 router = APIRouter()
 
@@ -61,5 +62,6 @@ router.include_router(studio_theme_words_router)
 router.include_router(studio_hidden_message_router)
 router.include_router(studio_word_search_router)
 router.include_router(studio_trivia_clues_router)
+router.include_router(studio_top_five_guess_router)
 
 __all__ = ["router"]

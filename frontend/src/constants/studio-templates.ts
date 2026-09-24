@@ -27,6 +27,7 @@ import { atoZWordSearchTemplate } from '@/utils/studio/a-to-z-word-search/genera
 import { wordWheelTemplate } from '@/utils/studio/word-wheel/generate'
 import { pictureRebusTemplate } from '@/utils/studio/picture-rebus/generate'
 import { retirementBingoTemplate } from '@/utils/studio/retirement-bingo/generate'
+import { topFiveGuessTemplate } from '@/utils/studio/top-five-guess/generate'
 
 /**
  * Card order in the Studio panel. Grouped by category in the same order as
@@ -53,6 +54,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   missingVowelsTemplate,
   pictureRebusTemplate,
   retirementBingoTemplate,
+  topFiveGuessTemplate,
 
   // Spatial
   mazeTemplate,
