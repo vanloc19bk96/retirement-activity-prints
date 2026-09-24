@@ -35,6 +35,7 @@ from app.api.routes.studio_would_you_rather import router as studio_would_you_ra
 from app.api.routes.studio_ever_or_never import router as studio_ever_or_never_router
 from app.api.routes.studio_retired_name import router as studio_retired_name_router
 from app.api.routes.studio_two_truths_fib import router as studio_two_truths_fib_router
+from app.api.routes.studio_retiree_quiz import router as studio_retiree_quiz_router
 
 router = APIRouter()
 
@@ -71,5 +72,6 @@ router.include_router(studio_would_you_rather_router)
 router.include_router(studio_ever_or_never_router)
 router.include_router(studio_retired_name_router)
 router.include_router(studio_two_truths_fib_router)
+router.include_router(studio_retiree_quiz_router)
 
 __all__ = ["router"]

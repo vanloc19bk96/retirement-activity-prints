@@ -77,7 +77,7 @@ Pages: 1 · Answer key: yes · AI content: no
 
 ---
 
-## Word (13 games)
+## Word (14 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -438,6 +438,63 @@ for the seller. Fib letters are dealt from a shuffled A-B-C deck for each
 page, so three sets on a page never share a fib letter.
 Pages: 1 · Answer key: yes (rings the fib, prints a correction) · AI content: yes
 
+### What Kind of Retiree Are You? (`what-kind-of-retiree`)
+A lighthearted scored personality quiz built for retirement books. Each
+numbered question is a relatable retirement moment ("It's a free Tuesday with
+nothing planned. What sounds best?") with four lettered answers, one for each
+retirement style: The Explorer, The Tinkerer, The Social Butterfly and The
+Professional Napper. The reader circles the letter of the answer most like
+them. The pages after the quiz score it. A scoring grid has one row per
+question and one column per style, each column headed by an outline symbol
+(star, diamond, circle, square) and the style's name when the column can hold
+it. Each cell shows the letter that scores for that style, so the reader rings
+the letter they chose in every row, counts each column into the box at its
+foot, and the highest column is their style. A tie reads as a blend ("read
+every style that tied"). A write-up for each style follows, headed by its
+symbol and name, then a "just for fun" line. Nothing depends on colour, and
+there is no answer page.
+
+Settings: the theme only (the shared retirement picker; its default gives every
+question its own retirement topic). Everything else is derived from the trim
+and reported in the theme's help line: 8 to 10 questions (as many as fill the
+last quiz page), questions per page (at most five), type size, and whether the
+grid and write-ups share a page. Comfortable type (15 pt and up) is tried
+first, and the 14 pt floor only when no comfortable size fits within four quiz
+pages. A 6 x 9 prints 9 questions on 3 pages at about 15 pt, then a scoring
+page and a results page; a 5 x 8 prints 8 questions on 4 pages. Each question
+reserves a line budget sized from typical text; when a batch runs long, the
+quiz is re-planned from its own line counts rather than refused.
+
+Scoring is fair by construction. Every question has exactly one answer per
+style, each worth one circle, so no style can win on structure. Letters are
+dealt from a Latin square over every run of four questions, so each style sits
+at each letter equally often (never more than one apart), and the grid is
+built from the same placed record as the question page, so the two cannot
+disagree. The service writes every answer into its style's own field, then a
+blind second call sorts each question's answers into styles without being told
+which is which. A question survives only when that sort matches exactly and
+the checker calls it clear, balanced (no answer the obvious "right" one, none a
+put-down) and suitable. The four write-ups are checked the same way; a
+write-up that fails is replaced by a vetted fallback, so every style always has
+one. If the check cannot run, no questions are returned. Before that, every
+question must be one or two short sentences ending in a single question mark,
+and every answer a short phrase (at most 7 words, 36 characters) of similar
+length to its siblings. Text is refused if it names a style ("explore",
+"napper"), uses a put-down ("lazy", "boring"), assumes a spouse,
+grandchildren, wealth, a house or an office career, or touches a sensitive
+topic, a brand or a celebrity. The browser checks the same rules again, and the
+two word lists are held identical by a test.
+
+Variety is structural. Each question gets its own brief, a retirement topic and
+a question shape sampled by seed from about 50 topics and 18 shapes. Repeats
+are compared on content words. Within one quiz no two questions share a topic
+or say the same thing, the same style's answers may not repeat each other, and
+no word may carry one style's answers more than twice. A question that repeats
+one already in the book (read back from the pages), one this browser printed
+recently for the theme, or the server's recent memory for the seller is
+dropped.
+Pages: 4-6 (quiz pages, then scoring and results) · Answer key: no · AI content: yes
+
 ---
 
 ## Spatial (1 game)
@@ -469,6 +526,7 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 | ever-or-never | Ever or Never | word | 1 | no | yes |
 | retired-name | What's Your Retired Name? | word | 1 | no | yes |
 | two-truths-and-a-fib | Two Truths and a Fib | word | 1 | yes | yes |
+| what-kind-of-retiree | What Kind of Retiree Are You? | word | 4-6 | no | yes |
 | maze | Maze | spatial | 1 | yes | no |
 
-**Total: 15 games** (1 logic · 13 word · 1 spatial).
+**Total: 16 games** (1 logic · 14 word · 1 spatial).
