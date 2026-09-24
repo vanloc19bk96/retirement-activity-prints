@@ -77,7 +77,7 @@ Pages: 1 · Answer key: yes · AI content: no
 
 ---
 
-## Word (9 games)
+## Word (10 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -270,6 +270,45 @@ next. The answer page is drawn from the same sets: each question with its five
 answers ranked and their points beside them.
 Pages: 1 · Answer key: yes (ranked answers with points) · AI content: yes
 
+### Would You Rather: Retirement Edition (`would-you-rather`)
+A conversation game built for retirement books, couples and retirement parties.
+Each question prints "Would you rather…" above two choices from one scenario —
+"Spend a spring weekend in a cottage by the sea" OR "Spend a spring weekend at a
+farmhouse in the hills" — each in a box of exactly the same size with a square
+to tick, separated by a round OR badge, so neither choice looks like the answer.
+There is no right answer and no answer page.
+
+Settings: the theme (the shared retirement picker; its default mixes a different
+retirement topic into every question on the page), the tone (a mix of
+thoughtful and fun, warm and thoughtful, or light and funny) and an optional
+"Why?" writing line under each question. Questions per page (at most four, three
+with the writing line) and type size are derived from the trim, and the theme's
+help line reports what came out (a 6 x 9 holds two to three questions at 17-19
+pt; nothing is ever set below 14 pt, and no choice runs past three lines).
+
+AI writes fresh questions for every page. Each question in a request gets its
+own brief — a retirement topic and a dilemma shape, sampled by seed — so
+variety comes from structure, not paraphrase. Every shape is an axis with two
+opposite ends (quiet vs lively, host vs guest, cosy favourite vs something new,
+old memories vs new ones…): the topic gives the one situation both choices
+share, and each choice sits at one end, so picking one means giving up the
+other. The model first names that shared setup and the "X vs Y" trade-off; a
+pair it cannot sum up that way (two unrelated activities, or two versions of
+the same thing with nothing to weigh) is dropped in the API. Every pair is
+validated in the API and again in the browser: both
+choices present, verb-led so they complete the lead, one clause with no third
+option hidden inside, of similar length, genuinely different (not the same words
+twice, not "go" vs "never go"), and free of sensitive topics (health, ageing
+bodies, memory, loneliness, money worries, death, politics, religion, alcohol,
+gambling, age jokes), brands and celebrities. Repeats are caught on content
+words with sides in either order, and one side reused word for word also counts
+as a repeat. A new question is checked against every Would You Rather question
+already in the book (read back from the pages themselves), what this seller's
+browser printed recently for the theme, and the server's recent memory for the
+seller; a pair that repeats any of them is dropped, never added. A pair whose
+choice would need more lines than its box reserved is passed over for the next.
+Pages: 1 · Answer key: no · AI content: yes
+
 ---
 
 ## Spatial (1 game)
@@ -297,6 +336,7 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 | retirement-anagram | Anagrams | word | 1 | yes | yes |
 | missing-vowels | Missing Vowels | word | 1 | yes | yes |
 | top-five-guess | Top Five Guess | word | 1 | yes | yes |
+| would-you-rather | Would You Rather | word | 1 | no | yes |
 | maze | Maze | spatial | 1 | yes | no |
 
-**Total: 11 games** (1 logic · 9 word · 1 spatial).
+**Total: 12 games** (1 logic · 10 word · 1 spatial).

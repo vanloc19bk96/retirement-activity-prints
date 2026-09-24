@@ -28,6 +28,7 @@ import type {
   StudioGenerateProgress,
   StudioGenerateContext,
   StudioFabricObject,
+  StudioPrefetchContext,
 } from '@/types/studio-template.types'
 import {
   collectReferencedFontFamiliesFromFabricCanvasJson,
@@ -38,7 +39,10 @@ import {
   STUDIO_UNIQUE_CONTENT_REMOTE_ATTEMPTS,
   claimUniqueStudioOutputs,
 } from '@/utils/studio/studio-unique-content'
-import { withStudioContentHash } from '@/utils/studio/studio-content-history'
+import {
+  collectStudioContentLabels,
+  withStudioContentHash,
+} from '@/utils/studio/studio-content-history'
 import type { StudioWritePageOptions } from '@/utils/studio/studio-events'
 
 export type StudioWritePage = (
@@ -173,6 +177,12 @@ export async function runStudioGenerateOnce(options: {
     marginGuide,
   })
 
+  // Read lazily and afresh per attempt: a bulk run writes pages between calls.
+  const prefetchContext: StudioPrefetchContext = {
+    bookContentLabels: (templateKey) =>
+      collectStudioContentLabels(canvasStateStore, req.interiorPageCount, templateKey),
+  }
+
   // Seed-invariant sheets never vary by seed — fingerprint retries
   // would exhaust and skip every duplicate instance in a book/bulk run.
   const claimed = await claimUniqueStudioOutputs({
@@ -191,7 +201,7 @@ export async function runStudioGenerateOnce(options: {
       let remoteData: unknown
       if (def.prefetch) {
         try {
-          remoteData = await def.prefetch(attemptConfig, signal)
+          remoteData = await def.prefetch(attemptConfig, signal, prefetchContext)
           // Prefetch is the slow half of AI templates — advance bar before layout.
           setProgress?.({ completed: 1, total: 2, countKind: 'phase' })
         } catch (e) {

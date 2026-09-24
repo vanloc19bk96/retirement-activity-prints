@@ -184,7 +184,22 @@ export type StudioConfig = Record<string, unknown>
 export type StudioPrefetch = (
   config: StudioConfig,
   signal: AbortSignal,
+  context?: StudioPrefetchContext,
 ) => Promise<unknown>
+
+/**
+ * What the book already holds, for a prefetch that must not repeat it.
+ *
+ * Optional and lazy: templates that ignore it pay nothing, and one that asks
+ * scans the pages once per call.
+ */
+export interface StudioPrefetchContext {
+  /**
+   * Content labels this template stamped on the book's pages
+   * (`data.studioContentLabel`), in page order. Bounded by the collector.
+   */
+  bookContentLabels: (templateKey: string) => string[]
+}
 
 export interface StudioGenerateContext {
   pageWidth: number

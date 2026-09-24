@@ -28,6 +28,7 @@ import { wordWheelTemplate } from '@/utils/studio/word-wheel/generate'
 import { pictureRebusTemplate } from '@/utils/studio/picture-rebus/generate'
 import { retirementBingoTemplate } from '@/utils/studio/retirement-bingo/generate'
 import { topFiveGuessTemplate } from '@/utils/studio/top-five-guess/generate'
+import { wouldYouRatherTemplate } from '@/utils/studio/would-you-rather/generate'
 
 /**
  * Card order in the Studio panel. Grouped by category in the same order as
@@ -55,6 +56,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   pictureRebusTemplate,
   retirementBingoTemplate,
   topFiveGuessTemplate,
+  wouldYouRatherTemplate,
 
   // Spatial
   mazeTemplate,
