@@ -77,7 +77,7 @@ Pages: 1 · Answer key: yes · AI content: no
 
 ---
 
-## Word (16 games)
+## Word (17 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -635,6 +635,68 @@ from both its pages), what this browser printed recently for the theme, and the
 server's recent memory for the seller. One that repeats any of them is dropped.
 Pages: 1 · Answer key: yes (each answer in bold under its question's number) · AI content: yes
 
+### Price Check: Then & Now (`price-check`)
+A nostalgic guessing game built for retirement books. Each numbered question
+names an everyday item, its quantity and a year ("In 1975, about how much did a
+gallon of regular gasoline cost in the U.S.?"), with four lettered prices under
+it, cheapest first. The reader circles the letter of their best guess, and the
+instruction invites them to compare it with what they pay today. The answer
+page sets every question again exactly as printed, with a ring round the right
+letter only and an italic line beneath saying what the figure is ("About
+57¢ a gallon (U.S. average)"). The year is in the question, so the line leaves
+it out. A light rule separates the answers too. Questions run
+oldest first, so a page reads as a walk through the decades. Nothing depends on
+colour.
+
+Prices are never written by a model. Every figure comes from a bundled dataset
+(`utils/studio/price-check/data.ts`) that `scripts/build-price-check-data.py`
+builds from published U.S. sources: BLS average prices (U.S. city average, the
+mean of twelve months — a year missing a month is left out), the EIA's annual
+regular-gasoline averages (leaded to 1975, unleaded from 1976), the theatre
+owners' annual average ticket price (1989 left out as a method break) and the
+USPS first-class letter rate (a year counts only when one rate held for at
+least 350 days). About 400 facts across nineteen items, 1950 to 2000, all
+nominal U.S. dollars — never inflation-adjusted, never converted. Each series
+is one item in one unit ("a pound of white bread", "a half-gallon of whole
+milk"), so a question never mixes units. National averages are asked with
+"about" or "average"; the postage rate, which was exact, is asked plainly.
+Seasonal or thin series (navel oranges) are rejected by the build. There is no
+"now" price: a modern figure would go stale in print.
+
+Settings: the level only. Gentle spaces the four prices well apart; Classic
+sets them closer. Country, years, items, questions per page and type size are
+not settings. The page walks 1950 to 2000 by itself — the 1950s and 1960s only
+have stamps, gasoline and the movies to ask about, so a decade picker would
+print one question five times. The level's help line reports what the trim
+holds: a 5 x 8 prints three at 17 pt, a 6 x 9 five at 17 pt, a 7 x 10 six at
+16 pt and an 8.5 x 11 six at 18 pt. The answer page is the taller of the two
+(each answer adds its fact line), so it sets the count. Type never goes below
+15 pt (the fact line sits a step smaller, never below 13 pt), a question never
+runs past three lines and a fact line never past two, broken only before its
+"(U.S. average)" part. Prices sit four across, or two by two on a narrow
+column.
+
+Choices are built from the true price, never picked at random. The other three
+step down and up from it by a ratio drawn per step (Gentle about 1.5–1.85×,
+Classic about 1.3–1.5×), and never less than two cents apart. They are refused
+if any two sit too close to tell apart once rounded. All four share one style:
+all in cents, or all in dollars once any reaches a dollar, so the answer never
+stands out by its format. Answer letters come off a shuffled A–D deck for each
+page; a 3¢ stamp that has no room for cheaper choices takes the next letter it
+can use. Every question is re-proved from its fact before it prints: the price
+is the dataset's, it appears exactly once among the choices at the right
+letter, and the fact line under the ring names that price and unit.
+
+Variety comes from the item, the year and the decade, never from rewording.
+Each pick goes to the decade the page has used least, then to the scarcest
+decade, then to the item the book has asked about least. A page never asks
+about one thing twice (the two milks and the two gasolines count as one). Each
+question stamps its `item@year` identity on the page. A local, network-free
+prefetch reads those identities back, so a new page never repeats a question
+already in the book. It also avoids near-repeats (the same item within three
+years, or at the same price) until a long book has used everything else.
+Pages: 1 · Answer key: yes (each question again, right letter ringed, fact beneath) · AI content: no
+
 ---
 
 ## Spatial (1 game)
@@ -669,6 +731,7 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 | what-kind-of-retiree | What Kind of Retiree Are You? | word | 4-6 | no | yes |
 | fill-in-funnies | Fill-in Funnies | word | 2-3 | no | yes |
 | riddles-and-jokes | Riddles & Jokes | word | 1 | yes | yes |
+| price-check | Price Check: Then & Now | word | 1 | yes | no |
 | maze | Maze | spatial | 1 | yes | no |
 
-**Total: 18 games** (1 logic · 16 word · 1 spatial).
+**Total: 19 games** (1 logic · 17 word · 1 spatial).
