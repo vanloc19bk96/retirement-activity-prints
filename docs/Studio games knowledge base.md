@@ -743,8 +743,8 @@ their pictures are the same drawing. The page fingerprint names each picture's
 version. The browser also remembers which versions this seller printed lately
 and passes over them, so one seller's books do not repeat each other either.
 The page furniture is a per-account house style
-(`utils/studio/office-relics/style.ts`, 54 looks): rounded, square or
-double-ruled card frames, numbers as "1." or "1)", the word-bank heading, and
+(`utils/studio/office-relics/style.ts`, 36 looks): rounded or square
+single-ruled card frames, numbers as "1." or "1)", the word-bank heading, and
 one of three phrasings of the instruction. The style never changes the grid. The
 plan is fitted to the tallest phrasing, so the form's note holds for every
 seller.

@@ -15,10 +15,11 @@ import { OR_TEMPLATE_KEY } from './content'
  * form note is true whatever their style.
  */
 
-export type OrFrameStyle = 'rounded' | 'square' | 'double'
+export type OrFrameStyle = 'rounded' | 'square'
 export type OrNumberStyle = 'dot' | 'paren'
 
-export const OR_FRAME_STYLES: readonly OrFrameStyle[] = ['rounded', 'square', 'double']
+/** Always a single rule: a double one reads as a card within a card. */
+export const OR_FRAME_STYLES: readonly OrFrameStyle[] = ['rounded', 'square']
 export const OR_NUMBER_STYLES: readonly OrNumberStyle[] = ['dot', 'paren']
 /** The word bank's heading. None of them says what the instruction calls it. */
 export const OR_BANK_LABELS: readonly string[] = ['WORD BANK', 'ANSWER BANK', 'CHOOSE FROM']
@@ -33,7 +34,7 @@ export interface OrHouseStyle {
   instruction: number
 }
 
-/** 3 x 2 x 3 x 3 = 54 looks; two sellers match on all of them rarely. */
+/** 2 x 2 x 3 x 3 = 36 looks; two sellers match on all of them rarely. */
 export function orHouseStyle(ownerSalt: string): OrHouseStyle {
   const rng = createRngFromSeedInput({
     ownerSalt,

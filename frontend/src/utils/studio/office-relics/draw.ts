@@ -49,9 +49,6 @@ export type OrDrawMode = 'puzzle' | 'answers'
 /** Reduces a picture to one token when a page is fingerprinted for uniqueness: which drawing, which version. */
 export const relicCanonicalKey = (drawing: string, version: string) => `${OR_TEMPLATE_KEY}:picture:${drawing}:${version}`
 
-/** How far the inner rule of a `double` frame sits inside the outer one. */
-const DOUBLE_FRAME_INSET = 3.5
-
 export interface OrCardBox {
   left: number
   top: number
@@ -131,25 +128,6 @@ function drawCard(
       'structure',
     ),
   )
-  if (style.frame === 'double') {
-    // Inside the card padding, so it never reaches a picture or a line.
-    objects.push(
-      buildRect(
-        {
-          left: card.left + DOUBLE_FRAME_INSET,
-          top: card.top + DOUBLE_FRAME_INSET,
-          width: card.width - DOUBLE_FRAME_INSET * 2,
-          height: card.height - DOUBLE_FRAME_INSET * 2,
-          rx: Math.max(0, CARD_RADIUS - DOUBLE_FRAME_INSET / 2),
-          ry: Math.max(0, CARD_RADIUS - DOUBLE_FRAME_INSET / 2),
-          stroke: STUDIO_RULE_MEDIUM,
-          strokeWidth: STUDIO_STROKE_HAIRLINE,
-        },
-        tag,
-        'structure',
-      ),
-    )
-  }
 
   objects.push(
     buildRelicPicture(
