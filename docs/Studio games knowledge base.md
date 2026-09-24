@@ -77,7 +77,7 @@ Pages: 1 · Answer key: yes · AI content: no
 
 ---
 
-## Word (10 games)
+## Word (11 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -309,6 +309,43 @@ seller; a pair that repeats any of them is dropped, never added. A pair whose
 choice would need more lines than its box reserved is passed over for the next.
 Pages: 1 · Answer key: no · AI content: yes
 
+### Ever or Never: Retirement Edition (`ever-or-never`)
+A party and keepsake game built for retirement books. Each row prints one short,
+specific retirement-life statement — "Ever taken a nap before lunch on a
+Tuesday?" — with a square to tick beside **Ever** and another beside **Never**,
+and a "Total Evers: ____ out of N" tally under the list so friends can compare.
+Rows are numbered and ruled so the eye tracks from statement to boxes. On wide
+trims (7 x 10, 8.5 x 11) the answers sit to the right of each statement, lined
+up down the page like a scorecard; on smaller trims they go on their own line
+under it, so a statement is never squeezed into a sliver. There is no right
+answer and no answer page.
+
+Settings: the theme (the shared retirement picker; its default mixes a different
+retirement topic into every statement on the page), the tone (a mix of warm and
+funny, warm and gentle, or light and funny) and an optional story line under
+each statement for keepsake books. Statements per page (at most ten, six with
+the story line), type size and where the answers sit are derived from the trim,
+and the theme's help line reports what came out (a 6 x 9 holds six at 16 pt;
+nothing is ever set below 14 pt, and no statement runs past three lines).
+
+AI writes fresh statements for every page. Each statement in a request gets its
+own brief — a retirement topic (naps, free weekdays, the old alarm clock, the
+garden, grandchildren, travel, clubs…) and an angle (a first time, a small
+freedom work never allowed, a harmless rule broken, a happy mix-up…), sampled by
+seed — so variety comes from structure, not paraphrase. The model first names
+the one concrete moment that either happened or did not; a vague habit ("Ever
+enjoyed retirement?") has nothing to tick and is dropped. Every statement is
+validated in the API and again in the browser: "Ever" followed by a past
+participle, one experience (no "or"), no negation that would turn the boxes
+inside out, short enough for the lines its row reserved, and free of sensitive
+topics (health, ageing bodies, memory lapses, loneliness, money worries, death,
+politics, religion, alcohol, gambling, age jokes), brands and celebrities.
+Repeats are caught on content words. A new statement is checked against every
+Ever or Never statement already in the book (read back from the pages
+themselves), what this seller's browser printed recently for the theme, and the
+server's recent memory for the seller; one that repeats any of them is dropped.
+Pages: 1 · Answer key: no · AI content: yes
+
 ---
 
 ## Spatial (1 game)
@@ -337,6 +374,7 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 | missing-vowels | Missing Vowels | word | 1 | yes | yes |
 | top-five-guess | Top Five Guess | word | 1 | yes | yes |
 | would-you-rather | Would You Rather | word | 1 | no | yes |
+| ever-or-never | Ever or Never | word | 1 | no | yes |
 | maze | Maze | spatial | 1 | yes | no |
 
-**Total: 12 games** (1 logic · 10 word · 1 spatial).
+**Total: 13 games** (1 logic · 11 word · 1 spatial).
