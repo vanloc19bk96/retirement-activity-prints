@@ -308,6 +308,25 @@ function clean(raw: unknown): string {
   return String(raw ?? '').replace(/\s+/g, ' ').trim()
 }
 
+/** Where a quote mark opens rather than closes: the start, or after a space or opening mark. */
+const OPENS_AFTER = /[\s([“‘—–]/
+
+/**
+ * Straight quotes as a printed book sets them: “…” and ‘…’, apostrophes as ’.
+ * Already-curly text passes through untouched, so a second pass changes nothing.
+ */
+export function typesetQuotes(text: string): string {
+  let out = ''
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]!
+    const opens = i === 0 || OPENS_AFTER.test(text[i - 1]!)
+    if (ch === '"') out += opens ? '“' : '”'
+    else if (ch === "'") out += opens ? '‘' : '’'
+    else out += ch
+  }
+  return out
+}
+
 export function normalizeKind(raw: unknown): FifKind | null {
   const value = raw && typeof raw === 'object' ? (raw as { kind?: unknown }).kind : raw
   const kind = String(value ?? '')
@@ -318,7 +337,7 @@ export function normalizeKind(raw: unknown): FifKind | null {
 }
 
 export function normalizeTitle(raw: unknown): string | null {
-  const title = clean(raw).replace(EDGE_QUOTES_RE, '').replace(/[\s.:;]+$/, '')
+  const title = typesetQuotes(clean(raw).replace(EDGE_QUOTES_RE, '').replace(/[\s.:;]+$/, ''))
   if (!title || !TITLE_ALLOWED_RE.test(title)) return null
   if (title.length < 3 || title.length > FIF_LIMITS.maxTitleChars) return null
   if (title.split(' ').length > FIF_LIMITS.maxTitleWords) return null
@@ -427,7 +446,7 @@ export function normalizeFifStory(raw: unknown): FifStory | null {
   if (record.verified !== true) return null
   const title = normalizeTitle(record.title)
   if (!title || !Array.isArray(record.paragraphs) || !Array.isArray(record.blanks)) return null
-  const paragraphs = record.paragraphs.map(clean).filter(Boolean)
+  const paragraphs = record.paragraphs.map((p) => typesetQuotes(clean(p))).filter(Boolean)
   const blanks: FifKind[] = []
   for (const entry of record.blanks) {
     const kind = normalizeKind(entry)

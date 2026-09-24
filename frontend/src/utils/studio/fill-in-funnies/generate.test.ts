@@ -27,6 +27,7 @@ import {
   storiesRepeat,
   storyRepeatsLabel,
   compactStoryLabel,
+  typesetQuotes,
   type FifKind,
   type FifStory,
 } from './content'
@@ -41,6 +42,7 @@ import {
   STEP_WORDS,
   STORY_END,
   WRITE_RULE_MIN,
+  fifContentBox,
   fifPrintNote,
   fifWorstCasePlan,
 } from './layout'
@@ -214,6 +216,16 @@ describe('fill-in-funnies content gates', () => {
     expect(glued[0]!.space).toBe(true)
     expect(glued.slice(1).every((a) => !a.space)).toBe(true)
   })
+
+  it('sets straight quotes as a printed book does', () => {
+    expect(typesetQuotes(`He said "[7]!" and it's ('really') done.`)).toBe(
+      'He said “[7]!” and it’s (‘really’) done.',
+    )
+    const once = typesetQuotes(`"Yes," I'm sure.`)
+    expect(typesetQuotes(once)).toBe(once)
+    expect(story(0).paragraphs.join(' ')).toContain('“[7]!”')
+    expect(story(0).paragraphs.join(' ')).not.toMatch(/["']/)
+  })
 })
 
 describe('fill-in-funnies repeats', () => {
@@ -294,6 +306,29 @@ describe('fill-in-funnies activity', () => {
       .map((o) => String(o.text).replace(/ /g, ' '))
       .join(' ')
     for (const word of ['garage.', 'overalls,', 'lawnmower', 'nap.']) expect(printed).toContain(word)
+  })
+
+  it('centres the word list across the page', () => {
+    for (const [w, h] of TRIMS) {
+      const ctx = kdpCtx(w, h)
+      const [words] = generate(base, ctx)
+      const numbers = words!.objects.filter((o) => /^\d+\.$/.test(String(o.text)))
+      const lines = rules(words!.objects)
+      const inkLeft = Math.min(...numbers.map((o) => o.left))
+      const inkRight = Math.max(...lines.map((o) => o.left + (o.width ?? 0)))
+      const box = fifContentBox(ctx)
+      expect(Math.abs((inkLeft + inkRight) / 2 - (box.left + box.width / 2))).toBeLessThan(DPI * 0.35)
+    }
+  })
+
+  it('does not leave the foot of a large page bare under a short story', () => {
+    for (const index of [0, 1, 2]) {
+      const ctx = kdpCtx(8.5, 11, only(index))
+      const pages = generate(base, ctx)
+      const lowest = Math.max(...pages.at(-1)!.objects.map((o) => extent(o).bottom))
+      expect(lowest).toBeGreaterThan(ctx.pageHeight * 0.78)
+      expect(lowest).toBeLessThanOrEqual(ctx.pageHeight - ctx.margin.bottom)
+    }
   })
 
   it('has no hidden answers and no answer page', () => {

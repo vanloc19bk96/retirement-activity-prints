@@ -19,7 +19,7 @@ import {
   parseFifPayload,
   selectFifStories,
 } from './content'
-import { drawStoryPage, drawWordPage } from './draw'
+import { drawStoryPage, drawWordPage, storyLineExtra } from './draw'
 import { fitFif } from './fit'
 import { runFifKdpPreflight } from './kdp-preflight'
 import { fifContentBox, fifInstructions, fifWorstCasePlan } from './layout'
@@ -100,6 +100,8 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
   })
 
   const label = bookStoryLabel(fitted.story)
+  // One line pitch for the whole story, set by how much room its first page has.
+  const lineExtra = storyLineExtra(promised.fields.storyFirst, fitted.storyPlan, fitted.pages[0]!)
   const storyPages = fitted.pages.map((page, index): StudioPageOutput => {
     // Every page keeps the title so a reader flipping back knows where they
     // are; only the first story page repeats the how-to.
@@ -112,6 +114,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
       font,
       tag,
       label: index === 0 ? label : undefined,
+      lineExtra,
     })
     return { pageRole: 'single', objects }
   })

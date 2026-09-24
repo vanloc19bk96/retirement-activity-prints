@@ -77,7 +77,7 @@ Pages: 1 · Answer key: yes · AI content: no
 
 ---
 
-## Word (15 games)
+## Word (16 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -520,6 +520,15 @@ Hints and blank numbers never go below 11 pt, writing lines never get shorter
 than 1.25 in on the list or 1.1 in in the story, and the word list is sized for
 every kind of prompt so every activity in a run matches.
 
+Both pages are balanced for print. The word list is centred across the page,
+even on a wide trim where the writing lines stop short of the column. On a
+large trim a short story does not sit in the top half: up to half the spare
+height opens up the line spacing (more room to write above each blank), and the
+rest is split so the block sits at the optical centre, a little above the true
+middle. A continued story keeps the same line spacing on its second page, which
+starts at the top. Straight quotes and apostrophes in a story print as curly
+book quotes (“…”, ’).
+
 Every story is checked before it prints. The service asks for 8-10 blanks and
 about 100 words in two to five short paragraphs with a title. Blanks are written
 [1], [2] … in order of first appearance, one kind per number from a fixed list
@@ -560,6 +569,72 @@ from the pages), what this browser printed recently for the theme, and the
 server's recent memory for the seller. One that repeats any of them is dropped.
 Pages: 2 (3 when a small trim continues the story) · Answer key: no · AI content: yes
 
+### Retirement Riddles & Jokes (`riddles-and-jokes`)
+A light, browsable humour page built for retirement books. Each numbered item
+is a short riddle ("I have a trunk but never pack for a holiday. What am I?")
+or a clean joke ("Where do retired train drivers go on holiday?"). The reader
+guesses the answer, then checks the answer page, where every answer is printed
+in bold under the same number as its question ("Anywhere with a good track
+record."). Riddles and jokes alternate down the page. A light rule separates
+the items, and nothing depends on colour.
+
+Answers go on the answer page rather than upside down under each item. The
+answer page follows the book's own solutions setting (after the game or at the
+back), stays tied to its game when pages are reordered, and keeps every
+punchline out of sight until the reader turns to it. Upside-down answers would
+also have halved what a large-print page holds. The puzzle page carries no
+answer text at all, not even hidden. The answer page is drawn from the same
+records as the puzzle page, so an answer can only print under its own number.
+
+Settings: the theme (the shared retirement picker; its default gives every item
+its own retirement topic) and the mix (riddles and jokes, riddles only, or
+jokes only). Items per page and type size are not settings. The page aims for
+about eight but never squeezes: it first looks for at least six at a
+comfortable 16 pt or more, and only drops toward the 15 pt floor when a trim
+cannot hold that. The theme's help line reports the result: a 5 x 8 prints six
+at 16 pt, a 5.5 x 8.5 seven at 17 pt, a 6 x 9 eight at 17 pt, and a 7 x 10 or
+8.5 x 11 eight at 18 pt. A setup never runs past three lines and an answer
+never past two. The page reserves a line budget sized from a typical setup, and
+an item that would overrun it is skipped for the next one. The plan only stands
+if the answer page fits too.
+
+Every item is checked before it prints. The service writes each item with its
+kind, a short comic idea, the setup and the answer. A blind second call is then
+shown every setup with the answers shuffled apart and lettered, and has to match
+each setup back to its own answer. It also rates each pair: clear, a real payoff
+(a pun, a twist, not a flat statement or something too obvious), one answer only,
+fresh (not a well-known joke or riddle, catchphrase or quotation, even lightly
+reworded) and suitable. An item survives only when the match comes back right
+and every rating passes. An answer picked for two setups fails both. If the
+check cannot run, nothing is returned. Before that, a setup must be one or two
+short sentences ending in a single question mark, and an answer a short phrase or
+sentence with no question in it. A riddle's answer is at most eight words and
+never already sits in its own setup. Items are refused for:
+- labels, numbering, quotation marks or knock-knock jokes;
+- humour about age, memory or forgetting, health, bodies, money or pensions,
+  spouses, loneliness, death, politics, religion, alcohol or gambling;
+- brands or celebrities.
+
+The browser checks the same rules again, refuses any item without the service's
+`verified` mark, and a test keeps both sides' word lists identical.
+
+Variety comes from structure, not a bank of jokes. Each item gets its own
+brief, sampled by seed: a kind, a retirement topic (about 70: naps, the old
+alarm clock, golf, the vegetable garden, a cruise, the office printer…), a
+format (about 20: "What do you call…", "I… What am I?", "What's the difference
+between…") and a humour pattern (a double meaning, a phrase taken literally, a
+gentle reversal of work habits…). Repeats are caught on content words. Function
+words, joke-frame words ("what do you call") and the retirement words every
+item shares are dropped, and synonyms are folded ("throw away" / "get rid of",
+"nap" / "snooze"). So "Why did the retiree throw away the alarm clock?" and "Why
+did the retired man get rid of his alarm clock?" count as one joke, and two
+riddles answered "The alarm clock." and "Your old alarm clock!" count as one
+answer. No more than two setups on a page open with the same three words. A new
+item is checked against every setup and answer already in the book (read back
+from both its pages), what this browser printed recently for the theme, and the
+server's recent memory for the seller. One that repeats any of them is dropped.
+Pages: 1 · Answer key: yes (each answer in bold under its question's number) · AI content: yes
+
 ---
 
 ## Spatial (1 game)
@@ -593,6 +668,7 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 | two-truths-and-a-fib | Two Truths and a Fib | word | 1 | yes | yes |
 | what-kind-of-retiree | What Kind of Retiree Are You? | word | 4-6 | no | yes |
 | fill-in-funnies | Fill-in Funnies | word | 2-3 | no | yes |
+| riddles-and-jokes | Riddles & Jokes | word | 1 | yes | yes |
 | maze | Maze | spatial | 1 | yes | no |
 
-**Total: 17 games** (1 logic · 15 word · 1 spatial).
+**Total: 18 games** (1 logic · 16 word · 1 spatial).
