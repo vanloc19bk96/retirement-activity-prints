@@ -10,6 +10,7 @@ import {
 import { STUDIO_CATEGORIES } from '@/constants/studio-categories'
 import { STARTER_STUDIO_TEMPLATE_KEYS } from '@/constants/studio-plan-access'
 import { sudokuTemplate } from '@/utils/studio/sudoku/generate'
+import { wordokuTemplate } from '@/utils/studio/wordoku/generate'
 import { wordSearchTemplate } from '@/utils/studio/retirement-word-search/generate'
 import { crosswordTemplate } from '@/utils/studio/crossword/generate'
 import { retirementAnagramTemplate } from '@/utils/studio/retirement-anagram/generate'
@@ -33,6 +34,7 @@ import { pictureRebusTemplate } from '@/utils/studio/picture-rebus/generate'
 const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   // Logic
   sudokuTemplate,
+  wordokuTemplate,
 
   // Word
   wordSearchTemplate,

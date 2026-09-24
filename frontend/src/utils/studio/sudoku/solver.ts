@@ -88,6 +88,14 @@ function fillCell(
 }
 
 /**
+ * Fill every empty (0) cell of a partly placed grid by randomized backtracking.
+ * Returns false when the placed cells admit no completion.
+ */
+export function completeGrid(grid: number[][], size: SudokuSize, rng: StudioRng): boolean {
+  return fillCell(grid, 0, size, rng)
+}
+
+/**
  * Backtracking fill with randomized candidates.
  * 9×9 prefills independent diagonal boxes (always completable) for speed.
  * 6×6 starts empty — rectangular 2×3 boxes are not independently completable.
