@@ -26,6 +26,7 @@ import { triviaClueWordSearchTemplate } from '@/utils/studio/trivia-clue-word-se
 import { atoZWordSearchTemplate } from '@/utils/studio/a-to-z-word-search/generate'
 import { wordWheelTemplate } from '@/utils/studio/word-wheel/generate'
 import { pictureRebusTemplate } from '@/utils/studio/picture-rebus/generate'
+import { retirementBingoTemplate } from '@/utils/studio/retirement-bingo/generate'
 
 /**
  * Card order in the Studio panel. Grouped by category in the same order as
@@ -51,6 +52,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   riddleScrambleTemplate,
   missingVowelsTemplate,
   pictureRebusTemplate,
+  retirementBingoTemplate,
 
   // Spatial
   mazeTemplate,
