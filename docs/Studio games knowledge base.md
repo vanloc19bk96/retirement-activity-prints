@@ -77,7 +77,7 @@ Pages: 1 · Answer key: yes · AI content: no
 
 ---
 
-## Word (12 games)
+## Word (13 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -384,6 +384,60 @@ fresh ones, because good gender-neutral titles are finite. The table prints
 whole (26 letters, 12 months) or not at all.
 Pages: 1 · Answer key: no · AI content: yes
 
+### Two Truths and a Fib: Retirement Edition (`two-truths-and-a-fib`)
+A light factual challenge built for retirement books. Each numbered set has a
+short title ("Early Telephones") and three lettered statements on that one
+topic. Two are true and one is a fib, and the reader circles the fib's letter.
+The answer page shows the same sets under the same numbers and letters, with
+the fib's letter ringed and a one-sentence correction below it ("A is the fib.
+The first telephone directory was printed in New Haven, Connecticut, in
+1878."). Nothing on the page depends on colour.
+
+Settings: the subject and the level. Subject is this game's own list, not the
+shared retirement themes, because a fact puzzle needs a field of knowledge
+rather than a lifestyle mood. The default, mixed, draws each set from a
+different subject pool. The other choices are work & careers, inventions &
+everyday technology, home life through the decades, hobbies & pastimes, travel
+& transport, retirement traditions & customs, food & the kitchen, nature & the
+outdoors, or a subject the seller types. Level is Gentle (familiar facts),
+Classic or Challenging (surprising facts). Sets per page (at most three) and
+type size come from the trim, and the subject's help line reports the result:
+a 5 x 8 prints one set at 16 pt, a 6 x 9 two at 17 pt and an 8.5 x 11 three at
+16 pt. Statements never go below 15 pt or past three lines. Each set gets a
+line budget sized from a typical statement, and a set that needs more lines is
+skipped for the next one. The plan only stands if the answer page, with its
+corrections, fits as well.
+
+Truth is checked before anything prints. The service writes each set as two
+truths, a fib and a correction. The fib is its own field, never an index, so
+reordering can't point the key at a true statement. A second, blind fact-check
+call then judges every statement without being told which one is the fib
+(statements are shuffled within each set), and judges every correction as a
+standalone claim. A set survives only when the checker independently reads it
+as true / true / false, with the false one where the writer put the fib, calls
+the correction true, and finds the set coherent, the fib believable and the
+content suitable. An "unsure" anywhere drops the set. If the check can't run,
+no puzzles are returned. `STUDIO_FACT_CHECK_MODEL` can point the check at a
+stronger model. Before that, every statement must be one plain, standalone
+sentence. It is refused if it uses an absolute or superlative ("never",
+"only", "the largest"), a hedge or approximate number ("reportedly",
+"about 30"), time-sensitive wording ("today", "still") or a year after 2010.
+It is also refused if it starts with a pronoun leaning on another statement,
+addresses the reader, or touches a sensitive topic, a brand or a celebrity.
+The three statements must be of similar length, and the correction must be
+about the fib. The browser checks the same rules again and refuses any set
+without the service's `verified` mark.
+
+Variety is structural. Each set gets its own brief, a subject domain and an
+angle sampled by seed from about 100 domains and a dozen angles. Repeats are
+compared on content words, with synonyms folded ("existed before" / "invented
+earlier than"). A set that repeats any statement or title is dropped if it
+matches something already in the book (read back from the pages), something
+this browser printed recently for the subject, or the server's recent memory
+for the seller. Fib letters are dealt from a shuffled A-B-C deck for each
+page, so three sets on a page never share a fib letter.
+Pages: 1 · Answer key: yes (rings the fib, prints a correction) · AI content: yes
+
 ---
 
 ## Spatial (1 game)
@@ -414,6 +468,7 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 | would-you-rather | Would You Rather | word | 1 | no | yes |
 | ever-or-never | Ever or Never | word | 1 | no | yes |
 | retired-name | What's Your Retired Name? | word | 1 | no | yes |
+| two-truths-and-a-fib | Two Truths and a Fib | word | 1 | yes | yes |
 | maze | Maze | spatial | 1 | yes | no |
 
-**Total: 14 games** (1 logic · 12 word · 1 spatial).
+**Total: 15 games** (1 logic · 13 word · 1 spatial).

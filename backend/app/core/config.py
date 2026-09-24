@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     # Studio AI templates (Gemini). Key stays server-side only.
     GEMINI_API_KEY: Optional[str] = None
     STUDIO_GEMINI_MODEL: str = "gemini-flash-lite-latest"
+    # Model for the blind fact check behind Two Truths and a Fib. Empty uses
+    # STUDIO_GEMINI_MODEL; point it at a stronger model to tighten the check.
+    STUDIO_FACT_CHECK_MODEL: Optional[str] = None
     # Upstream call timeout; without it a stalled Gemini call pins a worker.
     STUDIO_GEMINI_TIMEOUT_SECONDS: int = 90
 

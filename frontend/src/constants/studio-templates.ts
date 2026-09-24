@@ -31,6 +31,7 @@ import { topFiveGuessTemplate } from '@/utils/studio/top-five-guess/generate'
 import { wouldYouRatherTemplate } from '@/utils/studio/would-you-rather/generate'
 import { everOrNeverTemplate } from '@/utils/studio/ever-or-never/generate'
 import { retiredNameTemplate } from '@/utils/studio/retired-name/generate'
+import { twoTruthsFibTemplate } from '@/utils/studio/two-truths-and-a-fib/generate'
 
 /**
  * Card order in the Studio panel. Grouped by category in the same order as
@@ -61,6 +62,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   wouldYouRatherTemplate,
   everOrNeverTemplate,
   retiredNameTemplate,
+  twoTruthsFibTemplate,
 
   // Spatial
   mazeTemplate,
