@@ -34,9 +34,11 @@ export interface KdpPreflightResult {
 export function runRetirementBingoKdpPreflight(options: {
   moments: readonly RetirementBingoMoment[]
   plan: RetirementBingoPagePlan
+  /** Pre-broken lines for every moment the card may hold, bank and custom. */
+  lines: ReadonlyMap<string, string[]>
   font: string
 }): KdpPreflightResult {
-  const { moments, plan, font } = options
+  const { moments, plan, lines: planned, font } = options
   const warnings: string[] = []
   const errors: string[] = []
   const spec: FontSpec = { fontFamily: font }
@@ -90,7 +92,7 @@ export function runRetirementBingoKdpPreflight(options: {
     errors.push('The phrases would print below a comfortable reading size.')
   }
   for (const moment of moments) {
-    const lines = plan.lines.get(moment.text)
+    const lines = planned.get(moment.text)
     if (!lines) {
       errors.push(`"${moment.text}" does not fit a square on this page size.`)
       break
@@ -119,6 +121,7 @@ export function runRetirementBingoKdpPreflight(options: {
   for (const moment of moments) {
     perGroup.set(moment.group, (perGroup.get(moment.group) ?? 0) + 1)
   }
+  perGroup.delete('custom')
   if (perGroup.size > 1 && Math.max(...perGroup.values()) > BINGO_MOMENT_COUNT / 2) {
     warnings.push('Most of this card comes from one kind of moment.')
   }

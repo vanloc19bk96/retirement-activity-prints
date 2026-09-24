@@ -78,6 +78,8 @@ function measuringContext(): CanvasRenderingContext2D | null {
 
 /** `declaration -> run -> width at MEASURE_FONT_SIZE`. Mirrors Fabric's font cache. */
 const runWidthCache = new Map<string, Map<string, number>>()
+/** Times `runWidthCache` has been dropped. */
+let metricsEpoch = 0
 
 function cacheFor(declaration: string): Map<string, number> {
   let cache = runWidthCache.get(declaration)
@@ -94,6 +96,16 @@ function cacheFor(declaration: string): Map<string, number> {
  */
 export function clearStudioTextMetricsCache(): void {
   runWidthCache.clear()
+  metricsEpoch++
+}
+
+/**
+ * Bumped every time the width cache is dropped. Callers that cache results
+ * built on these widths key them by it, so a plan made on fallback-font widths
+ * does not outlive the real font arriving.
+ */
+export function studioTextMetricsEpoch(): number {
+  return metricsEpoch
 }
 
 // Per-character advance in em, used only when no canvas is available.

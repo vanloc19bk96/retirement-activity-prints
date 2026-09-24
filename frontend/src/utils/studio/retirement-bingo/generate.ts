@@ -8,26 +8,38 @@ import type {
 import { STUDIO_BODY_SIZE, STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
 import { boxCenterX, drawHeader } from '../studio-layout'
 import { buildText, type StudioTag } from '../studio-fabric-builders'
-import { deriveSeed } from '../studio-rng'
+import { resolveOwnerSalt, studioPuzzleRng } from '../_shared/uniqueness'
 import { RETIREMENT_BINGO_CONFIG_SCHEMA } from './config'
 import {
   RETIREMENT_BINGO_BUILD_FAILED_MESSAGE,
   RETIREMENT_BINGO_DEFAULT_TITLE,
   RETIREMENT_BINGO_PAGE_TOO_SMALL_MESSAGE,
+  parseCustomMoments,
+  retirementBingoThemeFamilies,
   selectRetirementBingoMoments,
   type RetirementBingoMoment,
 } from './content'
+import { buildRetirementBingoDeck } from './deck'
 import { drawRetirementBingoCard } from './draw'
 import { runRetirementBingoKdpPreflight } from './kdp-preflight'
-import { planRetirementBingoPage, retirementBingoContentBox } from './layout'
-import { parseRetirementBingoTheme, retirementBingoInstruction } from './themes'
+import {
+  fitBingoPhrase,
+  planRetirementBingoPage,
+  retirementBingoContentBox,
+} from './layout'
+import { retirementBingoHouseStyle } from './style'
+import {
+  parseRetirementBingoTheme,
+  pickRetirementBingoInstruction,
+  retirementBingoInstructionPool,
+} from './themes'
 
 const TEMPLATE_KEY = 'retirement-bingo'
 
 /**
  * Fresh draws a card gets before the page is refused. The draw only fails when
- * the pool is nearly exhausted by family rules, and a second shuffle almost
- * always clears it; past a handful, the problem is the pool, not the luck.
+ * the deck is nearly exhausted by family rules, and a second shuffle almost
+ * always clears it; past a handful, the problem is the deck, not the luck.
  */
 const MAX_DRAWS = 6
 
@@ -35,9 +47,9 @@ function errorPage(
   ctx: StudioGenerateContext,
   config: StudioConfig,
   tag: StudioTag,
-  instruction: string,
   message: string,
 ): StudioPageOutput {
+  const instruction = retirementBingoInstructionPool(config)[0] ?? ''
   const header = drawHeader(retirementBingoContentBox(ctx), config, tag, instruction)
   return {
     pageRole: 'single',
@@ -65,47 +77,85 @@ function errorPage(
  * One bingo card on one page.
  *
  * Measured first, dealt second, checked third. The page plan fixes the square
- * and the type size against the whole theme, so every card in a book prints the
- * same way; only then are 24 moments dealt from what fits, and the finished
- * card goes through preflight. A card that fails is redealt from a derived
- * seed rather than printed — still deterministic, so regenerating a sheet with
- * the same seed gives the same card.
+ * and the type size against the whole theme, so every card in a book — and
+ * every seller's card on the same trim — prints at one readable size.
  *
- * There is no answer page. Bingo has nothing to solve; the card is the
- * reader's own record of their year.
+ * Then the Uniqueness Engine takes over (§4):
+ *
+ * * the seller's **deck** — which moments, worded which way — comes from the
+ *   account's puzzle salt, so two sellers' books share little of their text;
+ * * the seller's **house style** — header, free square, rules, write-in — comes
+ *   from the same salt, so their pages do not look like one product;
+ * * the **card** and the **instruction** come from the page's salted stream
+ *   (HMAC of salt, template, settings and page nonce), so a card is the same
+ *   card every time its page is regenerated and never another seller's card;
+ * * the finished card is stamped with the canonical hash of its 24 moments, so
+ *   the Studio's book-wide ledger refuses a repeat of the same card even with
+ *   its squares shuffled.
+ *
+ * A card that fails preflight is redealt from the next stream rather than
+ * printed. There is no answer page: bingo has nothing to solve.
  */
 function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageOutput[] {
   const theme = parseRetirementBingoTheme(config)
-  const instruction = retirementBingoInstruction(config)
   const font = String(config.fontFamily ?? STUDIO_DEFAULT_FONT)
+  const spec = { fontFamily: font }
+  const ownerSalt = resolveOwnerSalt(ctx)
 
   const tag: StudioTag = {
     templateKey: TEMPLATE_KEY,
     instanceId: ctx.instanceId,
     pageRole: 'single',
   }
-  const fail = (message: string) => [errorPage(ctx, config, tag, instruction, message)]
+  const fail = (message: string) => [errorPage(ctx, config, tag, message)]
 
-  const plan = planRetirementBingoPage({ page: ctx, config, theme, instruction, font })
+  const plan = planRetirementBingoPage({ page: ctx, config, theme, font })
   if (!plan) return fail(RETIREMENT_BINGO_PAGE_TOO_SMALL_MESSAGE)
+
+  // The seller's own moments, kept only where they fit this page's squares.
+  const lines = new Map(plan.lines)
+  const custom: RetirementBingoMoment[] = []
+  for (const moment of parseCustomMoments(config.customMoments).moments) {
+    const broken = fitBingoPhrase(moment.text, plan.metrics, plan.phraseFont, spec)
+    if (!broken) continue
+    lines.set(moment.text, broken)
+    custom.push(moment)
+  }
+
+  const deck = buildRetirementBingoDeck({
+    families: retirementBingoThemeFamilies(theme),
+    fits: (text) => plan.lines.has(text),
+    ownerSalt,
+  })
 
   let moments: RetirementBingoMoment[] | null = null
   let lastError = RETIREMENT_BINGO_BUILD_FAILED_MESSAGE
   for (let draw = 0; draw < MAX_DRAWS && !moments; draw++) {
     const candidate = selectRetirementBingoMoments({
-      pool: plan.pool,
-      seed: draw === 0 ? ctx.seed : deriveSeed(ctx.seed, `redeal:${draw}`),
-      themeId: theme.id,
+      deck,
+      custom,
+      rng: studioPuzzleRng({ templateKey: TEMPLATE_KEY, config, ctx, stream: `card:${draw}` }),
     })
-    const preflight = runRetirementBingoKdpPreflight({ moments: candidate, plan, font })
+    const preflight = runRetirementBingoKdpPreflight({ moments: candidate, plan, lines, font })
     if (preflight.ok) moments = candidate
     else lastError = preflight.errors[0] ?? lastError
   }
   if (!moments) return fail(lastError)
 
+  const instruction = pickRetirementBingoInstruction(
+    config,
+    studioPuzzleRng({ templateKey: TEMPLATE_KEY, config, ctx, stream: 'instruction' }),
+  )
   const header = drawHeader(retirementBingoContentBox(ctx), config, tag, instruction)
   const objects: StudioFabricObject[] = [...header.objects]
-  drawRetirementBingoCard(objects, { moments, plan, font, tag })
+  drawRetirementBingoCard(objects, {
+    moments,
+    lines,
+    plan,
+    style: retirementBingoHouseStyle(ownerSalt),
+    font,
+    tag,
+  })
 
   return [{ pageRole: 'single', objects }]
 }
@@ -115,7 +165,7 @@ export const retirementBingoTemplate: StudioTemplateDefinition = {
   label: 'Retirement Bingo',
   category: 'word',
   description:
-    'A 5 x 5 bingo card of everyday retirement moments — “Slept past 9”, “Had coffee with no rush”, “Started a new hobby” — with a free NAP square in the middle. Readers cross off each moment as it happens. Every card draws its own mix, so cards in a book stay different, and square and type sizes are fitted to your page. Double-click any square on the page to reword it.',
+    'A 5 x 5 bingo card of everyday retirement moments — “Slept past 9”, “Had coffee with no rush”, “Started a new hobby” — with a free NAP square in the middle. Readers cross off each moment as it happens. Your account gets its own set of moments, wording and card style, so your books don’t read like anyone else’s — and you can add moments of your own. Square and type sizes are fitted to your page. Double-click any square on the page to reword it.',
   pageCount: 1,
   producesAnswerKey: false,
   defaultPageTitle: RETIREMENT_BINGO_DEFAULT_TITLE,

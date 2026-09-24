@@ -1,4 +1,6 @@
 import type { StudioConfig, StudioSelectOption } from '@/types/studio-template.types'
+import { RETIREMENT_BINGO_INSTRUCTIONS } from '@/constants/studio-phrasing/retirement-bingo'
+import type { StudioRng } from '../studio-rng'
 
 /**
  * The one content decision a Retirement Bingo page asks for.
@@ -78,19 +80,19 @@ export function parseRetirementBingoTheme(config: StudioConfig): RetirementBingo
 }
 
 /**
- * The sentence under the heading: what to do, then how to win.
- *
- * Broken where the sense breaks, and short enough that each line holds on a
- * 5 x 8 column — a wrapped rule strands "BINGO!" on a line of its own. The free
- * square is not mentioned: it is labelled FREE on the card, and a rule the card
- * already states is a line the reader has to read twice.
+ * The instruction variants a page may print (§4.7), or none when the heading
+ * strip is switched off. Hand-written; see `constants/studio-phrasing`.
  */
-export const RETIREMENT_BINGO_INSTRUCTION =
-  'Cross off each moment as it happens.\n' +
-  'Five in a row, any direction, is BINGO!'
+export function retirementBingoInstructionPool(config: StudioConfig): readonly string[] {
+  if (config.showInstructions === false) return []
+  return RETIREMENT_BINGO_INSTRUCTIONS
+}
 
-/** What the page tells the reader, unless the heading strip is switched off. */
-export function retirementBingoInstruction(config: StudioConfig): string {
-  if (config.showInstructions === false) return ''
-  return RETIREMENT_BINGO_INSTRUCTION
+/**
+ * The instruction one page prints, drawn from the page's salted stream so a
+ * regenerated page keeps its wording and neighbouring pages usually differ.
+ */
+export function pickRetirementBingoInstruction(config: StudioConfig, rng: StudioRng): string {
+  const pool = retirementBingoInstructionPool(config)
+  return pool.length > 0 ? rng.pick(pool) : ''
 }

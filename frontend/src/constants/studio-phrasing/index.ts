@@ -7,5 +7,8 @@
  */
 
 import type { PhrasingPool } from '@/utils/studio/_shared/uniqueness/phrasing'
+import { RETIREMENT_BINGO_INSTRUCTIONS } from './retirement-bingo'
 
-export const STUDIO_INSTRUCTION_POOLS: Readonly<Record<string, PhrasingPool>> = {}
+export const STUDIO_INSTRUCTION_POOLS: Readonly<Record<string, PhrasingPool>> = {
+  'retirement-bingo': { default: RETIREMENT_BINGO_INSTRUCTIONS },
+}

@@ -17,15 +17,18 @@ import {
   fabricTextHeight,
   isExactMeasurement,
   measureRunWidth,
+  studioTextMetricsEpoch,
   type FontSpec,
 } from '../studio-text-metrics'
 import {
-  BINGO_MIN_THEME_POOL,
+  BINGO_MIN_THEME_FAMILIES,
   BINGO_SIZE,
   retirementBingoPool,
+  retirementBingoThemeFamilies,
   type RetirementBingoMoment,
 } from './content'
-import type { RetirementBingoTheme } from './themes'
+import { BINGO_DECK_MIN_FAMILIES, BINGO_DECK_SHARE } from './deck'
+import { retirementBingoInstructionPool, type RetirementBingoTheme } from './themes'
 
 /**
  * Everything a bingo page decides on the seller's behalf.
@@ -71,21 +74,31 @@ export const PHRASE_FONT_MIN = ptToPx(10)
 /** Phrase type ceiling — generous, but a square is not a headline. */
 const PHRASE_FONT_MAX = ptToPx(18)
 /** Type against square: keeps big trims from setting a phrase as one huge word. */
-const PHRASE_FONT_CELL_RATIO = 0.19
+const PHRASE_FONT_CELL_RATIO = 0.175
 export const PHRASE_LINE_HEIGHT = 1.1
 /** Four lines in a square is a paragraph. */
 export const PHRASE_MAX_LINES = 3
 
 /**
- * Share of the theme that must fit before a size is accepted.
+ * Share of the theme's *moments* that must fit before a size is accepted.
  *
- * One stubborn phrase should not shrink every square in the book, so the few
- * that will not fit at a size are simply not dealt on that trim. The share is
- * kept high on purpose: set lower, the planner buys a point of type by quietly
- * retiring the same long-ish phrases on every trim, and the bank shrinks for no
- * reader's benefit.
+ * Counted by family, not by phrasing: a phrasing that will not fit costs
+ * nothing as long as another way of saying the same moment does, because each
+ * seller's deck falls through to it. What must not happen is a moment leaving
+ * the deck altogether, so nearly all families have to survive at the chosen
+ * size.
  */
-const PHRASE_FIT_SHARE = 0.97
+const FAMILY_FIT_SHARE = 0.97
+
+/**
+ * Share of the theme's *phrasings* that must fit.
+ *
+ * The per-seller wording choice is only as strong as the phrasings left to
+ * choose between on this trim. Below this share, too many families would be
+ * down to one phrasing and every seller would print it the same way — so the
+ * planner gives up a point of type before it gives up that variety.
+ */
+const PHRASE_FIT_SHARE = 0.92
 
 /** Padding inside a square, against square size. */
 const CELL_PAD_RATIO = 0.08
@@ -145,10 +158,12 @@ export interface RetirementBingoMetrics {
 export interface RetirementBingoPagePlan {
   metrics: RetirementBingoMetrics
   phraseFont: number
-  /** Theme moments that fit a square at `phraseFont` — the only ones dealt. */
+  /** Theme phrasings that fit a square at `phraseFont` — the only ones dealt. */
   pool: RetirementBingoMoment[]
-  /** Pre-broken lines for every moment in `pool`, keyed by its text. */
-  lines: Map<string, string[]>
+  /** Distinct families among `pool`. */
+  familyCount: number
+  /** Pre-broken lines for every phrasing in `pool`, keyed by its text. Read-only. */
+  lines: ReadonlyMap<string, string[]>
   /** Left/top of the grid and of the letters above it. */
   gridLeft: number
   gridTop: number
@@ -202,14 +217,24 @@ export function retirementBingoContentBox(page: StudioConfigLayoutContext): Box 
   return insetHorizontal(contentBox(page), STUDIO_CONTENT_SAFE_INSET_X)
 }
 
-/** What is left of the column once the title and instruction have been set. */
+/**
+ * What is left of the column once the title and instruction have been set.
+ *
+ * Measured against the *tallest* instruction the page might print, not the one
+ * it will: the wording varies page to page (§4.7), and a grid that moved up or
+ * down by a line depending on which sentence it drew would make a book's pages
+ * visibly disagree. A shorter instruction just leaves a little more air.
+ */
 export function retirementBingoBodyField(
   page: StudioConfigLayoutContext,
   config: StudioConfig,
-  instruction: string,
 ): Box {
   const content = retirementBingoContentBox(page)
-  const headerHeight = measureHeaderHeight(config, instruction, content.width)
+  const pool = retirementBingoInstructionPool(config)
+  const headerHeight =
+    pool.length === 0
+      ? measureHeaderHeight(config, '', content.width)
+      : Math.max(...pool.map((text) => measureHeaderHeight(config, text, content.width)))
   return {
     ...content,
     top: content.top + headerHeight,
@@ -290,7 +315,20 @@ export function phraseBlockHeight(lineCount: number, fontSize: number): number {
   return fabricTextHeight(lineCount, fontSize, PHRASE_LINE_HEIGHT)
 }
 
-/** Lines for every moment that fits a square at this size. */
+/** Lines for one phrase at the plan's size, or null when it does not fit a square. */
+export function fitBingoPhrase(
+  text: string,
+  metrics: RetirementBingoMetrics,
+  fontSize: number,
+  spec: FontSpec,
+): string[] | null {
+  const lines = wrapBingoPhrase(text, fontSize, metrics.fitWidth, spec)
+  if (!lines) return null
+  if (phraseBlockHeight(lines.length, fontSize) > metrics.maxTextHeight) return null
+  return lines
+}
+
+/** Lines for every phrasing that fits a square at this size. */
 function fitPool(
   pool: readonly RetirementBingoMoment[],
   metrics: RetirementBingoMetrics,
@@ -299,12 +337,56 @@ function fitPool(
 ): Map<string, string[]> {
   const fitted = new Map<string, string[]>()
   for (const moment of pool) {
-    const lines = wrapBingoPhrase(moment.text, fontSize, metrics.fitWidth, spec)
-    if (!lines) continue
-    if (phraseBlockHeight(lines.length, fontSize) > metrics.maxTextHeight) continue
-    fitted.set(moment.text, lines)
+    const lines = fitBingoPhrase(moment.text, metrics, fontSize, spec)
+    if (lines) fitted.set(moment.text, lines)
   }
   return fitted
+}
+
+/** Distinct families among the phrasings of `pool` that `lines` holds. */
+function familiesIn(
+  pool: readonly RetirementBingoMoment[],
+  lines: ReadonlyMap<string, unknown>,
+): number {
+  const families = new Set<string>()
+  for (const moment of pool) if (lines.has(moment.text)) families.add(moment.family)
+  return families.size
+}
+
+/**
+ * Recent plans. The form's help line re-plans on every render and the bank is
+ * several hundred phrasings, so the answer is kept for identical inputs. The
+ * key carries whether glyph widths are exact and the metrics epoch: a plan
+ * made on fallback-font widths must not outlive the real font arriving, or the
+ * preflight — which measures afresh — finds its lines wider than their squares.
+ */
+const planCache = new Map<string, RetirementBingoPagePlan | null>()
+const PLAN_CACHE_SIZE = 16
+
+function planKey(
+  page: StudioConfigLayoutContext,
+  config: StudioConfig,
+  theme: RetirementBingoTheme,
+  spec: FontSpec,
+): string {
+  const { margin } = page
+  return [
+    page.pageWidth,
+    page.pageHeight,
+    margin.top,
+    margin.right,
+    margin.bottom,
+    margin.left,
+    String(config.title ?? '').trim() ? 'title' : 'untitled',
+    config.showInstructions === false ? 'bare' : 'instructed',
+    theme.id,
+    spec.fontFamily ?? '',
+    isExactMeasurement(spec) ? 'exact' : 'estimate',
+    // `document.fonts.check` reports "exact" for a family it has not loaded
+    // yet, so the flag alone cannot tell a plan made on fallback widths from
+    // one made on the real face; the metrics epoch can.
+    studioTextMetricsEpoch(),
+  ].join('|')
 }
 
 /**
@@ -312,9 +394,13 @@ function fitPool(
  *
  * Square first: it is bounded by the column width and by the height left under
  * the heading, and a bigger square helps every phrase at once. Type second: the
- * largest size at which nine in ten of the theme's moments fit, never below the
- * floor. The few that do not fit are left out of this trim's deck rather than
- * printed small.
+ * largest size at which nearly every moment still has a phrasing that fits,
+ * never below the floor. Phrasings that do not fit are left out on this trim
+ * rather than printed small — each seller's deck falls through to another
+ * phrasing of the same moment.
+ *
+ * The plan depends on the page and the theme only, never on the seller, so
+ * every seller's cards on one trim print at the same readable size.
  *
  * Returns null when the square would fall below its floor, or when too few
  * moments fit even at the smallest type to keep cards in a book different from
@@ -324,15 +410,30 @@ export function planRetirementBingoPage(options: {
   page: StudioConfigLayoutContext
   config: StudioConfig
   theme: RetirementBingoTheme
-  instruction: string
   font: string
 }): RetirementBingoPagePlan | null {
-  const { page, config, theme, instruction, font } = options
+  const { page, config, theme, font } = options
   const spec: FontSpec = { fontFamily: font }
-  const themePool = retirementBingoPool(theme)
-  if (themePool.length < BINGO_MIN_THEME_POOL) return null
+  const key = planKey(page, config, theme, spec)
+  if (planCache.has(key)) return planCache.get(key)!
 
-  const field = retirementBingoBodyField(page, config, instruction)
+  const plan = computePlan(page, config, theme, spec)
+  if (planCache.size >= PLAN_CACHE_SIZE) planCache.delete(planCache.keys().next().value!)
+  planCache.set(key, plan)
+  return plan
+}
+
+function computePlan(
+  page: StudioConfigLayoutContext,
+  config: StudioConfig,
+  theme: RetirementBingoTheme,
+  spec: FontSpec,
+): RetirementBingoPagePlan | null {
+  const themePool = retirementBingoPool(theme)
+  const themeFamilies = retirementBingoThemeFamilies(theme).length
+  if (themeFamilies < BINGO_MIN_THEME_FAMILIES) return null
+
+  const field = retirementBingoBodyField(page, config)
   const widest = Math.min(CELL_MAX, Math.floor(field.width / BINGO_SIZE))
 
   let metrics: RetirementBingoMetrics | null = null
@@ -349,15 +450,21 @@ export function planRetirementBingoPage(options: {
     PHRASE_FONT_MIN,
     Math.min(PHRASE_FONT_MAX, Math.round(metrics.cell * PHRASE_FONT_CELL_RATIO)),
   )
-  let chosen: { fontSize: number; lines: Map<string, string[]> } | null = null
+  let chosen: { fontSize: number; lines: Map<string, string[]>; families: number } | null =
+    null
   for (let fontSize = fontMax; fontSize >= PHRASE_FONT_MIN; fontSize--) {
     const lines = fitPool(themePool, metrics, fontSize, spec)
-    const enough = lines.size >= BINGO_MIN_THEME_POOL
-    if (enough && lines.size >= themePool.length * PHRASE_FIT_SHARE) {
-      chosen = { fontSize, lines }
+    const families = familiesIn(themePool, lines)
+    const enough = families >= BINGO_MIN_THEME_FAMILIES
+    if (
+      enough &&
+      families >= themeFamilies * FAMILY_FIT_SHARE &&
+      lines.size >= themePool.length * PHRASE_FIT_SHARE
+    ) {
+      chosen = { fontSize, lines, families }
       break
     }
-    if (fontSize === PHRASE_FONT_MIN && enough) chosen = { fontSize, lines }
+    if (fontSize === PHRASE_FONT_MIN && enough) chosen = { fontSize, lines, families }
   }
   if (!chosen) return null
 
@@ -375,6 +482,7 @@ export function planRetirementBingoPage(options: {
     metrics,
     phraseFont: chosen.fontSize,
     pool: themePool.filter((moment) => chosen.lines.has(moment.text)),
+    familyCount: chosen.families,
     lines: chosen.lines,
     gridLeft,
     gridTop,
@@ -388,25 +496,32 @@ function inches(px: number): string {
   return `${Math.round((px / DPI) * 100) / 100} in`
 }
 
+/** Families one seller's deck holds for a theme with `families` that fit. */
+export function expectedDeckFamilies(families: number): number {
+  return Math.max(
+    Math.round(families * BINGO_DECK_SHARE),
+    Math.min(families, BINGO_DECK_MIN_FAMILIES),
+  )
+}
+
 /** What this theme prints on the page size currently set in Settings. */
 export function retirementBingoPrintNote(options: {
   theme: RetirementBingoTheme
   page: StudioConfigLayoutContext | undefined
   config: StudioConfig
-  instruction: string
   font: string
 }): string {
-  const { theme, page, config, instruction, font } = options
-  const deck = retirementBingoPool(theme).length
+  const { theme, page, config, font } = options
 
   if (!page) {
+    const families = retirementBingoThemeFamilies(theme).length
     return (
-      `One 5 x 5 card a page, 24 moments drawn from ${deck}, with a free NAP ` +
-      'square in the middle. No answer page is needed.'
+      'One 5 x 5 card a page with a free NAP square. Your account deals from its ' +
+      `own set of about ${expectedDeckFamilies(families)} moments. No answer page is needed.`
     )
   }
 
-  const plan = planRetirementBingoPage({ page, config, theme, instruction, font })
+  const plan = planRetirementBingoPage({ page, config, theme, font })
   if (!plan) {
     return (
       'This page size is too small for a bingo card — the squares would print ' +
@@ -417,7 +532,8 @@ export function retirementBingoPrintNote(options: {
   const pt = Math.round((plan.phraseFont * PDF_POINTS_PER_INCH) / DPI)
   return (
     `One card a page: ${inches(plan.metrics.cell)} squares, moments at ${pt} pt. ` +
-    `Each card draws 24 of ${plan.pool.length} moments, so cards in a book stay ` +
-    'different. No answer page is needed.'
+    `Your account deals from its own set of about ${expectedDeckFamilies(plan.familyCount)} ` +
+    'moments, worded its own way, so your cards differ from other sellers’. ' +
+    'No answer page is needed.'
   )
 }
