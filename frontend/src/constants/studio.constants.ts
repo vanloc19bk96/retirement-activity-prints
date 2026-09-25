@@ -41,6 +41,7 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'work-lingo-match',
   'occupation-trivia',
   'maze',
+  'dot-to-dot',
 ])
 
 export const STUDIO_STROKE_HAIRLINE = 1.5

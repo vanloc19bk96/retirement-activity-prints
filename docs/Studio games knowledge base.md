@@ -1001,7 +1001,7 @@ Pages: 2-5 (quiz pages, then one answer page) · Answer key: yes (number, ringed
 
 ---
 
-## Spatial (4 games)
+## Spatial (5 games)
 
 ### Maze (`maze`)
 A pencil maze with one entrance, one exit, and exactly one way through.
@@ -1260,6 +1260,83 @@ sellers on the same settings print different pages. Every check is bounded by
 one book and one seller's recent history.
 Pages: 1 · Answer key: no · AI content: no
 
+### Dot to Dot: Retirement Edition (`dot-to-dot`)
+A relaxing dot-to-dot page: large numbered dots that, joined in order from 1
+and back to 1, reveal a retirement picture — a teapot, a golf flag, a sailboat,
+a hammock between two posts, a porch swing. Dot 1 is ringed and its number
+bold, near the top left; the numbers run clockwise round the picture. The
+answer page shows the same picture with the outline drawn in.
+
+Settings: pictures and dots.
+- Pictures: A mix of everything, Home comforts, Travel & getaways, Garden &
+  outdoors, or Hobbies & pastimes. The help line names the theme's subjects.
+- Dots: Relaxed (about 20–30 dots, 12 pt numbers, dots at least 0.27 in
+  apart), Classic (about 30–45, 11.25 pt, 0.22 in) or Challenging (about
+  45–60, 10.5 pt, 0.185 in). The help line reports the number size, the gap
+  and the picture's size on this trim, or says when the trim is too small.
+Subject, drawing version, which way it faces, where dot 1 sits, dot size,
+spacing and margins are not settings; each page deals its own.
+
+Every page is drawn in the browser (no AI, no images): black dots, black
+lining-digit numbers, a few thin pre-drawn details, nothing else — no frame,
+no background. Subjects (47): the Studio's shared retirement drawings that
+trace well (31 of 36; the bicycle, garden tools and yarn basket have no
+telling silhouette, and the fishing scene and beach chair are two objects),
+plus 16 drawn for this game (`subjects.ts`): porch swing, reading glasses,
+tea kettle, country mailbox, table lamp, armchair, sun hat, beach chair,
+fishing boat, camping lantern, tent, hammock, park bench, birdbath, golf flag
+and golf cart. Every knob on those changes the outline itself.
+
+Outline (`outline.ts`): the drawing's shapes are filled on a grid, the largest
+connected shape kept (it must hold 80% of the ink, or the drawing is refused
+as two objects), its holes filled, and its edge traced back to a smooth vector
+outline — the one line the dots hide. Pre-drawn details are only what never
+touches that edge: holes (inside a mug's handle, between a chair's legs) as
+closed lines, closed shapes inside (windows, wheels, lenses) and long interior
+lines, plus at most a small separate part; short open fragments are dropped.
+So the picture's outline is only ever revealed by the reader.
+
+Dots (`puzzle.ts`): corners come first — the outline is simplified to the
+level's fidelity (as faithful as the dot budget allows) and every corner kept
+is a dot; the rest are spread by length plus bend, so curves get more dots
+than straight sides, and never more on an arc than its length holds at the
+minimum gap. Any pair of dots under the gap (neighbours or across a narrow
+tip) loses its weaker one. A page aims for the level's count, but never more
+than the outline needs (twice its corners at 1.2% of its size) or than its
+length holds on a small trim. Numbers take the clearest of 72 spots round
+their dot, facing out of the picture where they can, never touching a line
+the reader will draw, another dot, another number or a pre-drawn detail, and
+always plainly nearer their own dot than any other; the most constrained dots
+choose first. A picture that will not dot cleanly tries fewer dots (down to
+the level's floor), then another version, then another subject.
+
+Quality gate (`kdp-preflight.ts`): numbering exactly 1 to N, each once, each
+on one dot, in path order; the count within the level; every pair of dots at
+least the level's gap apart and no dot near a line it is not part of; the
+finished outline never crosses or touches itself and stays within the
+level's tolerance (3–4.5% of the picture's size) of the true silhouette; the
+picture at least 2.8 in and filling its room; every dot and number inside the
+printable panel, numbers at 10 pt or more, clear of every line, dot and other
+number and nearer their own dot than any other; details clear of the outline;
+and not a shape the book already prints while the theme has fresh ones. The
+drawn page must be black ink only, one dot and one number per value, each
+number where it was placed, and the hidden answer outline joining the dots
+in order. A failed picture is dealt again; if nothing passes, the page says
+so plainly.
+
+Uniqueness and variety: a puzzle is its outline, not its drawing, so every
+version is reduced to a shape signature (its silhouette on a 16 × 16 grid,
+the same whichever way it faces — a flipped or re-patterned version is not a
+new puzzle). Each page stamps `subject|shape|version`. A new page takes the
+theme's least-used subject in the book (never the previous page's), a shape
+of it the book does not show and this seller has not printed lately; a shape
+repeats in a book only once the theme has none fresh left (and is then
+flagged a duplicate). Traced outlines are cached (bounded), choices are dealt
+from the seller's puzzle salt and the page seed, and every check is bounded
+by one book and one seller's recent history — never a comparison with every
+page ever made. 292 distinct outlines across the 47 subjects.
+Pages: 1 · Answer key: yes · AI content: no
+
 ---
 
 ## Quick-reference index (by key)
@@ -1294,5 +1371,6 @@ Pages: 1 · Answer key: no · AI content: no
 | stained-glass | Stained Glass Coloring | spatial | 1 | no | no |
 | quote-coloring | Quote Coloring Page | spatial | 1 | no | yes |
 | color-by-number | Color by Number: Retirement Scenes | spatial | 1 | no | no |
+| dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 28 games** (2 logic · 22 word · 4 spatial).
+**Total: 29 games** (2 logic · 22 word · 5 spatial).

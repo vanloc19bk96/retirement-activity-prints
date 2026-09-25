@@ -41,6 +41,7 @@ import { officeRelicsTemplate } from '@/utils/studio/office-relics/generate'
 import { stainedGlassTemplate } from '@/utils/studio/stained-glass/generate'
 import { quoteColoringTemplate } from '@/utils/studio/quote-coloring/generate'
 import { colorByNumberTemplate } from '@/utils/studio/color-by-number/generate'
+import { dotToDotTemplate } from '@/utils/studio/dot-to-dot/generate'
 import { workLingoTemplate } from '@/utils/studio/work-lingo-match/generate'
 import { occupationTriviaTemplate } from '@/utils/studio/occupation-trivia/generate'
 
@@ -88,6 +89,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   stainedGlassTemplate,
   quoteColoringTemplate,
   colorByNumberTemplate,
+  dotToDotTemplate,
 ]
 
 function withCommonFields(def: StudioTemplateDefinition): StudioTemplateDefinition {
