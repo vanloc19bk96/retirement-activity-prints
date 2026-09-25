@@ -65,7 +65,7 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ---
 
-## Logic (1 game)
+## Logic (2 games)
 
 ### Sudoku (`sudoku`)
 Classic number Sudoku for a large-print retirement book. Fill every row, column
@@ -74,6 +74,71 @@ Relaxed / Classic / Challenge based on logical techniques, not clue count — ev
 puzzle has exactly one solution and needs no guessing. Large print is the default
 (one 9×9 per page); two puzzles fit on a page for 6×6 or standard-print 9×9.
 Pages: 1 · Answer key: yes · AI content: no
+
+### Logic Grid: Farewell Party (`farewell-logic-grid`)
+A classic deduction grid set at a retirement party. The reader gets a scene
+("The Garden Party"), a two-sentence story, a numbered list of clues and a
+staircase grid, and marks X for no and a dot for yes until every person is
+matched with one value in each category ("Carol brought the apple pie, retired
+in March and is taking up pottery"). The page never relies on colour: blocks
+are split by heavy rules, cells by fine ones, and each label sits in its own
+ruled slot. Column labels are the only sideways text and read upward from the
+grid.
+
+Settings: the level only.
+- Gentle: four people, two categories, plain "who did" / "who did not" clues.
+- Classic: four people, three categories, a mix of clue types, at most two
+  clues that give a match outright.
+- Challenging: five people and three categories where the trim allows (four
+  on smaller trims), led by either/or, pairs and exact order, at most one
+  outright match.
+People, categories, clue count, type size, square size and pages are not
+settings; the level's help line reports what the trim prints.
+
+Every puzzle is built and proved in the browser (no AI). A seeded scene,
+people and hidden answer are drawn, then true clues are offered one at a time
+and kept only when they let the reader mark something new, until deduction
+alone fills the grid. Every clue the puzzle can do without is then removed,
+so none is redundant. The reader model uses one clue at a time against what is
+already marked, plus one-per-row and one-per-column; it never guesses and
+follows a guess, so no level needs trial and error. An exhaustive count then
+has to find exactly one answer, and every clue is re-checked against the stored
+answer. A puzzle that fails any check, or whose clues would overrun the page,
+is thrown away and rebuilt; it never reaches the book.
+
+Clue kinds: a match ("Robert brought the pasta salad"), a non-match, "neither…
+nor", "either… or" (always two values of the same kind, so inclusive and
+exclusive readings agree), "of X and Y, one… and the other…", and relative or
+exact order ("retired two months before"). A clue names at most two people by
+description, and never runs past three lines.
+
+Content: nine party scenes (potluck, garden party, community send-off,
+retirement dinner, class sign-up, library tea, last-day lunch, neighborhood
+party, reunion), each with five or six categories of its own, drawn from seventeen
+category pools (dishes, gifts, months, years of service, former jobs,
+departments, party tasks, new hobbies, class days, arrival times, toast order,
+garden plants, volunteering, desserts, day trips, reading, teas) and seventy-two
+first names, never two with the same initial in one puzzle. Nothing about
+health, money, family status, home ownership or physical ability, and no
+brands or real people. Grid labels are twelve characters at most.
+
+Layout, decided from the trim: clues and grid share a page when both fit at 15
+pt or larger with squares of at least 0.29 in. Otherwise the story and clues
+take the first page (up to 18 pt when the clues allow) and the grid the next,
+with a note saying so; on the narrowest trims a clue or two may continue above
+the grid. Squares are never smaller than 0.25 in and labels never below 12 pt.
+When there is room, the grid page adds a blank "Final answers" chart.
+
+The answer page carries the scene name, the answer as a table (a list on very
+narrow trims) and the grid with one check per person in every block. It is
+drawn from the same puzzle object as the clues, attached to the last puzzle
+page, so it can only show the answer the clues lead to.
+
+Uniqueness: each puzzle stamps its scene, categories and a noun-free digest of
+its deduction pattern. A new puzzle refuses any pattern already in the book,
+avoids a scene-and-category combination the book already prints while another
+is open, and takes the least-used scene first.
+Pages: 1-2 (plus an answer page) · Answer key: yes (table and checked grid) · AI content: no
 
 ---
 
@@ -950,6 +1015,7 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 | Key | Label | Category | Pages | Answer key | AI content |
 |---|---|---|---|---|---|
 | sudoku | Sudoku | logic | 1 | yes | no |
+| farewell-logic-grid | Logic Grid: Farewell Party | logic | 1-2 | yes | no |
 | word-search | Word Search | word | 1 | yes | yes |
 | hidden-message-word-search | Hidden Message Word Search | word | 1 | yes | yes |
 | trivia-clue-word-search | Trivia Clue Word Search | word | 1 | yes | yes |
@@ -974,4 +1040,4 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 | occupation-trivia | Occupation Trivia Pack | word | 2-5 | yes | yes |
 | maze | Maze | spatial | 1 | yes | no |
 
-**Total: 22 games** (1 logic · 20 word · 1 spatial).
+**Total: 23 games** (2 logic · 20 word · 1 spatial).

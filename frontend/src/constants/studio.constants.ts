@@ -18,6 +18,7 @@ export const STUDIO_ANSWER_INK_MONO = STUDIO_INK
 export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'sudoku',
   'wordoku',
+  'farewell-logic-grid',
   'word-search',
   'hidden-message-word-search',
   'trivia-clue-word-search',

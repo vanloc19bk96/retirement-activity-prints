@@ -11,6 +11,7 @@ import { STUDIO_CATEGORIES } from '@/constants/studio-categories'
 import { STARTER_STUDIO_TEMPLATE_KEYS } from '@/constants/studio-plan-access'
 import { sudokuTemplate } from '@/utils/studio/sudoku/generate'
 import { wordokuTemplate } from '@/utils/studio/wordoku/generate'
+import { farewellLogicGridTemplate } from '@/utils/studio/farewell-logic-grid/generate'
 import { wordSearchTemplate } from '@/utils/studio/retirement-word-search/generate'
 import { crosswordTemplate } from '@/utils/studio/crossword/generate'
 import { retirementAnagramTemplate } from '@/utils/studio/retirement-anagram/generate'
@@ -48,6 +49,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   // Logic
   sudokuTemplate,
   wordokuTemplate,
+  farewellLogicGridTemplate,
 
   // Word
   wordSearchTemplate,
