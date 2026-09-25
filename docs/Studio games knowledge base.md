@@ -1001,12 +1001,95 @@ Pages: 2-5 (quiz pages, then one answer page) · Answer key: yes (number, ringed
 
 ---
 
-## Spatial (1 game)
+## Spatial (2 games)
 
 ### Maze (`maze`)
 A pencil maze with one entrance, one exit, and exactly one way through.
 Difficulty sets how twisty the route is and how long the solution runs.
 Pages: 1 · Answer key: yes (traces the path) · AI content: no
+
+### Stained Glass Coloring (`stained-glass`)
+A relaxing coloring page: one retirement favorite — a rocking chair, a
+teapot, a sailboat, a sunflower, a fishing rod — set in a stained-glass window
+and surrounded by a mosaic of irregular pieces of glass. The reader looks at the
+design and colors it in, piece by piece, however they like. It is not
+paint-by-number and has no answer page.
+
+Settings: a theme and a piece size.
+- Theme: A mix of everything, Home comforts, Travel & getaways, Garden &
+  outdoors, or Hobbies & pastimes. The help line names the theme's subjects.
+- Piece size: Relaxed (big pieces, about an inch across), Classic, or
+  Intricate (more, smaller pieces — still wider than a sixth of an inch). Sizes
+  are absolute, so a bigger trim gets more pieces, never smaller ones; the help
+  line reports roughly how many pieces the current trim holds.
+Subject, window, border, background pattern, scenery, line weights and margins
+are not settings; each page deals its own design.
+
+Every page is drawn in the browser (no AI, no images): pure black vector lines
+on white, no grey, no fills, no text inside the art. The subject is a stack of
+closed shapes drawn for this game, printed with a heavy outline where it meets
+the background and lighter lines between its own pieces, so it always reads
+first. Large pieces of the subject are cut into a few cells; the background is
+a Voronoi mosaic in one of six patterns (even, graded toward the subject,
+concentric rings like a rose window, rays from the sun or from below, diamond
+quarries like a leaded cottage window, honeycomb). Windows
+are square, rounded, round-arched or pointed-arched, with a tiled, block-
+cornered, plain or no border band. Outdoor subjects stand on hills, waves or
+dunes, often under a corner sun; indoor subjects often sit in a radiating
+medallion.
+
+Quality gate: the finished lines are printed to a grid at 96 dpi and every
+enclosed region is measured. A mosaic cell too small or too narrow for the level
+is merged into its neighbour by removing the one joint it shares most edge
+with; a piece of the drawing itself can never be smaller than about an eighth of
+an inch across (the tests render every version of every subject at the smallest
+print size to prove it). The page then passes a preflight — a real subject in a
+real version, at least 42% of its window and 1.9 in across, 24–420 pieces, ink
+coverage of a line drawing, not a design the book already has — and a drawn
+check (black strokes at print weights only, inside the panel). A design that
+fails is dropped and another dealt; if none passes, the page shows a plain
+message instead of a broken panel.
+
+Content: 36 original subjects across four themes — home comforts (rocking
+chair, coffee mug, teacup, teapot, book and glasses, houseplant, yarn basket,
+sleeping cat, vintage radio, fresh-baked pie), travel (sailboat, motorhome,
+camper trailer, cruise ship, suitcase, hot air balloon, beach chair, lighthouse,
+steam train), garden (watering can, potted flowers, birdhouse, garden tools,
+wheelbarrow, sunflower, butterfly, songbird, picnic basket) and hobbies
+(fishing, golf bag, bicycle, acoustic guitar, paint palette, vintage camera,
+gramophone, binoculars). Each has two to four knobs (slat style, sail plan,
+steam curls, window count…) and a mirror image: 16–36 versions each, 722 in
+all. No brands, logos, characters, text, or anything about health, money or
+frailty. Floating subjects (balloon, butterfly, songbird) hover over the
+scenery; the rest stand on it.
+
+Uniqueness: each panel is stamped `subject|version|composition|style`. A new
+page takes the theme's least-used subject in the book (a subject returns only
+once the theme is used up, and then as a new version in a new window), avoids
+the previous page's window design, and passes over subjects and versions this
+seller printed lately. Subject, version and composition are dealt from the
+seller's puzzle salt, so two sellers on the same settings print different books.
+
+Book style and page hand (`style.ts`): the subject library is shared, so the
+same teapot in the same window would otherwise print the same picture for two
+sellers. Each book is dealt a style from the seller's salt and its first page's
+seed — pen (three print-safe line-weight sets), a favoured window, border and
+background pattern, border band and tile proportions, rounded-corner radius,
+how its subjects are drawn (a touch wider or narrower, a slight taper), how
+much of the window they fill, and how finely they are cut. The style token is
+stamped on every page and later pages adopt it, so a book reads as one set;
+the seller's next book is dealt the style, of two dozen candidates, farthest
+from the last dozen they printed (remembered in the browser; the tests hold
+eight books in a row at least five of eleven axes apart). On top, every page
+deals its own hand around the style: a little more or less stretch and taper,
+fill, and a gentle tilt for things that fly (balloon, butterfly, songbird). A
+page whose hand pinches a part below the coloring floor steps down to half
+strength (proven for every version, pen and extreme at the smallest print size)
+and then to the plain drawing; fill never takes a subject's longer side under
+2.6 in, so small trims print as before. Measured on a ⅛-inch grid, two sellers'
+pages with the same subject, version and window share about 40% of the subject's
+outline (previously 100%) and about 40% of all ink; the tests hold both under 60%.
+Pages: 1 · Answer key: no · AI content: no
 
 ---
 
@@ -1039,5 +1122,6 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 | work-lingo-match | Work Lingo Match | word | 1 | yes | yes |
 | occupation-trivia | Occupation Trivia Pack | word | 2-5 | yes | yes |
 | maze | Maze | spatial | 1 | yes | no |
+| stained-glass | Stained Glass Coloring | spatial | 1 | no | no |
 
-**Total: 23 games** (2 logic · 20 word · 1 spatial).
+**Total: 26 games** (2 logic · 22 word · 2 spatial).
