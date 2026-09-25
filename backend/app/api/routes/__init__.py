@@ -42,6 +42,7 @@ from app.api.routes.studio_work_lingo import router as studio_work_lingo_router
 from app.api.routes.studio_occupation_trivia import (
     router as studio_occupation_trivia_router,
 )
+from app.api.routes.studio_quote_coloring import router as studio_quote_coloring_router
 
 router = APIRouter()
 
@@ -83,5 +84,6 @@ router.include_router(studio_fill_in_funnies_router)
 router.include_router(studio_riddles_jokes_router)
 router.include_router(studio_work_lingo_router)
 router.include_router(studio_occupation_trivia_router)
+router.include_router(studio_quote_coloring_router)
 
 __all__ = ["router"]

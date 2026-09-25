@@ -1001,7 +1001,7 @@ Pages: 2-5 (quiz pages, then one answer page) · Answer key: yes (number, ringed
 
 ---
 
-## Spatial (3 games)
+## Spatial (4 games)
 
 ### Maze (`maze`)
 A pencil maze with one entrance, one exit, and exactly one way through.
@@ -1090,6 +1090,99 @@ and then to the plain drawing; fill never takes a subject's longer side under
 pages with the same subject, version and window share about 40% of the subject's
 outline (previously 100%) and about 40% of all ink; the tests hold both under 60%.
 Pages: 1 · Answer key: no · AI content: no
+
+### Quote Coloring Page (`quote-coloring`)
+A coloring page built around one original retirement saying ("My calendar only
+lists sunsets now") lettered in big outline letters, inside a cartouche, with a
+decorative pattern of flowers, shapes or hobby-and-travel motifs round it. The
+reader colors the letters, then the pattern. There is no answer page.
+
+Settings: a theme, a mood, a pattern and a space size.
+- Theme: the shared retirement theme picker (mixed topics by default, a preset
+  theme, or the seller's own words).
+- Mood: A mix of moods, Uplifting, Playful, or Calm & reflective.
+- Pattern: A mix of patterns, Flowers & leaves, Shapes & tiles, or Hobbies &
+  travel (teacups, sailboats, balloons, books, cameras, suitcases...).
+- Coloring spaces: Relaxed (big spaces), Classic, or Detailed. Sizes are
+  absolute, so a bigger trim gets more motifs, never smaller ones; the help line
+  reports the motif sizes and the smallest space, or says when the trim is too
+  small.
+The saying, face, letter size, line breaks, layout, cartouche, frame, line
+weights and margins are not settings; each page deals its own.
+
+Sayings (AI content, `services/studio_quote_coloring_service.py`): the page asks
+for eight, one per brief — a retirement topic (~90), a tone, a sentence form
+(20) and a length band, shuffled by seed — so sayings differ in idea and
+structure, not just wording. Gates before anything prints: 3–12 words, at most
+56 characters (the page's budget), no word over 11 letters, plain letters and
+ordinary punctuation only, no digits, quotation marks, attributions or ALL CAPS;
+nothing about age, health, memory, death, money worries, loneliness, spouses,
+alcohol, politics or religion; no brands or celebrities; no stock line from a
+list of famous quotes, slogans and greeting-card phrases. Then a blind check:
+a second call rates every saying cold — original (not a known quote, proverb,
+slogan, lyric or title, even lightly reworded), natural and correctly spelled,
+clear, warm, suitable, about retirement — and only sayings passing every rating
+return, marked `verified`. The browser re-checks the shape and only letters
+verified sayings. There is no bundled quote bank.
+
+No repeats: sayings are compared on content words with synonyms folded ("tea" /
+"coffee", "journey" / "travel"), so "Retirement means more time for what
+matters" and "Retirement gives you more time for what really matters" are one
+saying. Checked within a reply, against the book's own pages (every page stamps
+its saying), against this seller's recent sayings for the theme (browser) and
+the worker's memory — all bounded, never a comparison with every page ever
+made. No more than two sayings in a reply open with the same two words.
+
+Lettering (`lettering.ts`, `fonts.ts`): drawn from the bundled font files as
+vector outlines — never a text box, which the PDF export would fill solid. Five
+print-proven faces (Montserrat Bold, Rubik Bold, Galindo and Righteous in
+capitals; Bitter Bold in mixed case). One glyph per character, straight from the
+character map; a missing glyph refuses the saying. Overlapping contours inside a
+font's letters are removed, so only each letter's true edge prints. Every pair
+of letters is eased apart until clear paper separates their outlines. Lines
+break only between words, balanced, never stranding a short word, and the
+saying is set as big as its space allows (up to about 1.9 in em) but never below
+the face's proven size, at which every letter's inside, counter and punctuation
+mark clears the lettering floor (tested glyph by glyph at several sub-pixel
+positions). A saying that cannot fit a face at that size tries another face,
+then the next saying.
+
+Page (`compose.ts`): a frame (single line, double band, or tiled band), the
+lettering in a cartouche (rounded, oval, scalloped, double-lined or pill; or a
+band right across the page), and the pattern in what is left: packed (biggest
+spaces first, motifs a little smaller than their space, small plain fillers in
+the gaps) or a lattice (square, hex or diamond grid, two motifs alternating,
+completed by packing where the field cuts the grid off). Every motif keeps clear
+paper from every other line, and nothing of the pattern enters the lettering's
+space. The pattern always keeps at least a row of motifs above and below the
+lettering. Small trims fall back to the band layout, a single-line frame and a
+plain cartouche before giving up on a saying. When the pattern is "A mix", a
+saying about gardens gets flowers and one about travel or hobbies gets those
+motifs, while the book is not already ahead on that family.
+
+Motifs (`motifs.ts`): 32 original motifs (flowers, leaves, swirls; rosettes,
+stars, diamonds, hexagons, hearts; teacup, mug, sailboat, balloon, suitcase,
+sun, fish, bird, butterfly, book, cottage, shell, camera, palette, cloud) plus
+two plain fillers per family, each with a proven smallest radius at which every
+version and turn clears each level's floor.
+
+Quality gate: the whole page is printed to a grid at 96 dpi at its real line
+weights and every enclosed region measured. A pattern region under the level's
+floor takes its motif off the page; a lettering or frame region under its floor
+refuses the design. Then a preflight: the lettering reads back exactly as the
+saying, letter for letter; it is at least its face's proven size and clear of
+the cartouche; no pattern line enters the lettering's space or leaves the frame;
+no two motifs touch; ink coverage is that of line art; the book does not already
+print the saying. The drawn panel must be black strokes at print weights only,
+unfilled, inside the safe area. A failed design is dealt again; if nothing
+passes, the page says so plainly.
+
+Uniqueness and variety: each page stamps `saying|face|layout|cartouche|frame|
+fill|pattern`. Every design axis takes the option the book has used least,
+never the same cartouche or frame as the page before, and the lettering face
+rotates; ties are broken by the seller's salt and the page seed, so two sellers
+on the same settings print different pages.
+Pages: 1 · Answer key: no · AI content: yes (sayings; lettering and pattern are drawn in the browser)
 
 ### Color by Number: Retirement Scenes (`color-by-number`)
 A relaxing color-by-number page: a retirement scene — a rocking chair by a
@@ -1199,6 +1292,7 @@ Pages: 1 · Answer key: no · AI content: no
 | occupation-trivia | Occupation Trivia Pack | word | 2-5 | yes | yes |
 | maze | Maze | spatial | 1 | yes | no |
 | stained-glass | Stained Glass Coloring | spatial | 1 | no | no |
+| quote-coloring | Quote Coloring Page | spatial | 1 | no | yes |
 | color-by-number | Color by Number: Retirement Scenes | spatial | 1 | no | no |
 
-**Total: 27 games** (2 logic · 22 word · 3 spatial).
+**Total: 28 games** (2 logic · 22 word · 4 spatial).
