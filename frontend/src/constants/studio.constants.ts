@@ -38,6 +38,7 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'price-check',
   'office-relics',
   'work-lingo-match',
+  'occupation-trivia',
   'maze',
 ])
 

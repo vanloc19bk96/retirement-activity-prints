@@ -39,6 +39,9 @@ from app.api.routes.studio_retiree_quiz import router as studio_retiree_quiz_rou
 from app.api.routes.studio_fill_in_funnies import router as studio_fill_in_funnies_router
 from app.api.routes.studio_riddles_jokes import router as studio_riddles_jokes_router
 from app.api.routes.studio_work_lingo import router as studio_work_lingo_router
+from app.api.routes.studio_occupation_trivia import (
+    router as studio_occupation_trivia_router,
+)
 
 router = APIRouter()
 
@@ -79,5 +82,6 @@ router.include_router(studio_retiree_quiz_router)
 router.include_router(studio_fill_in_funnies_router)
 router.include_router(studio_riddles_jokes_router)
 router.include_router(studio_work_lingo_router)
+router.include_router(studio_occupation_trivia_router)
 
 __all__ = ["router"]

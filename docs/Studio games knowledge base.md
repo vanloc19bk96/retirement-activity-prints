@@ -77,7 +77,7 @@ Pages: 1 · Answer key: yes · AI content: no
 
 ---
 
-## Word (19 games)
+## Word (20 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -842,6 +842,98 @@ printed recently at any level, and the server's recent memory for the seller.
 One that repeats any of them is dropped.
 Pages: 1 · Answer key: yes (each phrase's letter in its box, exact meaning beneath) · AI content: yes
 
+### Occupation Trivia Pack (`occupation-trivia`)
+A multiple-choice trivia pack built for retirement books that celebrate one
+career. The seller picks an occupation (Teacher, Nurse, Police, Military,
+Trucker, Engineer, Accountant or Postal) and gets about ten numbered questions
+from the tools, terms, routines, traditions and history of that job ("What did
+teachers write on the blackboard with?", "Which trailer keeps a load cold?").
+Each question has four choices, lettered A to D, and every letter sits inside a
+printed ring the reader circles. Short choices sit two by two, and longer ones
+go one under another so they never wrap into small type. The instruction names
+the job ("Teacher trivia: circle the letter of the best answer."). The pack runs
+over as many quiz pages as it needs (at most four). Every page keeps the title,
+only the first carries the instruction, and a small italic line says when the
+pack continues. Pages are split so their question counts are as even as
+possible (3 / 3 / 4, never 2 / 4 / 4). There is one answer page, listing every
+number with its ringed letter, the answer in bold and a short italic note.
+Nothing depends on colour.
+
+The whole key is attached to the last quiz page, so the book adds exactly one
+answer page, after the quiz or at the back as the book's solutions setting
+says, and never between two quiz pages. The key is drawn from the same fitted
+records as the quiz, so a letter or answer can only be the one printed beside
+its own question. Regenerating the pack redraws both together.
+
+Settings: the occupation and the level. Level is Gentle (what anyone in the job
+knew), Classic or Challenging (for the long-serving professional, never exam
+material). Question count, type size and pages are not settings. The largest
+size from 18 pt down to 15 pt that fits a pack of ten within four pages is
+chosen from the trim, and the level's help line reports it: a 5.5 x 8.5 prints
+ten at 15 pt, a 6 x 9 ten at 16 pt, a 7 x 10 ten at 17 pt and an 8.5 x 11 ten
+at 18 pt, each on up to four pages. Only a 5 x 8 drops to eight questions. A
+question never runs past four lines and a choice never past two. The answer
+page tries 16 pt down to 13 pt with notes at 12 pt or larger. If no size holds
+the notes, it drops the notes and keeps every answer.
+
+Occupations are profiles in `backend/app/data/studio/occupation-trivia/prompt.json`.
+Each profile has its topic areas (eighteen per job), a care rule and its own
+blocked words. Adding an occupation means adding a profile there, one value in
+the schema and one line in `utils/studio/occupation-trivia/content.ts`. Tests
+keep the three in step. The care rules keep each pack safe for its job:
+- Nurse: history, equipment names and routines, never medical advice, doses or
+  treatments.
+- Police and Military: no weapons, tactics or operations. Military questions
+  name the branch and country when a fact depends on one.
+- Trucker: no current regulations.
+- Accountant: no current tax law or advice.
+- Engineer: no calculations.
+- Teacher and Postal: broad enough for any country and decade.
+
+Truth is checked before anything prints. The writer gives the right answer its
+own field, never an index, so no shuffling can point the key at a wrong choice.
+A blind second call then sees each question with its choices shuffled and has
+to pick the right one itself. It also rates the question:
+- a settled fact;
+- about this job, not work in general;
+- clear, naming the country or era when the answer depends on one;
+- fairly pitched: no exam questions, calculations, current rules, prices or
+  salaries;
+- wrong choices that are believable but clearly wrong;
+- suitable.
+The checker also flags a question that asks the same fact as an earlier one,
+and judges every answer-page note as a claim on its own. A question survives
+only when the pick matches, every rating passes and its note is true. If the
+check cannot run, nothing is returned. `STUDIO_FACT_CHECK_MODEL` can point the
+check at a stronger model.
+
+Before the check, each question has to pass these rules:
+- one question ending in a single question mark;
+- no negatives or superlatives ("not", "only", "best");
+- nothing time-sensitive ("today", "currently"), no hedges, no year after 2010;
+- never addresses the reader, and no "do you remember" framing;
+- four distinct choices of similar length, none inside another, and never
+  "all of the above";
+- the answer is not already in the question;
+- the note is about the question.
+The browser checks the same rules again, refuses any question without the
+service's `verified` mark, and a test keeps both sides' word lists identical.
+
+Variety comes from structure, not a question bank. Each question gets its own
+brief, sampled by seed: one of the job's topic areas and one of fourteen
+question shapes. Repeats are caught on the fact, not the wording. Two
+questions are the same when they have the same answer, the same topic, or most
+of the same content words, with synonyms folded ("blackboard" / "chalkboard").
+So "What tool did teachers use to write on chalkboards?" and "Which item was
+used by teachers to write on a blackboard?" count as one question. Each
+question stamps a label (`teacher: blackboard chalk = chalk`) on the page. A
+new pack refuses any fact the book already asks for that occupation, anything
+this browser printed recently for it, and anything in the server's recent
+memory for the seller. Right answers are dealt from shuffled A to D decks, so
+over ten questions each letter is right two or three times, and never three
+times running.
+Pages: 2-5 (quiz pages, then one answer page) · Answer key: yes (number, ringed letter, answer and a short note) · AI content: yes
+
 ---
 
 ## Spatial (1 game)
@@ -879,6 +971,7 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 | price-check | Price Check: Then & Now | word | 1 | yes | no |
 | office-relics | Office Relics | word | 1 | yes | no |
 | work-lingo-match | Work Lingo Match | word | 1 | yes | yes |
+| occupation-trivia | Occupation Trivia Pack | word | 2-5 | yes | yes |
 | maze | Maze | spatial | 1 | yes | no |
 
-**Total: 21 games** (1 logic · 19 word · 1 spatial).
+**Total: 22 games** (1 logic · 20 word · 1 spatial).
