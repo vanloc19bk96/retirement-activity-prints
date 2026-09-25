@@ -38,6 +38,7 @@ from app.api.routes.studio_two_truths_fib import router as studio_two_truths_fib
 from app.api.routes.studio_retiree_quiz import router as studio_retiree_quiz_router
 from app.api.routes.studio_fill_in_funnies import router as studio_fill_in_funnies_router
 from app.api.routes.studio_riddles_jokes import router as studio_riddles_jokes_router
+from app.api.routes.studio_work_lingo import router as studio_work_lingo_router
 
 router = APIRouter()
 
@@ -77,5 +78,6 @@ router.include_router(studio_two_truths_fib_router)
 router.include_router(studio_retiree_quiz_router)
 router.include_router(studio_fill_in_funnies_router)
 router.include_router(studio_riddles_jokes_router)
+router.include_router(studio_work_lingo_router)
 
 __all__ = ["router"]

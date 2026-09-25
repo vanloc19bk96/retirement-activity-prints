@@ -77,7 +77,7 @@ Pages: 1 · Answer key: yes · AI content: no
 
 ---
 
-## Word (18 games)
+## Word (19 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -772,6 +772,76 @@ book has shown every object, the form says so. The browser also remembers what
 this seller printed recently, so the next book starts with different objects.
 Pages: 1 · Answer key: yes (each name on its line under the same picture, other accepted names beneath) · AI content: no
 
+### Work Lingo Match (`work-lingo-match`)
+A nostalgic matching game built for retirement books: "how many of these
+workplace phrases do you remember?". The page lists numbered office phrases
+("Circle back", "Touch base", "Low-hanging fruit"), each with an empty box, and,
+shuffled apart, their plain-English meanings under letters ("Return to the
+topic later"). The reader writes each meaning's letter in its phrase's box, so
+nothing is drawn across the page and a finished sheet stays clean. On a trim
+wide enough for both lists they sit side by side like the two columns of a
+classic matching exercise; on narrower trims they stack, phrases first, under
+spaced-capital headings. The answer page sets every phrase again under the same
+number, its letter in the box in bold and the exact meaning from the puzzle in
+italics beneath it. Nothing depends on colour.
+
+Settings: the level only. Gentle deals everyday office phrases nearly everyone
+knows and holds at most eight pairs; Classic mixes familiar phrases with a few
+to think about; Challenging reaches for less obvious but still widely used
+business idioms (never niche industry jargon or new startup slang). Classic and
+Challenging hold up to ten. Workplace area, pairs per page, type size and decoy
+meanings are not settings: every page ranges across the office by itself, and a
+decoy would add a second way for a meaning to fit. The level's help line
+reports what the trim holds: a 5 x 8 prints five at 15 pt, a 5.5 x 8.5 six at
+16 pt, a 6 x 9 seven at 16 pt, a 7 x 10 eight at 16 pt, and an 8.5 x 11 eight
+at 18 pt (Gentle) or ten at 16 pt in two columns. Type never goes below 15 pt,
+a phrase or meaning never runs past two lines, and the page never prints fewer
+than five pairs. The instruction is one short line ("Match each phrase to its
+meaning."). A second line would cost a 5 x 8 page one of its pairs. The plan
+only stands if the answer page fits too.
+
+Every pair is checked before it prints. The service writes each pair with a
+workplace area, the phrase and its meaning. A blind second call is then shown
+every phrase with the meanings shuffled apart and lettered, which is the puzzle
+itself, and has to match each phrase back to its meaning. It also rates each
+pair: a real, established expression (not invented, not an acronym, slogan or
+one company's term), an accurate workplace meaning rather than a literal one,
+the only meaning on the list that fits, familiar enough for the level, and
+suitable. A pair survives only when the match comes back right and every rating
+passes. A meaning picked for two phrases fails both. The pairs a response
+returns were all checked together as one set: when the service tops up its
+pool, it checks the whole pool again, and the browser never builds a page from
+two responses. If the check cannot run, nothing is returned. Before that, a
+phrase must be one to six plain words starting with a capital, and a meaning
+three to ten words that never repeats a word of its own phrase. Pairs are
+refused for:
+- insensitive or offensive origins ("totem pole", "powwow", "grandfathered"),
+  ageist phrases ("put out to pasture"), crude words, violence and death,
+  health, religion, politics, alcohol and gambling;
+- brands and trade names used as verbs ("Kool-Aid", "Xerox").
+
+The browser checks the same rules again, refuses any pair without the service's
+`verified` mark, and a test keeps both sides' word lists identical. The page is
+drawn from the same fitted records on both sides: letters are a seeded shuffle
+in which no meaning keeps its phrase's position, and the preflight re-proves
+that each letter is used once and that every meaning prints exactly as written.
+
+Variety comes from structure, not a bank of phrases. Each pair gets its own
+brief, sampled by seed: one of twenty workplace areas (meetings, memos,
+deadlines, sales, budgets, hiring, office politics…) and one of four eras (the
+typewriter-and-memo years, the 1980s and 1990s corporate world, timeless idioms).
+Repeats are caught on content words, with function words, pronouns, light verbs
+("take", "put") and particles dropped and endings folded. So "Put it on the
+back burner" and "Back burner" count as one phrase, and "Circling back" and
+"Circle back" too. The same phrase with a reworded meaning is the same pair.
+On one page, two phrases that share a word ("Circle back" / "Back burner")
+never appear together, two meanings that share most of their words never do,
+and no meaning may echo another pair's phrase. A new phrase is checked against
+every phrase already in the book (read back from its pages), what this browser
+printed recently at any level, and the server's recent memory for the seller.
+One that repeats any of them is dropped.
+Pages: 1 · Answer key: yes (each phrase's letter in its box, exact meaning beneath) · AI content: yes
+
 ---
 
 ## Spatial (1 game)
@@ -808,6 +878,7 @@ Pages: 1 · Answer key: yes (traces the path) · AI content: no
 | riddles-and-jokes | Riddles & Jokes | word | 1 | yes | yes |
 | price-check | Price Check: Then & Now | word | 1 | yes | no |
 | office-relics | Office Relics | word | 1 | yes | no |
+| work-lingo-match | Work Lingo Match | word | 1 | yes | yes |
 | maze | Maze | spatial | 1 | yes | no |
 
-**Total: 20 games** (1 logic · 18 word · 1 spatial).
+**Total: 21 games** (1 logic · 19 word · 1 spatial).

@@ -1,0 +1,99 @@
+{
+  "_comment": "Work Lingo Match. Each page lists numbered workplace phrases ('Circle back') and, shuffled apart, lettered plain-English meanings ('Return to the topic later'); the reader writes each meaning's letter beside its phrase. Variety is structural: every requested pair gets its own brief (a workplace area and an era, sampled by seed), so a reply cannot be ten meeting phrases. Nothing ships on the writer's word: a second, blind call is shown the phrases and the meanings shuffled apart -- the puzzle itself -- matches each phrase to its meaning, and rates it as a real expression, an accurate meaning, the only meaning on the list that fits, familiar enough and suitable. Only pairs it matches back correctly, uniquely and passes on every count survive, and the pairs a response returns were all checked together as one set. Length budgets arrive on the request (frontend/src/utils/studio/work-lingo-match/content.ts); limits below are the hard bounds. qualifierWords (function words, pronouns, light verbs and particles) are dropped before phrases are compared, so 'Put it on the back burner' and 'Back burner' read as one phrase and two phrases sharing a word never share a page.",
+  "limits": {
+    "rateLimitPerWindow": 20,
+    "maxOutputTokens": 4096,
+    "checkMaxOutputTokens": 4096,
+    "maxAttempts": 2,
+    "poolSize": 16,
+    "maxWrite": 18,
+    "minPhraseChars": 4,
+    "maxPhraseChars": 32,
+    "maxPhraseWords": 6,
+    "minMeaningChars": 12,
+    "maxMeaningChars": 56,
+    "minMeaningWords": 3,
+    "maxMeaningWords": 10
+  },
+  "locale": {
+    "nativeLocales": ["en"],
+    "nativeLine": "- Write in clear, natural English. Choose phrases used across English-speaking workplaces, not one country's slang.",
+    "otherLine": "- Write every phrase and meaning in language locale '{locale}': workplace expressions genuinely used in that language, never a translated English idiom."
+  },
+  "levels": {
+    "gentle": {
+      "writer": "Gentle: phrases nearly every adult has heard at work, on the news or on TV -- instantly recognisable, everyday office talk.",
+      "checker": "nearly every adult would recognise it straight away"
+    },
+    "classic": {
+      "writer": "Classic: well-known workplace phrases -- mostly familiar ones, with a few that make the reader think for a moment.",
+      "checker": "most people who ever worked in an office, shop or business would recognise it"
+    },
+    "challenging": {
+      "writer": "Challenging: less obvious but still widely used business idioms -- the kind a reader has heard in meetings yet may need a moment to pin down. Never niche industry jargon, and never brand-new slang.",
+      "checker": "many people who worked in business would recognise it, even if it takes a moment; it is not niche industry jargon or brand-new slang"
+    }
+  },
+  "areas": [
+    "meetings and conference calls",
+    "memos, email and keeping people informed",
+    "the boss and management",
+    "teamwork and colleagues",
+    "projects and planning",
+    "deadlines and busy periods",
+    "sales and customers",
+    "marketing and big ideas",
+    "budgets, figures and estimates",
+    "decisions and strategy",
+    "problems, fixes and troubleshooting",
+    "office routines and the working day",
+    "feedback, reviews and performance",
+    "hiring, jobs and careers",
+    "negotiating and making deals",
+    "progress, results and success",
+    "brainstorming and creativity",
+    "priorities and workload",
+    "office politics and corporate culture",
+    "change and new directions"
+  ],
+  "eras": [
+    "a classic office phrase from the typewriter, memo and water-cooler years",
+    "a phrase from the 1980s and 1990s corporate world",
+    "a timeless workplace idiom still heard today",
+    "a management or meeting phrase that spread through offices everywhere"
+  ],
+  "example": {
+    "area": "meetings and conference calls",
+    "phrase": "Circle back",
+    "meaning": "Return to the topic later"
+  },
+  "blockedTerms": [
+    "dead", "die", "dies", "dying", "died", "death", "deadly", "kill", "killer", "killing", "murder", "shoot", "shooting", "gun", "guns",
+    "bullet", "bullets", "bomb", "war", "warpath", "grave", "funeral", "coffin", "suicide", "blood", "bloodbath", "massacre", "postal",
+    "totem pole", "powwow", "pow wow", "spirit animal", "tribe", "tribal", "kimono", "chinese", "gypsy", "gyp", "grandfathered",
+    "sold down the river", "peanut gallery", "off the reservation", "circle the wagons", "long time no see", "no can do", "master",
+    "slave", "blacklist", "whitelist", "cakewalk", "crazy", "insane", "lame", "dumb", "idiot", "stupid", "moron", "psycho",
+    "over the hill", "out to pasture", "old guard", "dinosaur", "fossil", "old-timer", "past it", "senior moment", "senile", "geezer",
+    "elderly", "frail", "feeble", "forgetful", "too old", "old dog", "new tricks", "sex", "sexy", "naked", "screw", "screwed", "piss", "pissing", "damn", "hell",
+    "ass", "butt", "balls", "crap", "sucks", "bitch", "bastard", "toilet", "bathroom", "god", "jesus", "church", "prayer", "bible",
+    "heaven", "hail mary", "gospel", "preach", "preaching", "election", "democrat", "republican", "political", "politics", "drunk",
+    "beer", "wine", "booze", "cocktail", "happy hour", "hangover", "casino", "gambling", "lottery", "cancer", "sick", "illness",
+    "disease", "dementia", "alzheimer", "stroke", "heart attack", "hospital", "medication", "pills"
+  ],
+  "brandTerms": [
+    "kool-aid", "kool aid", "xerox", "rolodex", "google", "zoom", "skype", "photoshop", "fedex", "band-aid", "band aid", "velcro",
+    "post-it", "scotch tape", "kleenex", "wite-out", "tipp-ex", "blackberry", "microsoft", "powerpoint", "amazon", "facebook",
+    "twitter", "linkedin", "uber", "netflix", "starbucks", "disney", "monopoly", "lego", "ibm"
+  ],
+  "qualifierWords": [
+    "a", "an", "the", "of", "to", "for", "at", "in", "on", "with", "and", "or", "but", "from", "by", "into", "onto", "as", "about",
+    "up", "down", "out", "off", "over", "under", "so", "too", "very", "just", "all", "any", "some", "every", "each", "no", "not",
+    "if", "is", "are", "was", "were", "be", "been", "being", "am", "has", "have", "had", "do", "does", "did", "done", "dont",
+    "can", "cant", "could", "would", "will", "wont", "should", "get", "gets", "got", "getting", "go", "goes", "going", "went",
+    "take", "takes", "taking", "took", "make", "makes", "making", "made", "put", "puts", "putting", "keep", "keeps", "keeping",
+    "kept", "give", "gives", "giving", "gave", "let", "lets", "it", "its", "i", "me", "my", "you", "your", "we", "us", "our",
+    "they", "their", "them", "he", "she", "his", "her", "him", "this", "that", "these", "those", "there", "then", "than", "now",
+    "what", "who", "which", "when", "where", "how", "why", "someone", "somebody", "something", "thing", "things", "one", "ones",
+    "people", "person", "more", "most", "much", "many", "again", "later"
+  ]
+}
