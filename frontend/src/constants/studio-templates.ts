@@ -22,6 +22,7 @@ import { fallenPhraseTemplate } from '@/utils/studio/fallen-phrase/generate'
 import { phraseFinderTemplate } from '@/utils/studio/phrase-finder/generate'
 import { codewordTemplate } from '@/utils/studio/codeword/generate'
 import { mazeTemplate } from '@/utils/studio/maze/generate'
+import { shapedMazeTemplate } from '@/utils/studio/shaped-maze/generate'
 import { hiddenMessageWordSearchTemplate } from '@/utils/studio/hidden-message-word-search/generate'
 import { triviaClueWordSearchTemplate } from '@/utils/studio/trivia-clue-word-search/generate'
 import { atoZWordSearchTemplate } from '@/utils/studio/a-to-z-word-search/generate'
@@ -86,6 +87,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
 
   // Spatial
   mazeTemplate,
+  shapedMazeTemplate,
   stainedGlassTemplate,
   quoteColoringTemplate,
   colorByNumberTemplate,

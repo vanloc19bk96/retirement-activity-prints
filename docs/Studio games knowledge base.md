@@ -1001,11 +1001,78 @@ Pages: 2-5 (quiz pages, then one answer page) · Answer key: yes (number, ringed
 
 ---
 
-## Spatial (5 games)
+## Spatial (6 games)
 
 ### Maze (`maze`)
 A pencil maze with one entrance, one exit, and exactly one way through.
 Difficulty sets how twisty the route is and how long the solution runs.
+Pages: 1 · Answer key: yes (traces the path) · AI content: no
+
+### Shaped Maze: Retirement Edition (`shaped-maze`)
+A pencil maze built inside a retirement shape — a teapot, a motorhome, a sun
+hat, a golf cart, a hammock between two trees — whose outline *is* the maze's
+outer wall. Each page is a small journey: START at a workday place (the
+Office, the Alarm Clock, Monday Morning, the Night Shift, the Shop Floor…),
+FINISH somewhere the shape stands for (Tea Time, the Open Road, the Fairway,
+the Beach). One entrance, one exit, exactly one way through.
+
+Settings: shapes and a level.
+- Shapes: A mix of everything, Home comforts, Travel & getaways, Garden &
+  outdoors, or Hobbies & pastimes (7–10 shapes each). The help line names a few.
+- Puzzle level: Gentle (paths 0.30–0.40 in), Classic (0.26–0.34 in) or
+  Challenging (0.24–0.30 in, longer route, more turns). The help line reports
+  the path widths, or says plainly when the trim in Settings is too small for
+  that level and which lever to move.
+Shape, drawing version, Start / Finish, grid size, wall weight and caption
+size are not settings; each page deals its own.
+
+The shapes: 33 silhouettes — most from the Studio's own retirement drawing
+library (the one Stained Glass and Color by Number use), plus ones drawn for
+the maze alone where the library's version is too fine for corridors (beach
+chair, rocking chair) or missing (sun hat, cottage, tent, garden shed,
+hammock, golf cart, fishing boat, pickleball paddle, chess knight, hiking
+boot). Each has 16–36 versions (knobs and mirror images). Shapes whose outline
+is a rectangle, a blob or several separate objects are left out on purpose.
+
+How a page is built (all in the browser, no AI, no images):
+- The shape's silhouette is laid over a grid of pencil-wide cells and each cell
+  kept when the shape covers most of it; the outline is tidied (no one-cell
+  bumps, no cells touching only at a corner, one piece, no speck holes).
+- A faithful-likeness gate: the cells must overlap the true silhouette well,
+  keep nearly all of it, not be a plain block and not be a fringe of spurs. If
+  not, narrower corridors (never below the level's floor) are tried, then
+  another shape.
+- A perfect maze (spanning tree) is carved over exactly the shape's cells;
+  cells outside keep all four walls, so the outline is solid wall except the
+  two openings. Several mazes and opening pairs are scored against the level's
+  route length and dead-end aims, as in the regular Maze.
+- Openings only where the outline looks straight out at open page (never into
+  a hole like a mug handle, never into a notch between two parts), far apart,
+  with room for the arrow and a two-line caption (START / place name) clear of
+  every wall and of each other.
+- Drawn in pure black: a heavier outline with softened outer corners (inner
+  corners stay square so no false gap can open), lighter inner walls merged
+  into runs, solid arrows. No fills, greys or textures.
+
+Quality gate (preflight): faithful shape, one piece, no pinches; START and
+FINISH on the outline facing out; exactly one route and no other gap in the
+outline; the key's route walks real corridors from START to FINISH; corridors
+at least a quarter inch, walls heavy enough to print; captions apart; all
+inside the safe area. A page that fails is rebuilt with another design; the
+seller never gets a broken maze.
+
+Answer key: the same maze with the route drawn through the corridors, taken
+from the very maze the page printed (never re-solved), in black ink.
+
+Variety: shape, version, Start, Finish, openings and the carve itself are all
+dealt from the seller's puzzle salt and the page seed. Within a book, shapes
+the book already holds wait their turn, a returning shape comes back as another
+version, and Starts rotate so thirty pages visit thirty workdays (read back from
+labels the book's pages carry). Across a seller's books, recently printed
+shapes and versions are passed over first (a bounded per-browser history). The
+page fingerprint uses a digest of the maze structure, so a duplicate page is
+caught whatever surrounds it. Nothing compares against every page ever made.
+
 Pages: 1 · Answer key: yes (traces the path) · AI content: no
 
 ### Stained Glass Coloring (`stained-glass`)
@@ -1368,9 +1435,10 @@ Pages: 1 · Answer key: yes · AI content: no
 | work-lingo-match | Work Lingo Match | word | 1 | yes | yes |
 | occupation-trivia | Occupation Trivia Pack | word | 2-5 | yes | yes |
 | maze | Maze | spatial | 1 | yes | no |
+| shaped-maze | Shaped Maze: Retirement Edition | spatial | 1 | yes | no |
 | stained-glass | Stained Glass Coloring | spatial | 1 | no | no |
 | quote-coloring | Quote Coloring Page | spatial | 1 | no | yes |
 | color-by-number | Color by Number: Retirement Scenes | spatial | 1 | no | no |
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 29 games** (2 logic · 22 word · 5 spatial).
+**Total: 30 games** (2 logic · 22 word · 6 spatial).
