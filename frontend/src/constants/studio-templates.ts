@@ -39,6 +39,7 @@ import { riddlesJokesTemplate } from '@/utils/studio/riddles-and-jokes/generate'
 import { priceCheckTemplate } from '@/utils/studio/price-check/generate'
 import { officeRelicsTemplate } from '@/utils/studio/office-relics/generate'
 import { stainedGlassTemplate } from '@/utils/studio/stained-glass/generate'
+import { colorByNumberTemplate } from '@/utils/studio/color-by-number/generate'
 import { workLingoTemplate } from '@/utils/studio/work-lingo-match/generate'
 import { occupationTriviaTemplate } from '@/utils/studio/occupation-trivia/generate'
 
@@ -84,6 +85,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   // Spatial
   mazeTemplate,
   stainedGlassTemplate,
+  colorByNumberTemplate,
 ]
 
 function withCommonFields(def: StudioTemplateDefinition): StudioTemplateDefinition {

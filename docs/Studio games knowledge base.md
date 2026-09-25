@@ -1001,7 +1001,7 @@ Pages: 2-5 (quiz pages, then one answer page) · Answer key: yes (number, ringed
 
 ---
 
-## Spatial (2 games)
+## Spatial (3 games)
 
 ### Maze (`maze`)
 A pencil maze with one entrance, one exit, and exactly one way through.
@@ -1091,6 +1091,82 @@ pages with the same subject, version and window share about 40% of the subject's
 outline (previously 100%) and about 40% of all ink; the tests hold both under 60%.
 Pages: 1 · Answer key: no · AI content: no
 
+### Color by Number: Retirement Scenes (`color-by-number`)
+A relaxing color-by-number page: a retirement scene — a rocking chair by a
+curtained window, a motorhome parked in the hills, a sailboat at golden hour,
+a beach chair under an umbrella — divided into numbered spaces, with a color
+key of six to eight colors below it. The reader finds each number in the key
+and colors its spaces to match. There is no answer page.
+
+Settings: scenes, detail and the color key.
+- Scenes: A mix of scenes, Cozy home, Travel & getaways, Garden & outdoors, or
+  Hobbies & pastimes. The help line names the theme's subjects.
+- Detail: Relaxed (fewer, bigger spaces; numbers at 12 pt), Classic, or
+  Detailed (more spaces for a longer session). No number anywhere prints below
+  9 pt; the help line reports the number size and the scene's size on this trim.
+- Color key: Color names (black & white books, the default) — each entry is
+  its number in a circle, an empty box to try the pencil in, and a plain color
+  name ("Light Blue", "Dark Green"); or Color swatches (color-printed books) —
+  the box is filled with the color and the name still prints, so the key reads
+  either way. The page never relies on printed color to say which color is meant.
+Subject, drawing version, mood, scene parts, frame, number of colors, line
+weights and margins are not settings; each page deals its own.
+
+Every page is drawn in the browser (no AI, no images): black vector lines on
+white, nothing filled, plus the numbers. The subject is one of the Studio's 36
+original retirement drawings (the stained-glass library: 722 versions), set in
+a scene built round it from its setting: a meadow (far hills, mountains or a
+ridge with optional snow, patchwork fields, a winding path, a fence, trees or a
+bush, flowers), a shoreline (sea, wave bands, an island), a beach (sea, sand,
+rolling dunes) or a room (wall, wainscoting and chair rail, a window with a view
+and optional curtains, a framed picture, baseboard, floorboards, a rug, a table
+with or without a scalloped cloth for things that sit on a table). Sun, sun
+rays and clouds fill outdoor skies. Parts are sized in inches with floors, and a
+part that cannot get its room is left out rather than squeezed in.
+
+Colors (`palette.ts`): nine moods (summer, golden hour, spring, autumn,
+seaside; cozy, sage, coastal and lavender rooms) give each part of the scene a
+believable color (sky light blue, far hill green, curtains pink...), with a
+family of second choices so touching parts never share a number. The subject's
+own pieces take its natural colors by size (a teapot blue, a pie tan), with a
+few drawing-order hints where size would mislead (steam and smoke pale, leaves
+green, a sunflower's petals golden round a brown disk). The key is settled at
+six to eight distinct colors, all used, listed in pencil-box order; a scene
+that cannot be keyed that way is refused, never padded.
+
+Spaces and numbers (`paint.ts`): the page is printed to a grid at 96 dpi at
+its real line weights and every enclosed space measured. Each subject drawing
+is measured alone first, and never printed smaller than the size at which every
+one of its spaces holds a number. A space too small for a number loses the
+stretch of scenery line that pinched it (a hill top grazing the subject), which
+merges it into its neighbour; a sliver made by fixed lines refuses the design.
+Each space's number sits at its deepest point (the centre of the largest circle
+that fits) and its clearance is then re-measured exactly against every printed
+line. Specks where lines meet at a sharp angle are ink, not spaces.
+
+Quality gate (`kdp-preflight.ts`): a real subject in a real version, big enough
+to be the picture and inside the frame; a key of six to eight distinct colors,
+every one used and every space numbered from it; no two touching parts printed
+with the same number; every number at its size with clear paper round it; a
+sensible count of spaces for the level; no single space so large the page looks
+unfinished; ink coverage of line art; and not a page — or the same subject in
+nearly the same scene — the book already has. The drawn page must be black
+strokes at print weights, unfilled, digits only in the scene, and a key that
+matches the numbers. A failed design is dealt again; if nothing passes, the
+page says so plainly.
+
+Uniqueness and variety: each page stamps `subject|version|composition|mood`,
+the composition recording what was actually drawn. A new page takes the
+theme's least-used subject in the book (and not the previous page's setting
+when it can), a version the book has not printed, the book's least-used mood
+(never the previous page's), and a composition as far as possible from the page
+before and from the subject's earlier pages (at least three scene details
+apart). Recently printed subjects and versions of this seller wait their turn;
+all choices are dealt from the seller's puzzle salt and the page seed, so two
+sellers on the same settings print different pages. Every check is bounded by
+one book and one seller's recent history.
+Pages: 1 · Answer key: no · AI content: no
+
 ---
 
 ## Quick-reference index (by key)
@@ -1123,5 +1199,6 @@ Pages: 1 · Answer key: no · AI content: no
 | occupation-trivia | Occupation Trivia Pack | word | 2-5 | yes | yes |
 | maze | Maze | spatial | 1 | yes | no |
 | stained-glass | Stained Glass Coloring | spatial | 1 | no | no |
+| color-by-number | Color by Number: Retirement Scenes | spatial | 1 | no | no |
 
-**Total: 26 games** (2 logic · 22 word · 2 spatial).
+**Total: 27 games** (2 logic · 22 word · 3 spatial).
