@@ -142,7 +142,7 @@ Pages: 1-2 (plus an answer page) · Answer key: yes (table and checked grid) · 
 
 ---
 
-## Word (25 games)
+## Word (26 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -640,6 +640,71 @@ print, line spacing and date line at their minimums. Black ink only (writing
 lines a mid grey). If a whole, balanced year cannot be made, the page says so
 plainly.
 Pages: about 27 (comfortable) or 52 (roomy) · Answer key: no · AI content: yes
+
+### Travel Wish Map: Retirement Edition (`travel-wish-map`)
+A travel wish list to dream over. The reader browses a checklist of
+destinations, checks the ones they would love to see someday, and writes a
+few words on the "Why I want to go:" line beside each. Every entry is a
+pen-sized checkbox, the destination in bold on one line, and two or three
+writing lines. It is about wishes, not trip planning: no itineraries,
+budgets, bookings, visas or safety advice, and nothing that dates the page.
+There is no right answer and no answer page.
+
+Settings: destinations and room to write. Destinations are:
+- *U.S. states* (default): all 50 states, alphabetical under the Census
+  Bureau's four regions (Northeast, Midwest, South, West).
+- *World regions*: 25 broad areas that do not overlap, such as the British
+  Isles, the Nordic Countries, Southeast Asia and the Pacific Islands, under
+  five continent headings.
+- *Countries of the world*: 30 countries dealt from a pool of about 100,
+  with a fixed share per continent (9 Europe, 7 Americas, 7 Asia & the
+  Middle East, 4 Africa, 3 Oceania), alphabetical within each.
+- *Kinds of places, near or far*: 24 places anyone can wish for, wherever
+  they live and however they travel. Four each under Nature & the Outdoors,
+  By the Water, Towns & Cities, History & Culture, People & Memories ("My
+  hometown", "Where an old friend lives") and Close to Home ("A day trip by
+  train or bus", "A café with a view").
+
+Room to write is two lines per place (default) or three. The number of
+destinations, entries per page, type size, checkbox size and line spacing
+are not settings. The help line reports what the trim prints ("50 states
+under 4 regions — 9 pages in 16 pt large print" on a 6 x 9).
+
+Destinations (no AI, `utils/studio/travel-wish-map/data.ts`): every name is
+bundled, fixed geography. A name that is not in the data under its own
+heading never prints. States and regions always print complete. Countries
+and kinds of places are dealt by seed. Names this book's earlier lists
+already print go last (read back from the pages' content labels), then this
+seller's recent lists (browser, about two lists' worth), then everything
+else. So a second country list in a book shares no country with the first
+while the pool lasts, and no list repeats a name within itself. Fixed lists
+are never "avoided": a state is a fact, not a duplicate. The country pool
+holds sovereign states under their UN geoscheme continent. It leaves out
+disputed names and countries mostly seen in the news rather than in travel
+sections, and never a country that shares its name with a U.S. state.
+
+Page: one column. A bold heading with a rule starts only where its first
+entry fits. It is repeated as "(continued)" (or "(cont.)") at the top of the
+next page when a group runs over, and never leaves one entry alone there.
+Every page keeps the title; only the first carries the how-to. Names are
+16 pt (18 pt on a 5.5 in or wider column), never below 14 pt, and always
+on one line: the type steps down only as far as the longest name the mode
+could print needs. "Why I want to go:" is 2 pt smaller (never below 14 pt).
+Writing lines are at least 0.38 in apart. Where the last page has room for
+two to four, the list closes with "More Places on My List": write-in entries
+with a line for the place and the same writing lines, never on a page of
+their own. No map is drawn. A real map is either too small to write on or
+borrowed artwork, and the headings already say where each place is.
+
+Quality gate: a preflight re-proves the list against the data (every name
+real and under its own heading, no repeats, fixed lists complete, sampled
+headings full). It also checks that the pages print that exact list in
+order, every name fits its line, no heading is cut off from its entries,
+write-ins come last, every page is inside the printable area, and the type,
+boxes, line spacing and the line after the label are at their minimums.
+Black ink only (writing lines a mid grey). If the page is too small, it
+says so plainly.
+Pages: 5-17 (by trim, destinations and writing space) · Answer key: no · AI content: no
 
 ### Two Truths and a Fib: Retirement Edition (`two-truths-and-a-fib`)
 A light factual challenge built for retirement books. Each numbered set has a
@@ -1709,6 +1774,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | retired-name | What's Your Retired Name? | word | 1 | no | yes |
 | roll-a-day | Roll-a-Day: Retirement Edition | word | 1 | no | yes |
 | weeks-of-firsts | 52 Weeks of Firsts: Retirement Edition | word | 27-52 | no | yes |
+| travel-wish-map | Travel Wish Map: Retirement Edition | word | 5-17 | no | no |
 | two-truths-and-a-fib | Two Truths and a Fib | word | 1 | yes | yes |
 | what-kind-of-retiree | What Kind of Retiree Are You? | word | 4-6 | no | yes |
 | fill-in-funnies | Fill-in Funnies | word | 2-3 | no | yes |
@@ -1725,4 +1791,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 34 games** (2 logic · 25 word · 7 spatial).
+**Total: 35 games** (2 logic · 26 word · 7 spatial).
