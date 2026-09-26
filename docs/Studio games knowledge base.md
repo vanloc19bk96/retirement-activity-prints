@@ -65,7 +65,7 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ---
 
-## Logic (4 games)
+## Logic (5 games)
 
 ### Sudoku (`sudoku`)
 Classic number Sudoku for a large-print retirement book. Fill every row, column
@@ -274,6 +274,97 @@ page. A book visits every one of the 42 campgrounds before one returns, never
 the previous page's, and never prints the same grid twice. A seller's next
 book opens at campgrounds their last one visited least recently.
 Pages: 1 · Answer key: yes (every tent pitched) · AI content: no
+
+### Island Hopping: Bridges (`island-hopping`)
+A Bridges (Hashi) logic puzzle dressed as a retirement cruise. Each page is
+one island chain: a square of sea with a faint dot on every open lattice
+point and the islands printed as numbered circles. The reader draws bridges
+between islands so each island has exactly as many bridges as its number.
+Bridges run straight across or down from one island to the next, never
+cross another bridge or an island, and at most two join the same pair; when
+the chart is finished every island can be reached from every other. Over
+the chart hangs the chain's sign, a double-ruled board with a retirement
+name: Porch Swing Islands, Gone Fishin' Islands, No Alarm Clock Islands,
+Grandkids' Islands. Under it a legend shows the island the reader is given,
+with how many to join ("Island (14 to join)"), and the bridge they draw
+("Bridge (1 or 2)"). The answer page draws every bridge, doubled where the
+answer doubles it.
+
+Settings: the level only.
+- Gentle: 7 × 7, 8 to 11 islands. Finished by counting alone, and the how-to
+  line adds "Tip: start with islands that have only one way to go."
+- Classic: 9 × 9, 14 to 18 islands. Always needs joining up at least once
+  (counting alone never finishes it).
+- Challenging: 10 × 10, 20 to 25 islands. Always needs a "what if" check
+  (counting and joining up never finish it).
+Which chain, which chart, island size and number size are not settings. The
+help line reports what the trim in Settings prints (island size, spacing and
+number size), or that the trim is too small.
+
+Every page is built in the browser (no AI). A chart grows from one island:
+again and again an island already placed sends a single or double bridge
+straight across or down over open water to a new island, never over another
+bridge and never beside another island. A few more bridges are then laid
+between islands that already face each other across clear water, so the
+answer has loops, not just branches, and the numbers are read off the
+bridges. The solver (`solver.ts`) keeps the fewest and most bridges each
+lane may hold and works the chart the way a reader does, one sure step at a
+time and never guessing:
+- basic: an island's number less the most its other lanes can take is the
+  least this lane must carry, and its number less what its other lanes
+  already carry is the most it may; a bridge closes every lane it crosses.
+- connect (Classic and up): a bridge that would finish both its islands and
+  leave their group cut off from the rest cannot be built (two 1s never
+  join, two 2s never double up); a group with one way out takes a bridge
+  there.
+- probe (Challenging): one more bridge (or one fewer) on a lane that leads
+  by the steps above straight to a broken rule is ruled out.
+Every step is sound, so a chart the solver finishes has exactly one answer.
+Only charts the level's steps finish on exactly their own bridges are kept,
+and (at Classic and Challenging) only charts the level below's steps cannot
+finish. Tests cross-check the solver against a brute-force count of answers
+on over a hundred charts, and check that charts with several answers are
+never called solved.
+
+Layout: top to bottom, the sign, the chart and the legend. The page is
+planned from the level and the trim alone, before a chart is built, so
+every page of a run matches. Islands sit on a lattice as widely spaced as
+the trim allows, up to 0.8 in, and never closer than the level's floor
+(Gentle 0.5 in, Classic 0.42 in, Challenging 0.38 in). Each island is a
+white circle with a black outline, 0.78 of the spacing across, and its
+number prints 16–26 pt, always inside the circle. The chart has a soft gray
+rounded frame with a little open sea inside it, the sign prints 16 pt (14 pt
+on a narrow trim, or the name over "Islands" when one line is still too
+wide) and the legend 14 pt, on one row or, on a narrow trim, one entry over
+the other. Bridges on the answer page run shore to shore, a double bridge as
+two parallel strokes. Typical results: 8.5 × 11 spaces islands 0.80 / 0.77 /
+0.70 in apart (Gentle / Classic / Challenging); 6 × 9 0.65 / 0.51 / 0.46 in;
+5.5 × 8.5 0.53 / 0.46 / 0.42 in.
+
+Quality gate (`kdp-preflight.ts`) runs before a page is accepted:
+- The chart is the level's size and island count, no two islands share a
+  point; the numbers match the answer; the answer keeps every rule; the
+  level's steps finish the chart on exactly that answer, and the level
+  below's steps do not.
+- Spacing, numbers (at least 16 pt and inside their islands) and the sign
+  are at their large-print floors or larger.
+- The sign's name fits its board; the sign, chart and legend are on the
+  printable panel and clear of each other.
+- The chain is not one the book already visits while others are unused, and
+  the chart is not one the book already prints.
+The drawn check then confirms every island drawn once at its point with its
+number printed once inside it, a hidden bridge on exactly the answer's lanes
+(doubled where the answer doubles it), the sign naming the chain, and the
+legend counting the islands and showing the bridge.
+
+Uniqueness: each puzzle stamps `chain|level|chart`, where the chart part is a
+digest that is the same however the chart is turned or mirrored (also used
+as the canonical key). Charts come from the seller's puzzle salt and the page
+seed, so two sellers never share a book and the same seed reprints the same
+page. A book sails to every one of the 42 island chains before one returns,
+never the previous page's, and never prints the same chart twice. A seller's
+next book opens at chains their last one visited least recently.
+Pages: 1 · Answer key: yes (every bridge built) · AI content: no
 
 ---
 
@@ -2405,6 +2496,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | farewell-logic-grid | Logic Grid: Farewell Party | logic | 1-2 | yes | no |
 | picture-logic | Picture Logic: Retirement Edition | logic | 1 | yes | no |
 | happy-campers | Happy Campers: Tents & Trees | logic | 1 | yes | no |
+| island-hopping | Island Hopping: Bridges | logic | 1 | yes | no |
 | word-search | Word Search | word | 1 | yes | yes |
 | hidden-message-word-search | Hidden Message Word Search | word | 1 | yes | yes |
 | trivia-clue-word-search | Trivia Clue Word Search | word | 1 | yes | yes |
@@ -2445,4 +2537,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 43 games** (4 logic · 32 word · 7 spatial).
+**Total: 44 games** (5 logic · 32 word · 7 spatial).

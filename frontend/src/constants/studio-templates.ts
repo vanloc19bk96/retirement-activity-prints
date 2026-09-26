@@ -14,6 +14,7 @@ import { wordokuTemplate } from '@/utils/studio/wordoku/generate'
 import { farewellLogicGridTemplate } from '@/utils/studio/farewell-logic-grid/generate'
 import { pictureLogicTemplate } from '@/utils/studio/picture-logic/generate'
 import { happyCampersTemplate } from '@/utils/studio/happy-campers/generate'
+import { islandHoppingTemplate } from '@/utils/studio/island-hopping/generate'
 import { wordSearchTemplate } from '@/utils/studio/retirement-word-search/generate'
 import { crosswordTemplate } from '@/utils/studio/crossword/generate'
 import { retirementAnagramTemplate } from '@/utils/studio/retirement-anagram/generate'
@@ -70,6 +71,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   farewellLogicGridTemplate,
   pictureLogicTemplate,
   happyCampersTemplate,
+  islandHoppingTemplate,
 
   // Word
   wordSearchTemplate,

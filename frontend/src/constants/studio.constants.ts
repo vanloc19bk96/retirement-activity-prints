@@ -21,6 +21,7 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'farewell-logic-grid',
   'picture-logic',
   'happy-campers',
+  'island-hopping',
   'word-search',
   'hidden-message-word-search',
   'trivia-clue-word-search',
