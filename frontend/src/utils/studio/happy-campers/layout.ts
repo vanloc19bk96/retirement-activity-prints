@@ -35,8 +35,10 @@ const COUNT_OF_CELL = 0.55
 export const HC_SIGN_SIZE = ptToPx(16)
 export const HC_SIGN_MIN = ptToPx(14)
 export const HC_SIGN_PAD_X = 16
-export const HC_SIGN_PAD_Y = 7
-const SIGN_GAP = 18
+export const HC_SIGN_PAD_Y = 9
+/** Air under the sign, before the column numbers: grows with the squares so the sign never crowds the grid. */
+export const HC_SIGN_GAP_MIN = 26
+const SIGN_GAP_OF_CELL = 0.45
 
 /** The legend: 14 pt words beside icons half as tall again. */
 export const HC_LEGEND_SIZE = ptToPx(14)
@@ -61,6 +63,8 @@ export interface HcPlan {
   signSize: number
   /** The sign on one line, or the name over "Campground" when one line is too wide. */
   signLines: 1 | 2
+  /** Air between the sign and the column numbers. */
+  signGap: number
   /** The band the sign sits in (its width is the panel's; the sign centres in it). */
   signBand: Box
   legendSize: number
@@ -125,9 +129,10 @@ function planAt(panel: Box, level: HcLevel, cell: number, signSize: number, sign
   const colCountHeight = Math.ceil(hcLineHeight(countSize))
 
   const signHeight = Math.ceil(hcLineHeight(signSize, signLines)) + HC_SIGN_PAD_Y * 2
+  const signGap = Math.round(Math.max(HC_SIGN_GAP_MIN, cell * SIGN_GAP_OF_CELL))
   const legendHeight = Math.max(HC_LEGEND_ICON, Math.ceil(hcLineHeight(HC_LEGEND_SIZE)))
   const gridSide = size * cell
-  const blockHeight = signHeight + SIGN_GAP + colCountHeight + countGap + gridSide + LEGEND_GAP + legendHeight
+  const blockHeight = signHeight + signGap + colCountHeight + countGap + gridSide + LEGEND_GAP + legendHeight
   const puzzleWidth = rowCountWidth + countGap + gridSide
   const widest = Math.max(puzzleWidth, widestSign(signSize, signLines, font), hcLegendWidth(spec.maxTents, font))
   if (widest > panel.width + 1e-6 || blockHeight > panel.height + 1e-6) return null
@@ -139,7 +144,7 @@ function planAt(panel: Box, level: HcLevel, cell: number, signSize: number, sign
   gridLeft = Math.min(gridLeft, Math.floor(panel.left + panel.width - gridSide))
   const top = Math.round(panel.top + Math.max(0, panel.height - blockHeight) * 0.35)
   const signBand: Box = { left: panel.left, top, width: panel.width, height: signHeight }
-  const gridTop = top + signHeight + SIGN_GAP + colCountHeight + countGap
+  const gridTop = top + signHeight + signGap + colCountHeight + countGap
   const grid: Box = { left: gridLeft, top: gridTop, width: gridSide, height: gridSide }
   const legendTop = gridTop + gridSide + LEGEND_GAP
   return {
@@ -152,6 +157,7 @@ function planAt(panel: Box, level: HcLevel, cell: number, signSize: number, sign
     grid,
     signSize,
     signLines,
+    signGap,
     signBand,
     legendSize: HC_LEGEND_SIZE,
     legendTop,

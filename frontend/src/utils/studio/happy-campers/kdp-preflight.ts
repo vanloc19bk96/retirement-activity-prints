@@ -2,7 +2,7 @@ import type { StudioFabricObject } from '@/types/studio-template.types'
 import type { Box } from '../studio-layout'
 import { HC_CAMPGROUNDS, hcLevelSpec, hcSignText, type HcBookEntry, type HcCampground, type HcLevel } from './content'
 import { HC_PART_KEY, hcLegendBox, hcSignBox } from './draw'
-import { HC_COUNT_MIN, HC_SIGN_MIN, HC_SIGN_PAD_X, hcSignSpec, hcTextWidth, type HcPlan } from './layout'
+import { HC_COUNT_MIN, HC_SIGN_GAP_MIN, HC_SIGN_MIN, HC_SIGN_PAD_X, hcSignSpec, hcTextWidth, type HcPlan } from './layout'
 import { hcSignature, type HcBuilt } from './puzzle'
 import { TENT, hcCounts, isHcSolution, solveHc } from './solver'
 
@@ -80,7 +80,7 @@ export function runHcKdpPreflight(options: {
   ] as const) {
     if (!inside(box, panel)) errors.push(`${what} runs past the printable area of this page.`)
   }
-  if (sign.top + sign.height > plan.grid.top - plan.countGap - plan.colCountHeight + 0.5) errors.push('The sign crowds the numbers.')
+  if (sign.top + sign.height + HC_SIGN_GAP_MIN > plan.grid.top - plan.countGap - plan.colCountHeight + 0.5) errors.push('The sign crowds the numbers.')
   if (legend.top < plan.grid.top + plan.grid.height + 4) errors.push('The legend crowds the grid.')
 
   // The book.

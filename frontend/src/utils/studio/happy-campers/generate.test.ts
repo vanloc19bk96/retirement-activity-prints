@@ -31,7 +31,7 @@ import {
 } from './content'
 import { HC_PART_KEY, buildHcPuzzle } from './draw'
 import { checkHcDrawnPage, runHcKdpPreflight } from './kdp-preflight'
-import { HC_COUNT_MIN, hcContentBox, hcPanelInBody, hcPrintNote, planHcPage } from './layout'
+import { HC_COUNT_MIN, HC_SIGN_GAP_MIN, hcContentBox, hcPanelInBody, hcPrintNote, planHcPage } from './layout'
 import { buildHcGrid, drawHcCandidate, hcSignature, type HcBuilt } from './puzzle'
 import { TENT, UNKNOWN, countHcSolutions, hcCounts, isHcSolution, solveHc, type HcPuzzle } from './solver'
 
@@ -359,6 +359,28 @@ describe('happy-campers pages', () => {
     const puzzle = buildHcPuzzle({ built, plan, campground, level: 'gentle', label: 'x', tag, font: FONT })
     expect(partsOf(puzzle, 'sign-text')[0]!.text).toBe('Pancake Breakfast Pines\nCampground')
     expect(checkHcDrawnPage({ puzzle, built, campground })).toEqual([])
+  })
+
+  it('keeps the sign clear of the numbers, with room for its name to set on one line', () => {
+    for (const level of LEVELS) {
+      for (const [w, h] of trims) {
+        const ctx = kdpCtx(w, h, 11)
+        const plan = planHcPage(panelFor(ctx, level), level, FONT)!
+        const puzzle = puzzleOf(generate({ ...base, level, seed: 11 }, ctx)[0]!.objects)!
+        const board = partsOf(puzzle, 'sign')[0]!
+        const text = partsOf(puzzle, 'sign-text')[0]!
+        const firstNumberTop = plan.grid.top - plan.countGap - plan.colCountHeight
+        // Air under the board grows with the squares and never drops below the floor.
+        expect(firstNumberTop - (plan.signBand.top + plan.signBand.height), `${level} ${w}x${h}`).toBeGreaterThanOrEqual(HC_SIGN_GAP_MIN)
+        expect(plan.signGap).toBeGreaterThanOrEqual(Math.round(plan.cell * 0.45) - 1)
+        // The words' box is at least as wide as the board, so a wider font runs past the padding rather than wrapping.
+        expect(text.width!).toBeGreaterThanOrEqual(board.width!)
+      }
+    }
+    const plan = planHcPage(panelFor(kdpCtx(8.5, 11)), 'classic', FONT)!
+    const crowded = { ...plan, signBand: { ...plan.signBand, top: plan.signBand.top + plan.signGap - 4 } }
+    const errors = runHcKdpPreflight({ built: builtFor('classic'), plan: crowded, level: 'classic', campground: HC_CAMPGROUNDS[0]!, panel: panelFor(kdpCtx(8.5, 11)), font: FONT }).errors
+    expect(errors).toContain('The sign crowds the numbers.')
   })
 
   it('says plainly when a trim is too small', () => {

@@ -241,12 +241,16 @@ the trim alone, before a grid is built, so every page of a run matches.
 Squares are as large as the trim allows, up to 0.8 in, and never below the
 level's floor (Gentle 0.55 in, Classic 0.45 in, Challenging 0.36 in). Numbers
 print 16–22 pt, the sign 16 pt (14 pt on a narrow trim, or the name over
-"Campground" when one line is still too wide) and the legend 14 pt. Trees are
+"Campground" when one line is still too wide) and the legend 14 pt. The sign
+stands clear of the numbers by about half a square (never under 26 px), and
+its words are set in a box at least as wide as the board, so a font that
+sets wider than measured runs into the board's padding instead of wrapping
+onto the numbers. Trees are
 drawn in two kinds, a pine and a round leafy tree, in soft gray with a black
 outline; tents are white with a black outline, a door and a pole tip. Typical
 results: 8.5 × 11 prints 0.8 in squares at Gentle and Classic and 0.68 in at
-Challenging; 6 × 9 prints 0.72 / 0.53 / 0.44 in; 5.5 × 8.5 prints 0.59 /
-0.48 / 0.39 in.
+Challenging; 6 × 9 prints 0.70 / 0.53 / 0.44 in; 5.5 × 8.5 prints 0.57 /
+0.47 / 0.39 in.
 
 Quality gate (`kdp-preflight.ts`) runs before a page is accepted:
 - The grid is the level's size and tree count; the numbers match the answer;
@@ -254,7 +258,8 @@ Quality gate (`kdp-preflight.ts`) runs before a page is accepted:
   that answer (and Challenging is not finished by the basic steps alone).
 - Squares, numbers and the sign are at their large-print floors or larger.
 - The sign's name fits its board; the sign, numbers, grid and legend are on
-  the printable panel and clear of each other.
+  the printable panel and clear of each other, with the sign's full air
+  above the numbers.
 - The campground is not one the book already visits while others are unused,
   and the grid is not one the book already prints.
 The drawn check then confirms every number printed once in its line, a tree

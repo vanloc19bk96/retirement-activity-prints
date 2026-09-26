@@ -19,7 +19,6 @@ import {
   HC_LEGEND_ICON,
   HC_LEGEND_ICON_GAP,
   HC_LEGEND_ITEM_GAP,
-  HC_SIGN_PAD_X,
   hcLegendSpec,
   hcLegendWidth,
   hcLegendWords,
@@ -239,6 +238,13 @@ export function hcSignBox(plan: HcPlan, campground: HcCampground, font: string):
   return { left: r2(left), top: plan.signBand.top, width, height: plan.signBand.height }
 }
 
+/** The widest the sign's words may set, centred on the sign and kept inside its band. */
+export function hcSignTextRoom(plan: HcPlan, sign: Box): number {
+  const centre = sign.left + sign.width / 2
+  const band = plan.signBand
+  return Math.floor(2 * Math.min(centre - band.left, band.left + band.width - centre))
+}
+
 /** Where the legend runs: centred under the grid and kept on the panel. */
 export function hcLegendBox(plan: HcPlan, tents: number, font: string): Box {
   const width = hcLegendWidth(tents, font)
@@ -286,7 +292,11 @@ export function buildHcPuzzle(options: {
           fontSize: plan.signSize,
           fontWeight: 700,
           lineHeight: 1,
-          width: Math.max(hcTextWidth(signText, plan.signSize, hcSignSpec(font)), sign.width - HC_SIGN_PAD_X),
+          // As wide as the band allows round the sign's centre: the name is
+          // centred either way, and a font that sets a little wider than
+          // measured runs past the board's padding instead of wrapping onto
+          // the numbers below.
+          width: Math.max(hcTextWidth(signText, plan.signSize, hcSignSpec(font)), hcSignTextRoom(plan, sign)),
           textAlign: 'center',
           originX: 'center',
         },
