@@ -43,6 +43,7 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'maze',
   'shaped-maze',
   'dot-to-dot',
+  'spot-the-difference',
 ])
 
 export const STUDIO_STROKE_HAIRLINE = 1.5

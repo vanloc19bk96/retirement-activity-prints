@@ -1001,7 +1001,7 @@ Pages: 2-5 (quiz pages, then one answer page) · Answer key: yes (number, ringed
 
 ---
 
-## Spatial (6 games)
+## Spatial (7 games)
 
 ### Maze (`maze`)
 A pencil maze with one entrance, one exit, and exactly one way through.
@@ -1404,6 +1404,94 @@ by one book and one seller's recent history — never a comparison with every
 page ever made. 292 distinct outlines across the 47 subjects.
 Pages: 1 · Answer key: yes · AI content: no
 
+### Spot the Differences: Retirement Edition (`spot-the-difference`)
+Two copies of one retirement scene, one above the other, the same size, in
+clean black line art: a cozy living room, a tea table, a front porch, a
+garden, a beach day, a fishing dock. One picture has 5 to 10 deliberate
+differences; the reader circles them. The instruction names the count, and a
+row of tick circles under the pictures ("Found: ○ ○ ○") shows it even with
+the instruction off. The answer page is the same two pictures with every
+difference ringed and numbered, and a short list of what changed ("1. No
+teacup (top)", "2. Clock changed", "3. Deck chair turned around", "4. Mug /
+teacup").
+
+Settings: scenes and differences.
+- Scenes: A mix of everything; At home (living room, reading nook, tea time,
+  hobby corner); Porch, garden & outdoors (front porch, garden, patio coffee,
+  backyard afternoon, picnic in the park, a round of golf); Travel & the
+  seaside (beach day, fishing dock, cruise deck, RV campsite, sightseeing
+  trip). 15 scenes; the help line names them.
+- Differences: Relaxed (5–6, bold: each change at least 0.3 in across and
+  0.6 in of changed line), Classic (6–8; 0.26 in, 0.45 in) or Challenging
+  (8–10, some subtler; 0.2 in, 0.32 in). A page hides as many as its scene
+  fairly holds within the range. The help line reports the pictures' size on
+  this trim; a soft warning appears when small pictures (under 2.7 in tall,
+  e.g. 5 × 8) are asked for Challenging, or for Classic with home scenes only
+  — rooms hold fewer well-spaced changes.
+Which scene, which things in it, which differences, picture size, line
+weights and the answer layout are not settings; each page deals its own.
+
+Every page is drawn in the browser (no AI, no images). A scene is data
+(`scene.ts`): a fixed backdrop (walls, floor, hills, sea, a dock, a ship's
+rail) and parts placed on it, each a drawing from a pool per slot — the
+Studio's shared retirement drawings, those Dot to Dot and Shaped Maze drew,
+and 39 drawn for this game (`elements.ts`: window, picture, wall clock,
+shelf of books, side table, tea table, rug, vase, floor and hanging lamps,
+cookies, cake, easel, footstool, slippers, a pile of books, sun, cloud,
+birds, kite, trees, pine, bush, fence, flowers, sand trap, picnic blanket,
+doormat, front door, hanging basket, ducks, beach umbrella, sandcastle,
+bucket, beach ball, life ring, campfire, signpost, tackle box) — 92 kinds in
+all (`props.ts`). Recipes (`scenes.ts`) pack parts in rows along floors,
+table tops and the ground with dealt gaps, versions and facing; things in
+one plane never overlap, the sky's sun, clouds and birds keep clear of
+everything, and nothing prints under 0.36 in. Both pictures render from the
+one scene: every shape is white paper with a black edge laid back to front,
+and what prints is each edge nothing later covers (`render.ts`), parts at
+1.2 pt, scenery at 0.94 pt, a 1.9 pt frame. A part keeps its anchor (its
+foot, or its hook) across versions, so a changed knob moves only what it
+changes — nothing else can drift between the pictures.
+
+Differences (`differences.ts`): one thing done to one part — left out of one
+picture (either one), one knob set otherwise (the clock's hands, the
+fence's pickets, the window's curtains, the cloud's puffs, the cake's
+tiers), turned round (only things with a front and back: chairs, boats,
+watering cans — never a cloud or a bush), or swapped for something of a
+similar size from the same slot. A knob that would lift a foot off the
+floor is never used. Every candidate is drawn both ways and compared as ink
+on a 48-per-inch grid: a cell counts only where one picture has ink and the
+other none within the level's tolerance (0.05–0.07 in), so a hairline shift
+is not a difference and a missing cup is. It must change enough line, be
+big enough and not too big (never over 42–60% of the picture's height), and
+its answer ring is fitted to the changed ink it measured. Differences are
+dealt weighted by the level (Relaxed favours whole things left out or
+swapped; Challenging favours knobs), one per part, at most half of one
+kind, every ring clear of every other; a few dealt orders are tried, then a
+packing pass (smallest rings first).
+
+Quality gate (`kdp-preflight.ts`): the scene is real and of the chosen
+group; the count within the level; one change per part; every change's
+measured size within bounds; rings on the picture and apart; the two
+finished pictures compared whole — they differ nowhere outside the rings
+(3 grid cells of rounding noise at most) and every change still shows
+there; neither picture bare nor cluttered (2–16% ink); every part wholly
+inside its frame; and not a near-copy of a page the book already prints
+(same scene, over 80% the same things and half the same changes). A change
+the full check faults is swapped for another; a scene that cannot hide
+enough is dealt again (up to 16 tries); if nothing passes, the page says so
+plainly. The drawn page must have both pictures the same size and aligned,
+black ink only, one hidden ring and number per difference, 1 to N once
+each, and a tick circle per difference.
+
+Uniqueness and variety: each page stamps `scene|things|changes` (short
+tokens). A new page takes the group's least-used scene in the book (never
+the previous page's), then one this seller has not printed lately; each
+scene is dealt up to three times and the one least like the book's pages of
+that scene kept; the seller's recent scenes (by what is in them) are
+avoided across books. Choices come from the seller's puzzle salt and the
+page seed, and every check is bounded by one book and one seller's recent
+history — never a comparison with every page ever made.
+Pages: 1 · Answer key: yes · AI content: no
+
 ---
 
 ## Quick-reference index (by key)
@@ -1440,5 +1528,6 @@ Pages: 1 · Answer key: yes · AI content: no
 | quote-coloring | Quote Coloring Page | spatial | 1 | no | yes |
 | color-by-number | Color by Number: Retirement Scenes | spatial | 1 | no | no |
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
+| spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 30 games** (2 logic · 22 word · 6 spatial).
+**Total: 31 games** (2 logic · 22 word · 7 spatial).
