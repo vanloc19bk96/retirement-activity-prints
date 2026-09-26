@@ -142,7 +142,7 @@ Pages: 1-2 (plus an answer page) · Answer key: yes (table and checked grid) · 
 
 ---
 
-## Word (26 games)
+## Word (27 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -705,6 +705,98 @@ boxes, line spacing and the line after the label are at their minimums.
 Black ink only (writing lines a mid grey). If the page is too small, it
 says so plainly.
 Pages: 5-17 (by trim, destinations and writing space) · Answer key: no · AI content: no
+
+### Who Knows the Retiree Best? (`who-knows-retiree-best`)
+A warm party game for retirement books, farewells and family celebrations.
+Coworkers, friends or family each answer the same twelve light questions
+about the retiree ("What was the very first job they were ever paid to do?",
+"Tea, coffee or hot chocolate: which would they pick first?", "What do they
+always say when a plan goes sideways?"), guessing what the retiree would say.
+Then the retiree reads out the real answers, players tick every match (close
+enough counts, and the retiree has the final say), and the scores show who
+knows them best. It is a social guessing game, not a questionnaire: nothing
+about the retiree is known or invented, and there is no answer page.
+
+The pages: one answer sheet per player, then the retiree's sheet. A player's
+sheet opens with a "Player:" line and closes with "Score: ___ out of 12".
+Every question is numbered, in large print, followed by the room its answer
+needs (a short line for a word, a name or a time; a full line for a phrase;
+two lines for a saying or a story) and a box to tick when it matches. The
+retiree's sheet ("Linda's Real Answers", or "The Real Answers") prints the
+same twelve questions with room to write the real answers, and closes with a
+scoreboard (a row per player, then "Who knows Linda best? ___") when more than
+one person plays. Every sheet starts on a new page, so sheets can be handed
+round.
+
+Settings: the retiree's name (optional), who is playing and how many.
+- *Name*: a first name or nickname, printed only in the headings and
+  instructions ("Who Knows Linda Best?", "you think Linda would give"). It is
+  never sent to the AI. Blank means "the retiree". A heading the seller typed
+  is kept as typed.
+- *Who's playing*: friends, family & coworkers (default), coworkers (more
+  workday routines, desk habits and what they're known for at work), or
+  friends & family (no office questions).
+- *Players*: 1 to 6 (default 2). Each gets their own answer sheet with the
+  same questions, so scores compare.
+Number of questions, topics, tone, answer space, type size and questions per
+page are not settings. The players' help line reports what the trim prints
+("Each of 2 players gets a 3-page answer sheet, then the real answers and
+scoreboard take 3 pages — about 9 pages in 18 pt large print" on a 6 x 9).
+
+Every question is gated in the API and again in the browser (AI content,
+`services/studio_who_knows_best_service.py`): one sentence ending in a single
+question mark, 4-16 words and at most 80 characters, about the retiree as
+they/their/them (never a name, "he" or "she") and never addressing the player
+as "you". A question is dropped if it is too broad to guess ("What do they
+enjoy?") or touches age, health, weight, money, relationships, family
+assumed (a partner, children, grandchildren), politics, religion, alcohol,
+gambling, anything embarrassing or secret, or security-question details
+(a first pet's name, a street, an account). Quotations, brands and
+celebrities are dropped too. A question that asks for a saying, advice or a
+story always gets two answer lines, whatever the model suggested.
+
+Repeats are caught in meaning: question words and padding ("favourite",
+"usually", "most likely") are set aside, synonyms folded (coffee and tea are
+one drink; job, career and office one working life; paid and pay one word),
+and the Bucket List's meaning test is applied with the model's own concept
+name. So "What was their first job?" and "Where did they work first?" are one
+question. A question that repeats one already in the book (read back from
+its pages), this seller's recent sets for the audience (browser) or the
+worker's memory is dropped. All bounded, never a comparison with every set
+ever made.
+
+Variety is structural. Every question gets its own brief: a topic, one of its
+facets and a question shape (a past detail, a habit, a pick between named
+options, a number or time, a prediction, something they are known for, one
+specific pick), sampled by seed from 17 topics and about 190 facets. A set
+plans twelve different topics (audience-weighted, capped per group, always
+retirement plans) plus eight spares. The browser picks the printed twelve:
+at least nine topics, a topic twice only on two different details, no more
+than two food, travel or career questions and three office ones, no shape
+more than three times, "favourite" at most twice, no three questions opening
+with the same two words, and always one about the future. It then orders
+them by seed: a quick question first, retirement plans last, and no two
+neighbours from the same group of topics, opening or shape where avoidable.
+
+Page: one column, at most 6.5 in wide. The type size comes from the trim: 18
+pt down to 15 pt while a typical question opens on one line, 15 pt with a line
+more of wrapping on the narrowest trims, 14 pt only as a floor. Answer lines
+are at least 0.38 in apart, short lines at least 1.75 in, tick boxes at least
+0.24 in. A question never splits from its lines, and a question that would
+need more than three lines is passed over for a spare. Each sheet takes as
+many pages as it needs, with questions spread evenly (the first page, which
+carries the how-to, often a little lighter) and one gap between blocks,
+widened where every page has room. The scoreboard sits under the last
+question when that saves a page, otherwise on a page of its own.
+
+Quality gate: a preflight re-proves the set (twelve questions numbered 1-12,
+every one printable, sized for its answer and distinct, every set rule held)
+and every sheet (all twelve in order, name and score lines on a player's
+sheet, a scoreboard for more than one player, nothing overlapping or past
+the printable area, and type, line spacing, boxes and lines at their
+minimums). Black ink only (writing lines a mid grey). If a whole, balanced
+set cannot be made, or the page is too small, the page says so plainly.
+Pages: 2-4 per player plus 2-4 for the real answers (by trim and players) · Answer key: no (the retiree writes the real answers) · AI content: yes
 
 ### Two Truths and a Fib: Retirement Edition (`two-truths-and-a-fib`)
 A light factual challenge built for retirement books. Each numbered set has a
@@ -1775,6 +1867,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | roll-a-day | Roll-a-Day: Retirement Edition | word | 1 | no | yes |
 | weeks-of-firsts | 52 Weeks of Firsts: Retirement Edition | word | 27-52 | no | yes |
 | travel-wish-map | Travel Wish Map: Retirement Edition | word | 5-17 | no | no |
+| who-knows-retiree-best | Who Knows the Retiree Best? | word | 4-28 | no | yes |
 | two-truths-and-a-fib | Two Truths and a Fib | word | 1 | yes | yes |
 | what-kind-of-retiree | What Kind of Retiree Are You? | word | 4-6 | no | yes |
 | fill-in-funnies | Fill-in Funnies | word | 2-3 | no | yes |
@@ -1791,4 +1884,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 35 games** (2 logic · 26 word · 7 spatial).
+**Total: 36 games** (2 logic · 27 word · 7 spatial).

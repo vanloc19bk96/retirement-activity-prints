@@ -46,6 +46,7 @@ from app.api.routes.studio_quote_coloring import router as studio_quote_coloring
 from app.api.routes.studio_bucket_list import router as studio_bucket_list_router
 from app.api.routes.studio_roll_a_day import router as studio_roll_a_day_router
 from app.api.routes.studio_weeks_of_firsts import router as studio_weeks_of_firsts_router
+from app.api.routes.studio_who_knows_best import router as studio_who_knows_best_router
 
 router = APIRouter()
 
@@ -91,5 +92,6 @@ router.include_router(studio_quote_coloring_router)
 router.include_router(studio_bucket_list_router)
 router.include_router(studio_roll_a_day_router)
 router.include_router(studio_weeks_of_firsts_router)
+router.include_router(studio_who_knows_best_router)
 
 __all__ = ["router"]

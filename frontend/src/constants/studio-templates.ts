@@ -35,6 +35,7 @@ import { everOrNeverTemplate } from '@/utils/studio/ever-or-never/generate'
 import { bucketListTemplate } from '@/utils/studio/bucket-list/generate'
 import { weeksOfFirstsTemplate } from '@/utils/studio/weeks-of-firsts/generate'
 import { travelWishMapTemplate } from '@/utils/studio/travel-wish-map/generate'
+import { whoKnowsBestTemplate } from '@/utils/studio/who-knows-retiree-best/generate'
 import { retiredNameTemplate } from '@/utils/studio/retired-name/generate'
 import { rollADayTemplate } from '@/utils/studio/roll-a-day/generate'
 import { twoTruthsFibTemplate } from '@/utils/studio/two-truths-and-a-fib/generate'
@@ -83,6 +84,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   bucketListTemplate,
   weeksOfFirstsTemplate,
   travelWishMapTemplate,
+  whoKnowsBestTemplate,
   retiredNameTemplate,
   rollADayTemplate,
   twoTruthsFibTemplate,
