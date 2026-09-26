@@ -36,6 +36,7 @@ import { bucketListTemplate } from '@/utils/studio/bucket-list/generate'
 import { weeksOfFirstsTemplate } from '@/utils/studio/weeks-of-firsts/generate'
 import { travelWishMapTemplate } from '@/utils/studio/travel-wish-map/generate'
 import { whoKnowsBestTemplate } from '@/utils/studio/who-knows-retiree-best/generate'
+import { wellWishesTemplate } from '@/utils/studio/well-wishes/generate'
 import { retiredNameTemplate } from '@/utils/studio/retired-name/generate'
 import { rollADayTemplate } from '@/utils/studio/roll-a-day/generate'
 import { twoTruthsFibTemplate } from '@/utils/studio/two-truths-and-a-fib/generate'
@@ -85,6 +86,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   weeksOfFirstsTemplate,
   travelWishMapTemplate,
   whoKnowsBestTemplate,
+  wellWishesTemplate,
   retiredNameTemplate,
   rollADayTemplate,
   twoTruthsFibTemplate,
@@ -112,7 +114,9 @@ function withCommonFields(def: StudioTemplateDefinition): StudioTemplateDefiniti
         field.key === 'title'
           ? {
               ...field,
-              help: `Leave blank to use “${def.defaultPageTitle}”, or type your own heading.`,
+              help:
+                def.pageTitleHelp ??
+                `Leave blank to use “${def.defaultPageTitle}”, or type your own heading.`,
             }
           : field,
       )

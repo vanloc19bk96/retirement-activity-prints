@@ -798,6 +798,67 @@ minimums). Black ink only (writing lines a mid grey). If a whole, balanced
 set cannot be made, or the page is too small, the page says so plainly.
 Pages: 2-4 per player plus 2-4 for the real answers (by trim and players) · Answer key: no (the retiree writes the real answers) · AI content: yes
 
+### Well Wishes & Signatures (`well-wishes-signatures`)
+A keepsake signature section for retirement, farewell and coworker gift
+books. Coworkers, friends or family each take a framed box, write a short
+wish or a favourite memory on its lines and sign their name. Each box has one
+gentle prompt at the top ("My wish for you", "A favorite memory", "Thank you
+for…"), evenly spaced writing lines and a sign-off line on the same rhythm
+("From", "Signed", "Warmly,"). Nothing is filled in before printing and there
+is no answer page.
+
+Settings: the retiree's name (optional; a first name or nickname, printed in
+the heading and intro only), who's signing (Everyone, Coworkers, or Friends &
+family, which adds work or family prompts and headings) and pages (1-4,
+default 2). Boxes per page, box size, line spacing and type size are not
+settings. The pages note reports what the trim prints ("6 message boxes (3
+per page)" on a 6 x 9). The title field keeps "Well Wishes" by default,
+which means "choose a heading for me". Typing a title prints it on every page.
+
+Wording (no AI, `utils/studio/well-wishes/content.ts`): about 14 headings,
+each with a named form ("Retirement Wishes for Linda") and a matching heading
+for the pages after the first ("More Retirement Wishes"). There are also 9
+one-line intros spoken to the signer, 32 box prompts spoken to the retiree
+and 7 sign-offs, all original and grouped by audience. A heading or intro
+that would not fit the column with the name falls back to its plain form.
+
+Look: six print-safe frame styles (plain, rounded, double rule, corner
+brackets, notched corners, inset scallop corners), the prompt either inside
+the frame or set into its top edge, and a quiet rule under the heading with
+one small line-art motif (sprig, sparkle, sunrise, wave, bloom, paper plane,
+diamond). Every look is one frame weight, black ink with mid-grey writing
+lines, and has no fills, shadows or gradients.
+
+Page: boxes stretch evenly to fill the safe area under the heading, so there
+is no empty band at the foot. They use two columns where each is at least 3.2
+in wide (8 x 10, 8.5 x 11) and one column otherwise. Every box is at least
+2.75 in wide, with at least three writing lines 0.38 in or more apart above a
+sign-off line of at least 1.6 in. Prompts and sign-offs are 15 pt (14 pt only
+if too few prompts fit). A set takes the first page's grid on every page,
+because the intro costs the first page room. Later pages keep the same boxes,
+a little taller, instead of adding a row, so a spread never shows two big
+boxes facing three small ones. Row counts are fixed before the look is
+chosen, so a frame style never changes how many people can sign. A two-line
+intro is balanced so it never ends on a lone word.
+
+Variety and uniqueness: heading, intro, frame, prompt placement, motif,
+sign-off and prompts are each picked by seed. Anything this book's earlier
+sets print goes last, read back from the pages' content labels. So does
+anything this seller printed in their last couple of sets (browser, bounded),
+so a second set in the same book gets a different heading, frame, motif and
+prompts. Prompts are dealt one per box, never twice on a page or in
+neighbouring boxes. All checks are bounded by one book and one seller's
+recent history.
+
+Quality gate: a preflight re-proves the page count, at least one box per
+page, one box size per page, no overlaps, every box inside the printable
+area, no gap at the foot, and every prompt and sign-off being one of the
+bundled texts that fits its box. It also checks that no prompt repeats close
+by, that generated headings fit at 18 pt or larger, and that type, line
+spacing, writing lines and signature room are at their minimums. If the page
+is too small for a roomy box, it says so plainly.
+Pages: 1-4 (default 2) · Answer key: no · AI content: no
+
 ### Two Truths and a Fib: Retirement Edition (`two-truths-and-a-fib`)
 A light factual challenge built for retirement books. Each numbered set has a
 short title ("Early Telephones") and three lettered statements on that one
@@ -1868,6 +1929,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | weeks-of-firsts | 52 Weeks of Firsts: Retirement Edition | word | 27-52 | no | yes |
 | travel-wish-map | Travel Wish Map: Retirement Edition | word | 5-17 | no | no |
 | who-knows-retiree-best | Who Knows the Retiree Best? | word | 4-28 | no | yes |
+| well-wishes-signatures | Well Wishes & Signatures | word | 1-4 | no | no |
 | two-truths-and-a-fib | Two Truths and a Fib | word | 1 | yes | yes |
 | what-kind-of-retiree | What Kind of Retiree Are You? | word | 4-6 | no | yes |
 | fill-in-funnies | Fill-in Funnies | word | 2-3 | no | yes |
@@ -1884,4 +1946,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 36 games** (2 logic · 27 word · 7 spatial).
+**Total: 37 games** (2 logic · 28 word · 7 spatial).

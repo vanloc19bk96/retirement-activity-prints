@@ -270,6 +270,11 @@ export interface StudioTemplateDefinition {
    */
   defaultPageTitle?: string
   /**
+   * Help under Title text, replacing the generic "Leave blank to use …" line —
+   * for templates that do more with their default than print it verbatim.
+   */
+  pageTitleHelp?: string
+  /**
    * Blank / fixed forms whose layout does not change with seed.
    * Book and bulk runs skip content-fingerprint uniqueness so the same sheet
    * can appear more than once — retries cannot invent a different page.
