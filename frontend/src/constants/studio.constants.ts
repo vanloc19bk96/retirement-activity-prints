@@ -20,6 +20,7 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'wordoku',
   'farewell-logic-grid',
   'picture-logic',
+  'happy-campers',
   'word-search',
   'hidden-message-word-search',
   'trivia-clue-word-search',

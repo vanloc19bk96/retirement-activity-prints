@@ -65,7 +65,7 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ---
 
-## Logic (3 games)
+## Logic (4 games)
 
 ### Sudoku (`sudoku`)
 Classic number Sudoku for a large-print retirement book. Fill every row, column
@@ -193,6 +193,82 @@ previous page's picture. A returning picture comes back the other way round
 when it can. A seller's next book opens with pictures their last one printed
 least recently. Choices come from the seller's puzzle salt and the page seed.
 Pages: 1 · Answer key: yes (shaded picture and its name) · AI content: no
+
+### Happy Campers: Tents & Trees (`happy-campers`)
+A Tents & Trees logic puzzle dressed as a retirement road trip. Each page is
+one campground: a grid with trees printed in some squares and a number beside
+every row and above every column. The reader pitches one tent beside every
+tree (above, below, left or right of it); tents never touch, not even corner
+to corner; and each row and column holds exactly the tents its number says.
+Over the grid hangs the campground's sign, a double-ruled board with a
+retirement name: Rocking Chair Ridge Campground, Gone Fishin' Cove, No Alarm
+Clock Acres, Porch Swing Pines. Under it a one-line legend shows the tree the
+reader is given and the tent they draw, with how many to pitch ("Tent (12 to
+pitch)"). The answer page draws every tent in its square.
+
+Settings: the level only.
+- Gentle: 6 × 6, 7 tents. Finished with the basic steps alone, and the how-to
+  line adds "Tip: dot the squares where no tent can go."
+- Classic: 8 × 8, 12 or 13 tents. May also need gap counting along a row.
+- Challenging: 10 × 10, 18 to 20 tents. Always needs more than the basic
+  steps (gap counting or a "what if" check).
+Which campground, which grid, square size and number size are not settings.
+The help line reports what the trim in Settings prints (square size and
+number size), or that the trim is too small.
+
+Every page is built in the browser (no AI). A grid is made by pitching tents
+at random squares that do not touch, planting a tree on a free side of each,
+and reading the counts off the tents. The solver (`solver.ts`) then works it
+the way a reader does, one sure step at a time and never guessing:
+- basic: a full row or column is grass, one with just enough room is all
+  tents; grass round every tent; a tree with one free side gets its tent
+  there; a square beside no free tree is grass; a tent with one tree beside it
+  belongs to that tree.
+- runs (Classic and up): a gap of k open squares holds at most ⌈k/2⌉ tents;
+  when a row needs exactly that many, an odd gap is tent, grass, tent… and
+  the squares across from an even gap are grass.
+- probe (Challenging): a square where a tent (or grass) leads by the steps
+  above straight to a broken rule is the other thing.
+Every step is sound, so a grid the solver finishes has exactly one answer.
+Only grids the level's steps finish on exactly their own tents are kept
+(and, at Challenging, only grids the basic steps cannot finish). Tests
+cross-check the solver against a brute-force count of answers on over a hundred
+grids, and check that grids with two answers are never called solved.
+
+Layout: top to bottom, the sign, the column numbers, the grid with the row
+numbers on its left, and the legend. The page is planned from the level and
+the trim alone, before a grid is built, so every page of a run matches.
+Squares are as large as the trim allows, up to 0.8 in, and never below the
+level's floor (Gentle 0.55 in, Classic 0.45 in, Challenging 0.36 in). Numbers
+print 16–22 pt, the sign 16 pt (14 pt on a narrow trim, or the name over
+"Campground" when one line is still too wide) and the legend 14 pt. Trees are
+drawn in two kinds, a pine and a round leafy tree, in soft gray with a black
+outline; tents are white with a black outline, a door and a pole tip. Typical
+results: 8.5 × 11 prints 0.8 in squares at Gentle and Classic and 0.68 in at
+Challenging; 6 × 9 prints 0.72 / 0.53 / 0.44 in; 5.5 × 8.5 prints 0.59 /
+0.48 / 0.39 in.
+
+Quality gate (`kdp-preflight.ts`) runs before a page is accepted:
+- The grid is the level's size and tree count; the numbers match the answer;
+  the answer keeps every rule; the level's steps finish the grid on exactly
+  that answer (and Challenging is not finished by the basic steps alone).
+- Squares, numbers and the sign are at their large-print floors or larger.
+- The sign's name fits its board; the sign, numbers, grid and legend are on
+  the printable panel and clear of each other.
+- The campground is not one the book already visits while others are unused,
+  and the grid is not one the book already prints.
+The drawn check then confirms every number printed once in its line, a tree
+on exactly the tree squares, a hidden tent on exactly the answer's squares,
+the sign naming the campground, and the legend counting the tents.
+
+Uniqueness: each puzzle stamps `campground|level|grid`, where the grid part is
+a digest that is the same however the grid is turned or mirrored (also used
+as the canonical key). Grids come from the seller's puzzle salt and the page
+seed, so two sellers never share a book and the same seed reprints the same
+page. A book visits every one of the 42 campgrounds before one returns, never
+the previous page's, and never prints the same grid twice. A seller's next
+book opens at campgrounds their last one visited least recently.
+Pages: 1 · Answer key: yes (every tent pitched) · AI content: no
 
 ---
 
@@ -2323,6 +2399,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | sudoku | Sudoku | logic | 1 | yes | no |
 | farewell-logic-grid | Logic Grid: Farewell Party | logic | 1-2 | yes | no |
 | picture-logic | Picture Logic: Retirement Edition | logic | 1 | yes | no |
+| happy-campers | Happy Campers: Tents & Trees | logic | 1 | yes | no |
 | word-search | Word Search | word | 1 | yes | yes |
 | hidden-message-word-search | Hidden Message Word Search | word | 1 | yes | yes |
 | trivia-clue-word-search | Trivia Clue Word Search | word | 1 | yes | yes |
@@ -2363,4 +2440,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 42 games** (3 logic · 32 word · 7 spatial).
+**Total: 43 games** (4 logic · 32 word · 7 spatial).
