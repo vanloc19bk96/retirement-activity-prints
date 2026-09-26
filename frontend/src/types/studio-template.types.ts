@@ -275,6 +275,11 @@ export interface StudioTemplateDefinition {
    */
   pageTitleHelp?: string
   /**
+   * Drop the "Show instructions" toggle — for keepsake pages (a certificate)
+   * that print no how-to line, so the switch would do nothing.
+   */
+  hidesInstructionsToggle?: boolean
+  /**
    * Blank / fixed forms whose layout does not change with seed.
    * Book and bulk runs skip content-fingerprint uniqueness so the same sheet
    * can appear more than once — retries cannot invent a different page.

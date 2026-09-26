@@ -142,7 +142,7 @@ Pages: 1-2 (plus an answer page) · Answer key: yes (table and checked grid) · 
 
 ---
 
-## Word (27 games)
+## Word (29 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -858,6 +858,85 @@ by, that generated headings fit at 18 pt or larger, and that type, line
 spacing, writing lines and signature room are at their minimums. If the page
 is too small for a roomy box, it says so plainly.
 Pages: 1-4 (default 2) · Answer key: no · AI content: no
+
+### Certificate of Retirement (`retirement-certificate`)
+A framed, gift-worthy certificate for retirement, farewell and retirement gift
+books. From the top: a small line-art emblem, the heading, a presentation line
+("This certifies that"), the retiree's name set large, one short citation
+("has completed 32 years of dedicated service at Riverside Library and is
+hereby excused from alarm clocks, meetings and Monday mornings, effective
+immediately."), then "Officially promoted to" with a new title ("Chief
+Leisure Officer"), and a signature row with a signature line, a date line
+and an optional seal. One page, no answer page.
+
+Settings (all optional, so a certificate takes seconds): the retiree's name,
+years of service (1-70), retirement date, workplace or team, tone (Fun,
+Heartfelt or Classic) and "Officially promoted to". A missing detail never
+leaves a gap. With no name, the certificate prints a long line for the name
+to be written in by hand. With no years it reads "many years of …". With no
+workplace the "at …" is dropped. With no date the date line is left blank,
+labelled "Date". With no title, one is picked to suit the tone. An ISO date
+(2026-06-30) is spelled out ("June 30, 2026"); any other date is printed as
+typed. The year from the date goes on the seal. The title field keeps
+"Certificate of Retirement" by default, which means "choose a heading for
+me". A "Game N" number from a whole-book run is treated the same way,
+because a certificate never prints "Game 7". A typed heading is printed as
+typed, and switching the page title off prints none. The instructions toggle
+is hidden (`hidesInstructionsToggle`), since a certificate has no how-to
+line. Nothing private is asked for.
+
+Wording (no AI, `utils/studio/retirement-certificate/content.ts`): 16
+headings (some with a small capitals line above, such as "Official License
+to" / "Retire"), 11 presentation lines, 18 citations, 7 service phrases, 9
+promotion lines, 105 distinct titles (62 fun, 28 heartfelt, 21 classic), and
+signature and date labels. All are original and tagged by tone. Presentation
+lines and citations are paired by grammar: "that" leads take a verb ("has
+completed …") and "to" leads take a phrase ("in recognition of …"). Humour
+stays on freedom (meetings, alarm clocks, hobbies, travel, coffee, gardens,
+slow mornings). A test keeps out anything about age, health, memory, money
+or idleness.
+
+Look: seven frame styles (double rule, deco steps, rounded, corner brackets,
+dotted inner rule, corner diamonds, concave corners), six emblems (sunrise,
+laurel, star, sailboat, flourish, compass), three seal edges (scalloped,
+starburst, beaded) or no seal, and the name in italic or bold, with the new
+title in the contrasting style. Black ink only. There are no fills beyond
+tiny dots, and no shadows or gradients.
+
+Page: the frame sits on the safe area and its ornaments stay within 30 px of
+it. Text keeps 0.36 in inside the frame. Every block is measured with
+Fabric's own glyph widths and fitted by shrinking to a floor and then
+breaking into at most two balanced lines. The floors are name 22 pt,
+heading 20 pt, title 17 pt, body 12 pt and labels 10 pt. The citation may
+take up to five lines. A name or title breaks at a space before a hyphen,
+and the title never outranks the name. One scale (0.8-1.35) is chosen for
+the whole stack so that it fills the page without crowding it, and the
+leftover height becomes weighted breathing room. The signature row puts
+the two lines beside a seal where they stay at least 1.3 in long, otherwise
+side by side, otherwise stacked. Headings, promotion lines, citations and
+labels that would not fit the trim are filtered out before picking. If the
+stack still does not fit, it steps down: no emblem, then the shortest
+citation, then no seal or small capitals line.
+
+Variety and uniqueness: heading, lead, citation, service phrase, promotion
+line, title, frame, emblem, seal and name style are each picked by seed.
+Anything this book's earlier certificates print goes last, read back from
+the pages' content labels. So does anything this seller printed recently
+(browser, bounded per tone). A team book of certificates therefore gets a
+different title, heading, citation and frame on each page. All checks are
+bounded by one book and one seller's recent history.
+
+Quality gate: a preflight re-proves the frame inside the safe area, text
+clear of the frame ornaments, every block inside the text area with none
+overlapping, every size at or above its floor, and line counts within
+limits. It also checks that the text is free of unfilled slots or stray
+values, that the citation is one complete sentence, and that the name line
+is long and tall enough to write on. The signature lines must be at least
+1.3 in, with labels and date fitting their lines and the seal clear of both.
+A generated title must be one of ours and must not already be in the book
+when a fresh one was available. If the page is too small, it says so
+plainly.
+Pages: 1 · Answer key: no · AI content: no
 
 ### Two Truths and a Fib: Retirement Edition (`two-truths-and-a-fib`)
 A light factual challenge built for retirement books. Each numbered set has a
@@ -1930,6 +2009,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | travel-wish-map | Travel Wish Map: Retirement Edition | word | 5-17 | no | no |
 | who-knows-retiree-best | Who Knows the Retiree Best? | word | 4-28 | no | yes |
 | well-wishes-signatures | Well Wishes & Signatures | word | 1-4 | no | no |
+| retirement-certificate | Certificate of Retirement | word | 1 | no | no |
 | two-truths-and-a-fib | Two Truths and a Fib | word | 1 | yes | yes |
 | what-kind-of-retiree | What Kind of Retiree Are You? | word | 4-6 | no | yes |
 | fill-in-funnies | Fill-in Funnies | word | 2-3 | no | yes |
@@ -1946,4 +2026,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 37 games** (2 logic · 28 word · 7 spatial).
+**Total: 38 games** (2 logic · 29 word · 7 spatial).

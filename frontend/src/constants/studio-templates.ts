@@ -37,6 +37,7 @@ import { weeksOfFirstsTemplate } from '@/utils/studio/weeks-of-firsts/generate'
 import { travelWishMapTemplate } from '@/utils/studio/travel-wish-map/generate'
 import { whoKnowsBestTemplate } from '@/utils/studio/who-knows-retiree-best/generate'
 import { wellWishesTemplate } from '@/utils/studio/well-wishes/generate'
+import { retirementCertificateTemplate } from '@/utils/studio/retirement-certificate/generate'
 import { retiredNameTemplate } from '@/utils/studio/retired-name/generate'
 import { rollADayTemplate } from '@/utils/studio/roll-a-day/generate'
 import { twoTruthsFibTemplate } from '@/utils/studio/two-truths-and-a-fib/generate'
@@ -87,6 +88,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   travelWishMapTemplate,
   whoKnowsBestTemplate,
   wellWishesTemplate,
+  retirementCertificateTemplate,
   retiredNameTemplate,
   rollADayTemplate,
   twoTruthsFibTemplate,
@@ -109,8 +111,11 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
 ]
 
 function withCommonFields(def: StudioTemplateDefinition): StudioTemplateDefinition {
+  const available = def.hidesInstructionsToggle
+    ? STUDIO_COMMON_FIELDS.filter((field) => field.key !== 'showInstructions')
+    : STUDIO_COMMON_FIELDS
   const commonFields = def.defaultPageTitle
-    ? STUDIO_COMMON_FIELDS.map((field) =>
+    ? available.map((field) =>
         field.key === 'title'
           ? {
               ...field,
@@ -120,7 +125,7 @@ function withCommonFields(def: StudioTemplateDefinition): StudioTemplateDefiniti
             }
           : field,
       )
-    : STUDIO_COMMON_FIELDS
+    : available
   const schema: StudioConfigField[] = [...commonFields, ...def.configSchema]
   return { ...def, configSchema: schema }
 }
