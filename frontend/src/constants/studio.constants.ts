@@ -28,6 +28,7 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'codeword',
   'retirement-anagram',
   'word-wheel',
+  'word-ladder',
   'riddle-scramble',
   'missing-vowels',
   'cryptogram',

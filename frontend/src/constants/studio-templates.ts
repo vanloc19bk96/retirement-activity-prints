@@ -28,6 +28,7 @@ import { hiddenMessageWordSearchTemplate } from '@/utils/studio/hidden-message-w
 import { triviaClueWordSearchTemplate } from '@/utils/studio/trivia-clue-word-search/generate'
 import { atoZWordSearchTemplate } from '@/utils/studio/a-to-z-word-search/generate'
 import { wordWheelTemplate } from '@/utils/studio/word-wheel/generate'
+import { wordLadderTemplate } from '@/utils/studio/word-ladder/generate'
 import { pictureRebusTemplate } from '@/utils/studio/picture-rebus/generate'
 import { retirementBingoTemplate } from '@/utils/studio/retirement-bingo/generate'
 import { topFiveGuessTemplate } from '@/utils/studio/top-five-guess/generate'
@@ -80,6 +81,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   phraseFinderTemplate,
   retirementAnagramTemplate,
   wordWheelTemplate,
+  wordLadderTemplate,
   riddleScrambleTemplate,
   missingVowelsTemplate,
   pictureRebusTemplate,

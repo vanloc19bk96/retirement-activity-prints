@@ -196,7 +196,7 @@ Pages: 1 · Answer key: yes (shaded picture and its name) · AI content: no
 
 ---
 
-## Word (31 games)
+## Word (32 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -359,6 +359,71 @@ word list, so B_LL and CH__R never reach the page. The solution page is the
 same page with the vowels written into their own blanks. AI writes fresh words
 and clues each page so a long book does not repeat.
 Pages: 1 · Answer key: yes · AI content: yes
+
+### Word Ladder: Work to Play (`word-ladder`)
+Clued word ladders for a large-print retirement book. Each puzzle climbs from
+a word of the working week to a word of retirement, one letter at a time:
+WORK to GOLF, DESK to REST, BOSS to NAPS, FILE to FREE. The ladder is drawn as
+a real one: two rails, a rung between every pair of words, and a row of letter
+squares on each step. The start word prints at the top and the finish word at
+the bottom; the rungs between are empty squares. To the right of each row sit
+the caption ("1. From WORK to GOLF") beside the first word, a clue beside
+every rung, and "Finish" beside the last word. The clue settles each rung, so
+every ladder has one right answer. The answer page fills every rung in.
+
+Settings: the level only.
+- Gentle: 2 or 3 rungs to fill, and the square whose letter changes is shaded
+  light gray. The how-to line adds "The shaded square changes."
+- Classic: 3 or 4 rungs.
+- Challenging: 5 or 6 rungs.
+Which ladders, how many a page, square size and type size are not settings.
+The help line reports what the trim in Settings prints: ladders a page,
+square size, letter size and clue size, or that the trim is too small.
+
+Every page is built in the browser (no AI). The library (`ladders.ts`) is
+written by hand: 32 Gentle, 36 Classic and 26 Challenging ladders, all
+four-letter everyday words, each with one clue per rung word (one clue per
+word, shared by every ladder that passes through it). Tests prove that every
+step changes exactly one letter in place, that no word repeats within a
+ladder, that each rung count matches its level, that every rung has a clue of
+at most 30 characters that never contains its own word, that no unused clue is
+kept, and that every ladder starts from a work word and ends on a word that
+is not one.
+
+Layout: the page decides from the trim alone, before a ladder is dealt, how
+many ladders it holds (up to three) and how large they print. Squares are up
+to 0.5 in and never below the level's floor (Gentle 0.4 in, Classic 0.38 in,
+Challenging 0.36 in). Letters print at 16 pt or larger, and clues at 14 pt or
+larger (the page first tries two or more ladders with clues at 15 pt or
+larger). Every clue and
+caption the level holds must set in at most two lines, level with its row. The
+clue column is only as wide as its widest line, so the block centres on the
+page. A trim that cannot hold two ladders prints one, with bigger squares, a
+little down the page. Typical results: 8.5 × 11 prints 3 Gentle, 2 Classic or
+2 Challenging ladders a page; 6 × 9 prints 2 Gentle, 2 Classic or 1
+Challenging.
+
+Quality gate (`kdp-preflight.ts`) runs before a page is accepted:
+- Every ladder belongs to the level and is sound (one letter a step, no
+  repeats, the level's rung count, every rung clued without giving itself away).
+- The page holds the ladders it was planned for, with no ladder twice.
+- Every clue and caption is set as written, in at most two lines.
+- Squares, letters and clues are at their large-print floors or larger, and a
+  two-line clue fits its rung.
+- Every ladder is on the printable panel and clear of the next.
+- No ladder is one the book already prints while the level has unused ones.
+The drawn check then confirms the caption, the two given words in their
+squares, a square for every letter, each rung's letters hidden in their own
+squares, the clues in rung order, and (Gentle only) exactly the changing square
+of each rung shaded.
+
+Uniqueness: each ladder stamps its id (`level:start-finish-n`). A book prints
+every ladder of its level before one returns, and never repeats the previous
+page's ladders. A page keeps its start words and finish words different while
+the level has others, and prints its shortest ladder first. A seller's next
+book opens with ladders their last one printed least recently. Choices come
+from the seller's puzzle salt and the page seed.
+Pages: 1 · Answer key: yes (every rung filled in) · AI content: no
 
 ### Top Five Guess (`top-five-guess`)
 A "guess the most likely answers" puzzle built for retirement books. Each block
@@ -2268,6 +2333,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | phrase-finder | Phrase Finder | word | 1 | yes | yes |
 | retirement-anagram | Anagrams | word | 1 | yes | yes |
 | missing-vowels | Missing Vowels | word | 1 | yes | yes |
+| word-ladder | Word Ladder: Work to Play | word | 1 | yes | no |
 | top-five-guess | Top Five Guess | word | 1 | yes | yes |
 | would-you-rather | Would You Rather | word | 1 | no | yes |
 | ever-or-never | Ever or Never | word | 1 | no | yes |
@@ -2297,4 +2363,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 41 games** (3 logic · 31 word · 7 spatial).
+**Total: 42 games** (3 logic · 32 word · 7 spatial).
