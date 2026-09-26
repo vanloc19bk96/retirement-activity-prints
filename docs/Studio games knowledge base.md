@@ -65,7 +65,7 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ---
 
-## Logic (2 games)
+## Logic (3 games)
 
 ### Sudoku (`sudoku`)
 Classic number Sudoku for a large-print retirement book. Fill every row, column
@@ -139,6 +139,60 @@ its deduction pattern. A new puzzle refuses any pattern already in the book,
 avoids a scene-and-category combination the book already prints while another
 is open, and takes the least-used scene first.
 Pages: 1-2 (plus an answer page) · Answer key: yes (table and checked grid) · AI content: no
+
+### Picture Logic: Retirement Edition (`picture-logic`)
+Nonogram (hidden-picture logic) puzzles for a large-print retirement book. The
+numbers beside each row and above each column give the runs of shaded squares
+in that line, in order, with at least one blank square between runs. Shade
+the right squares and a hand-drawn retirement picture appears: a teacup, a
+sailboat, a golf flag, a camper van, a pocket watch, a typewriter. A write-in
+line under the grid asks "What's the picture?". The answer page shows the
+shaded picture and prints its name on that line.
+
+Settings: the level only.
+- Gentle: pictures up to 10 × 10 (20 pictures). Squares 0.3 in or larger.
+- Classic: up to 15 × 15 (17 pictures). Squares 0.24 in or larger.
+- Challenging: up to 20 × 20 (14 pictures). Squares 0.22 in or larger.
+Which picture, which way it faces, square size and number size are not
+settings. The level's help line reports the smallest square and number the
+level prints on the trim in Settings, or says the trim is too small. When
+fewer than half the level's pictures fit, it also warns that pages will repeat.
+
+Every page is built and proven in the browser (no AI). Pictures
+(`pictures.ts`) are drawn square by square for their grid, not scaled down
+from larger art. Each is trimmed to its ink, so no border line prints a "0".
+Pictures that read either way may also print mirrored, which gives a
+different set of clues. Difficulty is grid size, never guessing. The solver
+(`solver.ts`) works one row or column at a time, exactly as a reader does,
+and marks only the squares that every remaining placement agrees on. It
+repeats until nothing changes. Every picture, both ways round, must be
+finished this way and land on exactly itself, which also proves it has a
+single answer. Tests check this for the whole library.
+
+Layout: column clues are stacked above the grid and row clues right-aligned
+to its left. Light guides run out through the clues, heavy rules mark every
+five squares and the grid's edge. Squares are as large as the trim allows (up
+to 0.45 in). Clue numbers are sized from the squares, 12 pt to 18 pt, and a
+two-digit row clue takes only the room it needs. Pictures too big for a
+mid-size trim at the level's large print are left out of that trim's pages.
+
+Quality gate (`kdp-preflight.ts`) runs before a page is accepted:
+- The clues are worked out again from the picture and solved line by line to it.
+- The picture is 20–80% shaded.
+- Squares are at least the level's floor and numbers at least 12 pt, inside their squares.
+- Every clue stays in its lane, the puzzle stays on the printable panel, and
+  the answer line is long enough for the name.
+- The picture is not one the book already prints while the level has unused ones.
+The drawn check then confirms three things. Every clue number is printed once,
+in its line and in order. The hidden answer is one bar per run and shades
+exactly the picture. The name waits, hidden, on the answer line.
+
+Uniqueness: each page stamps `id|m` or `id|n` (mirrored or not). A book
+shows every picture of its level before one returns, and never repeats the
+previous page's picture. A returning picture comes back the other way round
+when it can. A seller's next book opens with pictures their last one printed
+least recently. Choices come from the seller's puzzle salt and the page seed.
+Pages: 1 · Answer key: yes (shaded picture and its name) · AI content: no
 
 ---
 
@@ -2203,6 +2257,7 @@ Pages: 1 · Answer key: yes · AI content: no
 |---|---|---|---|---|---|
 | sudoku | Sudoku | logic | 1 | yes | no |
 | farewell-logic-grid | Logic Grid: Farewell Party | logic | 1-2 | yes | no |
+| picture-logic | Picture Logic: Retirement Edition | logic | 1 | yes | no |
 | word-search | Word Search | word | 1 | yes | yes |
 | hidden-message-word-search | Hidden Message Word Search | word | 1 | yes | yes |
 | trivia-clue-word-search | Trivia Clue Word Search | word | 1 | yes | yes |
@@ -2242,4 +2297,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 40 games** (2 logic · 31 word · 7 spatial).
+**Total: 41 games** (3 logic · 31 word · 7 spatial).
