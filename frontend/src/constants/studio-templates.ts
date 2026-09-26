@@ -39,6 +39,7 @@ import { whoKnowsBestTemplate } from '@/utils/studio/who-knows-retiree-best/gene
 import { wellWishesTemplate } from '@/utils/studio/well-wishes/generate'
 import { retirementCertificateTemplate } from '@/utils/studio/retirement-certificate/generate'
 import { officeAwardsTemplate } from '@/utils/studio/office-awards/generate'
+import { careerNumbersTemplate } from '@/utils/studio/career-by-the-numbers/generate'
 import { retiredNameTemplate } from '@/utils/studio/retired-name/generate'
 import { rollADayTemplate } from '@/utils/studio/roll-a-day/generate'
 import { twoTruthsFibTemplate } from '@/utils/studio/two-truths-and-a-fib/generate'
@@ -91,6 +92,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   wellWishesTemplate,
   retirementCertificateTemplate,
   officeAwardsTemplate,
+  careerNumbersTemplate,
   retiredNameTemplate,
   rollADayTemplate,
   twoTruthsFibTemplate,

@@ -142,7 +142,7 @@ Pages: 1-2 (plus an answer page) · Answer key: yes (table and checked grid) · 
 
 ---
 
-## Word (30 games)
+## Word (31 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -1037,6 +1037,120 @@ the column, and the badge inside its card. Type, writing rows, winner lines
 and badges must be at their minimums. If a balanced set cannot be made, or
 the page is too small, the page says so plainly.
 Pages: 1-8 (by awards, trim and the "Why" line) · Answer key: no · AI content: yes
+
+### Career By the Numbers (`career-by-the-numbers`)
+A playful look back at a working life in numbers, built for retirement
+activity books, farewell books and retirement gift books. Each numbered row
+asks for one fun estimate ("About how many cups of tea or coffee powered your
+career?", "On your busiest day, how many phone calls did you answer?"). The
+retiree writes a best guess on a line with the unit printed beside it:
+"About ________ cups". The how-to says estimates are the whole point
+("nobody's checking") and offers one rough guide for career totals (a
+full-time year is about 48 working weeks). Nothing is filled in before
+printing and there is no answer page. The service writes questions only,
+never a number, so no statistic about the retiree is ever invented.
+
+Settings: the retiree's name (optional), what kind of work, how many
+questions and the distance unit.
+- *Name*: a first name or nickname for the heading only ("Linda's Career By
+  the Numbers" while the title is left at "Career By the Numbers"). It is
+  never sent to the AI. Nothing else personal is asked: no years, employer,
+  job title or pay.
+- *What kind of work?*: any kind of work (default: nothing assumes a desk,
+  email, a commute or a Monday-to-Friday week), office, school, healthcare
+  (never anything medical), shop / restaurant / hotel, or workshop / site /
+  on the road.
+- *Questions*: 6, 8 (default), 10, 12, 15 or 20.
+- *Distances in*: miles (default) or kilometres. Every commute or travel
+  question uses that unit, so nobody wonders which to write.
+Tone, themes, type size, rows per page and pages are not settings. The
+questions' help line reports what the trim prints ("8 questions on about 2
+pages in 17 pt large print" on a 6 x 9).
+
+Every question is gated in the API and again in the browser (AI content,
+`services/studio_career_numbers_service.py`). A question is one sentence of
+6-20 words and at most 110 characters, ending in its only question mark. It
+says "how many" exactly once (never "how much", never a yes-or-no opener)
+and has no digits, so a made-up figure cannot slip in. It speaks to "you",
+never "I" or a gendered word. It must name its time frame (your career, over
+the years, a typical workday, shift or week, your busiest day), so nobody
+wonders whether to write a daily figure or a lifetime total. The unit is one
+or two lower-case words taken from the question itself ("cups", "phone
+calls", "times"). It is never "things", "items" or "total", never money,
+weight or percent, and a distance is only ever in the chosen unit. A
+question is dropped if it touches pay, money, pensions, health, injuries,
+stress, age, memory, weight, alcohol, smoking, religion, politics, romance,
+the bathroom, mistakes, complaints, arguments, being fired or quitting, or
+asks for anything private (employee numbers, addresses). Quotations, brands
+and celebrities are dropped too, as are the prompt's own examples copied
+word for word.
+
+Repeats are caught in meaning. The time frame and estimate padding are set
+aside and synonyms folded, so coffee, tea, cups and mugs are one drink, and
+meetings, huddles and briefings are one meeting. The Bucket List's meaning
+test is then applied with the model's own concept name. So "How many
+meetings did you attend?" and "Roughly how many meetings were you in over
+the years?" are one question, and a coffee question and a coffee-break
+question count as one. A question that repeats one already in the book
+(read back from its pages), this seller's recent sets for the kind of work
+(browser) or the worker's memory is dropped. Remembered labels start at "How
+many" and are cut on a word, so a long question still matches itself. All
+of these checks are bounded, never a comparison with every set ever made.
+
+Variety is structural. Every question gets its own brief: a theme, one of
+its details, a tone (playful or nostalgic) and a question shape (a career
+total, a typical day or week, a best guess, a tally, the busiest day).
+Briefs are sampled by seed from 28 themes and about 190 details: coffee and
+tea, snacks, lunch, meetings, messages, the phone, the commute, work
+travel, mornings and alarm clocks, Mondays and Fridays, hours and shifts,
+breaks, the clock, projects, deadlines, paperwork, pens and supplies, tools
+and uniforms, coworkers, helping others, conversations, celebrations,
+learning, the career path, technology, the workspace, time off and the road
+to retirement. A set plans different themes, about two in five nostalgic,
+always with one road-to-retirement question, plus eight spares.
+
+The browser picks the printed set as a whole:
+- at least three quarters of the questions from different themes, and a
+  theme twice only when the two count different things;
+- groups capped to the set's size, counted by what a question is really
+  about, whatever its brief said. So a coffee question written for a
+  workspace brief still counts as the set's one drinks question. Drinks,
+  meetings, the commute, supplies and technology get one question each;
+- at least 30% playful and 30% nostalgic;
+- no shape in more than 40% of the questions, no opening ("About how", "On
+  a", "How many"...) in more than 30%, and no unit in more than a quarter.
+It orders the set by seed: a playful question first, the road to retirement
+last, and no neighbours sharing a group, opening, shape or unit where
+avoidable.
+
+Page: one column of rows at most 6.2 in wide. Each row has a thin numbered
+ring, the question in large print, then "About", the writing line and the
+unit on one baseline, so a unit can never drift from its line. The type
+size comes from the trim: 18 pt down to 15 pt while a typical question sets
+in two lines, 15 pt with questions wrapping to a third line on narrow trims,
+and 14 pt only as a floor. A question takes at most three lines, balanced so
+it never ends on a lone word. A question that would need a fourth line, or
+whose unit has no room beside its line, is passed over for a spare. Every
+writing line in a set is the same length (1.4 in to 2.4 in, room for a
+seven-digit guess) with at least 0.45 in above it. A row never splits. The
+set takes as many pages as its rows need, spread evenly (the how-to page
+often one lighter), with one gap between rows widened where every page has
+room. Every page repeats the heading, and only the first carries the how-to.
+Where the last page has room, a small centred row of three line-art motifs
+closes it (picked by seed from a coffee cup, an alarm clock, a paperclip, a
+pencil and a sunrise). Black ink, with mid-grey writing lines. The rings are
+outlines, white inside. There are no fills, shadows or gradients.
+
+Quality gate: a preflight re-proves the set: the right number of questions,
+numbered in order, each printable with its unit, distinct and within every
+set rule, with the playful/nostalgic mix held. It re-proves every page too:
+every question printed once in order, set exactly as written in at most
+three lines, rows whole, no overlaps, nothing past the printable area or
+wider than the column, every unit inside the column, and the motif row
+clear of the last question and inside the page. Type, writing rows, line
+length and rings must be at their minimums. If a balanced set cannot be
+made, or the page is too small, the page says so plainly.
+Pages: 1-6 (by questions and trim) · Answer key: no · AI content: yes
 
 ### Two Truths and a Fib: Retirement Edition (`two-truths-and-a-fib`)
 A light factual challenge built for retirement books. Each numbered set has a
@@ -2111,6 +2225,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | well-wishes-signatures | Well Wishes & Signatures | word | 1-4 | no | no |
 | retirement-certificate | Certificate of Retirement | word | 1 | no | no |
 | office-awards | Office Awards: Retirement Edition | word | 1-8 | no | yes |
+| career-by-the-numbers | Career By the Numbers | word | 1-6 | no | yes |
 | two-truths-and-a-fib | Two Truths and a Fib | word | 1 | yes | yes |
 | what-kind-of-retiree | What Kind of Retiree Are You? | word | 4-6 | no | yes |
 | fill-in-funnies | Fill-in Funnies | word | 2-3 | no | yes |
@@ -2127,4 +2242,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 39 games** (2 logic · 30 word · 7 spatial).
+**Total: 40 games** (2 logic · 31 word · 7 spatial).

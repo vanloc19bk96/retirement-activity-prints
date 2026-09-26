@@ -1,0 +1,788 @@
+{
+  "_comment": "Career By the Numbers. A page of light, nostalgic career estimates -- 'About how many cups of tea or coffee powered your career?' -- each with a line for the retiree's best guess and the unit beside it. The service writes questions and units only: never an answer, never a number, and nothing about the retiree is sent. Variety is structural: every question gets its own brief -- a theme, one of its details, a tone (playful or nostalgic) and a question shape -- sampled by seed from 28 themes and about 190 details; a set plans different themes, capped per group (one drinks question, one meetings question, one commute question), always opening its plan with one question about the road to retirement, plus spares for the gates on both sides.",
+  "limits": {
+    "rateLimitPerWindow": 10,
+    "maxOutputTokens": 6144,
+    "maxAttempts": 2,
+    "maxItems": 20,
+    "capBase": 20,
+    "spares": 8,
+    "maxAsk": 28,
+    "nostalgicPercent": 40,
+    "minQuestionChars": 24,
+    "maxQuestionChars": 110,
+    "minQuestionWords": 6,
+    "maxQuestionWords": 20,
+    "maxUnitChars": 16,
+    "maxUnitWords": 2,
+    "maxConceptChars": 40
+  },
+  "locale": {
+    "nativeLocales": ["en"],
+    "nativeLine": "- Write in clear, warm, natural English that reads well in both British and American homes.",
+    "otherLine": "- Write every question and unit in language locale '{locale}', natural for that language, keeping each question one short sentence."
+  },
+  "distances": {
+    "miles": {
+      "label": "Miles",
+      "unit": "miles",
+      "line": "Any distance is in miles -- never kilometres."
+    },
+    "km": {
+      "label": "Kilometres",
+      "unit": "kilometres",
+      "line": "Any distance is in kilometres -- never miles."
+    }
+  },
+  "workplaces": {
+    "any": {
+      "label": "Any kind of work",
+      "line": "The retiree's line of work is not known. Write questions anyone who has worked could answer -- an office worker, a teacher, a nurse, a shop assistant, a driver or a tradesperson -- using words like work, the job, a shift, the workday or coworkers. Never assume desks, computers, email, a commute or a Monday-to-Friday week in a way that would leave someone out; say 'or' where it helps ('emails or messages', 'a desk or workbench')."
+    },
+    "office": {
+      "label": "Office or corporate",
+      "line": "The retiree worked in an office. Desks, email, meetings, the printer and the office kitchen fit naturally, but keep the set varied -- never all screens and meetings."
+    },
+    "school": {
+      "label": "School or college",
+      "line": "The retiree worked at a school or college. Lessons, classes, the staff room, marking, timetables, school trips, assemblies and the photocopier fit naturally. Count what a teacher or member of school staff did, never anything private about pupils or parents."
+    },
+    "healthcare": {
+      "label": "Hospital, clinic or care",
+      "line": "The retiree worked in healthcare or care: a hospital, clinic, practice or care home. Shifts, handovers, the rota, the staff room, patients helped and cups of tea on a long shift fit naturally. Never ask about illness, injuries, deaths, emergencies or anything medical."
+    },
+    "service": {
+      "label": "Shop, restaurant or hotel",
+      "line": "The retiree worked in retail, hospitality or customer service: a shop, cafe, restaurant or hotel. Shifts, customers served, the till, the stockroom and opening and closing up fit naturally. Never mock customers."
+    },
+    "trades": {
+      "label": "Workshop, site or on the road",
+      "line": "The retiree worked with their hands or on the move: a workshop, building site, factory, warehouse or driving. Tools, the van, the tea break, early starts, jobs finished and distances driven fit naturally; keep email and desks rare. Never ask about safety or accidents."
+    }
+  },
+  "tones": {
+    "playful": "playful: a light, funny everyday work moment the retiree will laugh about while guessing",
+    "nostalgic": "nostalgic: a warm look back at people, achievements or good moments from the working years"
+  },
+  "shapes": {
+    "career-total": "a whole-career total, opening with \"About how many\" or \"Roughly how many\" and naming your career or working life (\"About how many cups of tea or coffee powered your career?\")",
+    "typical": "a typical workday, shift or week, opening with \"On a typical workday\", \"On a typical shift\" or \"In a typical week\" (\"In a typical week, how many times were you asked where something was kept?\")",
+    "guess": "a playful best guess, opening with \"If you had to guess\" or \"At a guess\" and covering the years or your whole career (\"If you had to guess, how many pens wandered off over the years?\")",
+    "tally": "a count that sounds like a tally, opening with \"How many\" and ending on the years or your career (\"How many Monday mornings did you show up for over the years?\")",
+    "record": "the busiest single day, week or occasion, opening with \"On your busiest day\" or \"In your busiest week\" (\"On your busiest day, about how many phone calls did you answer?\")"
+  },
+  "exampleQuestions": [
+    "About how many cups of tea or coffee powered your career?",
+    "In a typical week, how many times were you asked where something was kept?",
+    "If you had to guess, how many pens wandered off over the years?",
+    "How many Monday mornings did you show up for over the years?",
+    "On your busiest day, about how many phone calls did you answer?"
+  ],
+  "anchorTheme": "finish-line",
+  "groups": {
+    "finish": { "max": 1 },
+    "drinks": { "max": 1 },
+    "food": { "max": 2 },
+    "meetings": { "max": 1 },
+    "communication": { "max": 2 },
+    "commute": { "max": 1 },
+    "travel": { "max": 1 },
+    "routine": { "max": 3 },
+    "time": { "max": 2 },
+    "output": { "max": 3 },
+    "supplies": { "max": 1 },
+    "gear": { "max": 1 },
+    "people": { "max": 2 },
+    "helping": { "max": 2 },
+    "conversations": { "max": 1 },
+    "celebrations": { "max": 2 },
+    "learning": { "max": 1 },
+    "milestones": { "max": 2 },
+    "tech": { "max": 1 },
+    "workspace": { "max": 1 },
+    "time-off": { "max": 2 }
+  },
+  "themes": {
+    "finish-line": {
+      "label": "the road to retirement",
+      "group": "finish",
+      "weight": 2,
+      "playful": [
+        "workdays or shifts from the very first to the very last",
+        "alarm clocks set for work over a whole career",
+        "times saying see you tomorrow at the end of the day",
+        "days counted down on the calendar before retirement",
+        "journeys home at the end of a working day",
+        "first-thing-in-the-morning hellos over a whole career"
+      ],
+      "nostalgic": [
+        "coworkers who will miss seeing you around",
+        "people who shaped your working life along the way",
+        "good-luck wishes received on the way out",
+        "happy memories made at work, at a guess"
+      ]
+    },
+    "hot-drinks": {
+      "label": "coffee, tea and the drinks round",
+      "group": "drinks",
+      "weight": 2,
+      "playful": [
+        "cups of coffee or tea that powered the workday",
+        "refills from the shared pot, urn or kettle",
+        "rounds of hot drinks made for the whole team",
+        "mugs washed up at the work sink",
+        "hot drinks left until they went cold",
+        "trips to the kettle or coffee machine in a typical day"
+      ],
+      "nostalgic": [
+        "morning cuppas shared with a favourite coworker",
+        "hot drinks made for someone having a hard day"
+      ]
+    },
+    "snacks": {
+      "label": "snacks and treats",
+      "group": "food",
+      "weight": 2,
+      "playful": [
+        "biscuits, cookies or sweets from the shared tin",
+        "doughnuts or pastries brought in on a Friday",
+        "snacks rescued from the back of a drawer or locker",
+        "treats brought back from coworkers' holidays",
+        "visits to the vending machine or snack cupboard"
+      ],
+      "nostalgic": [
+        "homemade treats shared with the team",
+        "boxes of treats brought in to say thank you"
+      ]
+    },
+    "lunch": {
+      "label": "lunch",
+      "group": "food",
+      "weight": 2,
+      "playful": [
+        "packed lunches carried to work",
+        "sandwiches eaten at a desk, counter or workbench",
+        "leftovers warmed up in the shared microwave",
+        "quick trips out to grab lunch",
+        "lunch breaks taken over a whole career"
+      ],
+      "nostalgic": [
+        "team lunches and meals out with coworkers",
+        "lunch breaks spent chatting with the same friendly faces"
+      ]
+    },
+    "meetings": {
+      "label": "meetings and briefings",
+      "group": "meetings",
+      "weight": 2,
+      "playful": [
+        "meetings, briefings or team huddles attended over a career",
+        "hours spent in meetings in a typical week",
+        "meetings that could have been a quick chat",
+        "video calls where someone was still on mute",
+        "handovers or briefings at the start of a shift"
+      ],
+      "nostalgic": [
+        "team huddles that set up a good day",
+        "meetings where a really good idea was born"
+      ]
+    },
+    "messages": {
+      "label": "emails, notes and messages",
+      "group": "communication",
+      "weight": 2,
+      "playful": [
+        "emails or messages sent over a whole career",
+        "messages waiting after a week away",
+        "notes left on someone's desk, locker or noticeboard",
+        "times hitting reply all",
+        "unread messages waiting on a typical Monday morning"
+      ],
+      "nostalgic": [
+        "thank-you notes and cards received",
+        "messages of encouragement sent to coworkers"
+      ]
+    },
+    "phone": {
+      "label": "the phone",
+      "group": "communication",
+      "weight": 1,
+      "playful": [
+        "phone calls answered in a typical day",
+        "times the phone rang just as a break began",
+        "calls put on hold over the years",
+        "times spelling out a name over the phone",
+        "work phone numbers known by heart"
+      ],
+      "nostalgic": [
+        "calls that brightened a customer's or coworker's day"
+      ]
+    },
+    "commute": {
+      "label": "getting to and from work",
+      "group": "commute",
+      "weight": 2,
+      "playful": [
+        "{distance} travelled getting to and from work over a career",
+        "hours spent in traffic or waiting at the stop",
+        "bus or train rides to work",
+        "laps of the car park hunting for a space",
+        "rainy journeys to work",
+        "songs sung along to on the way to work"
+      ],
+      "nostalgic": [
+        "sunrises seen on the way to work",
+        "familiar faces passed on the daily journey"
+      ]
+    },
+    "work-travel": {
+      "label": "travelling for work",
+      "group": "travel",
+      "weight": 1,
+      "playful": [
+        "work trips taken away from home",
+        "nights spent in hotels for work",
+        "{distance} driven for the job over a career",
+        "suitcases or overnight bags packed for work",
+        "site visits, house calls, school trips or deliveries made"
+      ],
+      "nostalgic": [
+        "new towns or places seen thanks to the job",
+        "interesting people met while travelling for work"
+      ]
+    },
+    "mornings": {
+      "label": "workday mornings",
+      "group": "routine",
+      "weight": 2,
+      "playful": [
+        "times hitting snooze before a workday",
+        "early starts before sunrise",
+        "minutes spent hunting for keys before leaving",
+        "work uniforms or outfits laid out the night before",
+        "bags checked twice at the front door"
+      ],
+      "nostalgic": [
+        "good mornings said on arrival at work",
+        "quiet early mornings enjoyed before everyone arrived"
+      ]
+    },
+    "weekdays": {
+      "label": "Mondays, Fridays and the working week",
+      "group": "routine",
+      "weight": 2,
+      "playful": [
+        "Monday mornings worked over a career",
+        "Friday afternoons spent counting down to the weekend",
+        "times asking what day of the week it was",
+        "weekends that felt far too short",
+        "times someone asked how your weekend was"
+      ],
+      "nostalgic": [
+        "Friday feelings shared with the team",
+        "fresh starts on a Monday morning"
+      ]
+    },
+    "shifts": {
+      "label": "hours and shifts",
+      "group": "time",
+      "weight": 2,
+      "playful": [
+        "hours worked in a typical week",
+        "early, late or night shifts worked",
+        "extra hours stayed on to finish a job",
+        "workdays that started in the dark and ended in the dark",
+        "rotas, timetables or schedules checked"
+      ],
+      "nostalgic": [
+        "days that ended with the feeling of a job well done",
+        "shifts shared with a trusted work partner"
+      ]
+    },
+    "breaks": {
+      "label": "breaks",
+      "group": "routine",
+      "weight": 2,
+      "playful": [
+        "breaks taken in a typical day",
+        "minutes in a typical lunch break",
+        "short walks to stretch the legs at break time",
+        "breaks interrupted by one quick question",
+        "crosswords or puzzles tackled at break time"
+      ],
+      "nostalgic": [
+        "breaks spent laughing with coworkers",
+        "quiet breaks enjoyed with a good book"
+      ]
+    },
+    "clock": {
+      "label": "the clock",
+      "group": "time",
+      "weight": 1,
+      "playful": [
+        "glances at the clock on a slow afternoon",
+        "minutes early for work on a typical day",
+        "times the clocks changed during a working career",
+        "times saying just five more minutes",
+        "last-minute dashes to beat the clock"
+      ],
+      "nostalgic": [
+        "extra minutes given to help someone finish on time"
+      ]
+    },
+    "projects": {
+      "label": "projects and tasks",
+      "group": "output",
+      "weight": 2,
+      "playful": [
+        "projects, jobs or tasks completed over a career",
+        "to-do lists written",
+        "tasks ticked off on a really busy day",
+        "reports, orders or forms finished",
+        "big jobs finished just in the nick of time"
+      ],
+      "nostalgic": [
+        "projects that made the whole team proud",
+        "jobs finished that still bring a smile"
+      ]
+    },
+    "deadlines": {
+      "label": "deadlines",
+      "group": "output",
+      "weight": 1,
+      "playful": [
+        "deadlines met over a whole career",
+        "rush jobs finished in a single day",
+        "times promising to have something done by Friday",
+        "late-afternoon sprints to the finish line"
+      ],
+      "nostalgic": [
+        "deadlines beaten by pulling together as a team"
+      ]
+    },
+    "paperwork": {
+      "label": "paperwork and printing",
+      "group": "output",
+      "weight": 1,
+      "playful": [
+        "pages printed or photocopied",
+        "signatures written over a career",
+        "forms filled in",
+        "envelopes addressed or posted",
+        "folders or files sorted and labelled"
+      ],
+      "nostalgic": [
+        "shelves, cupboards or filing cabinets finally sorted out"
+      ]
+    },
+    "supplies": {
+      "label": "pens and office supplies",
+      "group": "supplies",
+      "weight": 2,
+      "playful": [
+        "pens lost, borrowed or never returned",
+        "paperclips, staples or rubber bands used",
+        "staplers borrowed from someone else's desk",
+        "pencils sharpened",
+        "highlighters or markers that ran dry",
+        "sticky notes stuck up as reminders"
+      ],
+      "nostalgic": [
+        "trusty pens or tools that lasted for years"
+      ]
+    },
+    "gear": {
+      "label": "tools, uniforms and work gear",
+      "group": "gear",
+      "weight": 1,
+      "playful": [
+        "pairs of work shoes or boots worn out",
+        "uniforms, aprons, overalls or lanyards worn",
+        "name badges or ID cards worn",
+        "keys on the work keyring",
+        "tape measures, screwdrivers, scissors or other trusty tools"
+      ],
+      "nostalgic": [
+        "tools or tips passed on to a newcomer"
+      ]
+    },
+    "coworkers": {
+      "label": "coworkers",
+      "group": "people",
+      "weight": 2,
+      "playful": [
+        "coworkers worked alongside over the years",
+        "managers or supervisors had over a career",
+        "names learned at work",
+        "desk, locker or workstation neighbours",
+        "work friends still in touch"
+      ],
+      "nostalgic": [
+        "new starters welcomed on their first day",
+        "work friends who became friends for life"
+      ]
+    },
+    "helping": {
+      "label": "helping others",
+      "group": "helping",
+      "weight": 2,
+      "playful": [
+        "questions answered in a typical day",
+        "times being asked where something was kept",
+        "favours done for coworkers"
+      ],
+      "nostalgic": [
+        "people trained or shown the ropes",
+        "customers, clients, students or patients helped over a career",
+        "thank-yous received over the years",
+        "people helped out of a tricky spot"
+      ]
+    },
+    "chats": {
+      "label": "conversations and laughs",
+      "group": "conversations",
+      "weight": 2,
+      "playful": [
+        "conversations about the weather",
+        "chats in corridors, car parks or break rooms",
+        "stories told at break time",
+        "jokes shared on a slow afternoon"
+      ],
+      "nostalgic": [
+        "good conversations with coworkers",
+        "laughs shared over the years"
+      ]
+    },
+    "celebrations": {
+      "label": "celebrations at work",
+      "group": "celebrations",
+      "weight": 2,
+      "playful": [
+        "birthday cakes shared at work",
+        "cards signed for coworkers",
+        "leaving parties attended",
+        "rounds of Happy Birthday sung at work",
+        "team outings or end-of-year parties"
+      ],
+      "nostalgic": [
+        "milestones celebrated with the team",
+        "welcome and farewell gatherings for coworkers"
+      ]
+    },
+    "learning": {
+      "label": "learning on the job",
+      "group": "learning",
+      "weight": 1,
+      "playful": [
+        "training sessions or courses attended",
+        "new systems, machines or tools learned",
+        "passwords changed over a career",
+        "instruction manuals read or skimmed"
+      ],
+      "nostalgic": [
+        "skills learned on the job",
+        "certificates or qualifications earned"
+      ]
+    },
+    "career-path": {
+      "label": "the career path",
+      "group": "milestones",
+      "weight": 2,
+      "playful": [
+        "job titles held over a career",
+        "workplaces or employers over a working life",
+        "desks, offices or workstations moved into",
+        "first days at a new job",
+        "job interviews sat through"
+      ],
+      "nostalgic": [
+        "new roles or responsibilities taken on",
+        "places of work that felt like a second home"
+      ]
+    },
+    "tech": {
+      "label": "technology at work",
+      "group": "tech",
+      "weight": 1,
+      "playful": [
+        "computers, tills or machines used over a career",
+        "printer or copier jams cleared",
+        "times switching something off and on again",
+        "phones or pagers carried for work"
+      ],
+      "nostalgic": [
+        "big changes in technology lived through at work"
+      ]
+    },
+    "workspace": {
+      "label": "the workspace",
+      "group": "workspace",
+      "weight": 1,
+      "playful": [
+        "mugs collected at a desk or in a locker",
+        "plants kept alive at work",
+        "photos or postcards pinned up at work",
+        "chairs sat in over a career"
+      ],
+      "nostalgic": [
+        "workspaces made to feel like home"
+      ]
+    },
+    "time-off": {
+      "label": "vacations and time off",
+      "group": "time-off",
+      "weight": 2,
+      "playful": [
+        "vacation or holiday days enjoyed",
+        "postcards sent from time off",
+        "long weekends taken",
+        "out-of-office messages set"
+      ],
+      "nostalgic": [
+        "trips taken with time off from work",
+        "public holidays enjoyed over a career"
+      ]
+    }
+  },
+  "subjectWords": {
+    "drinks": ["drink"],
+    "food": ["snack", "lunch"],
+    "meetings": ["meeting"],
+    "communication": ["email", "phone"],
+    "commute": ["commute"],
+    "supplies": ["supply"],
+    "tech": ["tech", "printer"]
+  },
+  "scopeTerms": [
+    "career", "careers", "working life", "working lives", "working years", "working days", "working week",
+    "over the years", "all those years", "all the years", "through the years", "along the way",
+    "typical", "average", "usual", "busiest", "quietest",
+    "a day", "a week", "a month", "a year", "a workday", "a shift",
+    "each day", "each week", "each month", "each year", "each workday", "each shift",
+    "every day", "every week", "every month", "every year", "every workday", "every shift",
+    "per day", "per week", "per month", "per year", "per shift",
+    "first day", "first week", "first year", "last day", "last week", "last year", "final day", "final year"
+  ],
+  "readerWords": ["you", "your", "yours", "yourself", "youd", "youre", "youve", "youll"],
+  "firstPersonWords": ["i", "me", "my", "mine", "im", "ive", "id", "myself"],
+  "genderedWords": [
+    "he", "she", "him", "her", "his", "hers", "himself", "herself", "hes", "shes", "king", "queen", "lady",
+    "ladies", "gentleman", "gentlemen", "guy", "guys", "gal", "gals", "man", "woman", "men", "women", "boy",
+    "girl", "boys", "girls", "sir", "madam", "mr", "mrs", "ms", "wife", "husband", "boyfriend", "girlfriend"
+  ],
+  "blockedTerms": [
+    "salary", "salaries", "wage", "wages", "pay", "paid", "payday", "paydays", "paycheck", "paychecks",
+    "paycheque", "paycheques", "payslip", "payslips", "pay rise", "pay raise", "bonus", "bonuses", "income",
+    "money", "cash", "dollar", "dollars", "pound", "pounds", "euro", "euros", "cent", "cents", "pence",
+    "penny", "debt", "debts", "loan", "loans", "pension", "pensions", "savings", "tax", "taxes", "cost",
+    "costs", "price", "prices", "expenses", "budget", "budgets", "bank", "banks", "invest", "investment",
+    "sick", "sickness", "sick day", "sick days", "ill", "illness", "injury", "injuries", "injured",
+    "accident", "accidents", "hurt", "pain", "painful", "headache", "headaches", "backache", "medication",
+    "medicine", "pill", "pills", "surgery", "operation", "diagnosis", "disease", "infection", "virus",
+    "covid", "pandemic", "stress", "stressed", "stressful", "burnout", "burned out", "burnt out", "anxiety",
+    "anxious", "panic", "depressed", "depression", "tears", "cried", "cry", "crying", "exhausted",
+    "exhaustion", "tired", "weight", "weigh", "calories", "diet", "overweight", "age", "aged", "aging",
+    "ageing", "old", "older", "oldest", "elderly", "senior moment", "senior moments", "forgot", "forget",
+    "forgets", "forgetting", "forgotten", "forgetful", "memory loss", "senile", "dementia", "wrinkle",
+    "wrinkles", "grey hair", "grey hairs", "gray hair", "gray hairs", "fired", "sacked", "laid off",
+    "layoff", "layoffs", "redundancy", "redundancies", "redundant", "disciplinary", "warning letter",
+    "written warning", "performance review", "performance reviews", "appraisal", "appraisals",
+    "probation", "demoted", "demotion", "mistake", "mistakes", "error", "errors", "blunder", "blunders",
+    "complaint", "complaints", "complain", "complained", "complaining", "grievance", "lawsuit", "sued",
+    "strike", "strikes", "lazy", "laziest", "slacker", "skive", "skived", "skiving", "nap", "naps",
+    "napping", "asleep", "dozed", "dozing", "argument", "arguments", "argue", "argued", "arguing", "fight",
+    "fights", "fought", "feud", "grudge", "grudges", "rude", "gossip", "gossiped", "drama", "yell",
+    "yelled", "shout", "shouted", "shouting", "angry", "annoying", "annoyed", "irritating", "rant", "rants",
+    "blame", "blamed", "quit", "quitting", "resign", "resigned", "resignation", "hate", "hated", "boring",
+    "bored", "beer", "beers", "wine", "pint", "pints", "pub", "pubs", "cocktail", "cocktails", "drunk",
+    "hangover", "hangovers", "alcohol", "booze", "whisky", "whiskey", "vodka", "happy hour", "cigarette",
+    "cigarettes", "smoke", "smoking", "smoked", "vape", "vaping", "church", "prayer", "prayers", "pray",
+    "god", "religion", "religious", "christmas", "easter", "hanukkah", "diwali", "ramadan", "politics",
+    "political", "election", "elections", "vote", "voting", "protest", "death", "dead", "died", "die",
+    "dying", "funeral", "funerals", "grave", "killed", "kill", "romance", "romantic", "dating", "crush",
+    "flirt", "flirting", "affair", "divorce", "divorced", "toilet", "toilets", "bathroom", "restroom",
+    "loo", "employee id", "employee number", "staff number", "social security", "national insurance",
+    "home address", "quote", "quotes", "lyric", "lyrics", "celebrity", "celebrities", "crypto", "bitcoin"
+  ],
+  "blockedUnits": [
+    "things", "thing", "items", "item", "stuff", "units", "unit", "amount", "amounts", "total", "totals",
+    "number", "numbers", "points", "percent", "kilograms", "kilos", "grams", "litres", "liters", "gallons"
+  ],
+  "milesWords": ["mile", "miles"],
+  "kilometresWords": ["kilometre", "kilometres", "kilometer", "kilometers", "km", "kms"],
+  "qualifierWords": [
+    "a", "an", "the", "of", "to", "in", "on", "at", "for", "with", "from", "by", "about", "as", "into",
+    "onto", "up", "out", "over", "off", "and", "or", "but", "so", "if", "than", "then", "that", "this",
+    "these", "those", "there", "here", "what", "which", "who", "whom", "whose", "where", "when", "why",
+    "how", "many", "much", "is", "are", "was", "were", "be", "been", "being", "do", "does", "did", "has",
+    "have", "had", "it", "its", "they", "their", "them", "we", "our", "us", "you", "your", "yours",
+    "yourself", "roughly", "around", "approximately", "nearly", "almost", "estimate", "guess", "say",
+    "would", "could", "might", "ever", "all", "any", "some", "one", "just", "only", "very", "really",
+    "whole", "entire", "career", "careers", "life", "lives", "years", "year", "week", "weeks", "month",
+    "months", "typical", "average", "usual", "busiest", "quietest", "along", "way", "through", "each",
+    "every", "per", "total", "number", "time", "times", "hour", "hours", "minute", "minutes", "mile",
+    "miles", "kilometre", "kilometres", "kilometer", "kilometers", "km", "lot", "lots", "altogether",
+    "single", "first", "last", "final", "will", "going", "down", "still"
+  ],
+  "genericWords": [
+    "work", "worked", "working", "works", "workplace", "job", "spend", "spent", "make", "made", "take",
+    "took", "taken", "get", "got", "gotten", "go", "went", "gone", "use", "used", "see", "saw", "seen",
+    "attend", "attended", "send", "sent", "receive", "received", "give", "gave", "given", "enjoy",
+    "enjoyed", "power", "powered", "keep", "kept", "put", "show", "showed", "start", "started", "finish",
+    "finished", "complete", "completed", "need", "needed", "manage", "managed", "reckon", "think",
+    "happen", "happened", "end", "ended"
+  ],
+  "phrases": {
+    "a typical day": "",
+    "a typical workday": "",
+    "a typical shift": "",
+    "a typical week": "",
+    "a day": "",
+    "each day": "",
+    "every day": "",
+    "per day": "",
+    "a workday": "",
+    "each workday": "",
+    "every workday": "",
+    "a shift": "",
+    "each shift": "",
+    "every shift": "",
+    "per shift": "",
+    "your busiest day": "",
+    "your busiest week": "",
+    "if you had to guess": "",
+    "at a guess": "",
+    "over the years": "",
+    "all those years": "",
+    "working life": "",
+    "working years": "",
+    "hours worked": "workhours",
+    "hours did you work": "workhours",
+    "hours you worked": "workhours",
+    "hours of work": "workhours",
+    "hours at work": "workhours",
+    "hours on the job": "workhours",
+    "to and from work": "commute",
+    "getting to work": "commute",
+    "on the way to work": "commute",
+    "on the way in": "commute",
+    "way to work": "commute",
+    "way home": "commute",
+    "journey to work": "commute",
+    "journeys to work": "commute",
+    "train ride": "commute",
+    "train rides": "commute",
+    "bus ride": "commute",
+    "bus rides": "commute",
+    "work trip": "worktrip",
+    "work trips": "worktrip",
+    "business trip": "worktrip",
+    "business trips": "worktrip",
+    "trips for work": "worktrip",
+    "travelling for work": "worktrip",
+    "traveling for work": "worktrip",
+    "alarm clock": "alarm",
+    "alarm clocks": "alarm",
+    "hit snooze": "alarm",
+    "hitting snooze": "alarm",
+    "sticky note": "stickynote",
+    "sticky notes": "stickynote",
+    "reply all": "email",
+    "video call": "meeting",
+    "video calls": "meeting",
+    "phone call": "phone",
+    "phone calls": "phone",
+    "paper clip": "supply",
+    "paper clips": "supply",
+    "rubber band": "supply",
+    "rubber bands": "supply",
+    "thank-you": "thanks",
+    "thank you": "thanks",
+    "thank-yous": "thanks",
+    "vacation days": "holiday",
+    "vacation day": "holiday",
+    "holiday days": "holiday",
+    "days of vacation": "holiday",
+    "days of holiday": "holiday",
+    "days off": "holiday",
+    "time off": "holiday",
+    "annual leave": "holiday",
+    "public holiday": "publicholiday",
+    "public holidays": "publicholiday",
+    "bank holiday": "publicholiday",
+    "bank holidays": "publicholiday",
+    "holiday party": "party",
+    "holiday parties": "party",
+    "leaving party": "party",
+    "leaving parties": "party",
+    "leaving do": "party",
+    "leaving dos": "party",
+    "out-of-office": "outofoffice",
+    "out of office": "outofoffice",
+    "to-do list": "todo",
+    "to-do lists": "todo",
+    "to do list": "todo",
+    "to do lists": "todo",
+    "car park": "parking",
+    "parking lot": "parking",
+    "break room": "breakroom",
+    "staff room": "breakroom",
+    "new starter": "newstarter",
+    "new starters": "newstarter",
+    "new hire": "newstarter",
+    "new hires": "newstarter",
+    "monday morning": "monday",
+    "monday mornings": "monday",
+    "friday afternoon": "friday",
+    "friday afternoons": "friday",
+    "job title": "jobtitle",
+    "job titles": "jobtitle",
+    "name badge": "badge",
+    "name badges": "badge",
+    "id card": "badge",
+    "id cards": "badge",
+    "happy birthday": "birthday"
+  },
+  "synonyms": {
+    "coffee": "drink", "coffees": "drink", "tea": "drink", "teas": "drink", "cuppa": "drink",
+    "cuppas": "drink", "cup": "drink", "cups": "drink", "mug": "drink", "mugs": "drink", "kettle": "drink",
+    "espresso": "drink", "latte": "drink", "brew": "drink", "brews": "drink", "drinks": "drink",
+    "refill": "drink", "refills": "drink", "urn": "drink", "snacks": "snack", "biscuit": "snack",
+    "biscuits": "snack", "cookie": "snack", "cookies": "snack", "sweets": "snack", "candy": "snack",
+    "doughnut": "snack", "doughnuts": "snack", "donut": "snack", "donuts": "snack", "pastry": "snack",
+    "pastries": "snack", "treat": "snack", "treats": "snack", "chocolate": "snack", "chocolates": "snack",
+    "lunches": "lunch", "lunchtime": "lunch", "sandwich": "lunch", "sandwiches": "lunch", "meal": "lunch",
+    "meals": "lunch", "leftovers": "lunch", "meetings": "meeting", "huddle": "meeting",
+    "huddles": "meeting", "briefing": "meeting", "briefings": "meeting", "handover": "meeting",
+    "handovers": "meeting", "emails": "email", "e-mail": "email", "e-mails": "email", "inbox": "email",
+    "message": "email", "messages": "email", "memo": "email", "memos": "email", "phones": "phone",
+    "call": "phone", "calls": "phone", "caller": "phone", "callers": "phone", "voicemail": "phone",
+    "commutes": "commute", "commuting": "commute", "traffic": "commute", "journey": "commute",
+    "journeys": "commute", "snooze": "alarm", "snoozed": "alarm", "alarms": "alarm", "mondays": "monday",
+    "fridays": "friday", "pen": "supply", "pens": "supply", "pencil": "supply", "pencils": "supply",
+    "highlighter": "supply", "highlighters": "supply", "marker": "supply", "markers": "supply",
+    "stapler": "supply", "staplers": "supply", "staple": "supply", "staples": "supply",
+    "paperclip": "supply", "paperclips": "supply", "photocopier": "printer", "copier": "printer",
+    "printers": "printer", "computer": "tech", "computers": "tech", "laptop": "tech", "laptops": "tech",
+    "screen": "tech", "screens": "tech", "keyboard": "tech", "keyboards": "tech", "vacation": "holiday",
+    "vacations": "holiday", "holidays": "holiday", "parties": "party", "celebration": "party",
+    "celebrations": "party", "gathering": "party", "gatherings": "party", "outing": "party",
+    "outings": "party", "birthdays": "birthday", "cards": "card", "coworkers": "coworker",
+    "colleague": "coworker", "colleagues": "coworker", "co-worker": "coworker", "co-workers": "coworker",
+    "teammate": "coworker", "teammates": "coworker", "boss": "manager", "bosses": "manager",
+    "managers": "manager", "supervisor": "manager", "supervisors": "manager", "customers": "customer",
+    "client": "customer", "clients": "customer", "student": "customer", "students": "customer",
+    "patient": "customer", "patients": "customer", "pupil": "customer", "pupils": "customer",
+    "guest": "customer", "guests": "customer", "trained": "training", "courses": "training",
+    "course": "training", "questions": "question", "chats": "chat", "chatted": "chat",
+    "conversation": "chat", "conversations": "chat", "laughs": "laugh", "laughter": "laugh",
+    "joke": "laugh", "jokes": "laugh", "stories": "story", "projects": "project", "task": "project",
+    "tasks": "project", "deadlines": "deadline", "forms": "paperwork", "file": "paperwork",
+    "files": "paperwork", "folder": "paperwork", "folders": "paperwork", "signatures": "signature",
+    "tools": "tool", "boots": "footwear", "boot": "footwear", "shoes": "footwear", "shoe": "footwear",
+    "uniforms": "uniform", "overalls": "uniform", "apron": "uniform", "aprons": "uniform",
+    "plants": "plant", "keys": "key", "passwords": "password", "hotels": "hotel", "sunrises": "sunrise",
+    "weekends": "weekend", "hellos": "greeting", "hello": "greeting", "goodbyes": "greeting",
+    "goodbye": "greeting", "mornings": "morning", "workday": "day", "workdays": "day"
+  }
+}

@@ -48,6 +48,7 @@ from app.api.routes.studio_roll_a_day import router as studio_roll_a_day_router
 from app.api.routes.studio_weeks_of_firsts import router as studio_weeks_of_firsts_router
 from app.api.routes.studio_who_knows_best import router as studio_who_knows_best_router
 from app.api.routes.studio_office_awards import router as studio_office_awards_router
+from app.api.routes.studio_career_numbers import router as studio_career_numbers_router
 
 router = APIRouter()
 
@@ -95,5 +96,6 @@ router.include_router(studio_roll_a_day_router)
 router.include_router(studio_weeks_of_firsts_router)
 router.include_router(studio_who_knows_best_router)
 router.include_router(studio_office_awards_router)
+router.include_router(studio_career_numbers_router)
 
 __all__ = ["router"]
