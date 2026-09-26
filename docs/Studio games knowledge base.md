@@ -142,7 +142,7 @@ Pages: 1-2 (plus an answer page) · Answer key: yes (table and checked grid) · 
 
 ---
 
-## Word (23 games)
+## Word (24 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -521,6 +521,60 @@ last name already printed in the book, recently in this browser, or recently
 by the server for this seller is dropped. First names are only ranked behind
 fresh ones, because good gender-neutral titles are finite. The table prints
 whole (26 letters, 12 months) or not at all.
+Pages: 1 · Answer key: no · AI content: yes
+
+### Roll-a-Day: Retirement Edition (`roll-a-day`)
+A playful plan-your-day game built for retirement books. The reader rolls a die
+for their morning and rolls again for their afternoon, then puts the two
+together: "Take a slow walk and grab a coffee" + "Bake a small batch of
+scones". The page prints two six-row tables, "Roll #1: Morning" and "Roll #2:
+Afternoon", each row a die face drawn with its pips beside one activity, and
+closes with "I rolled: Morning ☐ Afternoon ☐" to note the two numbers. 36
+possible days; no scoring, no extra rules, playable with any ordinary die.
+There is no right answer and no answer page.
+
+Settings: the mix only (a bit of everything, cosy days close to home, out &
+about nearby, creative & curious, or friends & community). The mix only
+weights the table: every side always keeps rest, gentle movement, making and
+people. Type size and the write-in line are derived from the trim and reported
+in the mix's help line (a 6 x 9 prints at 16-17 pt, a letter page at 20 pt;
+nothing is ever set below 14 pt, and no activity runs past two lines). A 5 x 8
+trim is too small for twelve rows at large print, and the form says so.
+
+Two stacked six-item tables rather than a literal 6 x 6 grid: 36 cells would
+each need a morning and an afternoon squeezed in, and a reader finds a result
+faster by looking up one roll at a time.
+
+Every morning meets every afternoon, so nobody checks the 36 pairings one by
+one; every activity is held to one shape instead (AI content,
+`services/studio_roll_a_day_service.py`): about half a day or less and
+complete on its own (no whole-day plan, trip away or overnight; nothing that
+finishes or continues the other half); no mealtime and nothing of the evening
+on either side; nothing of the afternoon in a morning (a nap) and nothing
+needing an early start in an afternoon (sunrise, breakfast); nothing
+strenuous, and no car, golf course, beach or big budget assumed. No two
+activities on a page share a word of substance (who and where aside: "a
+friend", "at home"), so no day does the same thing twice. Idea shape, safety
+and meaning-level repeats reuse the Bucket List's gates: one verb-led action,
+nothing vague ("Try a new hobby"), sensitive, branded, or assuming a spouse,
+grandchildren or a house.
+
+Variety is structural: each side takes six different kinds of activity (rest,
+gentle movement, making and people always; two of learning, local outings,
+home and play, the mix's first), and every activity gets its own facet and
+flavour (free, at home, with a friend, on foot or by bus...), shuffled by seed.
+A reply is accepted as one set, sides alternating so each side's first briefs
+win a clash over spares; a side short after the checks is topped up alone. An
+activity that repeats one already in the book (read back from its pages), in
+this seller's recent tables for the mix (browser) or in the worker's memory is
+dropped, so two tables in one book never share an activity. All bounded, never
+a comparison with every table ever made.
+
+Quality gate: a preflight re-proves die faces 1 to 6 on each side, every
+activity valid for its half of the day and set as written within its lines, at
+least five kinds per side, no two activities alike, the tables inside the
+printable area, and large print and dice large enough to count. Black ink
+only. If the table cannot be made whole, the page says so plainly.
 Pages: 1 · Answer key: no · AI content: yes
 
 ### Two Truths and a Fib: Retirement Edition (`two-truths-and-a-fib`)
@@ -1589,6 +1643,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | ever-or-never | Ever or Never | word | 1 | no | yes |
 | bucket-list | Retirement Bucket List | word | 4-12 | no | yes |
 | retired-name | What's Your Retired Name? | word | 1 | no | yes |
+| roll-a-day | Roll-a-Day: Retirement Edition | word | 1 | no | yes |
 | two-truths-and-a-fib | Two Truths and a Fib | word | 1 | yes | yes |
 | what-kind-of-retiree | What Kind of Retiree Are You? | word | 4-6 | no | yes |
 | fill-in-funnies | Fill-in Funnies | word | 2-3 | no | yes |
@@ -1605,4 +1660,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 32 games** (2 logic · 23 word · 7 spatial).
+**Total: 33 games** (2 logic · 24 word · 7 spatial).

@@ -1,0 +1,201 @@
+{
+  "_comment": "Roll-a-Day: Retirement Edition. The reader rolls a die for a morning plan (1-6) and again for an afternoon plan (1-6) and puts the two together: 36 possible days. Nobody checks the 36 pairings one by one, so every activity is held to one shape that makes any morning combine with any afternoon: about half a day or less, self-contained (never continuing or depending on the other half), no mealtime, no whole-day or overnight plan, and nothing belonging to the other half of the day (morningBanned / afternoonBanned) or to the evening (anySideBanned). No two activities on a page share a word of substance (softWords aside: who and where, not what), so no day doubles up. Variety is structural: each side takes six different kinds (the four coreKinds plus two extraKinds, the focus's boost first), every activity gets its own facet and flavour, shuffled by seed. exclusiveTerms keep the table open to everyone: nothing strenuous, no car, no golf course or beach house assumed. Idea shape, safety and meaning-level repeats reuse the Bucket List's gates (bucket-list/prompt.json).",
+  "limits": {
+    "rateLimitPerWindow": 20,
+    "maxOutputTokens": 4096,
+    "maxAttempts": 2,
+    "slots": 6,
+    "minKindsPerSide": 5,
+    "maxPerSide": 14,
+    "retrySpare": 3,
+    "minActivityChars": 12,
+    "maxActivityChars": 34,
+    "minActivityWords": 3,
+    "maxActivityWords": 8,
+    "maxConceptChars": 40
+  },
+  "kinds": {
+    "rest": {
+      "label": "slow down and unwind",
+      "facets": [
+        "a quiet sit somewhere pleasant with something to watch",
+        "reading something you enjoy in a comfortable spot",
+        "music you love, listened to properly",
+        "a warm drink savoured slowly",
+        "watching birds, clouds or passers-by",
+        "an audiobook or radio programme",
+        "a sunny spot by a window",
+        "leafing through old photos or postcards",
+        "writing a few lines in a journal",
+        "a long, unhurried bath or pampering hour",
+        "a slow, calm stretch to quiet music",
+        "a bench with a view"
+      ]
+    },
+    "move": {
+      "label": "gentle movement and fresh air",
+      "facets": [
+        "a short walk with something to look out for",
+        "a stroll through a park or green space",
+        "dancing around the kitchen to favourite songs",
+        "gentle stretches or chair exercises",
+        "a wander down a street you rarely use",
+        "light gardening or watering plants",
+        "a swim or a gentle class at a local pool",
+        "an easy bike ride on a quiet path",
+        "a walk to post a letter or pick up a paper",
+        "tai chi or yoga from a video at home",
+        "topping up a bird feeder and watching who visits",
+        "a loop around the block, noticing the season"
+      ]
+    },
+    "make": {
+      "label": "creative, hands-on making",
+      "facets": [
+        "a simple sketch or doodle",
+        "a small batch of baking",
+        "a new recipe from what is in the cupboard",
+        "a greeting card made by hand",
+        "knitting, sewing or another craft",
+        "painting a pebble, pot or postcard",
+        "arranging flowers or leaves in a jar",
+        "writing a short poem or story",
+        "photographs on one chosen theme",
+        "a small repair or upcycling project",
+        "a scrapbook or memory page",
+        "a simple tune on an instrument"
+      ]
+    },
+    "people": {
+      "label": "connecting with someone",
+      "facets": [
+        "a phone call to someone you have not spoken to lately",
+        "a handwritten letter or postcard",
+        "inviting a neighbour round for tea",
+        "meeting a friend somewhere nearby",
+        "a video call with someone far away",
+        "a club, group or class meeting",
+        "a small kindness for someone nearby",
+        "sharing something you baked or grew",
+        "a chat with someone at a community spot",
+        "helping out at a community event or charity",
+        "swapping books, seeds or recipes",
+        "a game or a puzzle with someone"
+      ]
+    },
+    "learn": {
+      "label": "curiosity and learning",
+      "facets": [
+        "a documentary or talk on a new subject",
+        "a few words of another language",
+        "the history of your street or town",
+        "a library book on something new",
+        "naming the trees, birds or flowers nearby",
+        "a podcast or radio programme on a new topic",
+        "a free online lesson",
+        "a small museum or gallery",
+        "reading about a place you would like to see",
+        "a card trick or a new game",
+        "a map, atlas or globe to explore",
+        "a new skill from a how-to video"
+      ]
+    },
+    "outing": {
+      "label": "a small local outing",
+      "facets": [
+        "a market or craft fair",
+        "a café you have never tried",
+        "the library",
+        "a garden centre or plant nursery",
+        "a bus ride to a nearby neighbourhood",
+        "a local exhibition",
+        "a charity shop or second-hand bookshop",
+        "a park, pond or riverside path",
+        "a free event or talk in town",
+        "a matinee film or show",
+        "a bakery for a small treat",
+        "a community garden"
+      ]
+    },
+    "home": {
+      "label": "a cosy, satisfying moment at home",
+      "facets": [
+        "one small drawer, shelf or cupboard put in order",
+        "repotting or tending a houseplant",
+        "sorting a box of photos",
+        "rearranging one corner of a room",
+        "a favourite film or an old series",
+        "a comfort recipe from the past",
+        "a playlist of songs from one year",
+        "planning a small outing for another day",
+        "herbs or seeds started on a windowsill",
+        "a fresh look at a shelf of books",
+        "a cosy blanket and a good story",
+        "a tidy-up that leaves one spot lovely"
+      ]
+    },
+    "play": {
+      "label": "games, puzzles and playful fun",
+      "facets": [
+        "a card game or a round of patience",
+        "a jigsaw or logic puzzle",
+        "a board game",
+        "a word game or crossword",
+        "a quiz or trivia challenge",
+        "a lawn game such as bowls or croquet",
+        "a memory or observation game",
+        "dominoes or draughts",
+        "a number puzzle",
+        "a photo scavenger hunt around the neighbourhood",
+        "a game from another country",
+        "a riddle or brain-teaser challenge"
+      ]
+    }
+  },
+  "coreKinds": ["rest", "move", "make", "people"],
+  "extraKinds": ["learn", "outing", "home", "play"],
+  "focuses": {
+    "balanced": { "boost": [], "flavours": [] },
+    "home": { "boost": ["home", "play"], "flavours": ["right at home", "free"] },
+    "outings": { "boost": ["outing", "learn"], "flavours": ["nearby, on foot or by bus", "somewhere in your own town"] },
+    "creative": { "boost": ["learn", "home"], "flavours": ["something new to you", "hands-on"] },
+    "social": { "boost": ["outing", "play"], "flavours": ["with a friend or neighbour", "with a small group"] }
+  },
+  "flavours": [
+    "free",
+    "right at home",
+    "on your own",
+    "with a friend or neighbour",
+    "nearby, on foot or by bus",
+    "indoors",
+    "outdoors in fair weather",
+    "low-cost",
+    "something new to you",
+    "an old favourite with a twist"
+  ],
+  "sides": {
+    "morning": "things that suit the START of the day: unhurried, fresh-air or gently get-going. Nothing that needs the afternoon or evening.",
+    "afternoon": "things that suit the SECOND half of the day, after any morning: relaxed, sociable or absorbing. Nothing that needs an early start."
+  },
+  "anySideBanned": [
+    "all day", "all-day", "whole day", "full day", "day trip", "day out", "road trip", "overnight",
+    "weekend", "vacation", "holiday", "holidays", "cruise", "flight", "lunch", "lunchtime", "dinner",
+    "supper", "brunch", "evening", "tonight", "night", "nighttime", "bedtime", "midnight", "sunset",
+    "dusk", "stargaze", "stargazing", "stars", "moon", "tomorrow", "yesterday", "finish", "continue",
+    "again", "rest of the day", "later", "after", "afterwards", "before", "until", "this morning",
+    "this afternoon"
+  ],
+  "morningBanned": ["afternoon", "nap", "siesta"],
+  "afternoonBanned": ["morning", "sunrise", "dawn", "daybreak", "breakfast", "wake", "early"],
+  "exclusiveTerms": [
+    "run", "running", "jog", "jogging", "marathon", "sprint", "hike", "hiking", "climb", "climbing",
+    "lift", "lifting", "weights", "gym", "workout", "drive", "driving", "car", "golf", "beach",
+    "boat", "yacht", "ski", "skiing", "splurge", "expensive", "luxury", "spa day", "shopping spree"
+  ],
+  "softWords": [
+    "friend", "friends", "neighbour", "neighbours", "neighbor", "neighbors", "people", "person",
+    "home", "house", "outside", "outdoors", "indoors", "inside", "nearby", "short", "slow", "slowly",
+    "quiet", "quietly", "gentle", "gently", "easy", "fresh", "cup", "minute", "minutes", "hour",
+    "hours", "room", "spot", "table", "window", "corner", "sunny"
+  ]
+}

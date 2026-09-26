@@ -34,6 +34,7 @@ import { wouldYouRatherTemplate } from '@/utils/studio/would-you-rather/generate
 import { everOrNeverTemplate } from '@/utils/studio/ever-or-never/generate'
 import { bucketListTemplate } from '@/utils/studio/bucket-list/generate'
 import { retiredNameTemplate } from '@/utils/studio/retired-name/generate'
+import { rollADayTemplate } from '@/utils/studio/roll-a-day/generate'
 import { twoTruthsFibTemplate } from '@/utils/studio/two-truths-and-a-fib/generate'
 import { retireeQuizTemplate } from '@/utils/studio/what-kind-of-retiree/generate'
 import { fillInFunniesTemplate } from '@/utils/studio/fill-in-funnies/generate'
@@ -79,6 +80,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   everOrNeverTemplate,
   bucketListTemplate,
   retiredNameTemplate,
+  rollADayTemplate,
   twoTruthsFibTemplate,
   retireeQuizTemplate,
   fillInFunniesTemplate,
