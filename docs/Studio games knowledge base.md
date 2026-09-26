@@ -142,7 +142,7 @@ Pages: 1-2 (plus an answer page) · Answer key: yes (table and checked grid) · 
 
 ---
 
-## Word (20 games)
+## Word (23 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -410,6 +410,80 @@ Ever or Never statement already in the book (read back from the pages
 themselves), what this seller's browser printed recently for the theme, and the
 server's recent memory for the seller; one that repeats any of them is dropped.
 Pages: 1 · Answer key: no · AI content: yes
+
+### Retirement Bucket List (`bucket-list`)
+A big, browsable keepsake list of things to do in retirement: 50, 75 or 100
+numbered ideas — "Take a scenic train journey", "Grow a pot of herbs on a
+windowsill", "Write a letter to a teacher who inspired you" — grouped under
+theme headings (Travel, Learn Something New, Give Back, Slow Down & Relax,
+Everyday Joys...), each with a large box to tick once it is done. The reader
+browses for possibilities and ticks them off over months and years. There is
+no right answer and no answer page.
+
+Settings: how many ideas (50, 75 or 100; 100 by default) and the mix (a bit of
+everything, close to home & low-cost, travel & adventure, creativity &
+learning, or friends & community). The mix only weights the list: every list
+keeps at least one restful, one close-to-home, one going-places, one creative
+and one people theme. Themes, ideas per page, type size, pages and checkbox
+size are not settings; the count's help line reports what the trim prints
+("100 ideas under about 12 themed headings — about 8 pages in 16 pt large
+print" on a 6 x 9).
+
+Page: one column per page — a bold theme heading with a rule under it, then
+rows of a checkbox (at least 3/16 in), the idea's number and the idea. Numbers
+run 1 to N across every page, never restarting. A heading only starts where it
+and two ideas fit, is repeated at the top of the next page as "(continued)"
+(or "(cont.)" where the long form will not fit) when it runs over, and never
+leaves one idea alone on the next page. Every page keeps the title; only the
+first carries the how-to. Type is 16 pt on most trims, 18 pt where a typical
+idea still sits on one line (7 x 10, letter), never below 14 pt, and an idea
+never runs past two lines (three on the narrowest trims). Where the last page
+has room, the list closes with "Your Own Ideas": three to eight write-in lines
+with boxes, wide-ruled — never on a page of its own.
+
+Ideas (AI content, `services/studio_bucket_list_service.py`): the service
+samples the list's headings from a bank of 27 themes in five groups (calm,
+close to home, going places, creative, people), about eight ideas under each,
+the focus weighted up. Every idea gets its own brief — one of its theme's
+10-12 facets plus a flavour (free, at home, with a friend, a small splurge,
+indoors on a rainy day...), shuffled by seed — so a list cannot be twenty ways
+of saying "travel". Headings are written in batches of about three that run
+concurrently; each batch is told which headings the rest of the list owns.
+Headings are printed from the bank, never written by the model. The model
+names each idea's underlying experience first ("scenic train journey"), then
+writes the idea.
+
+Gates, in the API and again in the browser: one idea starting with a verb
+(not "Visiting...", "Finally..."), 2-10 words and at most 52 characters, no
+"or"/"then", no second action joined by "and" or a comma, no colon or slash,
+not shouting; something concrete must be left once the empty words are gone,
+so "Experience more adventure" and "Learn new things" are refused; nothing
+about health, ageing bodies, memory, money worries, loneliness, death, time
+running out ("before it's too late"), age jokes, politics, religion, alcohol,
+gambling, risky stunts (skydiving, bungee...), brands, trademarked events or
+celebrities; and nothing that assumes a spouse, children, grandchildren, a
+house or a yard.
+
+No repeats in meaning: ideas are compared on content words after set phrases
+and synonyms are folded ("trip"/"journey"/"holiday", "painting"/"watercolour",
+"northern lights"/"aurora") and generic verbs (try, learn, take, visit...)
+dropped, so "Try painting", "Learn painting" and "Take a painting class" are
+one idea, and "Visit a new country" and "Take a trip to a country you have
+never visited" are one idea. The model's name for the experience catches the
+same thing in other words. Checked across the whole list, against every idea
+already in the book (read back from its pages), this seller's recent lists
+for the mix (browser) and the worker's memory — all bounded, never a
+comparison with every list ever made. A heading left short after the book
+check is topped up by name; the list is then balanced to the exact count
+(each heading its share, spares spread at most two over), and a heading too
+thin to stand is left out rather than padded.
+
+Quality gate: a preflight re-proves the exact count, one unbroken numbering
+run, every idea set as written within its lines, no two ideas alike, every
+heading beside its ideas, every page inside the printable area, and large
+print and pen-sized boxes. Black ink only. If the list cannot be made, the
+page says so plainly.
+Pages: 4-12 (by trim and length) · Answer key: no · AI content: yes
 
 ### What's Your Retired Name? (`retired-name`)
 A party and keepsake game built for retirement books. The reader finds the
@@ -1513,6 +1587,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | top-five-guess | Top Five Guess | word | 1 | yes | yes |
 | would-you-rather | Would You Rather | word | 1 | no | yes |
 | ever-or-never | Ever or Never | word | 1 | no | yes |
+| bucket-list | Retirement Bucket List | word | 4-12 | no | yes |
 | retired-name | What's Your Retired Name? | word | 1 | no | yes |
 | two-truths-and-a-fib | Two Truths and a Fib | word | 1 | yes | yes |
 | what-kind-of-retiree | What Kind of Retiree Are You? | word | 4-6 | no | yes |
@@ -1530,4 +1605,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 31 games** (2 logic · 22 word · 7 spatial).
+**Total: 32 games** (2 logic · 23 word · 7 spatial).

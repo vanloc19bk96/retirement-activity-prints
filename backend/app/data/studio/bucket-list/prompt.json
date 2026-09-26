@@ -1,0 +1,704 @@
+{
+  "_comment": "Retirement Bucket List. A long numbered list of short, concrete things to do in retirement, grouped under theme headings, each with a checkbox to tick when done. Variety is structural: the service samples a handful of themes per list from the bank below (always at least one from every group, the seller's focus weighted up), then gives every requested idea its own brief -- one of that theme's facets plus a cross-cutting flavour (free, at home, with a friend...) -- so a list cannot be twenty ways of saying 'travel'. Section titles are printed as written here, never by the model. An idea survives only as one short imperative action (see limits); repeats are caught on content words after qualifierWords are dropped, phrases and synonyms are folded, and genericWords (verbs like try/learn/visit, and the empty words of vague goals) are removed -- an idea left with nothing concrete is too vague to print. leadVerbs catch two ideas joined into one ('Bake bread and share it'). The same lists are mirrored in frontend/src/utils/studio/bucket-list/content.ts and checked by content-lists.test.ts.",
+  "limits": {
+    "rateLimitPerWindow": 10,
+    "maxOutputTokens": 4096,
+    "maxAttempts": 2,
+    "batchItems": 36,
+    "minSections": 5,
+    "maxSections": 12,
+    "itemsPerSection": 8,
+    "minIdeaChars": 10,
+    "maxIdeaChars": 52,
+    "minIdeaWords": 2,
+    "maxIdeaWords": 10,
+    "maxConceptChars": 40
+  },
+  "locale": {
+    "nativeLocales": ["en"],
+    "nativeLine": "- Write in clear, warm, natural English that reads well in both British and American homes.",
+    "otherLine": "- Write every idea in language locale '{locale}', natural for that language, keeping each idea a short action."
+  },
+  "groups": {
+    "calm": "slow, simple and restful pleasures",
+    "home": "things close to home and easy on the budget",
+    "world": "going places and trying bigger experiences",
+    "creative": "making, learning and hobbies",
+    "people": "friends, family, neighbours and community"
+  },
+  "focuses": {
+    "balanced": { "boost": [] },
+    "close-to-home": { "boost": ["home", "calm"] },
+    "adventure": { "boost": ["world"] },
+    "creative": { "boost": ["creative"] },
+    "people": { "boost": ["people"] }
+  },
+  "themes": [
+    {
+      "key": "travel",
+      "title": "Travel",
+      "group": "world",
+      "facets": [
+        "a scenic journey where getting there is the best part",
+        "a region of your own country you have never seen",
+        "a trip planned around one local food",
+        "a trip timed for a seasonal festival or event",
+        "a stay somewhere unusual",
+        "going back to a place from your past",
+        "a trip to another country",
+        "a slow trip with no fixed timetable",
+        "a trip to see a natural wonder",
+        "a guided group trip",
+        "a city break for old buildings and history",
+        "an island or a stretch of coast"
+      ]
+    },
+    {
+      "key": "explore-nearby",
+      "title": "Explore Close to Home",
+      "group": "home",
+      "facets": [
+        "a corner of your own town you have never walked through",
+        "a local museum or historic house",
+        "a nearby market or farm shop",
+        "a bus or train ride somewhere new just to look around",
+        "being a tourist in your own town for a day",
+        "a nearby village or town you have always passed by",
+        "a free open day, talk or tour",
+        "a local landmark seen at an unusual time of day",
+        "old buildings, plaques and local history",
+        "a cafe or bakery nearby you have never tried",
+        "a park or green space you have never visited"
+      ]
+    },
+    {
+      "key": "learn",
+      "title": "Learn Something New",
+      "group": "creative",
+      "facets": [
+        "the basics of another language",
+        "a practical everyday skill",
+        "the night sky, birds, trees or rocks",
+        "a short community or online course",
+        "the history of your hometown",
+        "a musical instrument",
+        "a strategy game like chess or bridge",
+        "how something is made, on a tour or at a workshop",
+        "a handy digital skill",
+        "a subject you never studied at school",
+        "a traditional craft technique"
+      ]
+    },
+    {
+      "key": "create",
+      "title": "Create",
+      "group": "creative",
+      "facets": [
+        "painting or drawing",
+        "writing a poem, a short story or letters",
+        "something shaped from clay or wood",
+        "a handmade gift",
+        "a photography project",
+        "something handmade for your home",
+        "a scrapbook or collage",
+        "a small creative challenge over a week",
+        "designing your own cards",
+        "something made from things that would be thrown away",
+        "a piece of textile art"
+      ]
+    },
+    {
+      "key": "give-back",
+      "title": "Give Back",
+      "group": "people",
+      "facets": [
+        "volunteering an hour a week",
+        "sharing a skill with a beginner",
+        "a small kindness for a neighbour",
+        "a litter pick or planting day",
+        "donating something handmade",
+        "helping at a charity event",
+        "mentoring someone starting out",
+        "reading aloud to others",
+        "helping at an animal shelter",
+        "thank-you notes to people who helped you",
+        "a collection for a local food bank"
+      ]
+    },
+    {
+      "key": "relax",
+      "title": "Slow Down & Relax",
+      "group": "calm",
+      "facets": [
+        "an unhurried morning ritual",
+        "a day with nothing planned",
+        "a peaceful spot outdoors",
+        "watching the sky change",
+        "a spa-style treat at home",
+        "a long book read slowly",
+        "an afternoon on a porch, balcony or bench",
+        "listening to a whole album with no distractions",
+        "a quiet puzzle or pastime",
+        "a cosy rainy day",
+        "gentle stretching or slow movement"
+      ]
+    },
+    {
+      "key": "connect",
+      "title": "Connect",
+      "group": "people",
+      "facets": [
+        "getting back in touch with an old friend",
+        "a regular get-together",
+        "hosting a simple meal",
+        "joining a club or group",
+        "sending letters and cards",
+        "getting to know the neighbours",
+        "making a friend through a class or club",
+        "swapping stories with someone of another generation",
+        "a video call gathering with faraway friends",
+        "a pen pal",
+        "a coffee morning or tea party"
+      ]
+    },
+    {
+      "key": "try-new",
+      "title": "Try Something New",
+      "group": "world",
+      "facets": [
+        "a food you have never tasted",
+        "a sport or game you have never played",
+        "a style of dance",
+        "an instrument you have never touched",
+        "performing in front of friendly people",
+        "an unusual class",
+        "a new look or style",
+        "a new way of getting around",
+        "a kind of show or event you have never been to",
+        "saying yes to an invitation you would usually decline",
+        "a new routine for a month"
+      ]
+    },
+    {
+      "key": "hobbies",
+      "title": "Hobbies",
+      "group": "creative",
+      "facets": [
+        "birdwatching",
+        "growing things in pots",
+        "collecting something small",
+        "building a model",
+        "fishing",
+        "card and board games",
+        "baking",
+        "knitting, crochet or sewing",
+        "stargazing",
+        "jigsaw and word puzzles",
+        "tracing your family tree",
+        "simple woodwork"
+      ]
+    },
+    {
+      "key": "projects",
+      "title": "Personal Projects",
+      "group": "home",
+      "facets": [
+        "sorting photos into albums",
+        "writing down your life stories",
+        "a family recipe collection",
+        "refreshing one corner of your home",
+        "a signature dish perfected",
+        "a reading challenge",
+        "a walking distance goal",
+        "digitising old letters or photos",
+        "a time capsule",
+        "a balcony or window box project",
+        "putting a collection on display"
+      ]
+    },
+    {
+      "key": "nature",
+      "title": "Into Nature",
+      "group": "calm",
+      "facets": [
+        "wildflowers",
+        "an early morning walk",
+        "a botanical garden",
+        "paddling at the water's edge",
+        "learning to name trees or birds",
+        "the night sky",
+        "a picnic in a park",
+        "a woodland walk",
+        "feeding the birds",
+        "watching wildlife",
+        "the changing seasons"
+      ]
+    },
+    {
+      "key": "family-friends",
+      "title": "Family & Friends",
+      "group": "people",
+      "facets": [
+        "a reunion",
+        "starting a new tradition",
+        "a day out with a friend",
+        "cooking together",
+        "teaching someone a game",
+        "a family tree drawn up with relatives",
+        "a surprise for someone you love",
+        "a shared photo book",
+        "a games night",
+        "a celebration for no particular reason",
+        "a weekend away together"
+      ]
+    },
+    {
+      "key": "experiences",
+      "title": "Experiences",
+      "group": "world",
+      "facets": [
+        "a hot air balloon ride or a scenic flight",
+        "a live performance",
+        "a behind-the-scenes tour",
+        "a cooking class somewhere special",
+        "a night somewhere unusual",
+        "a live sports match",
+        "a big outdoor festival",
+        "a boat trip",
+        "a view from somewhere high",
+        "a guided wildlife trip",
+        "a heritage steam train",
+        "a meal cooked in front of you"
+      ]
+    },
+    {
+      "key": "everyday-joys",
+      "title": "Everyday Joys",
+      "group": "calm",
+      "facets": [
+        "the perfect cup of tea or coffee",
+        "fresh flowers",
+        "a favourite song",
+        "a handwritten note",
+        "something warm from the oven",
+        "a walk in the rain",
+        "breakfast made special",
+        "a long phone chat",
+        "a small treat",
+        "a tidy, peaceful room",
+        "a good laugh"
+      ]
+    },
+    {
+      "key": "food",
+      "title": "Food & Flavours",
+      "group": "home",
+      "facets": [
+        "a dish from another country",
+        "a meal made from market finds",
+        "bread from scratch",
+        "a family recipe perfected",
+        "a cooking class",
+        "a food festival",
+        "herbs grown and used",
+        "a picnic feast",
+        "a fruit or vegetable you have never tried",
+        "a regional speciality",
+        "homemade jam or preserves",
+        "a dessert you have always wanted to make"
+      ]
+    },
+    {
+      "key": "arts-culture",
+      "title": "Arts & Culture",
+      "group": "creative",
+      "facets": [
+        "a play or a musical",
+        "an orchestra concert",
+        "an art exhibition",
+        "a poetry reading",
+        "a historic site",
+        "the ballet or the opera",
+        "a film festival",
+        "a local choir concert",
+        "a sculpture park",
+        "a craft fair",
+        "a talk by an author"
+      ]
+    },
+    {
+      "key": "move-play",
+      "title": "Move & Play",
+      "group": "home",
+      "facets": [
+        "a walking challenge",
+        "a swim",
+        "a dance class",
+        "a lawn game",
+        "a racket sport",
+        "tai chi or yoga",
+        "a bike ride on a quiet path",
+        "table tennis",
+        "mini golf",
+        "a gentle hike",
+        "a friendly tournament"
+      ]
+    },
+    {
+      "key": "home-garden",
+      "title": "Home & Garden",
+      "group": "home",
+      "facets": [
+        "herbs on a windowsill",
+        "a pot or planter of flowers",
+        "a corner for birds and bees",
+        "new plants grown from cuttings",
+        "rearranging a room",
+        "a vegetable grown in a container",
+        "a cosy reading nook",
+        "decorating for a season",
+        "flowers grown from seed",
+        "a small compost bin",
+        "a houseplant you keep alive for a year"
+      ]
+    },
+    {
+      "key": "memories",
+      "title": "Memories & Keepsakes",
+      "group": "calm",
+      "facets": [
+        "a letter to your future self",
+        "a story recorded in your own voice",
+        "a jar of happy moments",
+        "names and dates written on old photos",
+        "a childhood place revisited",
+        "a playlist of songs from every decade of your life",
+        "a keepsake box",
+        "a one-line-a-day journal",
+        "a family story written down",
+        "favourite recipes written on cards",
+        "a map of everywhere you have lived"
+      ]
+    },
+    {
+      "key": "music",
+      "title": "Music & Song",
+      "group": "creative",
+      "facets": [
+        "an instrument",
+        "a choir",
+        "live music in a small venue",
+        "the words of a favourite song",
+        "an outdoor concert",
+        "a dance lesson",
+        "a playlist for a special day",
+        "a simple song of your own",
+        "music from another culture",
+        "a singalong with friends",
+        "a record shop or music fair"
+      ]
+    },
+    {
+      "key": "small-adventures",
+      "title": "Small Adventures",
+      "group": "world",
+      "facets": [
+        "a sunrise from a hilltop",
+        "an evening walk with a torch",
+        "a bus to somewhere you have never been",
+        "a day trip by train",
+        "a spur-of-the-moment outing",
+        "a paddle on calm water",
+        "a night under canvas",
+        "a trail you have never walked",
+        "a ferry ride",
+        "a walk to a place you usually ride to",
+        "a picnic somewhere surprising"
+      ]
+    },
+    {
+      "key": "days-out",
+      "title": "Days Out",
+      "group": "world",
+      "facets": [
+        "a seaside town out of season",
+        "a castle or a ruin",
+        "a pier or a promenade",
+        "an open-air museum",
+        "a lavender or sunflower farm",
+        "an aquarium",
+        "a stately garden in bloom",
+        "a river boat trip",
+        "a wildlife park",
+        "a craft village or artists' studios",
+        "a famous viewpoint",
+        "a historic market town"
+      ]
+    },
+    {
+      "key": "wonders",
+      "title": "Natural Wonders",
+      "group": "world",
+      "facets": [
+        "a great waterfall",
+        "a gorge or a canyon",
+        "caves with a guide",
+        "a glacier or an ice field",
+        "a dark-sky place full of stars",
+        "an ancient tree",
+        "sand dunes",
+        "sea life seen from a glass-bottomed boat",
+        "the northern lights",
+        "a solar eclipse",
+        "a famous rock formation",
+        "a field of wildflowers in full bloom"
+      ]
+    },
+    {
+      "key": "treat-yourself",
+      "title": "Treat Yourself",
+      "group": "calm",
+      "facets": [
+        "an afternoon tea",
+        "a brand new book",
+        "a day of pampering",
+        "a beautiful notebook",
+        "a meal somewhere special",
+        "the best seats at a show",
+        "flowers bought for yourself",
+        "a massage",
+        "a lazy morning",
+        "an upgrade on a journey",
+        "something you have wanted for years"
+      ]
+    },
+    {
+      "key": "community",
+      "title": "Community Life",
+      "group": "people",
+      "facets": [
+        "a local club",
+        "a community garden",
+        "a neighbourhood event",
+        "a walking group",
+        "a repair cafe or swap shop",
+        "a library group",
+        "a local history society",
+        "a public talk or lecture",
+        "a street party",
+        "helping to organise an event",
+        "a quiz night"
+      ]
+    },
+    {
+      "key": "skills",
+      "title": "Skills & Know-How",
+      "group": "creative",
+      "facets": [
+        "fixing something small",
+        "tying useful knots",
+        "a sewing repair",
+        "reading a map and a compass",
+        "the settings on a camera",
+        "a handy computer skill",
+        "looking after a bicycle",
+        "a new card game",
+        "sharpening a kitchen knife safely",
+        "a new cooking technique",
+        "identifying edible garden herbs"
+      ]
+    },
+    {
+      "key": "seasons",
+      "title": "Seasons & Celebrations",
+      "group": "calm",
+      "facets": [
+        "picking fruit in season",
+        "a winter light display",
+        "spring blossom",
+        "an autumn walk",
+        "a midsummer picnic",
+        "a harvest festival",
+        "decorating for a holiday",
+        "a festival from another culture",
+        "the first snow",
+        "an ordinary day made into a celebration",
+        "a seasonal tradition of your own"
+      ]
+    }
+  ],
+  "flavours": [
+    "free or nearly free",
+    "right at home",
+    "in your own town",
+    "a relaxed day out",
+    "further from home",
+    "with a friend",
+    "on your own",
+    "with a group",
+    "a small splurge",
+    "gentle and unhurried",
+    "a small step outside your comfort zone",
+    "outdoors",
+    "indoors on a rainy day",
+    "any time of year"
+  ],
+  "qualifierWords": [
+    "a", "an", "the", "my", "your", "our", "their", "his", "her", "its", "you", "yourself", "i", "we", "me", "us",
+    "them", "it", "of", "to", "for", "at", "in", "on", "with", "and", "from", "about", "by", "into", "onto", "up",
+    "out", "over", "under", "near", "around", "through", "across", "along", "as", "too", "so", "very", "really",
+    "just", "only", "every", "each", "all", "that", "this", "those", "these", "some", "any", "one", "own", "new",
+    "old", "another", "other", "favourite", "favorite", "whole", "entire", "full", "once", "more", "most", "ever",
+    "never", "been", "have", "has", "had", "before", "after", "finally", "always", "somewhere", "someone",
+    "something", "place", "where", "who", "what", "how", "when", "there", "here", "than", "day", "days", "time",
+    "week", "month", "year", "first", "least", "is", "are", "be", "not", "can", "could", "would", "will"
+  ],
+  "genericWords": [
+    "try", "learn", "take", "go", "make", "do", "get", "have", "start", "begin", "enjoy", "experience", "find",
+    "discover", "explore", "spend", "see", "watch", "visit", "attend", "join", "give", "keep", "plan", "travel",
+    "class", "lesson", "course", "workshop", "beginner", "basic", "skill", "hobby", "local", "nearby", "different",
+    "special", "simple", "little", "small", "big", "great", "perfect", "proper", "real", "good", "nice", "lovely",
+    "beautiful", "unusual", "fun", "adventure", "thing", "stuff", "life", "moment", "dream", "goal", "passion",
+    "happiness", "joy", "purpose", "potential", "best", "live", "world", "way", "kind", "type", "bit", "lot",
+    "few", "part", "list", "bucket", "use", "put", "let", "become", "embrace", "pursue", "someday", "maybe",
+    "famous", "memorable", "exciting", "amazing"
+  ],
+  "phrases": {
+    "northern lights": "aurora",
+    "hot air balloon": "balloon",
+    "hot-air balloon": "balloon",
+    "family tree": "genealogy",
+    "family history": "genealogy",
+    "life story": "memoir",
+    "life stories": "memoir",
+    "tai chi": "taichi",
+    "board game": "boardgame",
+    "board games": "boardgame",
+    "card game": "cardgame",
+    "card games": "cardgame",
+    "ice cream": "icecream",
+    "farmers market": "market",
+    "farmers' market": "market",
+    "open mic": "openmic",
+    "pen pal": "penpal",
+    "pen friend": "penpal",
+    "time capsule": "timecapsule",
+    "afternoon tea": "afternoontea"
+  },
+  "synonyms": {
+    "trip": "travel", "trips": "travel", "journey": "travel", "journeys": "travel", "travels": "travel",
+    "traveling": "travel", "travelling": "travel", "tour": "travel", "tours": "travel", "touring": "travel",
+    "vacation": "travel", "vacations": "travel", "holiday": "travel", "holidays": "travel", "getaway": "travel",
+    "getaways": "travel", "voyage": "travel", "outing": "travel", "outings": "travel",
+    "abroad": "abroad", "overseas": "abroad", "foreign": "abroad", "country": "abroad", "countries": "abroad",
+    "international": "abroad",
+    "painting": "paint", "paintings": "paint", "painted": "paint", "watercolor": "paint", "watercolors": "paint",
+    "watercolour": "paint", "watercolours": "paint", "acrylic": "paint", "acrylics": "paint",
+    "drawing": "draw", "drawings": "draw", "sketch": "draw", "sketches": "draw", "sketching": "draw",
+    "sketchbook": "draw",
+    "photo": "photo", "photos": "photo", "photograph": "photo", "photographs": "photo", "photography": "photo",
+    "camera": "photo", "picture": "photo", "pictures": "photo",
+    "walking": "walk", "walks": "walk", "hike": "walk", "hikes": "walk", "hiking": "walk", "stroll": "walk",
+    "ramble": "walk", "rambling": "walk", "trek": "walk", "trekking": "walk",
+    "singing": "sing", "song": "sing", "songs": "sing", "choir": "sing", "choirs": "sing", "chorus": "sing",
+    "dancing": "dance", "dances": "dance",
+    "gardening": "garden", "gardens": "garden",
+    "planting": "grow", "plant": "grow", "growing": "grow",
+    "cooking": "cook", "recipe": "cook", "recipes": "cook", "dish": "cook", "dishes": "cook", "meal": "cook",
+    "meals": "cook", "cuisine": "cook",
+    "writing": "write", "wrote": "write",
+    "diary": "journal", "diaries": "journal", "journals": "journal",
+    "memoirs": "memoir", "autobiography": "memoir",
+    "volunteering": "volunteer",
+    "museums": "museum",
+    "gig": "concert", "gigs": "concert", "concerts": "concert",
+    "theater": "theatre", "theatres": "theatre", "theaters": "theatre",
+    "stars": "star", "stargazing": "star", "stargaze": "star", "constellation": "star", "constellations": "star",
+    "birds": "bird", "birdwatching": "bird", "birding": "bird",
+    "fishing": "fish",
+    "swimming": "swim",
+    "bicycle": "bike", "cycling": "bike", "cycle": "bike", "biking": "bike", "bikes": "bike",
+    "sailing": "boat", "sail": "boat", "boats": "boat",
+    "canoe": "paddle", "canoeing": "paddle", "kayak": "paddle", "kayaking": "paddle", "paddling": "paddle",
+    "friends": "friend", "pal": "friend", "pals": "friend",
+    "languages": "language",
+    "knitting": "knit", "crochet": "knit", "crocheting": "knit",
+    "ancestry": "genealogy", "ancestors": "genealogy",
+    "ocean": "coast", "sea": "coast", "seaside": "coast", "beach": "coast", "beaches": "coast", "coastline": "coast",
+    "mountain": "hill", "mountains": "hill", "hills": "hill", "hilltop": "hill", "summit": "hill",
+    "rail": "train", "railway": "train", "railroad": "train", "trains": "train",
+    "read": "book", "reading": "book", "books": "book", "novel": "book", "novels": "book",
+    "overnight": "night", "nights": "night",
+    "markets": "market",
+    "festivals": "festival", "fair": "festival", "fairs": "festival"
+  },
+  "nonVerbStarters": [
+    "a", "an", "the", "my", "your", "our", "their", "his", "her", "its", "i", "we", "you", "it", "this", "that",
+    "these", "those", "to", "and", "or", "but", "some", "any", "more", "less", "most", "new", "finally", "maybe",
+    "perhaps", "someday", "one", "really", "always", "never", "ever", "every", "all", "just", "simply", "why",
+    "what", "how", "when", "where", "if", "there", "here", "retirement", "retired", "bucket", "being", "at", "in",
+    "on", "with", "for", "from", "by", "after", "before", "once"
+  ],
+  "leadVerbs": [
+    "visit", "take", "learn", "try", "go", "make", "bake", "cook", "grow", "plant", "paint", "draw", "write",
+    "read", "sing", "dance", "play", "join", "host", "invite", "teach", "walk", "hike", "swim", "ride", "sail",
+    "paddle", "fly", "climb", "watch", "see", "spend", "plan", "book", "attend", "volunteer", "donate", "start",
+    "build", "create", "knit", "sew", "photograph", "explore", "discover", "find", "collect", "organise",
+    "organize", "record", "frame", "sort", "fix", "repair", "restore", "decorate", "camp", "fish", "feed",
+    "send", "call", "reconnect", "meet", "gather", "celebrate", "surprise", "give", "share", "help", "mentor",
+    "tour", "taste", "sample", "eat", "order", "brew", "pick", "sketch", "sculpt", "carve", "weave", "quilt",
+    "crochet", "journal", "perform", "sit", "relax", "rest", "nap", "stroll", "wander", "listen", "stargaze",
+    "identify", "spot", "keep", "buy", "treat", "enjoy", "savour", "savor", "soak", "sleep", "follow",
+    "complete", "finish", "master", "practise", "practice", "study", "research", "trace", "map", "label", "scan",
+    "digitise", "digitize", "print", "bind", "publish", "enter", "compete", "win", "bowl", "cycle", "row",
+    "kayak", "canoe", "skate", "ski", "snorkel", "bring", "throw", "hang", "fill", "put", "set",
+    "sell", "tell", "show", "sign", "swap", "stay"
+  ],
+  "clichePhrases": [
+    "live your best life", "follow your dreams", "follow your heart", "seize the day", "carpe diem",
+    "make memories", "create memories", "make lasting memories", "comfort zone", "be yourself", "find yourself",
+    "find your passion", "find happiness", "enjoy life", "enjoy every moment", "live in the moment",
+    "make every day count", "just do it", "bucket list", "life is short", "yolo", "you only live once",
+    "before it's too late", "before its too late", "too late", "while you still can", "while you can",
+    "at your age", "last chance", "one last", "too old", "young again", "act your age", "golden years",
+    "twilight years", "senior discount"
+  ],
+  "blockedTerms": [
+    "death", "dead", "die", "dying", "died", "funeral", "grave", "cemetery", "widow", "widower", "will and testament",
+    "illness", "ill", "sick", "disease", "cancer", "dementia", "alzheimer", "stroke", "surgery", "operation",
+    "hospital", "doctor", "nurse", "nursing home", "care home", "retirement home", "medication", "medicine",
+    "pills", "diagnosis", "arthritis", "pain", "aches", "hip replacement", "knee replacement",
+    "wheelchair", "walking stick", "disabled", "disability", "blind", "deaf", "hearing aid", "dentures",
+    "incontinence", "bladder", "diet", "weight loss", "overweight", "fat", "wrinkles", "grey hair",
+    "memory loss", "forget", "forgot", "forgotten", "forgetful", "forgetting", "senior moment", "over the hill",
+    "old fogey", "elderly", "geriatric", "senior citizen", "old age", "old man", "old woman", "old lady", "grumpy",
+    "lonely", "loneliness", "alone forever", "nobody visits", "bored to death",
+    "debt", "broke", "bankrupt", "poverty", "poor", "bills", "pay off", "paying off", "mortgage", "loan", "taxes",
+    "can't afford", "cannot afford", "pension", "savings", "invest", "investing", "stocks", "crypto", "bitcoin",
+    "divorce", "ex-wife", "ex-husband", "affair",
+    "grandchild", "grandchildren", "grandkid", "grandkids", "grandson", "grandsons", "granddaughter",
+    "granddaughters", "spouse", "husband", "wife", "your kids", "your children", "your son", "your daughter",
+    "backyard", "your yard", "your house", "your lawn", "renovate", "remodel",
+    "election", "political", "politics", "democrat", "republican", "president", "government", "protest", "vote",
+    "voting", "campaign",
+    "religion", "church", "prayer", "god", "heaven", "hell", "bible",
+    "drunk", "hangover", "beer", "wine", "vodka", "whiskey", "cocktail", "cocktails", "booze", "alcohol", "brewery",
+    "pub crawl",
+    "gamble", "gambling", "casino", "lottery", "bet", "betting",
+    "gun", "guns", "rifle", "hunting", "weapon", "war", "fight", "kill", "violence", "sex", "sexy",
+    "naked", "nude", "tattoo",
+    "skydive", "skydiving", "sky dive", "bungee", "base jump", "cliff dive", "cliff diving", "shark", "sharks",
+    "free solo", "hitchhike", "hitchhiking", "motorcycle", "stunt", "extreme",
+    "stupid", "idiot", "hate", "ugly", "crazy", "useless", "boring old", "damn",
+    "police", "arrested", "illegal", "trespass"
+  ],
+  "brandTerms": [
+    "disney", "disneyland", "marvel", "netflix", "facebook", "instagram", "tiktok", "youtube", "google", "amazon",
+    "iphone", "apple watch", "walmart", "starbucks", "mcdonald", "mcdonalds", "coca-cola", "coca cola",
+    "lego", "barbie", "harry potter", "star wars", "star trek", "taylor swift", "elvis", "beatles",
+    "rolex", "ferrari", "harley", "nintendo", "playstation", "xbox", "costco", "ikea", "uber", "airbnb",
+    "zoom", "facetime", "whatsapp", "kindle", "wordle", "las vegas", "route 66", "orient express", "michelin",
+    "ted talk", "tedx", "peloton", "fitbit", "eurail", "national geographic", "guinness", "olympic", "olympics",
+    "super bowl", "wimbledon", "world cup", "broadway", "royal caribbean", "carnival cruise", "viking cruise"
+  ]
+}

@@ -32,6 +32,7 @@ import { retirementBingoTemplate } from '@/utils/studio/retirement-bingo/generat
 import { topFiveGuessTemplate } from '@/utils/studio/top-five-guess/generate'
 import { wouldYouRatherTemplate } from '@/utils/studio/would-you-rather/generate'
 import { everOrNeverTemplate } from '@/utils/studio/ever-or-never/generate'
+import { bucketListTemplate } from '@/utils/studio/bucket-list/generate'
 import { retiredNameTemplate } from '@/utils/studio/retired-name/generate'
 import { twoTruthsFibTemplate } from '@/utils/studio/two-truths-and-a-fib/generate'
 import { retireeQuizTemplate } from '@/utils/studio/what-kind-of-retiree/generate'
@@ -76,6 +77,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   topFiveGuessTemplate,
   wouldYouRatherTemplate,
   everOrNeverTemplate,
+  bucketListTemplate,
   retiredNameTemplate,
   twoTruthsFibTemplate,
   retireeQuizTemplate,
