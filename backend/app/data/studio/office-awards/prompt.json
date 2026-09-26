@@ -1,0 +1,700 @@
+{
+  "_comment": "Office Awards: Retirement Edition. A page of light, warm workplace award categories -- 'Keeper of the Spare Phone Charger', 'Calmest Voice on a Busy Shift' -- and for each one a coworker writes the name of the colleague who deserves it. The service writes award titles only; nobody is named and no coworker list is ever sent. Variety is structural: every award gets its own brief -- a theme, one of its details, a tone (playful or warm) and a title shape -- sampled by seed from 23 themes and about 200 details; a set plans different themes, capped per group (one drinks award, one timekeeping award, no pile of meeting jokes), always with one farewell award about the retiree, plus spares for the gates on both sides. subjectWords spot what an award is really about whatever its brief said, so a coffee award written for a teamwork brief still counts as the set's coffee award. qualifierWords, phrases and synonyms fold an award to its underlying idea so 'Most Coffee Consumed' and 'Biggest Coffee Drinker' are one award. Brands are the Bucket List's own list (bucket-list/prompt.json).",
+  "limits": {
+    "rateLimitPerWindow": 10,
+    "maxOutputTokens": 4096,
+    "maxAttempts": 2,
+    "maxAwards": 24,
+    "capBase": 24,
+    "spares": 8,
+    "maxAsk": 32,
+    "warmPercent": 40,
+    "minAwardChars": 8,
+    "maxAwardChars": 48,
+    "minAwardWords": 2,
+    "maxAwardWords": 9,
+    "maxConceptChars": 40
+  },
+  "locale": {
+    "nativeLocales": ["en"],
+    "nativeLine": "- Write in clear, warm, natural English that reads well in both British and American workplaces.",
+    "otherLine": "- Write every award title in language locale '{locale}', natural for that language, keeping each one short and in title case where the language uses it."
+  },
+  "workplaces": {
+    "any": {
+      "label": "Any workplace",
+      "line": "The workplace is not known. Use words that work in an office, a school, a hospital, a shop or a workshop alike -- the team, a shift, the break room, the rota, the car park -- and never depend on cubicles, conference rooms or corporate jargon."
+    },
+    "office": {
+      "label": "Office or corporate team",
+      "line": "The team works in an office. Desks, email, meetings and the printer are fair game, but keep jargon light and never make every award about office equipment."
+    },
+    "school": {
+      "label": "School or college",
+      "line": "The team works at a school or college: teachers, support staff and office staff. The staff room, timetables, the photocopier, the bell, playground duty and school events are fair game. Never joke about pupils or parents."
+    },
+    "healthcare": {
+      "label": "Hospital, clinic or care",
+      "line": "The team works in healthcare or care: a hospital, clinic, practice or care home. Shifts, handovers, the staff room, the rota and teamwork on a busy day are fair game. Never joke about patients, illness or anything medical."
+    },
+    "service": {
+      "label": "Shop, restaurant or hotel",
+      "line": "The team works in retail, hospitality or customer service: a shop, cafe, restaurant or hotel. Shifts, the stockroom, the till, opening and closing and looking after customers are fair game. Never mock customers."
+    },
+    "trades": {
+      "label": "Workshop, site or factory",
+      "line": "The team works in a workshop, on a site, in a warehouse or a factory. Tools, the tea break, the van, the shift pattern, the canteen and getting the job done are fair game. Never joke about safety or accidents."
+    }
+  },
+  "tones": {
+    "playful": "playful: an affectionate, recognisable workplace habit the winner would laugh about and be proud of",
+    "warm": "warm: appreciation for a kindness, strength or quality the team is grateful for"
+  },
+  "shapes": {
+    "most-likely": "starts with \"Most Likely to\" and a verb (\"Most Likely to Rescue the Photocopier\")",
+    "superlative": "starts with one superlative such as Best, Fastest, Friendliest, Calmest, Tidiest or Warmest, then the thing (\"Friendliest Hello on a Monday\")",
+    "title": "an honorary title or role the winner holds (\"Keeper of the Spare Phone Charger\", \"Chief Morale Booster\")",
+    "named-award": "a named award ending in the word Award (\"The Never-Without-a-Pen Award\")",
+    "habit": "a short habit phrase starting with Always, Never Without or First to (\"Never Without a Spare Umbrella\")"
+  },
+  "groups": {
+    "drinks": { "max": 1 },
+    "food": { "max": 2 },
+    "meetings": { "max": 2 },
+    "communication": { "max": 2 },
+    "time": { "max": 1 },
+    "organization": { "max": 3 },
+    "tech": { "max": 2 },
+    "problem-solving": { "max": 2 },
+    "knowledge": { "max": 2 },
+    "humor": { "max": 2 },
+    "stories": { "max": 2 },
+    "workspace": { "max": 2 },
+    "teamwork": { "max": 3 },
+    "kindness": { "max": 3 },
+    "morale": { "max": 2 },
+    "celebrations": { "max": 2 },
+    "mentoring": { "max": 2 },
+    "calm": { "max": 2 },
+    "breakroom": { "max": 1 },
+    "everyday": { "max": 2 },
+    "life": { "max": 2 },
+    "farewell": { "max": 2 }
+  },
+  "anchorTheme": "farewell",
+  "themes": {
+    "farewell": {
+      "label": "the retiree's farewell",
+      "group": "farewell",
+      "weight": 2,
+      "playful": [
+        "inheriting the Retiree's favourite chair, mug or desk spot",
+        "keeping one of the Retiree's famous habits going",
+        "phoning the Retiree for advice in the first week",
+        "organizing the first reunion with the Retiree",
+        "taking over the jobs only the Retiree knew how to do",
+        "visiting the Retiree to see how retirement is going",
+        "missing the Retiree's stories at break time"
+      ],
+      "warm": [
+        "carrying on something the Retiree taught the team",
+        "being the Retiree's most trusted right hand",
+        "keeping in touch with the Retiree the longest",
+        "learning the most from the Retiree over the years",
+        "the colleague the Retiree could always count on"
+      ]
+    },
+    "hot-drinks": {
+      "label": "hot drinks and the drinks round",
+      "group": "drinks",
+      "weight": 1,
+      "playful": [
+        "making the first pot of coffee or tea of the day",
+        "knowing everyone's hot drink order by heart",
+        "a much-loved mug nobody else may touch",
+        "carrying six drinks back without spilling one",
+        "a desk that is never without a warm drink",
+        "trying every flavour of tea in the cupboard"
+      ],
+      "warm": [
+        "bringing a warm drink to someone having a long day",
+        "always offering to make a round for the whole team"
+      ]
+    },
+    "snacks-treats": {
+      "label": "snacks, treats and baking",
+      "group": "food",
+      "weight": 2,
+      "playful": [
+        "a desk drawer that doubles as a snack shop",
+        "spotting free food in the kitchen within minutes",
+        "homemade baking that disappears by mid-morning",
+        "the tin of sweets that never seems to empty",
+        "knowing exactly where the good biscuits are hidden",
+        "bringing the most adventurous snack to share"
+      ],
+      "warm": [
+        "sharing treats with the whole team",
+        "remembering who likes which treat"
+      ]
+    },
+    "lunch": {
+      "label": "lunch breaks",
+      "group": "food",
+      "weight": 2,
+      "playful": [
+        "being the most reliable lunch buddy",
+        "a packed lunch that makes everyone jealous",
+        "knowing every good lunch spot nearby",
+        "the most predictable lunch order",
+        "turning lunch breaks into a walk outside",
+        "the leftovers everyone asks about"
+      ],
+      "warm": [
+        "always saving a seat at the lunch table",
+        "making sure new starters never eat lunch alone"
+      ]
+    },
+    "meetings": {
+      "label": "meetings, briefings and team huddles",
+      "group": "meetings",
+      "weight": 2,
+      "playful": [
+        "surviving the longest meeting on record",
+        "arriving at every meeting with a notebook and pen",
+        "taking the clearest notes",
+        "keeping meetings to time",
+        "asking the question everyone was thinking",
+        "always first to find the mute button on a call"
+      ],
+      "warm": [
+        "making sure everyone in a meeting gets heard",
+        "turning a long discussion into a clear plan"
+      ]
+    },
+    "messages": {
+      "label": "emails, messages and phone calls",
+      "group": "communication",
+      "weight": 2,
+      "playful": [
+        "the fastest reply in the building",
+        "the tidiest inbox",
+        "the friendliest sign-off on every message",
+        "the most memorable out-of-office message",
+        "a phone voice that could read the news",
+        "messages with never a typo in sight"
+      ],
+      "warm": [
+        "the kindest thank-you notes",
+        "making every caller or visitor feel welcome"
+      ]
+    },
+    "timekeeping": {
+      "label": "timekeeping and the daily routine",
+      "group": "time",
+      "weight": 1,
+      "playful": [
+        "the most creative excuse for running a little late",
+        "always first through the door in the morning",
+        "counting down the hours to Friday",
+        "a calendar reminder for absolutely everything",
+        "never missing the start of a break"
+      ],
+      "warm": [
+        "always making time for a quick chat",
+        "never letting a colleague finish a shift alone"
+      ]
+    },
+    "organizing": {
+      "label": "staying organized",
+      "group": "organization",
+      "weight": 2,
+      "playful": [
+        "labelling absolutely everything",
+        "colour-coded folders and files",
+        "the tidiest desk or work station",
+        "a to-do list for every to-do list",
+        "a sticky note system nobody else understands",
+        "knowing where every file is kept",
+        "the neatest handwriting on the whiteboard"
+      ],
+      "warm": [
+        "organizing things so everyone else can find them",
+        "keeping the team on track without any fuss"
+      ]
+    },
+    "supplies": {
+      "label": "supplies and handy kit",
+      "group": "organization",
+      "weight": 2,
+      "playful": [
+        "always having a spare pen",
+        "guarding the good stapler",
+        "the spare phone charger everyone borrows",
+        "an umbrella ready for anyone caught in the rain",
+        "a drawer with a solution for every small emergency",
+        "the scissors that never go missing",
+        "the biggest collection of highlighters"
+      ],
+      "warm": [
+        "lending anything to anyone without a second thought"
+      ]
+    },
+    "tech": {
+      "label": "technology and equipment",
+      "group": "tech",
+      "weight": 2,
+      "playful": [
+        "taming the printer or photocopier",
+        "being the unofficial help desk",
+        "rescuing a frozen screen",
+        "knowing every keyboard shortcut",
+        "getting the projector working first time",
+        "keeping a trusty paper diary alongside the computer"
+      ],
+      "warm": [
+        "patiently teaching others new technology"
+      ]
+    },
+    "fixers": {
+      "label": "problem solving",
+      "group": "problem-solving",
+      "weight": 2,
+      "playful": [
+        "fixing anything with tape and a paperclip",
+        "always having a Plan B",
+        "finding the thing everyone else has lost",
+        "solving the problem before anyone noticed it",
+        "the best idea at the very last minute",
+        "untangling the trickiest knot of cables"
+      ],
+      "warm": [
+        "the person everyone goes to when stuck",
+        "turning a tricky day into a solved one"
+      ]
+    },
+    "know-how": {
+      "label": "knowledge and know-how",
+      "group": "knowledge",
+      "weight": 2,
+      "playful": [
+        "knowing where absolutely everything is",
+        "the walking encyclopedia of the workplace",
+        "knowing the story behind every tradition",
+        "the best memory for names and faces",
+        "knowing exactly who to ask",
+        "the answer to every quiz question at break"
+      ],
+      "warm": [
+        "sharing know-how with anyone who asks",
+        "giving new starters the grand tour"
+      ]
+    },
+    "humour": {
+      "label": "humour and good laughs",
+      "group": "humor",
+      "weight": 2,
+      "playful": [
+        "the best laugh in the building",
+        "the most groan-worthy puns",
+        "the perfect one-liner at the perfect moment",
+        "a laugh you can hear from the other end of the corridor",
+        "the best reaction to a surprise"
+      ],
+      "warm": [
+        "making everyone laugh on a hard day",
+        "finding the funny side of any situation"
+      ]
+    },
+    "stories": {
+      "label": "storytelling",
+      "group": "stories",
+      "weight": 2,
+      "playful": [
+        "the best storyteller at break time",
+        "stories that start small and end up epic",
+        "the weekend stories everyone waits for on Monday",
+        "a story for every occasion",
+        "the liveliest retelling of an ordinary day"
+      ],
+      "warm": [
+        "stories that make newcomers feel part of the team",
+        "remembering the team's best moments over the years"
+      ]
+    },
+    "workspace": {
+      "label": "desks, lockers and workspaces",
+      "group": "workspace",
+      "weight": 2,
+      "playful": [
+        "the best desk or locker decoration",
+        "a plant that somehow thrives at work",
+        "the most photos pinned up at a workspace",
+        "seasonal decorations put up right on time",
+        "the comfiest chair set-up",
+        "a workspace with its own personality"
+      ],
+      "warm": [
+        "a workspace that always feels welcoming"
+      ]
+    },
+    "teamwork": {
+      "label": "teamwork",
+      "group": "teamwork",
+      "weight": 2,
+      "playful": [
+        "always the first to volunteer",
+        "the ultimate group project partner",
+        "the best tag-team partner on a busy day",
+        "the loudest cheer when the team hits a goal"
+      ],
+      "warm": [
+        "always ready to lend a hand",
+        "stepping in for colleagues without being asked",
+        "making the whole team stronger",
+        "sharing the credit every single time"
+      ]
+    },
+    "kindness": {
+      "label": "kindness and thoughtfulness",
+      "group": "kindness",
+      "weight": 3,
+      "playful": [
+        "remembering everyone's birthday",
+        "the most thoughtful surprise for a colleague"
+      ],
+      "warm": [
+        "being the best listener",
+        "the kindest words of encouragement",
+        "checking in when someone seems a bit quiet",
+        "noticing the little things",
+        "welcoming every new starter",
+        "a smile for everyone who walks in",
+        "the most generous with praise"
+      ]
+    },
+    "morale": {
+      "label": "team spirit and good energy",
+      "group": "morale",
+      "weight": 2,
+      "playful": [
+        "Monday morning sunshine",
+        "being the team cheerleader",
+        "the best high five",
+        "turning any task into a friendly competition",
+        "the most enthusiastic good morning",
+        "the best playlist for a quiet afternoon"
+      ],
+      "warm": [
+        "brightening every room",
+        "the most positive attitude on a tough day"
+      ]
+    },
+    "celebrations": {
+      "label": "celebrations and traditions",
+      "group": "celebrations",
+      "weight": 2,
+      "playful": [
+        "being the unofficial party planner",
+        "organizing the card everyone signs",
+        "decorating for every holiday",
+        "being the team quiz champion",
+        "masterminding the secret gift swap",
+        "the best dance moves at the party",
+        "never missing a team celebration"
+      ],
+      "warm": [
+        "making every milestone feel special",
+        "keeping the team's traditions going"
+      ]
+    },
+    "mentoring": {
+      "label": "mentoring and advice",
+      "group": "mentoring",
+      "weight": 2,
+      "playful": [
+        "the unofficial ask-me-anything desk",
+        "the best advice nobody asked for but everyone needed",
+        "a wise saying for every situation"
+      ],
+      "warm": [
+        "the most patient teacher",
+        "the mentor who made a real difference",
+        "the best advice for new starters",
+        "believing in people before they believe in themselves"
+      ]
+    },
+    "calm": {
+      "label": "staying calm and steady",
+      "group": "calm",
+      "weight": 2,
+      "playful": [
+        "staying calmest under a deadline",
+        "cool as a cucumber on the busiest day",
+        "the steadiest hands when everything is urgent",
+        "never raising an eyebrow, whatever happens"
+      ],
+      "warm": [
+        "the steady presence on a busy day",
+        "keeping everyone calm when plans change"
+      ]
+    },
+    "breakroom": {
+      "label": "the break room or staff room",
+      "group": "breakroom",
+      "weight": 1,
+      "playful": [
+        "actually washing up the mugs",
+        "labelling food in the shared fridge",
+        "the break room chat champion",
+        "finishing the crossword at break",
+        "first to spot the cake in the staff room",
+        "keeping the break room tidy"
+      ],
+      "warm": [
+        "making the break room feel like home"
+      ]
+    },
+    "everyday": {
+      "label": "everyday work-life moments",
+      "group": "everyday",
+      "weight": 2,
+      "playful": [
+        "the unofficial weather reporter",
+        "the best commute stories",
+        "always prepared for rain",
+        "the most creative way to stay warm in a chilly room",
+        "knowing the best parking spot or bus route",
+        "the loudest keyboard typing"
+      ],
+      "warm": [
+        "the friendly face at the start of every shift"
+      ]
+    },
+    "outside-work": {
+      "label": "life outside work",
+      "group": "life",
+      "weight": 2,
+      "playful": [
+        "the best holiday stories",
+        "the most interesting hobby",
+        "the best weekend plans",
+        "the greenest fingers",
+        "the best book or film recommendations",
+        "the most adventurous traveller",
+        "the best pet photos"
+      ],
+      "warm": [
+        "inspiring others to try something new"
+      ]
+    }
+  },
+  "subjectWords": {
+    "drinks": ["drink"],
+    "food": ["snack", "lunch"],
+    "meetings": ["meeting"],
+    "communication": ["email", "phone"],
+    "time": ["late", "punctual", "early"],
+    "tech": ["printer", "tech"],
+    "breakroom": ["breakroom"],
+    "farewell": ["retiree", "retirees", "retirement", "retiring"]
+  },
+  "retireeWords": ["retiree", "retirees", "retirement", "retiring"],
+  "readerWords": ["you", "your", "yours", "yourself", "youd", "youre", "youve", "youll", "i", "me", "my", "mine", "im", "ive", "id"],
+  "genderedWords": [
+    "he", "she", "him", "her", "his", "hers", "himself", "herself", "hes", "shes", "king", "queen", "kings",
+    "queens", "prince", "princess", "lady", "ladies", "gentleman", "gentlemen", "guy", "guys", "gal", "gals",
+    "man", "woman", "men", "women", "boy", "girl", "boys", "girls", "mom", "mum", "dad", "mother", "father",
+    "sir", "madam", "mr", "mrs", "ms", "miss", "grandpa", "grandma", "granny", "uncle", "aunt", "auntie",
+    "sister", "brother", "wife", "husband", "boyfriend", "girlfriend"
+  ],
+  "blockedTerms": [
+    "best dressed", "dressed", "outfit", "outfits", "fashion", "fashionable", "stylish", "clothes", "shoes",
+    "hair", "hairstyle", "haircut", "bald", "beard", "good looking", "good-looking", "best looking",
+    "handsome", "pretty", "beautiful", "cute", "sexy", "attractive", "makeup", "tattoo", "tallest",
+    "shortest", "glasses", "weight", "weigh", "weighs", "diet", "dieting", "calories", "fat", "skinny",
+    "overweight", "slim", "age", "aged", "ageing", "aging", "old", "older", "oldest", "elderly",
+    "senior citizen", "young", "younger", "youngest", "over the hill", "senior moment", "ancient",
+    "dinosaur", "old-timer", "disability", "disabled", "deaf", "blind", "wheelchair", "hearing aid",
+    "sick", "sickness", "sick day", "sick days", "illness", "ill", "disease", "injury", "injured", "pain",
+    "aches", "medication", "medicine", "pill", "pills", "diagnosis", "surgery", "therapy", "therapist",
+    "mental", "crazy", "insane", "psycho", "ocd", "adhd", "anxiety", "anxious", "depression", "depressed",
+    "stress", "stressed", "burnout", "panic", "meltdown", "allergy", "allergies", "addict", "addicted",
+    "addiction", "memory loss", "forgetful", "forget", "forgets", "forgot", "forgetting", "senile",
+    "dementia", "salary", "salaries", "wage", "wages", "pay rise", "pay raise", "paycheck", "paycheque",
+    "bonus", "income", "money", "cash", "debt", "debts", "loan", "loans", "broke", "rich", "cheap",
+    "cheapest", "stingy", "expenses", "pension", "savings", "religion", "religious", "church", "prayer",
+    "pray", "god", "faith", "bible", "holy", "saint", "angel", "heaven", "christmas", "easter", "hanukkah",
+    "diwali", "ramadan", "politics", "political", "politician", "vote", "voting", "election", "government",
+    "protest", "president", "sex", "flirt", "flirting", "crush", "kiss", "romance", "romantic", "dating",
+    "affair", "marriage", "married", "divorce", "divorced", "custody", "family drama", "in-laws",
+    "racial", "ethnic", "ethnicity", "accent", "accents", "nationality", "foreigner", "immigrant", "fired",
+    "sacked", "laid off", "layoff", "redundancy", "redundant", "disciplinary", "performance review",
+    "probation", "demoted", "lazy", "laziest", "slacker", "useless", "incompetent", "least", "worst",
+    "unproductive", "procrastinator", "procrastination", "procrastinating", "skiving", "shirking",
+    "avoiding work", "nap", "naps", "napping", "asleep", "sleeping", "sleepiest", "snooze", "snoring",
+    "snore", "hiding", "mistake", "mistakes", "blunder", "disaster", "catastrophe", "fail", "failure",
+    "screw up", "mess up", "messed up", "crash", "crashed", "fire", "smell", "smells", "smelly", "burp",
+    "fart", "toilet", "bathroom", "restroom", "loo", "hygiene", "sweat", "sweaty", "nose", "chewing",
+    "thief", "steal", "stealing", "stole", "nosy", "nosiest", "annoying", "grumpy", "grumpiest", "moody",
+    "complain", "complains", "complainer", "complaining", "whine", "whiner", "gossip", "gossiping", "drama",
+    "bossy", "nag", "nagging", "rude", "stupid", "idiot", "dumb", "clueless", "weird", "weirdest", "ugly",
+    "boring", "cranky", "sarcastic", "loudmouth", "know-it-all", "know it all", "diva", "suck-up",
+    "teachers pet", "drunk", "drinking buddy", "beer", "wine", "whisky", "whiskey", "vodka", "gin", "rum",
+    "cocktail", "cocktails", "booze", "alcohol", "alcoholic", "happy hour", "pub", "hangover", "tipsy",
+    "gamble", "gambling", "casino", "lottery", "bet", "betting", "smoke", "smoking", "cigarette", "vape",
+    "weed", "gun", "weapon", "kill", "killer", "murder", "war", "police", "arrest", "arrested", "jail",
+    "prison", "illegal", "dead", "death", "die", "died", "dying", "funeral", "grave", "patients",
+    "customer complaints", "quote", "quotes", "lyric", "lyrics", "celebrity", "celebrities", "oscar",
+    "oscars", "emmy", "emmys", "grammy", "grammys", "nobel", "olympic", "olympics", "post-it", "crypto",
+    "bitcoin"
+  ],
+  "genericWords": [
+    "coworker", "coworkers", "co-worker", "co-workers", "colleague", "colleagues", "person", "people",
+    "employee", "employees", "staff", "worker", "workers", "member", "members", "everyone", "anyone",
+    "someone", "everybody", "somebody", "overall", "office", "workplace", "work", "job", "year", "team",
+    "winner", "prize", "trophy", "medal", "honour", "honor", "star", "valuable", "valued", "amazing",
+    "awesome", "great", "good", "nice", "nicest", "super", "fantastic", "wonderful", "brilliant",
+    "outstanding", "excellent", "incredible", "favourite", "favorite", "mvp"
+  ],
+  "qualifierWords": [
+    "a", "an", "the", "of", "to", "in", "on", "at", "for", "with", "from", "by", "about", "as", "into", "onto",
+    "up", "out", "over", "off", "and", "or", "but", "so", "if", "than", "then", "that", "this", "these",
+    "those", "there", "here", "what", "which", "who", "whom", "whose", "where", "when", "why", "how", "is",
+    "are", "was", "were", "be", "been", "being", "do", "does", "did", "has", "have", "had", "get", "gets",
+    "got", "it", "its", "they", "their", "them", "we", "our", "us", "most", "more", "likely", "best",
+    "better", "top", "award", "awards", "champion", "champ", "chief", "officer", "keeper", "master",
+    "expert", "guru", "wizard", "hero", "legend", "ace", "pro", "ever", "always", "never", "every", "all",
+    "any", "some", "one", "biggest", "greatest", "ultimate", "official", "unofficial", "honorary",
+    "certified", "legendary", "resident", "designated", "supreme", "grand", "very", "really", "just",
+    "only", "much", "many", "lot", "lots", "whole", "entire", "absolutely", "retiree", "retirees",
+    "retirement", "retiring", "go", "goto", "without", "thing", "things", "something", "everything"
+  ],
+  "phrases": {
+    "break room": "breakroom",
+    "break-room": "breakroom",
+    "staff room": "breakroom",
+    "lunch room": "breakroom",
+    "tea room": "breakroom",
+    "out-of-office": "outofoffice",
+    "out of office": "outofoffice",
+    "to-do list": "todo",
+    "to do list": "todo",
+    "sticky note": "stickynote",
+    "sticky notes": "stickynote",
+    "plan b": "backup",
+    "back-up plan": "backup",
+    "backup plan": "backup",
+    "reply all": "email",
+    "on time": "punctual",
+    "running late": "late",
+    "being late": "late",
+    "first in": "early",
+    "first through the door": "early",
+    "phone voice": "phone",
+    "thank-you": "thanks",
+    "thank you": "thanks",
+    "good morning": "greeting",
+    "high-five": "highfive",
+    "high five": "highfive",
+    "green fingers": "garden",
+    "green thumb": "garden",
+    "go-to": "",
+    "go to": "",
+    "lend a hand": "help",
+    "helping hand": "help",
+    "right hand": "help",
+    "keyboard shortcut": "shortcut",
+    "keyboard shortcuts": "shortcut",
+    "team player": "teamwork",
+    "team spirit": "cheer",
+    "new starter": "newstarter",
+    "new starters": "newstarter",
+    "new hire": "newstarter",
+    "new hires": "newstarter",
+    "newcomer": "newstarter",
+    "newcomers": "newstarter",
+    "monday morning": "monday",
+    "monday mornings": "monday",
+    "most likely": "",
+    "hot drink": "drink",
+    "hot drinks": "drink",
+    "help desk": "helpdesk",
+    "phone charger": "charger",
+    "phone chargers": "charger",
+    "first in line": "queue"
+  },
+  "synonyms": {
+    "coffee": "drink", "tea": "drink", "kettle": "drink", "cuppa": "drink", "brew": "drink", "espresso": "drink",
+    "latte": "drink", "cappuccino": "drink", "caffeine": "drink", "mug": "drink", "mugs": "drink",
+    "drinks": "drink", "drinker": "drink", "drinking": "drink", "beverage": "drink", "consumed": "drink",
+    "consume": "drink",
+    "snacks": "snack", "treat": "snack", "treats": "snack", "biscuit": "snack", "biscuits": "snack",
+    "cookie": "snack", "cookies": "snack", "sweets": "snack", "candy": "snack", "chocolate": "snack",
+    "cake": "snack", "cakes": "snack", "baking": "snack", "baker": "snack", "bake": "snack", "baked": "snack",
+    "goodies": "snack", "nibbles": "snack", "crisps": "snack", "chips": "snack", "doughnut": "snack",
+    "donut": "snack",
+    "lunches": "lunch", "lunchtime": "lunch", "dinner": "lunch", "meal": "lunch", "meals": "lunch",
+    "sandwich": "lunch", "sandwiches": "lunch", "leftovers": "lunch", "potluck": "lunch",
+    "meetings": "meeting", "huddle": "meeting", "huddles": "meeting", "briefing": "meeting",
+    "briefings": "meeting", "agenda": "meeting", "handover": "meeting", "handovers": "meeting",
+    "emails": "email", "inbox": "email", "message": "email", "messages": "email", "reply": "email",
+    "replies": "email", "responder": "email", "texts": "email",
+    "phones": "phone", "caller": "phone", "callers": "phone", "calls": "phone",
+    "lateness": "late", "tardy": "late",
+    "punctuality": "punctual", "earliest": "early", "earlybird": "early",
+    "photocopier": "printer", "copier": "printer", "scanner": "printer", "printers": "printer",
+    "computer": "tech", "computers": "tech", "laptop": "tech", "screen": "tech", "keyboard": "tech",
+    "technology": "tech", "gadget": "tech", "gadgets": "tech", "projector": "tech", "wifi": "tech",
+    "desk": "desk", "desks": "desk", "workspace": "desk", "cubicle": "desk", "workstation": "desk",
+    "locker": "desk", "lockers": "desk",
+    "plants": "plant", "greenery": "plant",
+    "laugh": "laugh", "laughs": "laugh", "laughter": "laugh", "joke": "laugh", "jokes": "laugh",
+    "joker": "laugh", "funny": "laugh", "funniest": "laugh", "humour": "laugh", "humor": "laugh",
+    "pun": "laugh", "puns": "laugh", "comedian": "laugh", "comedy": "laugh", "giggle": "laugh",
+    "stories": "story", "storyteller": "story", "storytelling": "story", "tale": "story", "tales": "story",
+    "anecdote": "story", "anecdotes": "story",
+    "organized": "organize", "organised": "organize", "organizer": "organize", "organiser": "organize",
+    "organizing": "organize", "organising": "organize", "organization": "organize",
+    "organisation": "organize",
+    "tidiest": "tidy", "neat": "tidy", "neatest": "tidy", "neatness": "tidy", "tidiness": "tidy",
+    "pen": "supply", "pens": "supply", "pencil": "supply", "pencils": "supply", "highlighter": "supply",
+    "highlighters": "supply", "stationery": "supply", "supplies": "supply", "stapler": "supply",
+    "staplers": "supply", "scissors": "supply", "paperclip": "supply", "paperclips": "supply",
+    "charger": "supply", "chargers": "supply",
+    "party": "party", "parties": "party", "celebration": "party", "celebrations": "party",
+    "celebrate": "party", "festivities": "party",
+    "birthdays": "birthday",
+    "cheerleader": "cheer", "cheering": "cheer", "morale": "cheer", "positivity": "cheer",
+    "positive": "cheer", "sunshine": "cheer", "upbeat": "cheer", "optimist": "cheer", "optimism": "cheer",
+    "enthusiasm": "cheer", "enthusiastic": "cheer", "sunniest": "cheer", "cheerful": "cheer",
+    "calmest": "calm", "cool": "calm", "coolest": "calm", "unflappable": "calm", "steady": "calm",
+    "steadiest": "calm", "composed": "calm", "zen": "calm", "relaxed": "calm",
+    "helpful": "help", "helper": "help", "helping": "help", "assist": "help", "assistance": "help",
+    "mentor": "mentor", "mentoring": "mentor", "teacher": "mentor", "teaching": "mentor", "coach": "mentor",
+    "coaching": "mentor", "advice": "mentor", "adviser": "mentor", "advisor": "mentor", "wisdom": "mentor",
+    "wise": "mentor", "wisest": "mentor",
+    "listener": "listen", "listening": "listen", "ear": "listen", "ears": "listen",
+    "volunteers": "volunteer", "volunteering": "volunteer",
+    "problem": "fix", "problems": "fix", "solver": "fix", "solving": "fix", "solution": "fix",
+    "solutions": "fix", "fixer": "fix", "fixing": "fix", "fixes": "fix", "troubleshooter": "fix",
+    "knows": "know", "knowing": "know", "knowledge": "know", "encyclopedia": "know",
+    "encyclopaedia": "know", "know-how": "know",
+    "rain": "weather", "umbrella": "weather", "umbrellas": "weather", "forecast": "weather",
+    "commute": "commute", "commuter": "commute", "traffic": "commute", "parking": "commute",
+    "holiday": "travel", "holidays": "travel", "vacation": "travel", "vacations": "travel", "trip": "travel",
+    "trips": "travel", "traveller": "travel", "traveler": "travel", "travels": "travel",
+    "hobbies": "hobby", "pastime": "hobby", "pastimes": "hobby",
+    "greeting": "greeting", "hello": "greeting", "welcome": "greeting", "welcoming": "greeting",
+    "smile": "greeting", "smiles": "greeting"
+  },
+  "exampleAwards": [
+    "Most Likely to Rescue the Photocopier",
+    "Friendliest Hello on a Monday",
+    "Keeper of the Spare Phone Charger",
+    "Chief Morale Booster",
+    "The Never-Without-a-Pen Award",
+    "Never Without a Spare Umbrella",
+    "Calmest Voice on a Busy Shift"
+  ]
+}

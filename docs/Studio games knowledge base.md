@@ -142,7 +142,7 @@ Pages: 1-2 (plus an answer page) · Answer key: yes (table and checked grid) · 
 
 ---
 
-## Word (29 games)
+## Word (30 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -937,6 +937,106 @@ A generated title must be one of ours and must not already be in the book
 when a fresh one was available. If the page is too small, it says so
 plainly.
 Pages: 1 · Answer key: no · AI content: no
+
+### Office Awards: Retirement Edition (`office-awards`)
+A retirement-party and farewell-book favourite. The page is a list of light
+workplace award categories ("Keeper of the Emergency Snack Drawer", "First
+Call When Anyone Is Stuck", "Most Patient Teacher"). For each one, coworkers
+write the name of the colleague who deserves it, and anyone can win,
+including the retiree. Each award sits in its own framed card: a numbered
+line-art rosette on the left, the award title in bold large print, then a
+"Winner:" line, plus an optional "Why:" line for a quick reason or memory.
+Nothing is filled in before printing and there is no answer page.
+
+Settings: the retiree's name (optional), where they worked, how many awards
+and the "Why" line.
+- *Name*: a first name or nickname, printed in the heading ("Linda's
+  Farewell Office Awards" while the title is left at "Office Awards"), in the
+  how-to ("anyone can win, even Linda!") and in awards about the retiree.
+  The service writes "the Retiree" and the browser swaps the name in ("Most
+  Likely to Inherit Linda's Chair"). The name is never sent to the AI, and
+  no coworker names are ever asked for.
+- *Where did they work?*: any workplace (default: no cubicles or corporate
+  jargon), office, school, healthcare (never anything medical), shop /
+  restaurant / hotel, or workshop / site / factory.
+- *Awards*: 6, 8, 10 (default), 12, 16, 20 or 24.
+- *Add a "Why" line*: off by default. The winner's name stays the core
+  interaction, and the reason line is for keepsake books.
+Tone, themes, type size, cards per page and pages are not settings. The
+awards' help line reports what the trim prints ("10 awards on about 2 pages
+in 15 pt large print" on a 6 x 9).
+
+Every award is gated in the API and again in the browser (AI content,
+`services/studio_office_awards_service.py`). A title is 2-9 words and at
+most 48 characters, set in title case with curly apostrophes. It has no
+sentence punctuation, quotation marks or emoji, never shouts, never speaks
+to "you", and is gender neutral (no queen, guy, lady...). An award is
+dropped if nothing is left once award padding ("Most Likely to", "Best",
+"Award", "Coworker") and vague praise ("Most Valuable Team Member") are set
+aside. It is also dropped if it touches appearance, clothes, weight, age,
+health, disability, mental health, money or pay, religion, politics,
+romance, family life, race, alcohol, poor performance, firing, mistakes or
+personal habits (sleeping, smells, the bathroom). Mean framings ("worst",
+"least", "laziest", "complainer", "annoying"), borrowed award names
+(Oscars...), quotations, brands and celebrities are dropped too. The
+prompt's own examples are dropped if copied word for word.
+
+Repeats are caught in meaning. Padding is set aside and synonyms folded, so
+coffee, tea, the kettle, a mug and "consumed" are one drink, and the break
+room, staff room and tea room are one room. The Bucket List's meaning test
+is then applied with the model's own concept name. So "Most Coffee Consumed"
+and "Biggest Coffee Drinker" are one award. An award that repeats one
+already in the book (read back from its pages), this seller's recent sets
+for the workplace (browser) or the worker's memory is dropped. All of these
+checks are bounded, never a comparison with every set ever made.
+
+Variety is structural. Every award gets its own brief: a theme, one of its
+details, a tone (playful or warm) and a title shape (Most Likely to..., a
+superlative, an honorary title, a named "... Award", a habit). Briefs are
+sampled by seed from 24 themes and about 190 details: coffee and the drinks
+round, snacks, lunch, meetings, messages, timekeeping, organizing, supplies,
+tech, problem solving, know-how, humour, storytelling, workspaces, teamwork,
+kindness, team spirit, celebrations, mentoring, staying calm, the break room,
+everyday moments, life outside work and the retiree's farewell. A set plans
+different themes, about two in five warm, always with one farewell award,
+plus eight spares.
+
+The browser picks the printed set as a whole:
+- at least three quarters of the awards from different themes, and a theme
+  twice only when the two awards honour different things;
+- groups capped to the set's size, counted by what a title is really about,
+  whatever its brief said. So a coffee award written for a teamwork brief
+  still counts as the set's one drinks award. Timekeeping, drinks and the
+  break room get one award each, and meetings or food one or two;
+- at least 30% warm and 30% playful;
+- no shape in more than 40% of the awards, and no opening ("Most Likely",
+  "Best", "The"...) in more than a quarter.
+It orders the set by seed: a playful award first, the farewell award last,
+and no neighbours sharing a group, opening or shape where avoidable.
+
+Page: one column of cards at most 6.5 in wide. The type size comes from the
+trim: 18 pt down to 15 pt while a typical title sets on one line, 15 pt with
+titles wrapping on narrow trims, and 14 pt only as a floor. A title takes at
+most two lines, broken where the lines come out closest in length, so it
+never ends on a lone word. A title that would need a third line (the
+retiree's name included) is passed over for a spare. Writing rows are at
+least 0.4 in apart, winner lines at least 1.9 in, and the rosette at least
+0.42 in across. A card never splits. The set takes as many pages as its
+cards need, spread evenly (the how-to page often one lighter), with one gap
+between cards widened where every page has room. Every page repeats the
+heading, and only the first carries the how-to. Black ink, with mid-grey
+writing lines. The rosettes are outlines, white inside. There are no fills,
+shadows or gradients.
+
+Quality gate: a preflight re-proves the set: the right number of awards,
+numbered in order, each printable, distinct and within every set rule,
+with the funny/warm mix held. It re-proves every page too: every award
+printed once in order, titles set exactly as written in at most two lines,
+cards whole, no overlaps, nothing past the printable area or wider than
+the column, and the badge inside its card. Type, writing rows, winner lines
+and badges must be at their minimums. If a balanced set cannot be made, or
+the page is too small, the page says so plainly.
+Pages: 1-8 (by awards, trim and the "Why" line) · Answer key: no · AI content: yes
 
 ### Two Truths and a Fib: Retirement Edition (`two-truths-and-a-fib`)
 A light factual challenge built for retirement books. Each numbered set has a
@@ -2010,6 +2110,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | who-knows-retiree-best | Who Knows the Retiree Best? | word | 4-28 | no | yes |
 | well-wishes-signatures | Well Wishes & Signatures | word | 1-4 | no | no |
 | retirement-certificate | Certificate of Retirement | word | 1 | no | no |
+| office-awards | Office Awards: Retirement Edition | word | 1-8 | no | yes |
 | two-truths-and-a-fib | Two Truths and a Fib | word | 1 | yes | yes |
 | what-kind-of-retiree | What Kind of Retiree Are You? | word | 4-6 | no | yes |
 | fill-in-funnies | Fill-in Funnies | word | 2-3 | no | yes |
@@ -2026,4 +2127,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 38 games** (2 logic · 29 word · 7 spatial).
+**Total: 39 games** (2 logic · 30 word · 7 spatial).
