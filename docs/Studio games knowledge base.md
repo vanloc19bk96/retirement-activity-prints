@@ -142,7 +142,7 @@ Pages: 1-2 (plus an answer page) · Answer key: yes (table and checked grid) · 
 
 ---
 
-## Word (24 games)
+## Word (25 games)
 
 ### Word Search (`word-search`)
 A classic word search. Hide AI-written words on any theme, or your own list,
@@ -576,6 +576,70 @@ least five kinds per side, no two activities alike, the tables inside the
 printable area, and large print and dice large enough to count. Black ink
 only. If the table cannot be made whole, the page says so plainly.
 Pages: 1 · Answer key: no · AI content: yes
+
+### 52 Weeks of Firsts: Retirement Edition (`weeks-of-firsts`)
+A year-long "try something new" challenge built for retirement books. Fifty-two
+numbered weeks, each a framed card: "Week 12" and a "Date:" line across the
+top, one concrete new thing to try ("Cook a Thai green curry from scratch",
+"Learn to recognise one bird by its song"), then ruled lines for notes on what
+happened. The weeks are numbered, not dated, so a reader can start in any week
+of the year; the first page opens with "I began my year of firsts on: ____".
+There is no right answer and no answer page.
+
+Settings: the mix (a bit of everything, close to home & low-cost, out & about,
+creative & curious, or friends & community) and the writing space
+(comfortable or roomy). The mix only weights the year: every area always
+appears. Weeks per page (at most three), type size and line count are derived
+from the trim and the writing space and reported in the writing space's help
+line: comfortable prints two weeks per page on every common KDP trim (15-18 pt,
+at least five writing lines each, about 27 pages); roomy gives every week a
+page of its own (at least nine lines, 52 pages). Nothing is set below 14 pt,
+writing lines are at least 0.36" apart, the date line at least 1.25" long.
+Fewer weeks per page always win over smaller type. A card never splits across
+pages, every later page holds its weeks at the same positions, and the space a
+page cannot fill with a whole card becomes a "Firsts I'm Looking Forward To"
+box on the first page (or a line or two more for each week there) and a
+"Looking Back on My Year of Firsts" box on the last (favourite first, one to do
+again, what to try next).
+
+Every idea is held to the Bucket List's gates (AI content,
+`services/studio_weeks_of_firsts_service.py`): one verb-led action, nothing
+vague, doubled up, sensitive, branded, or assuming a spouse, grandchildren, a
+house or a car, with a roomier line (3-12 words, at most 60 characters). On
+top: nothing tied to a season, month, holiday or date, since week 1 may fall at
+any time of year; nothing that sounds like an order or a test ("must",
+"challenge yourself", "face your fears"); and something concrete must be left
+once the "never tried before" padding is set aside ("Visit a place you've never
+been" is too vague). Repeats are caught in meaning with that padding ignored,
+so "Take a painting class" and "Try painting for the first time" are one idea,
+while two firsts are not alike merely for both being "never tried".
+
+Variety is structural: the year is spread over eighteen areas (cooking at home,
+tasting out, exploring nearby, nature, growing, making, pictures, reading and
+writing, music, learning, friends, kindness, culture, slow pleasures, games,
+gentle movement, small adventures, home projects), two to four weeks each, the
+mix raising four areas to four. Every idea gets its own facet and flavour (free,
+at home, with a friend, on foot or by bus...), shuffled by seed, and areas are
+written in concurrent batches. The browser picks the printed 52 from the pool
+(spares for its own checks): each area its share, spares borrowed round robin
+but never past five weeks of anything, at least fourteen areas, and bigger
+outings (far travel, strenuous or costly ideas) capped at four a year. The
+year is then put in reading order by seed: no area within three weeks of
+itself, no two weeks of the same kind (food, outings...) back to back where
+avoidable, bigger outings apart and out of the first four weeks, the heavier
+areas spread across the whole year. An idea that repeats one already in the
+book (read back from its pages, e.g. a second year of firsts), in this seller's
+recent years for the mix (browser) or in the worker's memory is dropped. All
+bounded, never a comparison with every year ever made.
+
+Quality gate: a preflight re-proves exactly 52 weeks numbered 1 to 52 in page
+order, every idea printable, distinct and set as written within its card, the
+area and bigger-outing caps, no area two weeks running, every card whole and
+inside the printable area with at least the chosen writing lines, and large
+print, line spacing and date line at their minimums. Black ink only (writing
+lines a mid grey). If a whole, balanced year cannot be made, the page says so
+plainly.
+Pages: about 27 (comfortable) or 52 (roomy) · Answer key: no · AI content: yes
 
 ### Two Truths and a Fib: Retirement Edition (`two-truths-and-a-fib`)
 A light factual challenge built for retirement books. Each numbered set has a
@@ -1644,6 +1708,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | bucket-list | Retirement Bucket List | word | 4-12 | no | yes |
 | retired-name | What's Your Retired Name? | word | 1 | no | yes |
 | roll-a-day | Roll-a-Day: Retirement Edition | word | 1 | no | yes |
+| weeks-of-firsts | 52 Weeks of Firsts: Retirement Edition | word | 27-52 | no | yes |
 | two-truths-and-a-fib | Two Truths and a Fib | word | 1 | yes | yes |
 | what-kind-of-retiree | What Kind of Retiree Are You? | word | 4-6 | no | yes |
 | fill-in-funnies | Fill-in Funnies | word | 2-3 | no | yes |
@@ -1660,4 +1725,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 33 games** (2 logic · 24 word · 7 spatial).
+**Total: 34 games** (2 logic · 25 word · 7 spatial).

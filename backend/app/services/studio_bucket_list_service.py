@@ -455,8 +455,12 @@ def _opens_on_a_verb(first: str) -> bool:
     return True
 
 
-def normalize_idea(raw: Any, *, budget: int) -> str | None:
-    """One idea as printed -- "Take a scenic train journey" -- or None."""
+def normalize_idea(raw: Any, *, budget: int, max_words: int | None = None) -> str | None:
+    """One idea as printed -- "Take a scenic train journey" -- or None.
+
+    ``max_words`` lets a game that prints a roomier line (a weekly prompt)
+    reuse these gates; the Bucket List keeps its own limit.
+    """
     text = _clean(raw)
     for pattern in (_NUMBER_RE, _BOX_RE):
         text = pattern.sub("", text).strip()
@@ -470,7 +474,8 @@ def normalize_idea(raw: Any, *, budget: int) -> str | None:
     if not words or not _opens_on_a_verb(words[0]) or _joins_two_ideas(text):
         return None
     count = len(text.split())
-    if not int_value(_limits(), "minIdeaWords") <= count <= int_value(_limits(), "maxIdeaWords"):
+    most = int_value(_limits(), "maxIdeaWords") if max_words is None else max_words
+    if not int_value(_limits(), "minIdeaWords") <= count <= most:
         return None
     if not int_value(_limits(), "minIdeaChars") <= len(text) <= budget:
         return None

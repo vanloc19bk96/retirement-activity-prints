@@ -382,8 +382,16 @@ function opensOnAVerb(first: string): boolean {
   return !(first.length > 5 && (first.endsWith('ing') || first.endsWith('ly')))
 }
 
-/** One idea as printed — "Take a scenic train journey" — or null. Mirrors `normalize_idea`. */
-export function normalizeIdea(raw: unknown, budget: number = MAX_IDEA_CHARS): string | null {
+/**
+ * One idea as printed — "Take a scenic train journey" — or null. Mirrors
+ * `normalize_idea`. `maxWords` lets a game with a roomier line (a weekly
+ * prompt) reuse these gates; the Bucket List keeps its own limit.
+ */
+export function normalizeIdea(
+  raw: unknown,
+  budget: number = MAX_IDEA_CHARS,
+  maxWords: number = BL_LIMITS.maxIdeaWords,
+): string | null {
   let text = clean(raw)
   for (const pattern of [NUMBER_RE, BOX_RE]) text = text.replace(pattern, '').trim()
   text = text.replace(EDGE_QUOTES_RE, '').replace(TAIL_RE, '').replace(EDGE_QUOTES_RE, '')
@@ -394,7 +402,7 @@ export function normalizeIdea(raw: unknown, budget: number = MAX_IDEA_CHARS): st
   const words = text.toLowerCase().match(WORD_RE) ?? []
   if (!words[0] || !opensOnAVerb(words[0]) || joinsTwoIdeas(text)) return null
   const count = text.split(' ').filter(Boolean).length
-  if (count < BL_LIMITS.minIdeaWords || count > BL_LIMITS.maxIdeaWords) return null
+  if (count < BL_LIMITS.minIdeaWords || count > maxWords) return null
   if (text.length < BL_LIMITS.minIdeaChars || text.length > budget) return null
   if (isUnsafeBlCopy(text)) return null
   // Nothing concrete left once the empty words are gone: a slogan, not a plan.

@@ -1,0 +1,400 @@
+{
+  "_comment": "52 Weeks of Firsts: Retirement Edition. Fifty-two weekly prompts, one new thing to try each week, each printed with a date line and writing lines for notes. The weeks are numbered, not dated, so the reader can start any week of the year: nothing seasonal or calendar-bound (seasonalTerms), and nothing that sounds like an order (pressureTerms). Variety is structural: the year is spread over eighteen areas (every area appears; the mix's boost areas take four weeks, the rest two or three, never more than areaMax), every idea gets its own facet and flavour, shuffled by seed. Bigger outings -- far travel, strenuous or costly ideas (stretchTerms) -- are allowed but capped per year (stretchMax), so the year stays open to every budget and body. fillerWords are the 'never tried before' padding every first carries; they are ignored when two ideas are compared. Idea shape, safety and meaning-level repeats reuse the Bucket List's gates (bucket-list/prompt.json).",
+  "limits": {
+    "rateLimitPerWindow": 10,
+    "maxOutputTokens": 4096,
+    "maxAttempts": 2,
+    "batchItems": 30,
+    "weeks": 52,
+    "areaMin": 2,
+    "areaBase": 3,
+    "areaBoost": 4,
+    "areaMax": 5,
+    "minAreas": 14,
+    "stretchMax": 4,
+    "minIdeaChars": 14,
+    "maxIdeaChars": 60,
+    "minIdeaWords": 3,
+    "maxIdeaWords": 12,
+    "maxConceptChars": 40
+  },
+  "locale": {
+    "nativeLocales": ["en"],
+    "nativeLine": "- Write in clear, warm, natural English that reads well in both British and American homes.",
+    "otherLine": "- Write every idea in language locale '{locale}', natural for that language, keeping each idea one short action."
+  },
+  "areas": {
+    "kitchen": {
+      "label": "cooking and baking at home",
+      "group": "food",
+      "facets": [
+        "a dish from a cuisine you have never cooked",
+        "a bread or bake you have never attempted",
+        "a vegetable, grain or pulse you have never cooked with",
+        "a spice or herb you have never used",
+        "a soup from another part of the world",
+        "a jam, chutney or pickle made from scratch",
+        "pasta, noodles or dumplings shaped by hand",
+        "a traditional sweet treat from another culture",
+        "a recipe from an old or second-hand cookbook",
+        "a tea blend or cordial of your own",
+        "a dish cooked with a technique new to you",
+        "a breakfast from another country"
+      ]
+    },
+    "tastes": {
+      "label": "tasting new food out and about",
+      "group": "food",
+      "facets": [
+        "a cafe or bakery you have never been into",
+        "a fruit you have never eaten",
+        "a restaurant serving a cuisine new to you",
+        "a stall at a food market",
+        "a cheese, bread or olive you have never tasted",
+        "a tea or coffee from a region new to you",
+        "a farm shop or pick-your-own farm",
+        "a cookery demonstration or tasting",
+        "a pastry or cake from another country",
+        "a dish ordered without looking at what it is",
+        "a street-food market",
+        "a local speciality from a nearby town"
+      ]
+    },
+    "nearby": {
+      "label": "exploring close to home",
+      "group": "outing",
+      "facets": [
+        "a street or neighbourhood you have never walked",
+        "a bus route ridden to the end of the line",
+        "a local landmark you have always passed by",
+        "a nearby village or town you have never stopped in",
+        "a building open to the public for a day",
+        "the story behind a local street name or statue",
+        "a library branch you have never visited",
+        "a guided walk or tour of your own town",
+        "the best view in your area",
+        "a shop you have always wondered about",
+        "a local archive or heritage centre",
+        "an event on a community noticeboard"
+      ]
+    },
+    "nature": {
+      "label": "nature and the outdoors",
+      "group": "outdoors",
+      "facets": [
+        "a nature reserve or wetland you have never visited",
+        "a bird you learn to recognise by its song",
+        "a tree, flower or fungus you learn to name",
+        "clouds, and the names of their shapes",
+        "a riverside, canal or lakeside path",
+        "a wildflower meadow",
+        "the night sky and one constellation",
+        "a botanical garden or glasshouse",
+        "the dawn chorus",
+        "leaves or flowers pressed and kept",
+        "a picnic somewhere green",
+        "a nature talk or guided ranger walk"
+      ]
+    },
+    "grow": {
+      "label": "growing things",
+      "group": "outdoors",
+      "facets": [
+        "a herb grown on a windowsill",
+        "seeds sprouted in a jar",
+        "a new plant grown from a cutting",
+        "a session at a community garden",
+        "a seed or plant swap",
+        "a vegetable you have never grown",
+        "bulbs planted in a pot",
+        "a tiny terrarium or bottle garden",
+        "a pot of flowers for bees and butterflies",
+        "vegetable scraps regrown in water",
+        "an unusual houseplant",
+        "a garden open to visitors for a day"
+      ]
+    },
+    "make": {
+      "label": "making things by hand",
+      "group": "creative",
+      "facets": [
+        "shaping something from clay",
+        "a first knitted or crocheted piece",
+        "paper folding",
+        "a collage from magazines or old cards",
+        "a bird feeder made from simple things",
+        "a candle or bar of soap",
+        "a small mosaic",
+        "a woven or plaited piece",
+        "an embroidery stitch",
+        "a card made by hand",
+        "a simple sewing project",
+        "a papier-mache bowl"
+      ]
+    },
+    "picture": {
+      "label": "drawing, painting and photography",
+      "group": "creative",
+      "facets": [
+        "a watercolour painting",
+        "sketching a view from life",
+        "a photo walk on one theme",
+        "a self-portrait",
+        "a still life of everyday things",
+        "hand lettering or calligraphy",
+        "a pattern doodle that fills a page",
+        "photographs taken at an unusual time of day",
+        "a charcoal or pastel drawing",
+        "close-up photographs of tiny details",
+        "a print made with a potato or a leaf",
+        "a painted pebble or pot"
+      ]
+    },
+    "words": {
+      "label": "reading and writing",
+      "group": "mind",
+      "facets": [
+        "a kind of book you have never read",
+        "a short poem of your own",
+        "a letter to your younger self",
+        "a very short story",
+        "a book group meeting",
+        "a classic you have always meant to read",
+        "an audiobook",
+        "a haiku",
+        "a review of something you enjoyed",
+        "an author talk or reading",
+        "a book by a writer from another country",
+        "one ordinary day written down in detail"
+      ]
+    },
+    "music": {
+      "label": "music and sound",
+      "group": "creative",
+      "facets": [
+        "live music in a style you have never heard",
+        "a simple tune on a new instrument",
+        "a community choir session",
+        "a ukulele, harmonica or small drum",
+        "a concert in an unusual place",
+        "music from a country you know little about",
+        "a drumming circle",
+        "a song learned in another language",
+        "a whole album played start to finish",
+        "a music workshop",
+        "a simple homemade instrument",
+        "an open rehearsal"
+      ]
+    },
+    "learn": {
+      "label": "learning something new",
+      "group": "mind",
+      "facets": [
+        "a few phrases in a new language",
+        "a free online lesson",
+        "a public talk or lecture",
+        "a few signs in sign language",
+        "a new computer or phone skill",
+        "a documentary on an unfamiliar subject",
+        "a knot, fold or practical trick",
+        "learning to juggle",
+        "a magic trick",
+        "a map and compass",
+        "how something ordinary is made",
+        "the basics of a new game of strategy"
+      ]
+    },
+    "people": {
+      "label": "friends and connection",
+      "group": "people",
+      "facets": [
+        "a neighbour invited round for tea",
+        "a club or group meeting you have never been to",
+        "a video call with someone far away",
+        "a conversation group or social cafe",
+        "a shared supper where everyone brings a dish",
+        "a pen pal",
+        "someone asked to teach you their skill",
+        "a small gathering you host",
+        "an old friend you have not spoken to in years",
+        "a walking group",
+        "someone from a different generation",
+        "a talk with someone from another culture"
+      ]
+    },
+    "give": {
+      "label": "volunteering and kindness",
+      "group": "people",
+      "facets": [
+        "a volunteer shift somewhere new",
+        "a community litter pick",
+        "a shift at a charity shop",
+        "something knitted or made for charity",
+        "books given to a little free library",
+        "helping at a community event",
+        "helping someone practise their reading",
+        "a food bank shift",
+        "a thank-you note to someone who helped you",
+        "sharing a skill with a beginner",
+        "a small anonymous kindness",
+        "tending a shared community planter"
+      ]
+    },
+    "culture": {
+      "label": "arts, culture and heritage",
+      "group": "outing",
+      "facets": [
+        "a play at a local theatre",
+        "a gallery exhibition",
+        "a museum you have never visited",
+        "a film in another language",
+        "a dance performance",
+        "an opera or ballet shown at a cinema",
+        "a poetry reading",
+        "a heritage craft demonstration",
+        "a festival from a community other than your own",
+        "a sculpture trail",
+        "a historic house",
+        "an artist's open studio"
+      ]
+    },
+    "calm": {
+      "label": "slow pleasures and relaxation",
+      "group": "rest",
+      "facets": [
+        "a guided relaxation or meditation",
+        "a morning with no plans at all",
+        "a slow tea ritual",
+        "a whole hour of music with your eyes closed",
+        "an evening with the screens switched off",
+        "watching the sky change at dusk",
+        "a picnic on your own",
+        "a sound bath",
+        "a slow breakfast somewhere with a view",
+        "an afternoon on a bench watching the world",
+        "a scented soak or pampering hour",
+        "a quiet space you have never sat in"
+      ]
+    },
+    "play": {
+      "label": "games and puzzles",
+      "group": "play",
+      "facets": [
+        "a board game you have never played",
+        "a big jigsaw",
+        "a cryptic crossword",
+        "a card game new to you",
+        "a quiz night",
+        "mahjong",
+        "a game of strategy",
+        "an escape room",
+        "a game from another country",
+        "a puzzle trail or treasure hunt",
+        "dominoes",
+        "a logic puzzle"
+      ]
+    },
+    "move": {
+      "label": "gentle movement",
+      "group": "active",
+      "facets": [
+        "a tai chi session",
+        "a dance class in a style new to you",
+        "a gentle yoga or stretching class",
+        "an aqua exercise class",
+        "a walk with poles",
+        "a game of bowls",
+        "table tennis",
+        "pickleball",
+        "a chair-based exercise class",
+        "croquet",
+        "a swimming stroke you have never learned",
+        "a new walking route"
+      ]
+    },
+    "adventure": {
+      "label": "small adventures",
+      "group": "outing",
+      "facets": [
+        "a train ride to a town you have never visited",
+        "a boat trip",
+        "a night away somewhere new",
+        "a kind of transport you have never ridden",
+        "a day out with no plan",
+        "a cave, mine or underground tour",
+        "a behind-the-scenes tour",
+        "a picnic in an unexpected spot",
+        "a film shown outdoors",
+        "a planetarium show",
+        "a destination picked at random from a map",
+        "a tour of a working farm, mill or factory"
+      ]
+    },
+    "home": {
+      "label": "personal projects at home",
+      "group": "rest",
+      "facets": [
+        "a room rearranged in a new way",
+        "a small photo book of favourite pictures",
+        "a simple repair you have never done",
+        "a small collection started",
+        "old photographs scanned and labelled",
+        "a handwritten book of favourite recipes",
+        "your family history traced back one step",
+        "a time capsule",
+        "a playlist of songs from your life",
+        "a corner turned into a reading nook",
+        "a new way of keeping a journal",
+        "a map of places that matter to you"
+      ]
+    }
+  },
+  "focuses": {
+    "balanced": { "boost": [] },
+    "close-to-home": { "boost": ["kitchen", "grow", "home", "calm"] },
+    "out-and-about": { "boost": ["nearby", "nature", "culture", "adventure"] },
+    "creative": { "boost": ["make", "picture", "words", "music"] },
+    "social": { "boost": ["people", "give", "play", "tastes"] }
+  },
+  "flavours": [
+    "free or nearly free",
+    "right at home",
+    "in your own town",
+    "on your own",
+    "with a friend",
+    "with a small group",
+    "outdoors in fair weather",
+    "indoors on a rainy day",
+    "a small treat",
+    "gentle and unhurried",
+    "from another culture",
+    "a slightly bolder step",
+    "using things you already have",
+    "on foot or by bus"
+  ],
+  "fillerWords": [
+    "tried", "tries", "trying", "youve", "youd", "youll", "ive", "havent", "hasnt", "didnt", "dont",
+    "yet", "unfamiliar", "familiar", "usual", "usually", "normally", "wondered", "wondering", "meant",
+    "always", "first", "new", "never", "someone", "something", "different", "ones"
+  ],
+  "seasonalTerms": [
+    "christmas", "xmas", "easter", "halloween", "thanksgiving", "hanukkah", "diwali", "new year",
+    "new years", "valentine", "valentines", "bonfire night", "fireworks", "birthday", "anniversary",
+    "summer", "winter", "autumn", "spring", "springtime", "wintertime", "summertime", "snow", "snowman",
+    "snowfall", "frost", "heatwave", "january", "february", "march", "april", "june", "july",
+    "august", "september", "october", "november", "december", "this week", "next week", "this year",
+    "next year", "today", "tomorrow", "tonight"
+  ],
+  "pressureTerms": [
+    "must", "should", "have to", "has to", "need to", "needs to", "challenge yourself", "push yourself",
+    "force yourself", "conquer", "overcome", "fear", "fears", "scared", "brave", "dare", "at last",
+    "no excuses", "resolution", "resolutions", "achieve", "accomplish"
+  ],
+  "stretchTerms": [
+    "abroad", "overseas", "flight", "fly", "flying", "cruise", "road trip", "weekend away",
+    "night away", "overnight", "hike", "hiking", "climb", "climbing", "kayak", "kayaking", "canoe",
+    "paddleboard", "sail", "sailing", "ski", "skiing", "camp", "camping", "drive", "driving",
+    "splurge", "luxury", "expensive", "balloon", "zip line", "zipline", "marathon", "run", "running",
+    "cycle", "cycling", "bike", "swim", "swimming", "escape room"
+  ]
+}

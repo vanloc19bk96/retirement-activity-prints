@@ -45,6 +45,7 @@ from app.api.routes.studio_occupation_trivia import (
 from app.api.routes.studio_quote_coloring import router as studio_quote_coloring_router
 from app.api.routes.studio_bucket_list import router as studio_bucket_list_router
 from app.api.routes.studio_roll_a_day import router as studio_roll_a_day_router
+from app.api.routes.studio_weeks_of_firsts import router as studio_weeks_of_firsts_router
 
 router = APIRouter()
 
@@ -89,5 +90,6 @@ router.include_router(studio_occupation_trivia_router)
 router.include_router(studio_quote_coloring_router)
 router.include_router(studio_bucket_list_router)
 router.include_router(studio_roll_a_day_router)
+router.include_router(studio_weeks_of_firsts_router)
 
 __all__ = ["router"]
