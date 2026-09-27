@@ -30,6 +30,7 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'string-of-pearls',
   'skyline-tour',
   'country-fence',
+  'stepping-stones',
   'word-search',
   'hidden-message-word-search',
   'trivia-clue-word-search',

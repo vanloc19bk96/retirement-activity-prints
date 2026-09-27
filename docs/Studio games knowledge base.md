@@ -65,7 +65,7 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ---
 
-## Logic (13 games)
+## Logic (14 games)
 
 ### Sudoku (`sudoku`)
 Classic number Sudoku for a large-print retirement book. Fill every row, column
@@ -1233,6 +1233,127 @@ pastures before one returns, never the previous page's, and never prints
 the same field twice. A seller's next book opens at pastures their last one
 used least recently.
 Pages: 1 · Answer key: yes (the pasture fenced: a gray meadow with grass tufts inside a heavy fence and square posts) · AI content: no
+
+### Stepping Stones: Walk the Path (`stepping-stones`)
+The number-path puzzle loved in the Sunday papers, laid out as a retiree's
+favorite stroll. Each page is one square of rounded stepping stones with a
+strip of lawn between them, a bold number printed on a few. The reader
+writes every number from 1 to the last (36, 64 or 81) on the stones, one
+to a stone, so the numbers make one walk: each number sits on a stone next
+to the one before it, across or down, never diagonally. The start (1) and
+the finish (the last number) are always printed, ringed twice, and lie a
+fair way apart. Over the path stands its signpost, a double-ruled board
+naming a walk worth taking: the Rose Garden Path, a Seaside Boardwalk,
+Lighthouse Point Trail, the Grandkids' Nature Walk, an Evening Walk with
+the Dog. Under it a legend shows two neighbouring stones numbered 4 and 5
+("= next number, across or down") and the ringed start stone ("= start and
+finish"). The answer page turns the numbers into a garden trail: a soft
+gray path winding from the start stone through every stone to the finish,
+rounded at every turn, with every missing number written in on its stone
+(the printed numbers stay bold, the found ones plain).
+
+Settings: the level only.
+- Gentle: 6 × 6, 1 to 36, 13 numbers printed. Finished by counting steps
+  alone, and the how-to line adds "Tip: 5 and 9 are four steps apart, so 6,
+  7 and 8 fill the stones between."
+- Classic: 8 × 8, 1 to 64, 18 numbers printed. Always needs "no dead ends"
+  at least once (counting steps alone never finishes it).
+- Challenging: 9 × 9, 1 to 81, 13–14 numbers printed. Always needs "what
+  if" at least once (the Classic steps alone never finish it).
+Which walk, which path, which numbers and the stone size are not settings.
+The help line reports what the trim in Settings prints (stone size, the
+path's width and the numbers' size), or that the trim is too small.
+
+Every page is built in the browser (no AI). The walk comes first: a plain
+zigzag through every stone, bent sixty times per stone at random (an end of
+the walk steps onto a neighbouring stone already on it and the stretch
+between is turned round, so the walk still visits every stone once) until
+no trace of the zigzag is left. Walks with a straight run longer than the
+level allows (4 / 5 / 6 stones) or whose start and finish lie closer than
+half the path's width are not kept. The numbers come next: every stone gets
+its place in the walk, and numbers are then taken away one by one — never
+the start or the finish, the most crowded one first so the numbers left
+spread over the whole path — as long as the level's steps still finish the
+path on the same walk, down to the level's fair share (Gentle 36%, Classic
+28%, Challenging 16% of the stones; at Challenging first as long as the
+Classic steps do, then up to twelve more that only "what if" can spare).
+The solver (`solver.ts`) keeps a pencil list of the numbers each empty
+stone could still take and works the way a reader does, one sure step at a
+time:
+- reach ("count the steps"): between two numbers on the page, say 5 and 9,
+  the numbers 6, 7, 8 fill a walk exactly that long, so each lies within
+  that many steps of both, counted round the stones already filled, and —
+  as a walk colours a checkerboard black, white, black… — only on a stone of
+  the right colour; a number with one stone left goes there, a stone with
+  one number left takes it, and two printed numbers too far apart (or on
+  the wrong colours) are a broken puzzle.
+- link (Classic and up, "no dead ends"): a number in the middle of the walk
+  needs the number before it on one neighbour and the number after it on
+  another, so a stone whose neighbours cannot give it both is crossed off
+  that number (a stone with one open neighbour can only be the start or the
+  finish).
+- probe (Challenging, "what if"): on a stone with two or three numbers left,
+  a number that leads by the link steps straight to a broken rule is
+  crossed off.
+Every step is sound, so a path the solver finishes has exactly one answer.
+Only paths the level's steps finish on exactly their own walk are kept, and
+(at Classic and Challenging) only paths the easier steps cannot finish.
+Tests cross-check the solver against a plain search that counts walks on
+4 × 4 and 5 × 5 paths, and check that paths with several answers are never
+called solved. A path builds in under a hundredth of a second at Gentle,
+about two hundredths at Classic, and about a fifth of a second at
+Challenging (a third at worst).
+
+Layout: top to bottom, the signpost, the path and the legend. The page is
+planned from the level and the trim alone, before a path is built, so every
+page of a run matches. Stones are as large as the trim allows, up to 0.8 in
+apart, and never closer than the level's floor (Gentle 0.6 in, Classic
+0.5 in, Challenging 0.45 in); each stone is its pitch less a strip of lawn
+(12% of the pitch, never under 5 px), with corners rounded to about a
+quarter of its side, outlined in a 1.5 px black rule. Numbers print at
+about four tenths of the pitch, 16–22 pt (never under 16 pt), in the
+digit face: bold where printed, plain where written in on the answer page;
+two-digit numbers keep room round them on the smallest stone. The start
+and finish stones carry a 2.5 px ring with a fine ring inside it. The
+signpost prints 16 pt (14 pt on a narrow trim, or broken between words when
+one line is still too wide), clear of the path by about four tenths of a
+pitch (never under 26 px). The legend prints 14 pt, 24 px under the path, on
+one row or, on a narrow trim, one entry over the other. On the answer page
+the trail is 0.3 of a pitch wide (never under 8 px), washed #DDDDDD (about
+13% gray, dark enough for KDP's printers, light enough for the black
+numbers over it), drawn under the stones. Typical results (stone pitch):
+8.5 × 11 prints 0.80 / 0.80 / 0.80 in (Gentle / Classic / Challenging);
+6 × 9 0.72 / 0.58 / 0.51 in; 5.5 × 8.5 0.60 / 0.52 / 0.46 in.
+
+Quality gate (`kdp-preflight.ts`) runs before a page is accepted:
+- The path is the level's size; every stone is blank or a number from 1 to
+  the last, none twice; the answer is one walk through every stone keeping
+  every printed number; the start and finish are printed, a fair way apart;
+  the page prints the level's share of numbers; no straight run is longer
+  than the level allows; the level's steps finish the path on exactly that
+  walk, and the easier steps alone do not where the level asks for more.
+- Stones, numbers and the signpost are at their large-print floors or
+  larger, and every stone sits on its pitch.
+- The walk's name fits its signpost; the signpost, path and legend are on
+  the printable panel and clear of each other, with the signpost's full air
+  above the path.
+- The walk is not one the book already uses while others wait, and the
+  path is not one the book already prints.
+The drawn check then confirms every stone, row by row, every printed
+number bold on its stone and no other, every other number waiting hidden
+on its own stone, one hidden trail along exactly the answer's walk, the
+start and finish ringed, the signpost naming the walk, and the legend
+showing the pair of stones and the start stone.
+
+Uniqueness: each puzzle stamps `walk|level|path`, where the path part is a
+digest of the printed numbers that is the same however the path is turned
+or mirrored, and walked either way round (k read as last + 1 − k; also used
+as the canonical key). Paths come from the seller's puzzle salt and the
+page seed, so two sellers never share a book and the same seed reprints
+the same page. A book works through every one of the 46 walks before one
+returns, never the previous page's, and never prints the same path twice. A
+seller's next book opens at walks their last one used least recently.
+Pages: 1 · Answer key: yes (the walk traced as a gray garden trail through every stone, every number written in) · AI content: no
 
 ---
 
@@ -3373,6 +3494,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | string-of-pearls | String of Pearls: Thread the Necklace | logic | 1 | yes | no |
 | skyline-tour | Skyline Tour: Raise the Towers | logic | 1 | yes | no |
 | country-fence | Country Fence: Fence the Pasture | logic | 1 | yes | no |
+| stepping-stones | Stepping Stones: Walk the Path | logic | 1 | yes | no |
 | word-search | Word Search | word | 1 | yes | yes |
 | hidden-message-word-search | Hidden Message Word Search | word | 1 | yes | yes |
 | trivia-clue-word-search | Trivia Clue Word Search | word | 1 | yes | yes |
@@ -3413,4 +3535,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 52 games** (13 logic · 32 word · 7 spatial).
+**Total: 53 games** (14 logic · 32 word · 7 spatial).
