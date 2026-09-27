@@ -65,7 +65,7 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ---
 
-## Logic (6 games)
+## Logic (7 games)
 
 ### Sudoku (`sudoku`)
 Classic number Sudoku for a large-print retirement book. Fill every row, column
@@ -469,6 +469,105 @@ the 42 projects before one returns, never the previous page's, and never
 prints the same grid twice. A seller's next book opens at projects their
 last one used least recently.
 Pages: 1 · Answer key: yes (every strand drawn) · AI content: no
+
+### Garden Plots: Plant the Flowers (`garden-plots`)
+The viral Queens puzzle (a one-star Star Battle) replanted as a retiree's
+garden. Each page is one square garden split by heavy walls into garden
+beds, as many beds as rows. The reader plants one flower in every row,
+every column and every bed, and no two flowers may touch, not even corner
+to corner. Over the garden stands its sign, a double-ruled board naming a
+retiree's garden: Sunny Porch Garden, Lavender Lane, Kitchen Herb Garden,
+Grandkids' Garden. Under it a legend shows a garden bed with how many
+there are ("8 garden beds") and the flower the reader plants ("Flower
+(plant 8)"). The answer page plants a flower, white petals round a solid
+heart, in every square of the answer.
+
+Settings: the level only.
+- Gentle: 7 × 7, 7 flowers. Finished by the basic steps alone, and the
+  how-to line adds "Tip: a bed that lies all in one row or column puts its
+  flower there — cross off the rest of that line."
+- Classic: 8 × 8, 8 flowers. Always needs counting beds in groups at least
+  once (the basic steps alone never finish it).
+- Challenging: 9 × 9, 9 flowers. Needs group counting or a "what if" check
+  at least twice (the basic steps alone never finish it).
+Which garden, which beds and the square size are not settings. The help
+line reports what the trim in Settings prints (square size and the
+garden's width), or that the trim is too small.
+
+Every page is built in the browser (no AI). The answer comes first: one
+flower per row and column, never beside the one in the row above. Every
+flower starts a bed of its own and the beds grow a square at a time (some
+greedier than others, so a garden has a lawn and a herb patch) until the
+garden is full, so the answer always keeps one flower to a bed. A freshly
+grown garden nearly always has other answers too; every other answer
+plants a flower on a square the true answer leaves empty, and handing that
+square to a neighbouring bed kills it (one bed now holds two of its
+flowers). Round by round the hand-over that leaves fewest answers is made
+(any piece of the old bed the square held on goes with it, so every bed
+stays one patch, and no bed drops below two squares) until one answer is
+left. The solver (`solver.ts`) keeps a pencil mark on every square (flower,
+crossed off, not yet known) and works the garden the way a reader does,
+one sure step at a time and never guessing:
+- basic: a flower crosses off its row, column, bed and the eight squares
+  round it; a row, column or bed with one open square left takes its
+  flower there; a bed lying all in one row (or column) owns it, so the rest
+  of the line is crossed off, and a line lying all in one bed owns the bed;
+  a square that would, with a flower, cross off every open square of some
+  row, column or bed is crossed off.
+- sets (Classic and up): two, three or four beds whose open squares sit in
+  as many rows (or columns) own those lines, so the rest of them is crossed
+  off; and the same for rows or columns inside as many beds.
+- probe (Challenging): a square where a flower would lead, by the basic
+  steps, straight to a broken rule is crossed off.
+Every step is sound, so a garden the solver finishes has exactly one
+answer. Only gardens the level's steps finish on exactly their own answer
+are kept, and (at Classic and Challenging) only gardens the basic steps
+cannot finish. Tests cross-check the solver against a brute-force count of
+answers on over sixty gardens, and check that gardens with several answers
+are never called solved.
+
+Layout: top to bottom, the sign, the garden and the legend. The page is
+planned from the level and the trim alone, before a garden is grown, so
+every page of a run matches. Squares are as large as the trim allows, up
+to 0.8 in, and never smaller than the level's floor (Gentle and Classic
+0.5 in, Challenging 0.45 in). Each bed is tinted white or one of three
+light grays (no two beds that share a side alike, and pale enough for
+pencil marks), the squares are softly ruled in mid gray, and 3 pt black
+walls run round every bed and the garden, meeting square at every corner.
+The walls carry the puzzle; the tints only help the eye. The sign prints
+16 pt (14 pt on a narrow trim, or broken between words when one line is
+still too wide), stands clear of the garden by about half a square (never
+under 26 px). The legend prints 14 pt, 22 px under the garden, on one row
+or, on a narrow trim, one entry over the other. Typical results: 8.5 × 11
+prints 0.80 / 0.80 / 0.78 in squares (Gentle / Classic / Challenging);
+6 × 9 0.61 / 0.59 / 0.53 in; 5.5 × 8.5 0.54 / 0.53 / 0.47 in.
+
+Quality gate (`kdp-preflight.ts`) runs before a page is accepted:
+- The garden is the level's size; every bed is one patch of two squares or
+  more; the answer keeps every rule; the level's steps finish the garden on
+  exactly that answer, and the basic steps alone do not where the level
+  asks for more.
+- Squares and the sign are at their large-print floors or larger.
+- The garden's name fits its sign; the sign, garden and legend are on the
+  printable panel and clear of each other, with the sign's full air above
+  the garden.
+- The garden's name is not one the book already uses while others wait,
+  and the beds are not ones the book already prints.
+The drawn check then confirms a wall on every stretch where two beds meet
+and nowhere else, the frame, no two neighbouring beds in one tint, a
+hidden flower (petals and heart) on every planted square and nowhere else,
+the sign naming the garden, and the legend counting the beds and showing
+the flower.
+
+Uniqueness: each puzzle stamps `garden|level|beds`, where the beds part is
+a digest that is the same however the garden is turned or mirrored (its
+beds renumbered to match; also used as the canonical key). Gardens come
+from the seller's puzzle salt and the page seed, so two sellers never share
+a book and the same seed reprints the same page. A book works through
+every one of the 42 garden names before one returns, never the previous
+page's, and never prints the same garden twice. A seller's next book opens
+at gardens their last one used least recently.
+Pages: 1 · Answer key: yes (every flower planted) · AI content: no
 
 ---
 
@@ -2602,6 +2701,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | happy-campers | Happy Campers: Tents & Trees | logic | 1 | yes | no |
 | island-hopping | Island Hopping: Bridges | logic | 1 | yes | no |
 | tangled-yarn | Tangled Yarn: Link the Pairs | logic | 1 | yes | no |
+| garden-plots | Garden Plots: Plant the Flowers | logic | 1 | yes | no |
 | word-search | Word Search | word | 1 | yes | yes |
 | hidden-message-word-search | Hidden Message Word Search | word | 1 | yes | yes |
 | trivia-clue-word-search | Trivia Clue Word Search | word | 1 | yes | yes |
@@ -2642,4 +2742,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 45 games** (6 logic · 32 word · 7 spatial).
+**Total: 46 games** (7 logic · 32 word · 7 spatial).

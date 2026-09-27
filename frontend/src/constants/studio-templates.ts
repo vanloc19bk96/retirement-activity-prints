@@ -16,6 +16,7 @@ import { pictureLogicTemplate } from '@/utils/studio/picture-logic/generate'
 import { happyCampersTemplate } from '@/utils/studio/happy-campers/generate'
 import { islandHoppingTemplate } from '@/utils/studio/island-hopping/generate'
 import { tangledYarnTemplate } from '@/utils/studio/tangled-yarn/generate'
+import { gardenPlotsTemplate } from '@/utils/studio/garden-plots/generate'
 import { wordSearchTemplate } from '@/utils/studio/retirement-word-search/generate'
 import { crosswordTemplate } from '@/utils/studio/crossword/generate'
 import { retirementAnagramTemplate } from '@/utils/studio/retirement-anagram/generate'
@@ -74,6 +75,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   happyCampersTemplate,
   islandHoppingTemplate,
   tangledYarnTemplate,
+  gardenPlotsTemplate,
 
   // Word
   wordSearchTemplate,
