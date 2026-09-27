@@ -56,7 +56,7 @@ function mergeQuotaIntoUser(user: User, quota: DownloadQuota): User {
 }
 
 export function formatDownloadQuotaLabel(quota: DownloadQuota | null): string {
-  if (!quota) return '—'
+  if (!quota) return '-'
   if (quota.is_unlimited) {
     return `${quota.monthly_downloads_used} used · Unlimited`
   }

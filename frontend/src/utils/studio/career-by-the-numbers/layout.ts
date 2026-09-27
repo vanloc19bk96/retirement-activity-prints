@@ -398,7 +398,7 @@ export function cbnPrintNote(options: {
   count: number
 }): string {
   const { page, count } = options
-  const tooSmall = 'This page size is too small for Career By the Numbers — choose a larger one in Settings.'
+  const tooSmall = 'This page size is too small for Career By the Numbers. Choose a larger one in Settings.'
   if (!page) return `${count} questions, each with a line for a best guess. Pages are fitted to your trim.`
   const layout = cbnLayout({ ...options, page })
   if (!layout) return tooSmall

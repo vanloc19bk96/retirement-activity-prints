@@ -57,7 +57,7 @@ export interface WordSearchLevel {
 export const WORD_SEARCH_LEVELS: readonly WordSearchLevel[] = [
   {
     id: 'gentle',
-    label: 'Gentle — across and down only',
+    label: 'Gentle: across and down only',
     directions: 'easy',
     instruction: 'Circle each word from the list. They read across and down.',
     targetWords: 10,
@@ -67,7 +67,7 @@ export const WORD_SEARCH_LEVELS: readonly WordSearchLevel[] = [
   },
   {
     id: 'classic',
-    label: 'Classic — the everyday puzzle',
+    label: 'Classic: the everyday puzzle',
     directions: 'medium',
     instruction:
       'Circle each word from the list. They read across, down and diagonally.',
@@ -78,7 +78,7 @@ export const WORD_SEARCH_LEVELS: readonly WordSearchLevel[] = [
   },
   {
     id: 'challenging',
-    label: 'Challenging — every direction, some backwards',
+    label: 'Challenging: every direction, some backwards',
     directions: 'hard',
     instruction:
       'Circle each word from the list. They read in any direction, even backwards.',

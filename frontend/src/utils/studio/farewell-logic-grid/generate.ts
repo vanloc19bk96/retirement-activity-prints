@@ -115,7 +115,7 @@ export const farewellLogicGridTemplate: StudioTemplateDefinition = {
   label: 'Logic Grid: Farewell Party',
   category: 'logic',
   description:
-    'A classic logic grid puzzle set at a retirement party. Read a short story and a handful of clues — who brought which dish, who retired first, who is taking up pottery — then mark X and dots in the grid until every match is found. Every puzzle has exactly one answer, reached by reasoning alone with no guessing, and gets its own answer page. Pick a level; the grid, type size and pages are fitted to your trim. Scenes, people and clues are fresh every time, never repeating a puzzle already in your book.',
+    'A classic logic grid puzzle set at a retirement party. Read a short story and a handful of clues (who brought which dish, who retired first, who is taking up pottery), then mark X and dots in the grid until every match is found. Every puzzle has exactly one answer, reached by reasoning alone with no guessing, and gets its own answer page. Pick a level; the grid, type size and pages are fitted to your trim. Scenes, people and clues are fresh every time, never repeating a puzzle already in your book.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: LG_DEFAULT_TITLE,

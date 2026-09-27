@@ -222,7 +222,7 @@ if (import.meta.env.DEV) {
     const keys = new Set(t.configSchema.map((f) => f.key))
     if (keys.has('includeAnswerKey') || keys.has('answerKeyForAll')) {
       throw new Error(
-        `Studio template "${t.key}" must not expose includeAnswerKey / answerKeyForAll — ` +
+        `Studio template "${t.key}" must not expose includeAnswerKey / answerKeyForAll: ` +
           `solution pages are added automatically when producesAnswerKey is true`,
       )
     }

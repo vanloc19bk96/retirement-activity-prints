@@ -43,7 +43,7 @@ import {
 export const CODEWORD_THEME_SALT = 0x636f6465
 
 export const CODEWORD_PAGE_TOO_SMALL_MESSAGE =
-  'This page size is too small for a codeword — the grid and the number key need a wider column. ' +
+  'This page size is too small for a codeword: the grid and the number key need a wider column. ' +
   'Pick a larger page in Settings (6 x 9 in or larger works well).'
 
 export const CODEWORD_BUILD_FAILED_MESSAGE =

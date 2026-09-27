@@ -140,7 +140,7 @@ export const atoZWordSearchTemplate: StudioTemplateDefinition = {
   label: 'A to Z Word Search',
   category: 'word',
   description:
-    'Alphabet soup: twenty-six words are hidden in the grid, one beginning with each letter from A to Z — and the page prints only the letters, never the words. Pick a level; the grid size and type sizes are fitted to your page. The answer page reveals every letter’s word.',
+    'Alphabet soup: twenty-six words are hidden in the grid, one beginning with each letter from A to Z, and the page prints only the letters, never the words. Pick a level; the grid size and type sizes are fitted to your page. The answer page reveals every letter’s word.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: ATOZ_DEFAULT_TITLE,

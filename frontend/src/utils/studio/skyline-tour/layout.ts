@@ -236,9 +236,9 @@ export function skyPlanFor(options: { page: StudioConfigLayoutContext; config: S
 export function skyPrintNote(options: { page?: StudioConfigLayoutContext; config: StudioConfig; level: SkyLevel; font: string }): string {
   const { page, config, level, font } = options
   const spec = skyLevelSpec(level)
-  const lead = 'Every city is built fresh and proven to have one answer, reached by logic alone — no guessing.'
+  const lead = 'Every city is built fresh and proven to have one answer, reached by logic alone, with no guessing.'
   if (!page) return lead
   const plan = skyPlanFor({ page, config, level, font })
-  if (!plan) return `This page size is too small for ${spec.gridLabel} cities at large print — choose a larger page in Settings or an easier level.`
+  if (!plan) return `This page size is too small for ${spec.gridLabel} cities at large print. Choose a larger page in Settings or an easier level.`
   return `${lead} Plots print ${(plan.cell / DPI).toFixed(2)} in, the city ${(plan.city.width / DPI).toFixed(2)} in across with its clues, numbers ${pxToPt(plan.digitSize)} pt.`
 }

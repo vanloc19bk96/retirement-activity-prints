@@ -57,7 +57,7 @@ const inches = (value: number): number => Math.round(value * DPI)
 export const MAZE_LEVELS: readonly MazeLevel[] = [
   {
     id: 'gentle',
-    label: 'Gentle — wide paths, few dead ends',
+    label: 'Gentle: wide paths, few dead ends',
     // A third of an inch is about a pencil width plus room either side; the
     // ceiling is where the grid drops under ten cells on the trims this app
     // sells, and a nine-cell maze is a diagram of a maze.
@@ -77,7 +77,7 @@ export const MAZE_LEVELS: readonly MazeLevel[] = [
   },
   {
     id: 'classic',
-    label: 'Classic — the everyday maze',
+    label: 'Classic: the everyday maze',
     minPath: inches(0.28),
     maxPath: inches(0.36),
     minCols: 11,
@@ -93,7 +93,7 @@ export const MAZE_LEVELS: readonly MazeLevel[] = [
   },
   {
     id: 'challenging',
-    label: 'Challenging — longer route, more turns',
+    label: 'Challenging: longer route, more turns',
     // A quarter inch is the floor for the whole game, not just this level: it
     // is about six millimetres, and below it a ballpoint line touches both
     // walls at once. Dense is allowed here; cramped is not.

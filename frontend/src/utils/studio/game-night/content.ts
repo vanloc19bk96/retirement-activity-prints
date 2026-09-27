@@ -63,9 +63,9 @@ const inch = (n: number) => Math.round(n * DPI * 100) / 100
  * at least twice; Challenging grids, 7 × 7, need "what if" at least twice.
  */
 export const GN_LEVELS: readonly GnLevelSpec[] = [
-  { value: 'gentle', label: 'Gentle — 5 × 5, add & take away', gridLabel: '5 × 5', size: 5, ops: ['+', '-'], rules: 'basic', beyond: null, minHard: 0, mix: [0, 6, 4, 0], maxGivens: 3, minCell: inch(0.62) },
-  { value: 'classic', label: 'Classic — 6 × 6, all four signs', gridLabel: '6 × 6', size: 6, ops: ['+', '-', '*', '/'], rules: 'lines', beyond: 'basic', minHard: 2, mix: [0, 5, 3.5, 1.5], maxGivens: 2, minCell: inch(0.56) },
-  { value: 'challenging', label: 'Challenging — 7 × 7, all four signs', gridLabel: '7 × 7', size: 7, ops: ['+', '-', '*', '/'], rules: 'probe', beyond: 'lines', minHard: 2, mix: [0, 4.5, 3.5, 2], maxGivens: 1, minCell: inch(0.5) },
+  { value: 'gentle', label: 'Gentle: 5 × 5, add & take away', gridLabel: '5 × 5', size: 5, ops: ['+', '-'], rules: 'basic', beyond: null, minHard: 0, mix: [0, 6, 4, 0], maxGivens: 3, minCell: inch(0.62) },
+  { value: 'classic', label: 'Classic: 6 × 6, all four signs', gridLabel: '6 × 6', size: 6, ops: ['+', '-', '*', '/'], rules: 'lines', beyond: 'basic', minHard: 2, mix: [0, 5, 3.5, 1.5], maxGivens: 2, minCell: inch(0.56) },
+  { value: 'challenging', label: 'Challenging: 7 × 7, all four signs', gridLabel: '7 × 7', size: 7, ops: ['+', '-', '*', '/'], rules: 'probe', beyond: 'lines', minHard: 2, mix: [0, 4.5, 3.5, 2], maxGivens: 1, minCell: inch(0.5) },
 ]
 
 export const DEFAULT_GN_LEVEL: GnLevel = 'classic'

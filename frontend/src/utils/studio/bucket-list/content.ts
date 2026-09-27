@@ -65,17 +65,17 @@ export const BL_FOCUSES: readonly { value: BucketListFocus; label: string; help:
   {
     value: 'close-to-home',
     label: 'Close to home & low-cost',
-    help: 'More local outings, home projects and free or low-cost pleasures — with a little of everything else.',
+    help: 'More local outings, home projects and free or low-cost pleasures, with a little of everything else.',
   },
   {
     value: 'adventure',
     label: 'Travel & adventure',
-    help: 'More trips, days out and experiences — still mixed with quieter ideas.',
+    help: 'More trips, days out and experiences, still mixed with quieter ideas.',
   },
   {
     value: 'creative',
     label: 'Creativity & learning',
-    help: 'More making, learning and hobbies — still mixed with outings and people.',
+    help: 'More making, learning and hobbies, still mixed with outings and people.',
   },
   {
     value: 'people',

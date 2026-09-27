@@ -10,7 +10,7 @@ import type { AtoZLevel } from './levels'
 export const ATOZ_DEFAULT_TITLE = 'A to Z Word Search'
 
 export const ATOZ_PAGE_TOO_SMALL_MESSAGE =
-  'This page size is too small for an A to Z word search — twenty-six words need a wider grid. ' +
+  'This page size is too small for an A to Z word search: twenty-six words need a wider grid. ' +
   'Pick a larger page in Settings (7.5 x 9.25 in or 8.5 x 11 in both work well).'
 
 export const ATOZ_BUILD_FAILED_MESSAGE =

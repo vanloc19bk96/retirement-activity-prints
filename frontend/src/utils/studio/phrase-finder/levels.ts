@@ -55,21 +55,21 @@ export interface PhraseFinderLevel {
 export const PHRASE_FINDER_LEVELS: readonly PhraseFinderLevel[] = [
   {
     id: 'gentle',
-    label: 'Gentle — short phrases, more letters given',
+    label: 'Gentle: short phrases, more letters given',
     length: 'short',
     targetPuzzles: 3,
     revealShare: 0.4,
   },
   {
     id: 'classic',
-    label: 'Classic — the everyday puzzle',
+    label: 'Classic: the everyday puzzle',
     length: 'medium',
     targetPuzzles: 3,
     revealShare: 0.3,
   },
   {
     id: 'challenging',
-    label: 'Challenging — longer phrases, fewer letters given',
+    label: 'Challenging: longer phrases, fewer letters given',
     length: 'long',
     targetPuzzles: 2,
     revealShare: 0.24,

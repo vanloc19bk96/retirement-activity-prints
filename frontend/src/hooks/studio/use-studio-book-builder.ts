@@ -256,7 +256,7 @@ export function useStudioBookBuilder() {
     // which pages to redraw before the file goes to KDP.
     if (duplicated > 0) {
       parts.push(
-        `${duplicated} repeat content already in this book — regenerate them before publishing.`,
+        `${duplicated} repeat content already in this book. Regenerate them before publishing.`,
       )
     }
     setNote(parts.join(' '))

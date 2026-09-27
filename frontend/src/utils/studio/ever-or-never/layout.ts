@@ -342,7 +342,7 @@ export function eonPrintNote(options: {
 
   const plan = eonWorstCasePlan({ ...options, page })
   if (!plan) {
-    return 'This page size is too small for an Ever or Never page — choose a larger one in Settings.'
+    return 'This page size is too small for an Ever or Never page. Choose a larger one in Settings.'
   }
   const statements = plan.count === 1 ? '1 statement a page' : `${plan.count} statements a page`
   return `${statements}, in ${pxToPt(plan.metrics.font)} pt large print.`

@@ -195,7 +195,7 @@ export const hiddenMessageWordSearchTemplate: StudioTemplateDefinition = {
   label: 'Hidden Message Word Search',
   category: 'word',
   description:
-    'A large-print retirement word search with a saying hidden in it: find every word, then read the leftover letters. Pick a theme and a level — the grid size, word count and letter size are sized for your page. Includes an answer page.',
+    'A large-print retirement word search with a saying hidden in it: find every word, then read the leftover letters. Pick a theme and a level; the grid size, word count and letter size are sized for your page. Includes an answer page.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: HIDDEN_MESSAGE_DEFAULT_TITLE,

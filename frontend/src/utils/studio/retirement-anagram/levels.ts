@@ -51,7 +51,7 @@ export interface AnagramLevel {
 export const ANAGRAM_LEVELS: readonly AnagramLevel[] = [
   {
     id: 'gentle',
-    label: 'Gentle — short words, first letter given',
+    label: 'Gentle: short words, first letter given',
     minLetters: 4,
     maxLetters: 6,
     targetItems: 14,
@@ -60,7 +60,7 @@ export const ANAGRAM_LEVELS: readonly AnagramLevel[] = [
   },
   {
     id: 'classic',
-    label: 'Classic — the everyday puzzle',
+    label: 'Classic: the everyday puzzle',
     minLetters: 5,
     maxLetters: 8,
     targetItems: 12,
@@ -69,7 +69,7 @@ export const ANAGRAM_LEVELS: readonly AnagramLevel[] = [
   },
   {
     id: 'challenging',
-    label: 'Challenging — longer words, fully shuffled',
+    label: 'Challenging: longer words, fully shuffled',
     minLetters: 6,
     maxLetters: 10,
     targetItems: 10,

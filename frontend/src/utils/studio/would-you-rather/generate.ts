@@ -103,7 +103,7 @@ export const wouldYouRatherTemplate: StudioTemplateDefinition = {
   label: 'Would You Rather',
   category: 'party',
   description:
-    'Retirement Edition: two tempting choices from one scenario — “spend a spring weekend in a cottage by the sea” or “at a farmhouse in the hills” — with a box to tick. Great for conversation, couples and parties. Pick a theme and tone; questions per page and type size are fitted to your page. Fresh questions every page, never repeated within your book.',
+    'Retirement Edition: two tempting choices from one scenario, such as “spend a spring weekend in a cottage by the sea” or “at a farmhouse in the hills”, with a box to tick. Great for conversation, couples and parties. Pick a theme and tone; questions per page and type size are fitted to your page. Fresh questions every page, never repeated within your book.',
   pageCount: 1,
   producesAnswerKey: false,
   defaultPageTitle: WYR_DEFAULT_TITLE,

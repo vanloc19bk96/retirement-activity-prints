@@ -52,7 +52,7 @@ export const ATOZ_LETTER_FLOOR = 4
 export const ATOZ_LEVELS: readonly AtoZLevel[] = [
   {
     id: 'gentle',
-    label: 'Gentle — short words, across and down',
+    label: 'Gentle: short words, across and down',
     directions: 'easy',
     instruction:
       'Twenty-six words are hidden, one for each letter. They read across and down.',
@@ -61,7 +61,7 @@ export const ATOZ_LEVELS: readonly AtoZLevel[] = [
   },
   {
     id: 'classic',
-    label: 'Classic — the everyday puzzle',
+    label: 'Classic: the everyday puzzle',
     directions: 'medium',
     instruction:
       'Twenty-six words are hidden, one for each letter. They read across, down and diagonally.',
@@ -70,7 +70,7 @@ export const ATOZ_LEVELS: readonly AtoZLevel[] = [
   },
   {
     id: 'challenging',
-    label: 'Challenging — every direction, some backwards',
+    label: 'Challenging: every direction, some backwards',
     directions: 'hard',
     instruction:
       'Twenty-six words are hidden, one for each letter. They read in any direction, even backwards.',

@@ -129,7 +129,7 @@ export const skylineTourTemplate: StudioTemplateDefinition = {
   label: 'Skyline Tour: Raise the Towers',
   category: 'logic',
   description:
-    'The classic Skyscrapers puzzle, set in the skylines of a retiree’s travels: fill the city with buildings so every row and column holds each height once — and a number outside says how many buildings you see from there, the taller hiding the shorter behind. Every city is built fresh, proven to have one answer reached by logic alone, and named for a skyline worth touring — Chicago Lakefront, Paris Left Bank, Sydney Harbour, the Hometown Main Street. Three levels, large print, and an answer page that raises the whole skyline: a building of the right height on every plot, with windows, a door, and a spire on the tallest.',
+    'The classic Skyscrapers puzzle, set in the skylines of a retiree’s travels: fill the city with buildings so every row and column holds each height once, and a number outside says how many buildings you see from there, the taller hiding the shorter behind. Every city is built fresh, proven to have one answer reached by logic alone, and named for a skyline worth touring, such as Chicago Lakefront, Paris Left Bank, Sydney Harbour, the Hometown Main Street. Three levels, large print, and an answer page that raises the whole skyline: a building of the right height on every plot, with windows, a door, and a spire on the tallest.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: SKY_DEFAULT_TITLE,

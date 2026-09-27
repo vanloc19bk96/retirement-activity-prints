@@ -62,11 +62,11 @@ const inch = (n: number) => Math.round(n * DPI * 100) / 100
  * least once.
  */
 export const NEIGHBORS_LEVELS: readonly NeighborsLevelSpec[] = [
-  { value: 'gentle', label: 'Gentle — 6 × 6 town', gridLabel: '6 × 6', size: 6, rules: 'single', beyond: null, mix: [6, 5, 2, 0], clues: [0.3, 0.5], minCell: inch(0.6) },
-  { value: 'classic', label: 'Classic — 8 × 8 town', gridLabel: '8 × 8', size: 8, rules: 'touch', beyond: 'single', mix: [8, 4, 1, 0], clues: [0.2, 0.36], minCell: inch(0.5) },
+  { value: 'gentle', label: 'Gentle: 6 × 6 town', gridLabel: '6 × 6', size: 6, rules: 'single', beyond: null, mix: [6, 5, 2, 0], clues: [0.3, 0.5], minCell: inch(0.6) },
+  { value: 'classic', label: 'Classic: 8 × 8 town', gridLabel: '8 × 8', size: 8, rules: 'touch', beyond: 'single', mix: [8, 4, 1, 0], clues: [0.2, 0.36], minCell: inch(0.5) },
   {
     value: 'challenging',
-    label: 'Challenging — 9 × 9 town',
+    label: 'Challenging: 9 × 9 town',
     gridLabel: '9 × 9',
     size: 9,
     rules: 'probe',

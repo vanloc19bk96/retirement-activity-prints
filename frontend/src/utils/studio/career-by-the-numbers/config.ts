@@ -42,7 +42,7 @@ export const CBN_CONFIG_SCHEMA: StudioConfigField[] = [
     default: '',
     max: WKB_NAME_MAX,
     placeholder: 'e.g. Linda',
-    help: 'A first name or nickname for the heading — “Linda’s Career By the Numbers”. It is printed only, never sent to the AI.',
+    help: 'A first name or nickname for the heading, such as “Linda’s Career By the Numbers”. It is printed only, never sent to the AI.',
   },
   {
     key: 'workplace',
@@ -52,7 +52,7 @@ export const CBN_CONFIG_SCHEMA: StudioConfigField[] = [
     options: CBN_WORKPLACES.map((w) => ({ label: w.label, value: w.value })),
     helpWhen: (config) => {
       const workplace = CBN_WORKPLACES.find((w) => w.value === parseCbnWorkplace(config.workplace))!
-      return `${workplace.help} Every question is a fun estimate — nothing about pay, health or age.`
+      return `${workplace.help} Every question is a fun estimate: nothing about pay, health or age.`
     },
   },
   {

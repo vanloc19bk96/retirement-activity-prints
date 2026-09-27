@@ -57,7 +57,7 @@ export const OA_WORKPLACES: readonly { value: OfficeAwardsWorkplace; label: stri
   {
     value: 'any',
     label: 'Any workplace',
-    help: 'Awards any team would recognise — no cubicles or corporate jargon.',
+    help: 'Awards any team would recognise: no cubicles or corporate jargon.',
   },
   {
     value: 'office',
@@ -72,7 +72,7 @@ export const OA_WORKPLACES: readonly { value: OfficeAwardsWorkplace; label: stri
   {
     value: 'healthcare',
     label: 'Hospital, clinic or care',
-    help: 'Shifts, handovers, the rota and the staff room join in — never anything medical.',
+    help: 'Shifts, handovers, the rota and the staff room join in, but never anything medical.',
   },
   {
     value: 'service',
@@ -106,7 +106,7 @@ export function oaTitleFor(rawTitle: unknown, name: string): string {
 /** How the page is played: one name per award, anyone can win. */
 export function oaInstruction(name: string, reasonLine: boolean): string {
   const why = reasonLine ? ' Add a reason on the “Why” line.' : ''
-  return `Who fits each award best? Write their name — anyone can win, even ${whoFor(name)}!${why}`
+  return `Who fits each award best? Write their name. Anyone can win, even ${whoFor(name)}!${why}`
 }
 
 const RETIREE_RE = /\b(?:the )?Retiree(’s)?\b/gi

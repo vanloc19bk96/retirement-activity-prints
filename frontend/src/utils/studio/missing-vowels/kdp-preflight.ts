@@ -116,7 +116,7 @@ export function runMissingVowelsKdpPreflight(options: {
 
   if (items.length < 4) {
     warnings.push(
-      `Printed ${items.length} puzzles — a larger page size in Settings fits more.`,
+      `Printed ${items.length} puzzles. A larger page size in Settings fits more.`,
     )
   }
 

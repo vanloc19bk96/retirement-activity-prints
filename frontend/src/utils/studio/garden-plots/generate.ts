@@ -125,7 +125,7 @@ export const gardenPlotsTemplate: StudioTemplateDefinition = {
   label: 'Garden Plots: Plant the Flowers',
   category: 'logic',
   description:
-    'The viral Queens puzzle, replanted for retirement: a garden split into flower beds, with one flower to plant in every row, every column and every bed — and no two flowers touching, not even corner to corner. Every garden is grown fresh, proven to have one answer reached by logic alone, and signed with a retiree’s garden — Sunny Porch Garden, Lavender Lane, Kitchen Herb Garden. Three levels, large print, soft gray beds in heavy walls, and an answer page in full bloom.',
+    'The viral Queens puzzle, replanted for retirement: a garden split into flower beds, with one flower to plant in every row, every column and every bed, and no two flowers touching, not even corner to corner. Every garden is grown fresh, proven to have one answer reached by logic alone, and signed with a retiree’s garden: Sunny Porch Garden, Lavender Lane, Kitchen Herb Garden. Three levels, large print, soft gray beds in heavy walls, and an answer page in full bloom.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: GP_DEFAULT_TITLE,

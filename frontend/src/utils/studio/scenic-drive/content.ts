@@ -62,11 +62,11 @@ const inch = (n: number) => Math.round(n * DPI * 100) / 100
  * "what if" at least once.
  */
 export const DRIVE_LEVELS: readonly DriveLevelSpec[] = [
-  { value: 'gentle', label: 'Gentle — 7 × 7 grid', gridLabel: '7 × 7', size: 7, rules: 'sums', beyond: null, maxRun: 4, blacks: [0.25, 0.4], greed: 0.8, minCell: inch(0.5) },
-  { value: 'classic', label: 'Classic — 8 × 8 grid', gridLabel: '8 × 8', size: 8, rules: 'fit', beyond: 'sums', maxRun: 6, blacks: [0.22, 0.36], greed: 0.5, minCell: inch(0.48) },
+  { value: 'gentle', label: 'Gentle: 7 × 7 grid', gridLabel: '7 × 7', size: 7, rules: 'sums', beyond: null, maxRun: 4, blacks: [0.25, 0.4], greed: 0.8, minCell: inch(0.5) },
+  { value: 'classic', label: 'Classic: 8 × 8 grid', gridLabel: '8 × 8', size: 8, rules: 'fit', beyond: 'sums', maxRun: 6, blacks: [0.22, 0.36], greed: 0.5, minCell: inch(0.48) },
   {
     value: 'challenging',
-    label: 'Challenging — 9 × 9 grid',
+    label: 'Challenging: 9 × 9 grid',
     gridLabel: '9 × 9',
     size: 9,
     rules: 'probe',

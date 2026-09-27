@@ -44,7 +44,7 @@ export const CROSSWORD_CONFIG_SCHEMA: StudioConfigField[] = [
     options: crosswordThemeSelectOptions(),
     helpWhen: (config) =>
       parseCrosswordThemeChoice(config) === CROSSWORD_DEFAULT_THEME
-        ? 'A different retirement theme each puzzle — the right pick for a whole book.'
+        ? 'A different retirement theme each puzzle, the right pick for a whole book.'
         : 'Fresh answers and clues are written for this theme every time.',
   },
   {

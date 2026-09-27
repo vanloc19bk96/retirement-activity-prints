@@ -173,7 +173,7 @@ export function cbnPrintNote(options: { page?: StudioConfigLayoutContext; config
   const texts = cbnInstructionOptions(config)
   const panels = (texts.length > 0 ? texts : ['']).map((text) => cbnLayoutFor(page, config, text, keyStyle).panel)
   const worst = panels.reduce((a, b) => (b.height < a.height ? b : a))
-  if (!cbnPanelFits(worst)) return 'This page size is too small for a Color by Number scene — choose a larger one in Settings.'
+  if (!cbnPanelFits(worst)) return 'This page size is too small for a Color by Number scene. Choose a larger one in Settings.'
   const inches = (px: number) => (px / DPI).toFixed(1)
   return `${numbers}; the scene is about ${inches(worst.width)} × ${inches(worst.height)} in, with a 6–8 color key below.`
 }

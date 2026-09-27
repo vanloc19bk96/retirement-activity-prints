@@ -211,9 +211,9 @@ export function pqPlanFor(options: { page: StudioConfigLayoutContext; config: St
 export function pqPrintNote(options: { page?: StudioConfigLayoutContext; config: StudioConfig; level: PqLevel; font: string }): string {
   const { page, config, level, font } = options
   const spec = pqLevelSpec(level)
-  const lead = 'Every quilt is pieced fresh and proven to have one answer, reached by logic alone — no guessing.'
+  const lead = 'Every quilt is pieced fresh and proven to have one answer, reached by logic alone, with no guessing.'
   if (!page) return lead
   const plan = pqPlanFor({ page, config, level, font })
-  if (!plan) return `This page size is too small for ${spec.gridLabel} quilts at large print — choose a larger page in Settings or an easier level.`
+  if (!plan) return `This page size is too small for ${spec.gridLabel} quilts at large print. Choose a larger page in Settings or an easier level.`
   return `${lead} Squares print ${(plan.cell / DPI).toFixed(2)} in, the quilt ${((plan.cell * plan.size) / DPI).toFixed(2)} in across, numbers ${pxToPt(plan.numberSize)} pt.`
 }

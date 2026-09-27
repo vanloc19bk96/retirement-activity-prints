@@ -242,8 +242,8 @@ export function codewordPrintNote(
   const plan = planCodewordPage({ page, config, instruction, level })
   if (!plan) {
     return gentlerLevelFits(level, page, config, instruction)
-      ? 'This page size is too small for this level — choose a gentler level, or a larger page in Settings.'
-      : 'This page size is too small for a codeword — the grid and the number key need a wider column. ' +
+      ? 'This page size is too small for this level. Choose a gentler level, or a larger page in Settings.'
+      : 'This page size is too small for a codeword: the grid and the number key need a wider column. ' +
           'Choose a larger page in Settings.'
   }
 

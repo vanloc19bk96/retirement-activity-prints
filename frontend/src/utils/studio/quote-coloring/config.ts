@@ -52,7 +52,7 @@ export const QC_CONFIG_SCHEMA: StudioConfigField[] = [
     options: retirementThemeSelectOptions('Mixed retirement topics'),
     helpWhen: (config) =>
       parseRetirementThemeChoice(config) === RETIREMENT_THEME_MIXED
-        ? 'Slow mornings, gardens, travel, hobbies, friends and more — a different topic for every saying.'
+        ? 'Slow mornings, gardens, travel, hobbies, friends and more, with a different topic for every saying.'
         : 'Every saying explores this theme, each from a different angle.',
   },
   {
@@ -62,7 +62,7 @@ export const QC_CONFIG_SCHEMA: StudioConfigField[] = [
     default: '',
     max: AI_THEME_MAX_LENGTH,
     visibleWhen: isCustomRetirementTheme,
-    help: `What the sayings should be about — for example, life by the sea. Max ${AI_THEME_MAX_LENGTH} characters.`,
+    help: `What the sayings should be about (for example, life by the sea). Max ${AI_THEME_MAX_LENGTH} characters.`,
     warningWhen: (config) => themeIpWarning(String(config.customTheme ?? '')),
   },
   {
@@ -71,7 +71,7 @@ export const QC_CONFIG_SCHEMA: StudioConfigField[] = [
     type: 'select',
     default: 'mixed',
     options: QC_TONES.map((tone) => ({ label: tone.label, value: tone.value })),
-    help: 'Every saying is original, warm and written for this page — never a famous quote.',
+    help: 'Every saying is original, warm and written for this page, never a famous quote.',
   },
   {
     key: 'pattern',

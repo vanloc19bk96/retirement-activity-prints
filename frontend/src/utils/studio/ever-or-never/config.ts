@@ -72,7 +72,7 @@ export const EON_CONFIG_SCHEMA: StudioConfigField[] = [
     default: '',
     max: AI_THEME_MAX_LENGTH,
     visibleWhen: isCustomRetirementTheme,
-    help: `What the statements should be about — for example, summers at the lake. Max ${AI_THEME_MAX_LENGTH} characters.`,
+    help: `What the statements should be about (for example, summers at the lake). Max ${AI_THEME_MAX_LENGTH} characters.`,
     warningWhen: (config) => themeIpWarning(String(config.customTheme ?? '')),
   },
   {
@@ -88,7 +88,7 @@ export const EON_CONFIG_SCHEMA: StudioConfigField[] = [
     label: 'Add a story line',
     type: 'toggle',
     default: false,
-    help: 'A writing line under each statement to jot down the story — great for keepsake books. Fewer statements fit on a page.',
+    help: 'A writing line under each statement to jot down the story. Great for keepsake books. Fewer statements fit on a page.',
   },
 ]
 

@@ -265,7 +265,7 @@ export function wyrPrintNote(options: {
 
   const plan = wyrWorstCasePlan({ ...options, page })
   if (!plan) {
-    return 'This page size is too small for a Would You Rather page — choose a larger one in Settings.'
+    return 'This page size is too small for a Would You Rather page. Choose a larger one in Settings.'
   }
   const questions = plan.count === 1 ? '1 question a page' : `${plan.count} questions a page`
   return `${questions}, in ${pxToPt(plan.metrics.font)} pt large print.`

@@ -242,10 +242,10 @@ export function crosswordPrintNote(
   const cluePt = pxToPt(plan.clueFontSize)
 
   if (plan.gridCell < GRID_MIN_CELL) {
-    return `${shape}, clues at ${cluePt} pt — this page size is tight for a crossword, so a larger one in Settings gives a roomier grid.`
+    return `${shape}, clues at ${cluePt} pt. This page size is tight for a crossword, so a larger one in Settings gives a roomier grid.`
   }
   if (plan.reducedByPage) {
-    return `${shape} — trimmed to fit this page size — with clues at ${cluePt} pt, plus a matching answer page.`
+    return `${shape} (trimmed to fit this page size) with clues at ${cluePt} pt, plus a matching answer page.`
   }
   return `${shape}, clues at ${cluePt} pt, plus a matching answer page.`
 }

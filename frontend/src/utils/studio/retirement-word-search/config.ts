@@ -43,7 +43,7 @@ export const WORD_SEARCH_CONFIG_SCHEMA: StudioConfigField[] = [
     options: retirementThemeSelectOptions(),
     helpWhen: (config) =>
       parseRetirementThemeChoice(config) === RETIREMENT_THEME_MIXED
-        ? 'A different retirement theme each page — the right pick for a whole book.'
+        ? 'A different retirement theme each page, the right pick for a whole book.'
         : 'Fresh words are written for this theme every time.',
   },
   {

@@ -74,7 +74,7 @@ export const RJ_CONFIG_SCHEMA: StudioConfigField[] = [
     default: '',
     max: AI_THEME_MAX_LENGTH,
     visibleWhen: isCustomRetirementTheme,
-    help: `What the riddles and jokes should be about — for example, life on the allotment. Max ${AI_THEME_MAX_LENGTH} characters.`,
+    help: `What the riddles and jokes should be about (for example, life on the allotment). Max ${AI_THEME_MAX_LENGTH} characters.`,
     warningWhen: (config) => themeIpWarning(String(config.customTheme ?? '')),
   },
   {

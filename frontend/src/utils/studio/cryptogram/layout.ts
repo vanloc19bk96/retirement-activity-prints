@@ -293,7 +293,7 @@ export function cryptogramPrintNote(
   const plan = cryptogramWorstCasePlan({ level, page, config, instruction })
 
   if (!plan) {
-    return `This page size is too small for a ${level.length} cryptogram — choose a larger one in Settings, or a gentler level.`
+    return `This page size is too small for a ${level.length} cryptogram. Choose a larger one in Settings, or a gentler level.`
   }
 
   const puzzles = `${plan.puzzleCount} ${plan.puzzleCount === 1 ? 'saying' : 'sayings'} a page`

@@ -48,7 +48,7 @@ export const FIF_CONFIG_SCHEMA: StudioConfigField[] = [
     helpWhen: (config, layout) => {
       const theme =
         parseRetirementThemeChoice(config) === RETIREMENT_THEME_MIXED
-          ? 'Speeches, parties, holidays, hobbies and more — a fresh situation every story.'
+          ? 'Speeches, parties, holidays, hobbies and more, with a fresh situation every story.'
           : 'The story is set in this theme.'
       const note = fifPrintNote({
         page: layout,
@@ -65,7 +65,7 @@ export const FIF_CONFIG_SCHEMA: StudioConfigField[] = [
     default: '',
     max: AI_THEME_MAX_LENGTH,
     visibleWhen: isCustomRetirementTheme,
-    help: `What the story should be about — for example, our first caravan trip. Max ${AI_THEME_MAX_LENGTH} characters.`,
+    help: `What the story should be about, for example: our first caravan trip. Max ${AI_THEME_MAX_LENGTH} characters.`,
     warningWhen: (config) => themeIpWarning(String(config.customTheme ?? '')),
   },
 ]

@@ -195,9 +195,9 @@ export function gpPlanFor(options: { page: StudioConfigLayoutContext; config: St
 export function gpPrintNote(options: { page?: StudioConfigLayoutContext; config: StudioConfig; level: GpLevel; font: string }): string {
   const { page, config, level, font } = options
   const spec = gpLevelSpec(level)
-  const lead = 'Every garden is grown fresh and proven to have one answer, reached by logic alone — no guessing.'
+  const lead = 'Every garden is grown fresh and proven to have one answer, reached by logic alone, no guessing.'
   if (!page) return lead
   const plan = gpPlanFor({ page, config, level, font })
-  if (!plan) return `This page size is too small for ${spec.gridLabel} gardens at large print — choose a larger page in Settings or an easier level.`
+  if (!plan) return `This page size is too small for ${spec.gridLabel} gardens at large print. Choose a larger page in Settings or an easier level.`
   return `${lead} Squares print ${(plan.cell / DPI).toFixed(2)} in, the garden ${((plan.cell * plan.size) / DPI).toFixed(2)} in across.`
 }

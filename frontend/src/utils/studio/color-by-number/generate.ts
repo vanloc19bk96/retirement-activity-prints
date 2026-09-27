@@ -215,7 +215,7 @@ export const colorByNumberTemplate: StudioTemplateDefinition = {
   label: 'Color by Number: Retirement Scenes',
   category: 'coloring',
   description:
-    'A relaxing color-by-number page: a retirement scene — a porch rocker by the window, a motorhome in the hills, a sailboat at golden hour — divided into numbered spaces, with a 6–8 color key below. Works in black-and-white books: every color is named, with a box to try each pencil.',
+    'A relaxing color-by-number page: a retirement scene (a porch rocker by the window, a motorhome in the hills, a sailboat at golden hour) divided into numbered spaces, with a 6–8 color key below. Works in black-and-white books: every color is named, with a box to try each pencil.',
   pageCount: 1,
   producesAnswerKey: false,
   defaultPageTitle: CBN_DEFAULT_TITLE,

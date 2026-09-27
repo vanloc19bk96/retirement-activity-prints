@@ -42,7 +42,7 @@ export interface PictureRebusPuzzle {
 export const PICTURE_REBUS_DEFAULT_TITLE = 'Picture Puzzles'
 
 export const PICTURE_REBUS_PAGE_TOO_SMALL_MESSAGE =
-  'This page size is too small for picture puzzles — the pictures would print ' +
+  'This page size is too small for picture puzzles: the pictures would print ' +
   'below large-print size. Choose a larger page in Settings.'
 
 export const PICTURE_REBUS_BUILD_FAILED_MESSAGE =
@@ -142,7 +142,7 @@ export function pictureRebusFaults(puzzle: PictureRebusPuzzle): string[] {
   const spelled = icons.map((icon) => icon.word).join('')
   if (spelled !== letters) {
     faults.push(
-      `Puzzle "${answer}" does not match its pictures — they spell ${spelled}.`,
+      `Puzzle "${answer}" does not match its pictures: they spell ${spelled}.`,
     )
   }
 

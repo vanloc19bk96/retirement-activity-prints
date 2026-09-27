@@ -180,6 +180,41 @@ def coerce_json_text(raw: str) -> str:
     return repaired
 
 
+_EM_DASH_BEFORE_STOP_RE = re.compile(r"\s*—+\s*(?=[,.;:!?)\]]|$)")
+_EM_DASH_AFTER_OPEN_RE = re.compile(r"(?:^|(?<=[(\[]))\s*—+\s*")
+_EM_DASH_RE = re.compile(r"\s*—+\s*")
+
+
+def soften_em_dashes(text: str) -> str:
+    """Swap the em dash, a telltale of machine-written copy, for a comma.
+
+    A dash that opens or closes a phrase is simply dropped; one between two
+    clauses becomes ", ", which reads naturally in almost every sentence.
+    """
+    if "—" not in text:
+        return text
+    text = _EM_DASH_BEFORE_STOP_RE.sub("", text)
+    text = _EM_DASH_AFTER_OPEN_RE.sub("", text)
+    return _EM_DASH_RE.sub(", ", text)
+
+
+def _soften_json_strings(value: Any) -> Any:
+    if isinstance(value, str):
+        return soften_em_dashes(value)
+    if isinstance(value, list):
+        return [_soften_json_strings(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _soften_json_strings(item) for key, item in value.items()}
+    return value
+
+
+def soften_json_em_dashes(json_text: str) -> str:
+    """Apply :func:`soften_em_dashes` to every string value in a JSON document."""
+    if "—" not in json_text and "\\u2014" not in json_text.lower():
+        return json_text
+    return json.dumps(_soften_json_strings(json.loads(json_text)), ensure_ascii=False)
+
+
 def parse_json_object(raw: str) -> dict[str, Any]:
     """Shape-check helper for services; raises ValueError so callers can wrap it."""
     try:
@@ -288,8 +323,12 @@ async def call_gemini_json(
     system_instruction: str | None = SYSTEM_INSTRUCTION,
     model: str | None = None,
     label: str = "studio",
+    soften_dashes: bool = True,
 ) -> str:
     """One JSON completion, retried once and salvaged if the model runs long.
+
+    Em dashes in string values are rewritten (see :func:`soften_em_dashes`)
+    unless ``soften_dashes`` is off for a caller that reads the dash itself.
 
     Returns text that is guaranteed to parse as JSON — callers keep their own
     shape validation, which is what turns a salvaged prefix into a short-but-
@@ -373,7 +412,8 @@ async def call_gemini_json(
         raise StudioGenerationError("Model returned empty content")
 
     try:
-        return coerce_json_text(text)
+        json_text = coerce_json_text(text)
+        return soften_json_em_dashes(json_text) if soften_dashes else json_text
     except StudioGenerationError:
         if reason == "MAX_TOKENS":
             raise StudioTruncatedError(

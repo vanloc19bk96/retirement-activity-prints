@@ -452,7 +452,7 @@ export function wfPrintNote(options: {
   if (!page) return `${WF_WEEKS} weekly pages of prompts and writing space, fitted to your page size.`
   const fields = wfFields(page, config, instruction)
   const plan = planWeeksOfFirsts(fields, font, space)
-  if (!plan) return 'This page size is too small for 52 Weeks of Firsts — choose a larger one in Settings.'
+  if (!plan) return 'This page size is too small for 52 Weeks of Firsts. Choose a larger one in Settings.'
   const blank: FittedWfWeek[] = Array.from({ length: WF_WEEKS }, (_, i) => ({
     idea: '',
     concept: '',
@@ -463,5 +463,5 @@ export function wfPrintNote(options: {
   const pages = paginateWeeksOfFirsts(blank, plan, usableHeight(plan, fields))?.length
   const per = plan.perPage === 1 ? 'A full page for each week' : `${plan.perPage} weeks per page`
   const spread = pages ? `${pages} pages` : 'several pages'
-  return `${per}, ${plan.lines} writing lines each — ${spread} in ${pxToPt(plan.metrics.font)} pt large print.`
+  return `${per}, ${plan.lines} writing lines each, ${spread} in ${pxToPt(plan.metrics.font)} pt large print.`
 }

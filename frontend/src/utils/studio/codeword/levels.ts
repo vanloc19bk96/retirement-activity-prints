@@ -55,7 +55,7 @@ export interface CodewordLevel {
 export const CODEWORD_LEVELS: readonly CodewordLevel[] = [
   {
     id: 'gentle',
-    label: 'Gentle — shorter words, three letters given',
+    label: 'Gentle: shorter words, three letters given',
     targetWords: 10,
     minWords: 8,
     minLetters: 4,
@@ -65,7 +65,7 @@ export const CODEWORD_LEVELS: readonly CodewordLevel[] = [
   },
   {
     id: 'classic',
-    label: 'Classic — the everyday puzzle',
+    label: 'Classic: the everyday puzzle',
     targetWords: 13,
     minWords: 10,
     minLetters: 4,
@@ -75,7 +75,7 @@ export const CODEWORD_LEVELS: readonly CodewordLevel[] = [
   },
   {
     id: 'challenging',
-    label: 'Challenging — a fuller grid, two letters given',
+    label: 'Challenging: a fuller grid, two letters given',
     targetWords: 15,
     minWords: 11,
     minLetters: 4,

@@ -104,9 +104,9 @@ export interface OtLevelSpec {
  * the trim decides those, so a harder pack is never smaller print.
  */
 export const OT_LEVELS: readonly OtLevelSpec[] = [
-  { value: 'gentle', label: 'Gentle — what anyone in the job knew' },
-  { value: 'classic', label: 'Classic — familiar, with a few to think about' },
-  { value: 'challenging', label: 'Challenging — for the long-serving pro' },
+  { value: 'gentle', label: 'Gentle: what anyone in the job knew' },
+  { value: 'classic', label: 'Classic: familiar, with a few to think about' },
+  { value: 'challenging', label: 'Challenging: for the long-serving pro' },
 ]
 
 export function parseOtLevel(raw: unknown): OccupationTriviaLevel {

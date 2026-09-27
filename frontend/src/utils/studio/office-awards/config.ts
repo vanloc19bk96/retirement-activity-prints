@@ -39,7 +39,7 @@ export const OA_CONFIG_SCHEMA: StudioConfigField[] = [
     default: '',
     max: WKB_NAME_MAX,
     placeholder: 'e.g. Linda',
-    help: 'A first name or nickname for the heading, instructions and awards about the retiree — “Most Likely to Inherit Linda’s Chair”. It is printed only, never sent to the AI. Leave blank to say “the retiree”.',
+    help: 'A first name or nickname for the heading, instructions and awards about the retiree, such as “Most Likely to Inherit Linda’s Chair”. It is printed only, never sent to the AI. Leave blank to say “the retiree”.',
   },
   {
     key: 'workplace',
@@ -49,7 +49,7 @@ export const OA_CONFIG_SCHEMA: StudioConfigField[] = [
     options: OA_WORKPLACES.map((w) => ({ label: w.label, value: w.value })),
     helpWhen: (config) => {
       const workplace = OA_WORKPLACES.find((w) => w.value === parseOaWorkplace(config.workplace))!
-      return `${workplace.help} Always friendly — a mix of playful and heartfelt, nothing about looks, age, health or money.`
+      return `${workplace.help} Always friendly: a mix of playful and heartfelt, nothing about looks, age, health or money.`
     },
   },
   {
@@ -73,7 +73,7 @@ export const OA_CONFIG_SCHEMA: StudioConfigField[] = [
     label: 'Add a “Why” line',
     type: 'toggle',
     default: false,
-    help: 'A second line under each winner for a quick reason or memory — lovely for keepsake books. Fewer awards fit on each page.',
+    help: 'A second line under each winner for a quick reason or memory. Lovely for keepsake books. Fewer awards fit on each page.',
   },
 ]
 

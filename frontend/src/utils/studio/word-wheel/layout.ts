@@ -251,7 +251,7 @@ export function wordWheelPrintNote(
   const plan = planWordWheelPage({ page, config, instruction })
   if (!plan) {
     return (
-      'This page size is too small for a word wheel — the letters would print below ' +
+      'This page size is too small for a word wheel: the letters would print below ' +
       'large-print size. Choose a larger page in Settings.'
     )
   }

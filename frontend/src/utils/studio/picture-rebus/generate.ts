@@ -118,7 +118,7 @@ export const pictureRebusTemplate: StudioTemplateDefinition = {
   label: 'Picture Rebus',
   category: 'word',
   description:
-    'Two big pictures side by side make one word: a sun and a flower make SUNFLOWER. Every picture is drawn as clean black line art — no colour, no emoji — and the answer has a writing slot for each letter, so there is only ever one answer that fits. Pick a level; how many puzzles a page holds and how large the pictures print are fitted to your page. Includes a matching answer page.',
+    'Two big pictures side by side make one word: a sun and a flower make SUNFLOWER. Every picture is drawn as clean black line art (no colour, no emoji), and the answer has a writing slot for each letter, so there is only ever one answer that fits. Pick a level; how many puzzles a page holds and how large the pictures print are fitted to your page. Includes a matching answer page.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: PICTURE_REBUS_DEFAULT_TITLE,

@@ -39,7 +39,7 @@ export const PC_CONFIG_SCHEMA: StudioConfigField[] = [
         instruction: instructionFor(config),
         font: String(config.fontFamily ?? STUDIO_DEFAULT_FONT),
       })
-      return `Real U.S. prices from 1950 to 2000 — groceries, gas, stamps and movie tickets. ${note}`
+      return `Real U.S. prices from 1950 to 2000: groceries, gas, stamps and movie tickets. ${note}`
     },
   },
 ]

@@ -64,7 +64,7 @@ const inch = (n: number) => Math.round(n * DPI * 100) / 100
 export const CF_LEVELS: readonly CfLevelSpec[] = [
   {
     value: 'gentle',
-    label: 'Gentle — 6 × 6, 6 ships',
+    label: 'Gentle: 6 × 6, 6 ships',
     gridLabel: '6 × 6',
     size: 6,
     fleet: [3, 2, 2, 1, 1, 1],
@@ -76,7 +76,7 @@ export const CF_LEVELS: readonly CfLevelSpec[] = [
   },
   {
     value: 'classic',
-    label: 'Classic — 8 × 8, 8 ships',
+    label: 'Classic: 8 × 8, 8 ships',
     gridLabel: '8 × 8',
     size: 8,
     fleet: [4, 3, 3, 2, 2, 1, 1, 1],
@@ -88,7 +88,7 @@ export const CF_LEVELS: readonly CfLevelSpec[] = [
   },
   {
     value: 'challenging',
-    label: 'Challenging — 10 × 10, 10 ships',
+    label: 'Challenging: 10 × 10, 10 ships',
     gridLabel: '10 × 10',
     size: 10,
     fleet: [4, 3, 3, 2, 2, 2, 1, 1, 1, 1],
@@ -114,7 +114,7 @@ export const cfLevelSpec = (level: CfLevel): CfLevelSpec => CF_LEVELS.find((l) =
  * ------------------------------------------------------------------ */
 
 export const CF_INSTRUCTION =
-  'Find the hidden fleet. Each number counts the ship squares in its row or column. Ships lie straight across or down and never touch — not even corner to corner.'
+  'Find the hidden fleet. Each number counts the ship squares in its row or column. Ships lie straight across or down and never touch, not even corner to corner.'
 
 /** Gentle adds the first trick every Battleships solver learns. */
 export const CF_GENTLE_TIP = 'Tip: once a row or column has all its ship squares, the rest of it is water.'

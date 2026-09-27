@@ -126,7 +126,7 @@ export const twoTruthsFibTemplate: StudioTemplateDefinition = {
   label: 'Two Truths and a Fib',
   category: 'trivia',
   description:
-    'Retirement Edition: sets of three short statements about work, inventions, home life, travel, food and more — two are true and one is a fib. Circle the fib! Every fact is checked before it prints, and the answer page explains each fib. Pick a subject and level; puzzles per page and type size are fitted to your page. Fresh puzzles every page, never repeated within your book.',
+    'Retirement Edition: sets of three short statements about work, inventions, home life, travel, food and more. Two are true and one is a fib. Circle the fib! Every fact is checked before it prints, and the answer page explains each fib. Pick a subject and level; puzzles per page and type size are fitted to your page. Fresh puzzles every page, never repeated within your book.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: TTF_DEFAULT_TITLE,

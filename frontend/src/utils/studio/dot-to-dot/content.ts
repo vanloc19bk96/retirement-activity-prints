@@ -100,17 +100,17 @@ const inch = (n: number) => n * DPI
 export const DTD_LEVELS: readonly DtdLevelSpec[] = [
   {
     value: 'relaxed',
-    label: 'Relaxed — about 20–30 dots, big numbers',
+    label: 'Relaxed: about 20–30 dots, big numbers',
     rules: { dots: { min: 16, target: 26, max: 32 }, numberSize: 16, dotRadius: 3.5, minGap: inch(0.27), fidelity: 0.045 },
   },
   {
     value: 'classic',
-    label: 'Classic — about 30–45 dots',
+    label: 'Classic: about 30–45 dots',
     rules: { dots: { min: 28, target: 40, max: 46 }, numberSize: 15, dotRadius: 3.25, minGap: inch(0.22), fidelity: 0.035 },
   },
   {
     value: 'challenging',
-    label: 'Challenging — about 45–60 dots, more detail',
+    label: 'Challenging: about 45–60 dots, more detail',
     rules: { dots: { min: 42, target: 58, max: 64 }, numberSize: 14, dotRadius: 3, minGap: inch(0.185), fidelity: 0.03 },
   },
 ]

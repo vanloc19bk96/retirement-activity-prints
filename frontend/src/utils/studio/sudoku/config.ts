@@ -51,7 +51,7 @@ export function sudokuPrintNote(
   const measurements = `Prints ${formatInches(geometry.bounds.width)} in wide with ${digitPt} pt numbers`
 
   if (digitPt < LARGE_PRINT_FLOOR_PT) {
-    return `${shape} ${measurements} — a larger page size in Settings gives bigger, clearer numbers.`
+    return `${shape} ${measurements}. A larger page size in Settings gives bigger, clearer numbers.`
   }
   return `${shape} ${measurements}, plus a matching answer page.`
 }

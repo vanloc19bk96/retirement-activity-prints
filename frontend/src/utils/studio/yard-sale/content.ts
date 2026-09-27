@@ -60,9 +60,9 @@ const inch = (n: number) => Math.round(n * DPI * 100) / 100
  * or a little less, the share puzzle books print.
  */
 export const YS_LEVELS: readonly YsLevelSpec[] = [
-  { value: 'gentle', label: 'Gentle — 6 × 6 grid', gridLabel: '6 × 6', size: 6, rules: 'basic', beyond: null, minHard: 0, shaded: [0.25, 0.36], minCell: inch(0.6) },
-  { value: 'classic', label: 'Classic — 8 × 8 grid', gridLabel: '8 × 8', size: 8, rules: 'walls', beyond: 'basic', minHard: 2, shaded: [0.25, 0.34], minCell: inch(0.5) },
-  { value: 'challenging', label: 'Challenging — 9 × 9 grid', gridLabel: '9 × 9', size: 9, rules: 'probe', beyond: 'walls', minHard: 2, shaded: [0.25, 0.34], minCell: inch(0.45) },
+  { value: 'gentle', label: 'Gentle: 6 × 6 grid', gridLabel: '6 × 6', size: 6, rules: 'basic', beyond: null, minHard: 0, shaded: [0.25, 0.36], minCell: inch(0.6) },
+  { value: 'classic', label: 'Classic: 8 × 8 grid', gridLabel: '8 × 8', size: 8, rules: 'walls', beyond: 'basic', minHard: 2, shaded: [0.25, 0.34], minCell: inch(0.5) },
+  { value: 'challenging', label: 'Challenging: 9 × 9 grid', gridLabel: '9 × 9', size: 9, rules: 'probe', beyond: 'walls', minHard: 2, shaded: [0.25, 0.34], minCell: inch(0.45) },
 ]
 
 export const DEFAULT_YS_LEVEL: YsLevel = 'classic'

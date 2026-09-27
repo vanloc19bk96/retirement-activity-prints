@@ -125,7 +125,7 @@ export const cruiseFleetTemplate: StudioTemplateDefinition = {
   label: 'Cruise Fleet: Find the Ships',
   category: 'logic',
   description:
-    'The classic Battleships puzzle, set sail for retirement: a harbor hides a cruise fleet — a cruise ship, ferries, sailboats and rowboats — and the numbers beside each row and column tell how many ship squares lie there. Ships never touch, not even corner to corner. Every harbor is built fresh, proven to have one answer reached by logic alone, and signed with a retiree’s port of call — Sunset Harbor, Lighthouse Point, Calm Seas Marina. Three levels, large print, the whole fleet drawn to scale in the legend, and an answer page where every ship sails in.',
+    'The classic Battleships puzzle, set sail for retirement: a harbor hides a cruise fleet (a cruise ship, ferries, sailboats and rowboats), and the numbers beside each row and column tell how many ship squares lie there. Ships never touch, not even corner to corner. Every harbor is built fresh, proven to have one answer reached by logic alone, and signed with a retiree’s port of call, such as Sunset Harbor, Lighthouse Point or Calm Seas Marina. Three levels, large print, the whole fleet drawn to scale in the legend, and an answer page where every ship sails in.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: CF_DEFAULT_TITLE,

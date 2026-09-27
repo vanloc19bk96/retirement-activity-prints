@@ -50,7 +50,7 @@ export const TRIVIA_CONFIG_SCHEMA: StudioConfigField[] = [
     options: retirementThemeSelectOptions(),
     helpWhen: (config) =>
       parseRetirementThemeChoice(config) === RETIREMENT_THEME_MIXED
-        ? 'A different retirement theme each page — the right pick for a whole book.'
+        ? 'A different retirement theme each page, the right pick for a whole book.'
         : 'Fresh clues and answers are written for this theme every time.',
   },
   {

@@ -45,7 +45,7 @@ export interface RiddleScrambleLevel {
 export const RIDDLE_SCRAMBLE_LEVELS: readonly RiddleScrambleLevel[] = [
   {
     id: 'gentle',
-    label: 'Gentle — 4 short words',
+    label: 'Gentle: 4 short words',
     answerLetters: 4,
     minLetters: 4,
     maxLetters: 6,
@@ -53,7 +53,7 @@ export const RIDDLE_SCRAMBLE_LEVELS: readonly RiddleScrambleLevel[] = [
   },
   {
     id: 'classic',
-    label: 'Classic — 5 words',
+    label: 'Classic: 5 words',
     answerLetters: 5,
     minLetters: 5,
     maxLetters: 7,
@@ -61,7 +61,7 @@ export const RIDDLE_SCRAMBLE_LEVELS: readonly RiddleScrambleLevel[] = [
   },
   {
     id: 'challenging',
-    label: 'Challenging — 6 longer words',
+    label: 'Challenging: 6 longer words',
     answerLetters: 6,
     minLetters: 6,
     maxLetters: 9,

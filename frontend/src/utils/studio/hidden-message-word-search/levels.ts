@@ -73,7 +73,7 @@ export interface HiddenMessageLevel {
 export const HIDDEN_MESSAGE_LEVELS: readonly HiddenMessageLevel[] = [
   {
     id: 'gentle',
-    label: 'Gentle — across and down only',
+    label: 'Gentle: across and down only',
     directions: 'easy',
     instruction:
       'Circle each word from the list. They read across and down. The letters left over, read line by line, spell the hidden message.',
@@ -86,7 +86,7 @@ export const HIDDEN_MESSAGE_LEVELS: readonly HiddenMessageLevel[] = [
   },
   {
     id: 'classic',
-    label: 'Classic — the everyday puzzle',
+    label: 'Classic: the everyday puzzle',
     directions: 'medium',
     instruction:
       'Circle each word from the list. They read across, down and diagonally. The letters left over, read line by line, spell the hidden message.',
@@ -99,7 +99,7 @@ export const HIDDEN_MESSAGE_LEVELS: readonly HiddenMessageLevel[] = [
   },
   {
     id: 'challenging',
-    label: 'Challenging — every direction, some backwards',
+    label: 'Challenging: every direction, some backwards',
     directions: 'hard',
     instruction:
       'Circle each word from the list. They read in any direction, even backwards. The letters left over, read line by line, spell the hidden message.',

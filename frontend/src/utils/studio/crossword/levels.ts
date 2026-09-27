@@ -43,7 +43,7 @@ export interface CrosswordLevel {
 export const CROSSWORD_LEVELS: readonly CrosswordLevel[] = [
   {
     id: 'gentle',
-    label: 'Gentle — short answers, plain clues',
+    label: 'Gentle: short answers, plain clues',
     targetAnswers: 8,
     minAnswers: 6,
     minLetters: 4,
@@ -53,7 +53,7 @@ export const CROSSWORD_LEVELS: readonly CrosswordLevel[] = [
   },
   {
     id: 'classic',
-    label: 'Classic — the everyday puzzle',
+    label: 'Classic: the everyday puzzle',
     targetAnswers: 11,
     minAnswers: 8,
     minLetters: 4,
@@ -63,7 +63,7 @@ export const CROSSWORD_LEVELS: readonly CrosswordLevel[] = [
   },
   {
     id: 'challenging',
-    label: 'Challenging — a fuller grid',
+    label: 'Challenging: a fuller grid',
     targetAnswers: 13,
     minAnswers: 9,
     minLetters: 4,

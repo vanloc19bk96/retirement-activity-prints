@@ -44,21 +44,21 @@ export interface CryptogramLevel {
 export const CRYPTOGRAM_LEVELS: readonly CryptogramLevel[] = [
   {
     id: 'gentle',
-    label: 'Gentle — short sayings, three letters given',
+    label: 'Gentle: short sayings, three letters given',
     length: 'short',
     targetPuzzles: 3,
     starterLetters: 3,
   },
   {
     id: 'classic',
-    label: 'Classic — the everyday puzzle',
+    label: 'Classic: the everyday puzzle',
     length: 'medium',
     targetPuzzles: 3,
     starterLetters: 1,
   },
   {
     id: 'challenging',
-    label: 'Challenging — longer sayings, nothing given',
+    label: 'Challenging: longer sayings, nothing given',
     length: 'long',
     targetPuzzles: 2,
     starterLetters: 0,

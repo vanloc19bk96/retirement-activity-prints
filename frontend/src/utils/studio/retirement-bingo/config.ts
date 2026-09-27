@@ -93,13 +93,13 @@ export const RETIREMENT_BINGO_CONFIG_SCHEMA: StudioConfigField[] = [
       if (moments.length === 0) {
         return (
           'One per line, short and in the past tense. Mixed into every card with ' +
-          `the built-in moments — up to ${BINGO_CUSTOM_PER_CARD_MAX} a card. The ` +
+          `the built-in moments, up to ${BINGO_CUSTOM_PER_CARD_MAX} a card. The ` +
           'surest way to make your book unlike anyone else’s.'
         )
       }
       const perCard = customMomentsPerCard(moments.length)
       return (
-        `${moments.length} of your moments ready — about ${perCard} on each card, ` +
+        `${moments.length} of your moments ready: about ${perCard} on each card, ` +
         'the rest from the built-in set.'
       )
     },
@@ -111,7 +111,7 @@ export const RETIREMENT_BINGO_CONFIG_SCHEMA: StudioConfigField[] = [
         notes.push(
           rejected.length === 1
             ? `Skipping “${first.text}”: ${first.reason}.`
-            : `Skipping ${rejected.length} lines — “${first.text}”: ${first.reason}.`,
+            : `Skipping ${rejected.length} lines, such as “${first.text}”: ${first.reason}.`,
         )
       }
       if (layout && moments.length > 0) {
@@ -122,8 +122,8 @@ export const RETIREMENT_BINGO_CONFIG_SCHEMA: StudioConfigField[] = [
         )
         if (long.length > 0) {
           notes.push(
-            `${quoteList(long)} won’t fit a square on this page size — ` +
-              `try under ${BINGO_MAX_CHARS} letters with shorter words.`,
+            `${quoteList(long)} won’t fit a square on this page size. ` +
+              `Try under ${BINGO_MAX_CHARS} letters with shorter words.`,
           )
         }
       }

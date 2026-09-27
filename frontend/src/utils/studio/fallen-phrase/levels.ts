@@ -51,21 +51,21 @@ export interface FallenPhraseLevel {
 export const FALLEN_PHRASE_LEVELS: readonly FallenPhraseLevel[] = [
   {
     id: 'gentle',
-    label: 'Gentle — a short saying, 3 rows',
+    label: 'Gentle: a short saying, 3 rows',
     length: 'short',
     rows: 3,
     preferredCols: 13,
   },
   {
     id: 'classic',
-    label: 'Classic — the everyday puzzle, 4 rows',
+    label: 'Classic: the everyday puzzle, 4 rows',
     length: 'medium',
     rows: 4,
     preferredCols: 13,
   },
   {
     id: 'challenging',
-    label: 'Challenging — a longer saying, 5 rows',
+    label: 'Challenging: a longer saying, 5 rows',
     length: 'long',
     rows: 5,
     preferredCols: 13,

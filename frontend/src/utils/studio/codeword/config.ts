@@ -45,7 +45,7 @@ export const CODEWORD_CONFIG_SCHEMA: StudioConfigField[] = [
     options: codewordThemeSelectOptions(),
     helpWhen: (config) =>
       parseRetirementThemeChoice(config) === RETIREMENT_THEME_MIXED
-        ? 'A different retirement theme each puzzle — the right pick for a whole book.'
+        ? 'A different retirement theme each puzzle, the right pick for a whole book.'
         : 'The hidden words are drawn from this theme’s vocabulary.',
   },
   {

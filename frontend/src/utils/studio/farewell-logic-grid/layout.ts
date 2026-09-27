@@ -432,7 +432,7 @@ export function lgPrintNote(options: {
     `${shape.n === 4 ? 'Four' : 'Five'} people and ${shape.K === 2 ? 'two' : 'three'} categories`
   if (!page) return `${shapeText(level.shapes[0]!)}, one clear answer, plus an answer page.`
   const plan = planLgPage({ ...options, page })
-  if (!plan) return 'This page size is too small for a logic grid — choose a larger one in Settings.'
+  if (!plan) return 'This page size is too small for a logic grid. Choose a larger one in Settings.'
   const layout =
     plan.pages === 1
       ? 'clues and grid on one page'

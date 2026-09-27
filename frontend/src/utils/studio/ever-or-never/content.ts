@@ -68,7 +68,7 @@ export interface EonStatement {
 export function eonInstruction(storyLine: boolean): string {
   return storyLine
     ? 'Tick Ever or Never for each one, then jot down the story behind your Evers.'
-    : 'Tick Ever if you have, Never if you haven’t — then compare with friends!'
+    : 'Tick Ever if you have, Never if you haven’t. Then compare with friends!'
 }
 
 /*

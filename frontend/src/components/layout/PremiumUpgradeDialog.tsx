@@ -181,7 +181,7 @@ function PromotionalPackCard({ upgradeUrl, onUpgrade }: PromotionalPackCardProps
           }
         }}
         disabled={!hasUpgradeUrl}
-        aria-label="Continue to Promotional Material Pack checkout — opens in a new tab"
+        aria-label="Continue to Promotional Material Pack checkout (opens in a new tab)"
       >
         <span>Get the Promotional Pack</span>
         {hasUpgradeUrl && <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />}
@@ -209,7 +209,7 @@ function PlanCtaButton({ plan, isCurrent, upgradeUrl, onUpgrade }: PlanCtaButton
       aria-label={
         isCurrent
           ? `${PLAN_CONFIG[plan].title} is your current plan`
-          : `Continue to ${PLAN_CONFIG[plan].title} checkout — opens in a new tab`
+          : `Continue to ${PLAN_CONFIG[plan].title} checkout (opens in a new tab)`
       }
     >
       <span>{label}</span>

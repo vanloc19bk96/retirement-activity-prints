@@ -59,11 +59,11 @@ const inch = (n: number) => Math.round(n * DPI * 100) / 100
  * once; Challenging cities, a size larger, need "what if" at least once.
  */
 export const SKY_LEVELS: readonly SkyLevelSpec[] = [
-  { value: 'gentle', label: 'Gentle — 5 × 5 city', gridLabel: '5 × 5', size: 5, rules: 'basic', beyond: null, maxGivens: 2, minCluesPerSide: 1, minCell: inch(0.5) },
-  { value: 'classic', label: 'Classic — 6 × 6 city', gridLabel: '6 × 6', size: 6, rules: 'line', beyond: 'basic', maxGivens: 3, minCluesPerSide: 1, minCell: inch(0.45) },
+  { value: 'gentle', label: 'Gentle: 5 × 5 city', gridLabel: '5 × 5', size: 5, rules: 'basic', beyond: null, maxGivens: 2, minCluesPerSide: 1, minCell: inch(0.5) },
+  { value: 'classic', label: 'Classic: 6 × 6 city', gridLabel: '6 × 6', size: 6, rules: 'line', beyond: 'basic', maxGivens: 3, minCluesPerSide: 1, minCell: inch(0.45) },
   {
     value: 'challenging',
-    label: 'Challenging — 7 × 7 city',
+    label: 'Challenging: 7 × 7 city',
     gridLabel: '7 × 7',
     size: 7,
     rules: 'probe',

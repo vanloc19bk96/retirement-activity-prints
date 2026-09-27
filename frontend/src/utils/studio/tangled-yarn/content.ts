@@ -57,9 +57,9 @@ const inch = (n: number) => Math.round(n * DPI * 100) / 100
  * a "what if" check as well, on a bigger grid.
  */
 export const TY_LEVELS: readonly TyLevelSpec[] = [
-  { value: 'gentle', label: 'Gentle — 6 × 6, 5 to 7 pairs', gridLabel: '6 × 6', size: 6, minPairs: 5, maxPairs: 7, rules: 'basic', beyond: null, minCell: inch(0.55) },
-  { value: 'classic', label: 'Classic — 8 × 8, 8 to 11 pairs', gridLabel: '8 × 8', size: 8, minPairs: 8, maxPairs: 11, rules: 'reach', beyond: 'basic', minCell: inch(0.44) },
-  { value: 'challenging', label: 'Challenging — 10 × 10, 12 to 16 pairs', gridLabel: '10 × 10', size: 10, minPairs: 12, maxPairs: 16, rules: 'probe', beyond: 'reach', minCell: inch(0.38) },
+  { value: 'gentle', label: 'Gentle: 6 × 6, 5 to 7 pairs', gridLabel: '6 × 6', size: 6, minPairs: 5, maxPairs: 7, rules: 'basic', beyond: null, minCell: inch(0.55) },
+  { value: 'classic', label: 'Classic: 8 × 8, 8 to 11 pairs', gridLabel: '8 × 8', size: 8, minPairs: 8, maxPairs: 11, rules: 'reach', beyond: 'basic', minCell: inch(0.44) },
+  { value: 'challenging', label: 'Challenging: 10 × 10, 12 to 16 pairs', gridLabel: '10 × 10', size: 10, minPairs: 12, maxPairs: 16, rules: 'probe', beyond: 'reach', minCell: inch(0.38) },
 ]
 
 export const DEFAULT_TY_LEVEL: TyLevel = 'classic'
@@ -88,7 +88,7 @@ export const TY_INSTRUCTION =
   'Join each pair of matching letters with one strand of yarn. Strands run square to square, across or down, never cross, and fill every square.'
 
 /** Gentle adds the tip every Numberlink solver learns first. */
-export const TY_GENTLE_TIP = 'Tip: a square with only two open sides must use both — start in the corners.'
+export const TY_GENTLE_TIP = 'Tip: a square with only two open sides must use both. Start in the corners.'
 
 export function tyInstruction(config: StudioConfig, level: TyLevel): string {
   if (config.showInstructions === false) return ''

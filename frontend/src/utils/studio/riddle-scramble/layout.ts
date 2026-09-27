@@ -485,8 +485,8 @@ export function riddleScramblePrintNote(options: {
   const plan = riddleScrambleWorstCasePlan({ level, page, config, instruction, font })
   if (!plan) {
     return (
-      'This page size is too small for a riddle scramble at this level — ' +
-      'choose a larger one in Settings, or a gentler level.'
+      'This page size is too small for a riddle scramble at this level. ' +
+      'Choose a larger one in Settings, or a gentler level.'
     )
   }
   return `${shape}, letters at ${pxToPt(plan.metrics.scrambleFont)} pt, plus a matching answer page.`

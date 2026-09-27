@@ -385,7 +385,7 @@ export function oaPrintNote(options: {
   reasonLine: boolean
 }): string {
   const { page, count } = options
-  const tooSmall = 'This page size is too small for Office Awards — choose a larger one in Settings.'
+  const tooSmall = 'This page size is too small for Office Awards. Choose a larger one in Settings.'
   if (!page) return `${count} awards, each with a line for the winner’s name. Pages are fitted to your trim.`
   const layout = oaLayout({ ...options, page })
   if (!layout) return tooSmall

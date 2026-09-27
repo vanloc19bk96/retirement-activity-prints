@@ -56,7 +56,7 @@ export function DownloadProgressDialog({
   const clampedPercent = Math.max(0, Math.min(100, Math.round(progress)))
 
   const primaryLine = isCompleted
-    ? 'Export complete — starting download...'
+    ? 'Export complete. Starting download...'
     : currentLabel || STATUS_DESCRIPTION[status]
 
   return (

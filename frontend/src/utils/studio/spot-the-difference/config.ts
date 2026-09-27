@@ -31,7 +31,7 @@ export const SD_CONFIG_SCHEMA: StudioConfigField[] = [
       const recipes = sdGroupRecipes(parseSdGroup(config.theme))
       const names = recipes.map((r) => r.name.toLowerCase())
       const list = names.length > 4 ? `${names.slice(0, 4).join(', ')} and ${names.length - 4} more` : names.join(', ')
-      return `${recipes.length} scenes — ${list}. Every page is a freshly drawn scene.`
+      return `${recipes.length} scenes: ${list}. Every page is a freshly drawn scene.`
     },
   },
   {

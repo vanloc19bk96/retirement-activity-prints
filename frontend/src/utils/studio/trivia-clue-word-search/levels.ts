@@ -54,7 +54,7 @@ export interface TriviaLevel {
 export const TRIVIA_LEVELS: readonly TriviaLevel[] = [
   {
     id: 'gentle',
-    label: 'Gentle — short answers, plain clues',
+    label: 'Gentle: short answers, plain clues',
     directions: 'easy',
     instruction:
       'Answer each clue, then find that answer in the grid. Answers read across and down.',
@@ -67,7 +67,7 @@ export const TRIVIA_LEVELS: readonly TriviaLevel[] = [
   },
   {
     id: 'classic',
-    label: 'Classic — the everyday puzzle',
+    label: 'Classic: the everyday puzzle',
     directions: 'medium',
     instruction:
       'Answer each clue, then find that answer in the grid. Answers read across, down and diagonally.',
@@ -80,7 +80,7 @@ export const TRIVIA_LEVELS: readonly TriviaLevel[] = [
   },
   {
     id: 'challenging',
-    label: 'Challenging — every direction, some backwards',
+    label: 'Challenging: every direction, some backwards',
     directions: 'hard',
     instruction:
       'Answer each clue, then find that answer in the grid. Answers read in any direction, even backwards.',

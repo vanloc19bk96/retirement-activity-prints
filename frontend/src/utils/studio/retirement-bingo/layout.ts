@@ -524,7 +524,7 @@ export function retirementBingoPrintNote(options: {
   const plan = planRetirementBingoPage({ page, config, theme, font })
   if (!plan) {
     return (
-      'This page size is too small for a bingo card — the squares would print ' +
+      'This page size is too small for a bingo card: the squares would print ' +
       'below a comfortable reading size. Choose a larger page in Settings.'
     )
   }

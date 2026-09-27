@@ -126,7 +126,7 @@ export const gameNightTemplate: StudioTemplateDefinition = {
   label: 'Game Night: Tally the Scores',
   category: 'logic',
   description:
-    'The math-cage number grid puzzle fans can’t put down (known in puzzle books as Calcudoku), set at a retiree’s card table: write 1 to N once in every row and column so the numbers in each bold box make its target with its sign — add, take away, multiply or divide. Every grid is built fresh, proven to have one answer reached by logic alone, and named for a game night worth looking forward to — Tuesday Canasta Club, Cribbage on the Porch, Mahjong by the Lake. Three levels from a 5 × 5 of sums to a 7 × 7 with all four signs, a worked legend under every grid, and an answer page with every number written in.',
+    'The math-cage number grid puzzle fans can’t put down (known in puzzle books as Calcudoku), set at a retiree’s card table: write 1 to N once in every row and column so the numbers in each bold box make its target with its sign (add, take away, multiply or divide). Every grid is built fresh, proven to have one answer reached by logic alone, and named for a game night worth looking forward to, such as Tuesday Canasta Club, Cribbage on the Porch or Mahjong by the Lake. Three levels from a 5 × 5 of sums to a 7 × 7 with all four signs, a worked legend under every grid, and an answer page with every number written in.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: GN_DEFAULT_TITLE,

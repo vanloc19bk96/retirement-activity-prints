@@ -56,9 +56,9 @@ const inch = (n: number) => Math.round(n * DPI * 100) / 100
  * finished without that counting or a "what if" check, on a bigger field.
  */
 export const HC_LEVELS: readonly HcLevelSpec[] = [
-  { value: 'gentle', label: 'Gentle — 6 × 6, 7 tents', gridLabel: '6 × 6', size: 6, minTents: 7, maxTents: 7, rules: 'basic', beyondBasic: false, minCell: inch(0.55) },
-  { value: 'classic', label: 'Classic — 8 × 8, 12 or 13 tents', gridLabel: '8 × 8', size: 8, minTents: 12, maxTents: 13, rules: 'runs', beyondBasic: false, minCell: inch(0.45) },
-  { value: 'challenging', label: 'Challenging — 10 × 10, 18 to 20 tents', gridLabel: '10 × 10', size: 10, minTents: 18, maxTents: 20, rules: 'probe', beyondBasic: true, minCell: inch(0.36) },
+  { value: 'gentle', label: 'Gentle: 6 × 6, 7 tents', gridLabel: '6 × 6', size: 6, minTents: 7, maxTents: 7, rules: 'basic', beyondBasic: false, minCell: inch(0.55) },
+  { value: 'classic', label: 'Classic: 8 × 8, 12 or 13 tents', gridLabel: '8 × 8', size: 8, minTents: 12, maxTents: 13, rules: 'runs', beyondBasic: false, minCell: inch(0.45) },
+  { value: 'challenging', label: 'Challenging: 10 × 10, 18 to 20 tents', gridLabel: '10 × 10', size: 10, minTents: 18, maxTents: 20, rules: 'probe', beyondBasic: true, minCell: inch(0.36) },
 ]
 
 export const DEFAULT_HC_LEVEL: HcLevel = 'classic'

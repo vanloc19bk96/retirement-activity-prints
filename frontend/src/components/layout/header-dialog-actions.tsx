@@ -67,7 +67,7 @@ function HeaderDialogActionsComponent({
           size="sm"
           className={outlineButtonClassName}
           onClick={handleOpenCreateNewProjectDialog}
-          aria-label="Create new project — clears all pages and cover, then saves"
+          aria-label="Create new project: clears all pages and cover, then saves"
         >
           <FilePlus className="h-4 w-4 shrink-0" aria-hidden />
           <span className="hidden sm:inline">Create new project</span>
@@ -100,7 +100,7 @@ function HeaderDialogActionsComponent({
                 : '')
             }
             onClick={handleOpenPremiumUpgrade}
-            aria-label="Upgrade plan — opens upgrade options"
+            aria-label="Upgrade plan: opens upgrade options"
           >
             <Crown className="h-4 w-4 shrink-0" aria-hidden />
             <span>Upgrade</span>

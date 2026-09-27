@@ -59,11 +59,11 @@ const inch = (n: number) => Math.round(n * DPI * 100) / 100
  * paths, a size larger and sparer, need "what if" at least once.
  */
 export const STONES_LEVELS: readonly StonesLevelSpec[] = [
-  { value: 'gentle', label: 'Gentle — 6 × 6 path (1 to 36)', gridLabel: '6 × 6', size: 6, rules: 'reach', beyond: null, maxRun: 4, clues: [0.36, 0.5], minCell: inch(0.6) },
-  { value: 'classic', label: 'Classic — 8 × 8 path (1 to 64)', gridLabel: '8 × 8', size: 8, rules: 'link', beyond: 'reach', maxRun: 5, clues: [0.28, 0.4], minCell: inch(0.5) },
+  { value: 'gentle', label: 'Gentle: 6 × 6 path (1 to 36)', gridLabel: '6 × 6', size: 6, rules: 'reach', beyond: null, maxRun: 4, clues: [0.36, 0.5], minCell: inch(0.6) },
+  { value: 'classic', label: 'Classic: 8 × 8 path (1 to 64)', gridLabel: '8 × 8', size: 8, rules: 'link', beyond: 'reach', maxRun: 5, clues: [0.28, 0.4], minCell: inch(0.5) },
   {
     value: 'challenging',
-    label: 'Challenging — 9 × 9 path (1 to 81)',
+    label: 'Challenging: 9 × 9 path (1 to 81)',
     gridLabel: '9 × 9',
     size: 9,
     rules: 'probe',

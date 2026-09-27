@@ -57,7 +57,7 @@ export const PHRASE_FINDER_CONFIG_SCHEMA: StudioConfigField[] = [
     options: retirementThemeSelectOptions(),
     helpWhen: (config) =>
       parseRetirementThemeChoice(config) === RETIREMENT_THEME_MIXED
-        ? 'A different retirement theme each page — the right pick for a whole book.'
+        ? 'A different retirement theme each page, the right pick for a whole book.'
         : 'Fresh phrases and clues are written for this theme every time.',
   },
   {
@@ -67,7 +67,7 @@ export const PHRASE_FINDER_CONFIG_SCHEMA: StudioConfigField[] = [
     default: '',
     max: AI_THEME_MAX_LENGTH,
     visibleWhen: isCustomRetirementTheme,
-    help: `What the phrases should be about — for example, weekends in the garden. Max ${AI_THEME_MAX_LENGTH} characters.`,
+    help: `What the phrases should be about, for example, weekends in the garden. Max ${AI_THEME_MAX_LENGTH} characters.`,
     warningWhen: (config) => themeIpWarning(String(config.customTheme ?? '')),
   },
   {

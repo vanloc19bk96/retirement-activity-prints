@@ -420,7 +420,7 @@ export function wlPrintNote(options: {
 
   const plan = wlWorstCasePlan({ ...options, page })
   if (!plan) {
-    return 'This page size is too small for a Work Lingo Match page — choose a larger one in Settings.'
+    return 'This page size is too small for a Work Lingo Match page. Choose a larger one in Settings.'
   }
   return `${plan.count} phrases to match a page at ${pxToPt(plan.metrics.font)} pt, ${tail}`
 }

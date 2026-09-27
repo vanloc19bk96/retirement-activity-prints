@@ -293,7 +293,7 @@ export function ttfPrintNote(options: {
 
   const plan = ttfWorstCasePlan({ ...options, page })
   if (!plan) {
-    return 'This page size is too small for a Two Truths and a Fib page — choose a larger one in Settings.'
+    return 'This page size is too small for a Two Truths and a Fib page. Choose a larger one in Settings.'
   }
   const sets = plan.count === 1 ? '1 puzzle a page' : `${plan.count} puzzles a page`
   return `${sets} at ${pxToPt(plan.metrics.font)} pt, ${tail}`

@@ -59,11 +59,11 @@ const inch = (n: number) => Math.round(n * DPI * 100) / 100
  * Challenging boards, a size larger, need "what if" at least once.
  */
 export const PEARL_LEVELS: readonly PearlLevelSpec[] = [
-  { value: 'gentle', label: 'Gentle — 6 × 6 board', gridLabel: '6 × 6', size: 6, cover: 0.6, minPearls: 6, rules: 'local', beyond: null, minCell: inch(0.55) },
-  { value: 'classic', label: 'Classic — 8 × 8 board', gridLabel: '8 × 8', size: 8, cover: 0.6, minPearls: 8, rules: 'loop', beyond: 'local', minCell: inch(0.48) },
+  { value: 'gentle', label: 'Gentle: 6 × 6 board', gridLabel: '6 × 6', size: 6, cover: 0.6, minPearls: 6, rules: 'local', beyond: null, minCell: inch(0.55) },
+  { value: 'classic', label: 'Classic: 8 × 8 board', gridLabel: '8 × 8', size: 8, cover: 0.6, minPearls: 8, rules: 'loop', beyond: 'local', minCell: inch(0.48) },
   {
     value: 'challenging',
-    label: 'Challenging — 10 × 10 board',
+    label: 'Challenging: 10 × 10 board',
     gridLabel: '10 × 10',
     size: 10,
     cover: 0.6,

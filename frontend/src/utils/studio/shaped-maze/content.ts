@@ -274,7 +274,7 @@ const inches = (value: number): number => Math.round(value * DPI)
 export const SM_LEVELS: readonly SmLevel[] = [
   {
     id: 'gentle',
-    label: 'Gentle — wide paths, a relaxing walk',
+    label: 'Gentle: wide paths, a relaxing walk',
     minPath: inches(0.3),
     maxPath: inches(0.4),
     targetCells: 15,
@@ -283,7 +283,7 @@ export const SM_LEVELS: readonly SmLevel[] = [
   },
   {
     id: 'classic',
-    label: 'Classic — the everyday maze',
+    label: 'Classic: the everyday maze',
     minPath: inches(0.26),
     maxPath: inches(0.34),
     targetCells: 20,
@@ -292,7 +292,7 @@ export const SM_LEVELS: readonly SmLevel[] = [
   },
   {
     id: 'challenging',
-    label: 'Challenging — longer route, more turns',
+    label: 'Challenging: longer route, more turns',
     minPath: inches(0.24),
     maxPath: inches(0.3),
     targetCells: 26,

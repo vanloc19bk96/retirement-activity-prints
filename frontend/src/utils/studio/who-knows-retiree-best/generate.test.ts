@@ -233,8 +233,8 @@ describe('personal touches', () => {
   it('drops the how-to lines when instructions are off', () => {
     const on = texts(generate(base, kdpCtx(6, 9))).join('\n')
     const off = texts(generate({ ...base, showInstructions: false }, kdpCtx(6, 9))).join('\n')
-    expect(on).toContain('close enough counts')
-    expect(off).not.toContain('close enough counts')
+    expect(on).toContain('Close enough counts')
+    expect(off).not.toContain('Close enough counts')
   })
 })
 

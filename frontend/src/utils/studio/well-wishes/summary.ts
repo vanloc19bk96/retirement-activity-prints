@@ -22,7 +22,7 @@ export function wwPrintNote(options: {
   const { page, config, pages } = options
   if (!page) return 'Boxes are sized to your page for comfortable handwriting.'
   const counts = wwBoxCounts(page, config, wwSampleHeads(config, pages))
-  if (!counts) return 'This page size is too small for signature boxes — choose a larger one in Settings.'
+  if (!counts) return 'This page size is too small for signature boxes. Choose a larger one in Settings.'
   const total = counts.reduce((sum, n) => sum + n, 0)
   const [first, later] = [counts[0]!, counts[1]]
   const spread =

@@ -156,7 +156,7 @@ export const officeRelicsTemplate: StudioTemplateDefinition = {
   label: 'Office Relics',
   category: 'trivia',
   description:
-    'A nostalgic picture game: name each piece of old office equipment, from the typewriter and rotary phone to the punch clock and slide rule. Every object is a clean black line drawing made for print, and the answer page accepts the other names people use (card file or Rolodex). Pick a level — Gentle adds a word bank; pictures per page and their size are fitted to your page. Never repeats an object already in your book.',
+    'A nostalgic picture game: name each piece of old office equipment, from the typewriter and rotary phone to the punch clock and slide rule. Every object is a clean black line drawing made for print, and the answer page accepts the other names people use (card file or Rolodex). Pick a level (Gentle adds a word bank); pictures per page and their size are fitted to your page. Never repeats an object already in your book.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: OR_DEFAULT_TITLE,

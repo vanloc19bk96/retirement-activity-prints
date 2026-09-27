@@ -48,7 +48,7 @@ export const WKB_CONFIG_SCHEMA: StudioConfigField[] = [
     default: '',
     max: WKB_NAME_MAX,
     placeholder: 'e.g. Linda',
-    help: 'A first name or nickname for the headings and instructions — “Who Knows Linda Best?”. It is printed only, never sent to the AI. Leave blank to say “the retiree”.',
+    help: 'A first name or nickname for the headings and instructions, as in “Who Knows Linda Best?”. It is printed only, never sent to the AI. Leave blank to say “the retiree”.',
   },
   {
     key: 'audience',

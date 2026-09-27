@@ -43,7 +43,7 @@ export const WW_CONFIG_SCHEMA: StudioConfigField[] = [
     default: '',
     max: WW_NAME_MAX,
     placeholder: 'e.g. Linda',
-    help: 'A first name or nickname for the heading and intro — “Well Wishes for Linda”. Leave blank for wording that works for anyone.',
+    help: 'A first name or nickname for the heading and intro, e.g. “Well Wishes for Linda”. Leave blank for wording that works for anyone.',
   },
   {
     key: 'audience',

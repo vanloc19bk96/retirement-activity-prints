@@ -168,7 +168,7 @@ export const codewordTemplate: StudioTemplateDefinition = {
   label: 'Codeword',
   category: 'word',
   description:
-    'A crossword grid with no clues: every letter is replaced by a number, and the same number is always the same letter. Two or three letters are given to start; the rest of the code is worked out from the words themselves. Pick a theme and a level — grid size, number size and the key strip are fitted to your page. The solution page shows the finished grid and the whole code.',
+    'A crossword grid with no clues: every letter is replaced by a number, and the same number is always the same letter. Two or three letters are given to start; the rest of the code is worked out from the words themselves. Pick a theme and a level. Grid size, number size and the key strip are fitted to your page. The solution page shows the finished grid and the whole code.',
   pageCount: 1,
   producesAnswerKey: true,
   validateConfig: validateCodewordConfig,

@@ -136,12 +136,12 @@ export const careerNumbersTemplate: StudioTemplateDefinition = {
   label: 'Career By the Numbers',
   category: 'keepsake',
   description:
-    'Looking back on a working life in numbers: light, nostalgic estimates — “About how many cups of tea or coffee powered your career?”, “On your busiest day, how many phone calls did you answer?” — and the retiree writes a best guess on each line, with the unit printed beside it (“About ______ cups”). Best guesses are the whole point; nothing is looked up and nothing is invented for them. Works for any line of work, never about pay, health or age. Pick the kind of work, how many questions and miles or kilometres; type size and pages are fitted to your trim. Fresh questions every time, never repeated within your book.',
+    'Looking back on a working life in numbers: light, nostalgic estimates (“About how many cups of tea or coffee powered your career?”, “On your busiest day, how many phone calls did you answer?”), and the retiree writes a best guess on each line, with the unit printed beside it (“About ______ cups”). Best guesses are the whole point; nothing is looked up and nothing is invented for them. Works for any line of work, never about pay, health or age. Pick the kind of work, how many questions and miles or kilometres; type size and pages are fitted to your trim. Fresh questions every time, never repeated within your book.',
   pageCount: 1,
   producesAnswerKey: false,
   defaultPageTitle: CBN_DEFAULT_TITLE,
   pageTitleHelp:
-    'Leave as “Career By the Numbers” — with the retiree’s name set below, it reads “Linda’s Career By the Numbers” — or type your own heading.',
+    'Leave as “Career By the Numbers” (with the retiree’s name set below, it reads “Linda’s Career By the Numbers”) or type your own heading.',
   prefetch: careerNumbersPrefetch,
   validateConfig: validateCbnConfig,
   thumbnail: `<svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg">

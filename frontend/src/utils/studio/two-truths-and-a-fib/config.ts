@@ -76,7 +76,7 @@ export const TTF_CONFIG_SCHEMA: StudioConfigField[] = [
     default: '',
     max: AI_THEME_MAX_LENGTH,
     visibleWhen: isCustomTtfSubject,
-    help: `A field of facts — for example, canals and narrowboats, or the history of the post office. Max ${AI_THEME_MAX_LENGTH} characters.`,
+    help: `A field of facts, for example: canals and narrowboats, or the history of the post office. Max ${AI_THEME_MAX_LENGTH} characters.`,
     warningWhen: (config) => themeIpWarning(String(config.customSubject ?? '')),
   },
   {

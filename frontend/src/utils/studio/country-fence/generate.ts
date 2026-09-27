@@ -126,7 +126,7 @@ export const countryFenceTemplate: StudioTemplateDefinition = {
   label: 'Country Fence: Fence the Pasture',
   category: 'logic',
   description:
-    'The classic Slitherlink puzzle, moved out to a retiree’s hobby farm: join the dots into one closed fence that never crosses or branches, while every number tells how many of its square’s sides are fence. Every field is built fresh, proven to have one fence reached by logic alone, and named for a pasture worth fencing — Sunny Acres Pasture, Grandpa’s Back Forty, the Grandkids’ Petting Zoo. Three levels, large print, and an answer page where the loop becomes the farm itself: a gray pasture tufted with grass inside a heavy fence, a post at every corner.',
+    'The classic Slitherlink puzzle, moved out to a retiree’s hobby farm: join the dots into one closed fence that never crosses or branches, while every number tells how many of its square’s sides are fence. Every field is built fresh, proven to have one fence reached by logic alone, and named for a pasture worth fencing, such as Sunny Acres Pasture, Grandpa’s Back Forty or the Grandkids’ Petting Zoo. Three levels, large print, and an answer page where the loop becomes the farm itself: a gray pasture tufted with grass inside a heavy fence, a post at every corner.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: FENCE_DEFAULT_TITLE,

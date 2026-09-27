@@ -120,7 +120,7 @@ export const weeksOfFirstsTemplate: StudioTemplateDefinition = {
   label: '52 Weeks of Firsts: Retirement Edition',
   category: 'keepsake',
   description:
-    'A year of small firsts: 52 numbered weeks, each with one new thing to try — “Cook a Thai green curry from scratch”, “Learn to recognise one bird by its song” — a line for the date and comfortable lines for notes. Ideas range across food, nature, making, learning, people, culture, quiet pleasures and small adventures, mostly free, nearby and gentle. The weeks are numbered, not dated, so readers can start any time. Pick the mix and the writing space; type size and pages are fitted to your trim. Fresh ideas every year, never repeated within your book.',
+    'A year of small firsts: 52 numbered weeks, each with one new thing to try (“Cook a Thai green curry from scratch”, “Learn to recognise one bird by its song”), a line for the date and comfortable lines for notes. Ideas range across food, nature, making, learning, people, culture, quiet pleasures and small adventures, mostly free, nearby and gentle. The weeks are numbered, not dated, so readers can start any time. Pick the mix and the writing space; type size and pages are fitted to your trim. Fresh ideas every year, never repeated within your book.',
   pageCount: 1,
   producesAnswerKey: false,
   defaultPageTitle: WF_DEFAULT_TITLE,

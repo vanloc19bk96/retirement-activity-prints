@@ -11,8 +11,24 @@ from app.services.studio_gemini import (
     parse_string_items,
     repair_truncated_json,
     response_text,
+    soften_em_dashes,
+    soften_json_em_dashes,
     strip_json_fences,
 )
+
+
+def test_soften_em_dashes_reads_as_commas() -> None:
+    assert soften_em_dashes("Retire — then relax") == "Retire, then relax"
+    assert soften_em_dashes("A boat—at dawn—sails") == "A boat, at dawn, sails"
+    assert soften_em_dashes("Ends here —") == "Ends here"
+    assert soften_em_dashes("Stop — .") == "Stop."
+    assert soften_em_dashes("No dash here.") == "No dash here."
+
+
+def test_soften_json_em_dashes_touches_only_string_values() -> None:
+    raw = r'{"items": ["a \u2014 b", "c — d"], "n": 1}'
+    assert json.loads(soften_json_em_dashes(raw)) == {"items": ["a, b", "c, d"], "n": 1}
+    assert soften_json_em_dashes('{"a": "x"}') == '{"a": "x"}'
 
 
 def test_strip_fences() -> None:

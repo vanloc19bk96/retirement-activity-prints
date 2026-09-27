@@ -126,7 +126,7 @@ export const happyCampersTemplate: StudioTemplateDefinition = {
   label: 'Happy Campers: Tents & Trees',
   category: 'logic',
   description:
-    'A retirement road-trip logic puzzle: pitch one tent beside every tree so no two tents touch, and match the numbers on each row and column. Every grid is built fresh, proven to have one answer reached by logic alone, and set under the sign of a retirement campground — Rocking Chair Ridge, Gone Fishin’ Cove, No Alarm Clock Acres. Three levels, large print, and an answer page with every tent pitched.',
+    'A retirement road-trip logic puzzle: pitch one tent beside every tree so no two tents touch, and match the numbers on each row and column. Every grid is built fresh, proven to have one answer reached by logic alone, and set under the sign of a retirement campground such as Rocking Chair Ridge, Gone Fishin’ Cove, No Alarm Clock Acres. Three levels, large print, and an answer page with every tent pitched.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: HC_DEFAULT_TITLE,

@@ -128,7 +128,7 @@ export const occupationTriviaTemplate: StudioTemplateDefinition = {
   label: 'Occupation Trivia Pack',
   category: 'trivia',
   description:
-    'Retirement Edition: about ten multiple-choice questions celebrating one job — Teacher, Nurse, Police, Military, Trucker, Engineer, Accountant or Postal. Questions come from the tools, terms, routines, traditions and history of that work, and every answer is fact-checked before it prints. Readers circle a letter; one answer page lists every answer with a short note. Pick an occupation and a level; the type size and pages are fitted to your trim. Fresh questions every pack, never repeated within your book.',
+    'Retirement Edition: about ten multiple-choice questions celebrating one job (Teacher, Nurse, Police, Military, Trucker, Engineer, Accountant or Postal). Questions come from the tools, terms, routines, traditions and history of that work, and every answer is fact-checked before it prints. Readers circle a letter; one answer page lists every answer with a short note. Pick an occupation and a level; the type size and pages are fitted to your trim. Fresh questions every pack, never repeated within your book.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: OT_DEFAULT_TITLE,

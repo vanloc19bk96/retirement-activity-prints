@@ -55,6 +55,6 @@ export function qcPrintNote(options: { page?: StudioConfigLayoutContext; config:
   const worst = (qcInstructionOptions(config).length > 0 ? qcInstructionOptions(config) : [''])
     .map((text) => qcPanelBox(page, config, text))
     .reduce((a, b) => (b.height < a.height ? b : a))
-  if (!qcPanelFits(worst)) return 'This page size is too small for a quote coloring page — choose a larger one in Settings.'
+  if (!qcPanelFits(worst)) return 'This page size is too small for a quote coloring page. Choose a larger one in Settings.'
   return shapes
 }

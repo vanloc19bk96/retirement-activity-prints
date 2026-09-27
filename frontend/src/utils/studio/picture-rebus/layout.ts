@@ -486,7 +486,7 @@ export function pictureRebusPrintNote(options: {
   const plan = planPictureRebusPage({ page, config, level, instruction, font })
   if (!plan) {
     return (
-      'This page size is too small for picture puzzles — the pictures would ' +
+      'This page size is too small for picture puzzles: the pictures would ' +
       'print below large-print size. Choose a larger page in Settings.'
     )
   }

@@ -60,9 +60,9 @@ const inch = (n: number) => Math.round(n * DPI * 100) / 100
  * need a "what if" check as well, on a bigger sea.
  */
 export const IH_LEVELS: readonly IhLevelSpec[] = [
-  { value: 'gentle', label: 'Gentle — 7 × 7, 8 to 11 islands', gridLabel: '7 × 7', size: 7, minIslands: 8, maxIslands: 11, rules: 'basic', beyond: null, double: 0.4, loop: 0.3, minCell: inch(0.5) },
-  { value: 'classic', label: 'Classic — 9 × 9, 14 to 18 islands', gridLabel: '9 × 9', size: 9, minIslands: 14, maxIslands: 18, rules: 'connect', beyond: 'basic', double: 0.25, loop: 0.2, minCell: inch(0.42) },
-  { value: 'challenging', label: 'Challenging — 10 × 10, 20 to 25 islands', gridLabel: '10 × 10', size: 10, minIslands: 20, maxIslands: 25, rules: 'probe', beyond: 'connect', double: 0.3, loop: 0.3, minCell: inch(0.38) },
+  { value: 'gentle', label: 'Gentle: 7 × 7, 8 to 11 islands', gridLabel: '7 × 7', size: 7, minIslands: 8, maxIslands: 11, rules: 'basic', beyond: null, double: 0.4, loop: 0.3, minCell: inch(0.5) },
+  { value: 'classic', label: 'Classic: 9 × 9, 14 to 18 islands', gridLabel: '9 × 9', size: 9, minIslands: 14, maxIslands: 18, rules: 'connect', beyond: 'basic', double: 0.25, loop: 0.2, minCell: inch(0.42) },
+  { value: 'challenging', label: 'Challenging: 10 × 10, 20 to 25 islands', gridLabel: '10 × 10', size: 10, minIslands: 20, maxIslands: 25, rules: 'probe', beyond: 'connect', double: 0.3, loop: 0.3, minCell: inch(0.38) },
 ]
 
 export const DEFAULT_IH_LEVEL: IhLevel = 'classic'

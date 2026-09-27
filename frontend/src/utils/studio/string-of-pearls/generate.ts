@@ -126,7 +126,7 @@ export const stringOfPearlsTemplate: StudioTemplateDefinition = {
   label: 'String of Pearls: Thread the Necklace',
   category: 'logic',
   description:
-    'The classic Masyu puzzle, strung as a necklace from a retiree’s life: draw one loop through the squares that threads every pearl — straight through a white pearl with a turn beside it, a turn on a black pearl with a straight run each way. Every board is built fresh, proven to have one necklace reached by logic alone, and named for a necklace worth remembering — Golden Anniversary Pearls, Grandma’s Sunday Pearls, the Grandkids’ Macaroni Necklace. Three levels, large print, and an answer page where the loop becomes the necklace itself: a smooth cord through the pearls, a bead on every square between.',
+    'The classic Masyu puzzle, strung as a necklace from a retiree’s life: draw one loop through the squares that threads every pearl, going straight through a white pearl with a turn beside it and turning on a black pearl with a straight run each way. Every board is built fresh, proven to have one necklace reached by logic alone, and named for a necklace worth remembering, like Golden Anniversary Pearls, Grandma’s Sunday Pearls or the Grandkids’ Macaroni Necklace. Three levels, large print, and an answer page where the loop becomes the necklace itself: a smooth cord through the pearls, a bead on every square between.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: PEARL_DEFAULT_TITLE,

@@ -591,7 +591,7 @@ const LIST_CAPTION_GAP = 10
  * does not carry has not made a mistake, and a page that implies they have is a
  * page that earns a review saying so.
  */
-export const LIST_CAPTION = 'Words we found — others may also be possible'
+export const LIST_CAPTION = 'Words we found (others may also be possible)'
 
 export interface WordWheelListPlan {
   fontSize: number

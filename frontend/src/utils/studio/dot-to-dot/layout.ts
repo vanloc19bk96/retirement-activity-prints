@@ -49,7 +49,7 @@ export function dtdPrintNote(options: { page?: StudioConfigLayoutContext; config
   const texts = dtdInstructionOptions(config)
   const panels = (texts.length > 0 ? texts : ['']).map((text) => dtdPanelFor(page, config, text))
   const worst = panels.reduce((a, b) => (b.height < a.height ? b : a))
-  if (!dtdPanelFits(worst)) return 'This page size is too small for a dot-to-dot picture — choose a larger one in Settings.'
+  if (!dtdPanelFits(worst)) return 'This page size is too small for a dot-to-dot picture. Choose a larger one in Settings.'
   const room = labelRoom(rules) * 2
   const inches = (px: number) => (px / DPI).toFixed(1)
   return `${numbers}; the picture fills up to ${inches(worst.width - room)} × ${inches(worst.height - room)} in.`

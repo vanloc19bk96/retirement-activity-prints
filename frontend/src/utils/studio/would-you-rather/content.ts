@@ -74,7 +74,7 @@ export interface WyrPair {
 export function wyrInstruction(reasonLine: boolean): string {
   return reasonLine
     ? 'Tick the one you would choose, then write why on the line.'
-    : 'Tick the one you would choose — then share why with someone.'
+    : 'Tick the one you would choose, then share why with someone.'
 }
 
 /*

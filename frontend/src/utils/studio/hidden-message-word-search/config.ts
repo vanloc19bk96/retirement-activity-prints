@@ -56,7 +56,7 @@ export const HIDDEN_MESSAGE_CONFIG_SCHEMA: StudioConfigField[] = [
     options: retirementThemeSelectOptions(),
     helpWhen: (config) =>
       parseRetirementThemeChoice(config) === RETIREMENT_THEME_MIXED
-        ? 'A different retirement theme each page — the right pick for a whole book.'
+        ? 'A different retirement theme each page: the right pick for a whole book.'
         : 'Fresh words and a fresh saying are written for this theme every time.',
   },
   {
@@ -95,11 +95,11 @@ export const HIDDEN_MESSAGE_CONFIG_SCHEMA: StudioConfigField[] = [
       const level = parseHiddenMessageLevel(config)
       const band = `${level.minMessageLetters}–${level.maxMessageLetters} letters`
       if (!resolveTypedMessage(config)) {
-        return `Leave blank and a fresh saying is written for each page. Or hide your own — ${band}, not counting spaces.`
+        return `Leave blank and a fresh saying is written for each page. Or hide your own: ${band}, not counting spaces.`
       }
       // A book run repeats one typed message on every page. Say so once, here,
       // rather than letting a seller find out at proof stage.
-      return `Hidden on every page this game makes — best for a single keepsake page. ${band}, not counting spaces.`
+      return `Hidden on every page this game makes. Best for a single keepsake page. ${band}, not counting spaces.`
     },
   },
 ]

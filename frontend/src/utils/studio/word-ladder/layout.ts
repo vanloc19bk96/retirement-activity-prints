@@ -330,7 +330,7 @@ export function wlPrintNote(options: { page?: StudioConfigLayoutContext; config:
   const lead = `${count} hand-made ladders from work words to retirement words, a clue on every rung.`
   if (!page) return lead
   const plan = wlWorstCasePlan({ ...options, page })
-  if (!plan) return 'This page size is too small for Word Ladders at large print — choose a larger page in Settings or an easier level.'
+  if (!plan) return 'This page size is too small for Word Ladders at large print. Choose a larger page in Settings or an easier level.'
   const ladders = plan.count === 1 ? '1 ladder a page' : `${plan.count} ladders a page`
   const inches = (plan.metrics.cell / DPI).toFixed(2)
   return `${lead} ${ladders}, squares ${inches} in, letters ${pxToPt(plan.metrics.letterSize)} pt, clues ${pxToPt(plan.metrics.clueSize)} pt.`

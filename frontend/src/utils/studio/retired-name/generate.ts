@@ -115,7 +115,7 @@ export const retiredNameTemplate: StudioTemplateDefinition = {
   label: 'What’s Your Retired Name?',
   category: 'party',
   description:
-    'A party favourite for retirement books: find the first letter of your first name and your birth month to discover a funny retired name — “Captain Hammock Snoozer”. The A–Z and month tables, a worked example and a line to write your new name are sized to your page automatically. Pick a theme; fresh names are written for every page and never repeated within your book.',
+    'A party favourite for retirement books: find the first letter of your first name and your birth month to discover a funny retired name, like “Captain Hammock Snoozer”. The A–Z and month tables, a worked example and a line to write your new name are sized to your page automatically. Pick a theme; fresh names are written for every page and never repeated within your book.',
   pageCount: 1,
   producesAnswerKey: false,
   defaultPageTitle: RN_DEFAULT_TITLE,

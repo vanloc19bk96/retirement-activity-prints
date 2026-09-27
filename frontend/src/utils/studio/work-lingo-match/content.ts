@@ -67,9 +67,9 @@ export interface WlLevelSpec {
  * the trim decides the count, and the level only raises its ceiling.
  */
 export const WL_LEVELS: readonly WlLevelSpec[] = [
-  { value: 'gentle', label: 'Gentle — everyday office phrases', maxPairs: 8 },
-  { value: 'classic', label: 'Classic — familiar, with a few to think about', maxPairs: 10 },
-  { value: 'challenging', label: 'Challenging — less obvious business idioms', maxPairs: 10 },
+  { value: 'gentle', label: 'Gentle: everyday office phrases', maxPairs: 8 },
+  { value: 'classic', label: 'Classic: familiar, with a few to think about', maxPairs: 10 },
+  { value: 'challenging', label: 'Challenging: less obvious business idioms', maxPairs: 10 },
 ]
 
 export function parseWlLevel(raw: unknown): WorkLingoLevel {

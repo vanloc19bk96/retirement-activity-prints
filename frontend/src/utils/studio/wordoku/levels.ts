@@ -51,7 +51,7 @@ export const WORDOKU_SIZE = 9
 export const WORDOKU_LEVELS: readonly WordokuLevel[] = [
   {
     id: 'gentle',
-    label: 'Gentle — most letters given',
+    label: 'Gentle: most letters given',
     ceiling: 'relaxed',
     targetClues: 42,
     minClues: 40,
@@ -60,7 +60,7 @@ export const WORDOKU_LEVELS: readonly WordokuLevel[] = [
   },
   {
     id: 'classic',
-    label: 'Classic — the everyday puzzle',
+    label: 'Classic: the everyday puzzle',
     ceiling: 'relaxed',
     targetClues: 35,
     minClues: 33,
@@ -69,7 +69,7 @@ export const WORDOKU_LEVELS: readonly WordokuLevel[] = [
   },
   {
     id: 'challenging',
-    label: 'Challenging — fewer letters given',
+    label: 'Challenging: fewer letters given',
     ceiling: 'classic',
     targetClues: 31,
     minClues: 28,

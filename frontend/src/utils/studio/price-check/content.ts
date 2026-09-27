@@ -80,8 +80,8 @@ interface LevelSpec {
 }
 
 export const PC_LEVELS: readonly LevelSpec[] = [
-  { value: 'gentle', label: 'Gentle — prices well apart', step: [1.5, 1.85], minRatio: 1.4 },
-  { value: 'classic', label: 'Classic — prices closer together', step: [1.3, 1.5], minRatio: 1.22 },
+  { value: 'gentle', label: 'Gentle: prices well apart', step: [1.5, 1.85], minRatio: 1.4 },
+  { value: 'classic', label: 'Classic: prices closer together', step: [1.3, 1.5], minRatio: 1.22 },
 ]
 
 export function parsePcLevel(raw: unknown): PriceCheckLevel {
@@ -92,7 +92,7 @@ export function parsePcLevel(raw: unknown): PriceCheckLevel {
 const levelSpec = (level: PriceCheckLevel) => PC_LEVELS.find((l) => l.value === level)!
 
 export function pcInstruction(): string {
-  return 'Circle your best guess for each price — then compare it with today.'
+  return 'Circle your best guess for each price, then compare it with today.'
 }
 
 /* ------------------------------------------------------------------ *

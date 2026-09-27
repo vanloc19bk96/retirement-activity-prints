@@ -29,7 +29,7 @@ import {
 export const WORD_WHEEL_DEFAULT_TITLE = 'Word Wheel'
 
 export const WORD_WHEEL_PAGE_TOO_SMALL_MESSAGE =
-  'This page size is too small for a word wheel — the letters would print below large-print size. ' +
+  'This page size is too small for a word wheel: the letters would print below large-print size. ' +
   'Pick a larger page in Settings.'
 
 export const WORD_WHEEL_BUILD_FAILED_MESSAGE =

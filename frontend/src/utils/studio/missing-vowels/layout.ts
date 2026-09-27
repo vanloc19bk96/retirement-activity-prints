@@ -543,7 +543,7 @@ export function missingVowelsPrintNote(options: {
 
   const plan = missingVowelsWorstCasePlan({ level, page, config, instruction, font })
   if (!plan) {
-    return 'This page size is too small for a missing-vowels page at this level — choose a larger one in Settings, or a gentler level.'
+    return 'This page size is too small for a missing-vowels page at this level. Choose a larger one in Settings, or a gentler level.'
   }
 
   const rows = `${plan.itemCount} ${plan.itemCount === 1 ? 'puzzle' : 'puzzles'} a page`

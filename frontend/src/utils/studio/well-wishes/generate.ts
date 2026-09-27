@@ -274,12 +274,12 @@ export const wellWishesTemplate: StudioTemplateDefinition = {
   label: 'Well Wishes & Signatures',
   category: 'keepsake',
   description:
-    'A keepsake signature section for a retirement or farewell book: framed boxes where coworkers, friends and family write a wish or a favorite memory and sign their name. Each box has a gentle prompt, roomy writing lines and a signature line, sized to your trim for real handwriting. Every set gets its own warm heading, frame style and prompts — black ink only, print-ready.',
+    'A keepsake signature section for a retirement or farewell book: framed boxes where coworkers, friends and family write a wish or a favorite memory and sign their name. Each box has a gentle prompt, roomy writing lines and a signature line, sized to your trim for real handwriting. Every set gets its own warm heading, frame style and prompts. Black ink only, print-ready.',
   pageCount: 1,
   producesAnswerKey: false,
   defaultPageTitle: WW_DEFAULT_TITLE,
   pageTitleHelp:
-    'Leave as “Well Wishes” and each set gets its own warm heading — “Retirement Wishes”, “Notes & Good Wishes”… — named for the retiree when you add a name below. Or type your own.',
+    'Leave as “Well Wishes” and each set gets its own warm heading (“Retirement Wishes”, “Notes & Good Wishes”…), named for the retiree when you add a name below. Or type your own.',
   prefetch: wellWishesPrefetch,
   validateConfig: validateWwConfig,
   thumbnail: `<svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg">

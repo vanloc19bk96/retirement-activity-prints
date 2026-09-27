@@ -59,11 +59,11 @@ const inch = (n: number) => Math.round(n * DPI * 100) / 100
  * least once.
  */
 export const LAMP_LEVELS: readonly LampLevelSpec[] = [
-  { value: 'gentle', label: 'Gentle — 7 × 7 house', gridLabel: '7 × 7', size: 7, walls: 13, minNumbers: 4, rules: 'basic', beyond: null, minCell: inch(0.5) },
-  { value: 'classic', label: 'Classic — 9 × 9 house', gridLabel: '9 × 9', size: 9, walls: 21, minNumbers: 6, rules: 'shine', beyond: 'basic', minCell: inch(0.45) },
+  { value: 'gentle', label: 'Gentle: 7 × 7 house', gridLabel: '7 × 7', size: 7, walls: 13, minNumbers: 4, rules: 'basic', beyond: null, minCell: inch(0.5) },
+  { value: 'classic', label: 'Classic: 9 × 9 house', gridLabel: '9 × 9', size: 9, walls: 21, minNumbers: 6, rules: 'shine', beyond: 'basic', minCell: inch(0.45) },
   {
     value: 'challenging',
-    label: 'Challenging — 10 × 10 house',
+    label: 'Challenging: 10 × 10 house',
     gridLabel: '10 × 10',
     size: 10,
     walls: 26,

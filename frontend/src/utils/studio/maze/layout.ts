@@ -267,8 +267,8 @@ export function mazePrintNote(options: {
   const plan = planMazePage({ page, config, instruction, level })
   if (!plan) {
     return (
-      'This page size is too small for a maze at this level — ' +
-      'choose a larger one in Settings, or a gentler level.'
+      'This page size is too small for a maze at this level. ' +
+      'Choose a larger one in Settings, or a gentler level.'
     )
   }
 

@@ -25,7 +25,7 @@ export const FALLEN_PHRASE_PAGE_TOO_SMALL_MESSAGE =
  */
 export const FALLEN_PHRASE_INSTRUCTION =
   'The letters under each column have fallen out of the boxes above them. ' +
-  'Write every letter back into a box in its own column — never in another — to rebuild the saying.'
+  'Write every letter back into a box in its own column, never in another, to rebuild the saying.'
 
 /** Phrases are letters and single spaces. Nothing else ever reaches the grid. */
 const ALLOWED_RE = /^[A-Z]+(?: [A-Z]+)*$/

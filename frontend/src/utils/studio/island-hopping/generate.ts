@@ -126,7 +126,7 @@ export const islandHoppingTemplate: StudioTemplateDefinition = {
   label: 'Island Hopping: Bridges',
   category: 'logic',
   description:
-    'A retirement-cruise Bridges (Hashi) puzzle: join numbered islands with straight bridges — one or two between a pair, never crossing — until every island can be reached. Every chart is built fresh, proven to have one answer reached by logic alone, and set under the sign of a retirement island chain — Porch Swing Islands, Gone Fishin’ Islands, No Alarm Clock Islands. Three levels, large print, and an answer page with every bridge built.',
+    'A retirement-cruise Bridges (Hashi) puzzle: join numbered islands with straight bridges (one or two between a pair, never crossing) until every island can be reached. Every chart is built fresh, proven to have one answer reached by logic alone, and set under the sign of a retirement island chain, such as Porch Swing Islands, Gone Fishin’ Islands, No Alarm Clock Islands. Three levels, large print, and an answer page with every bridge built.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: IH_DEFAULT_TITLE,

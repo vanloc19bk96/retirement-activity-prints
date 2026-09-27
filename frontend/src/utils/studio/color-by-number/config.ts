@@ -44,7 +44,7 @@ export const CBN_CONFIG_SCHEMA: StudioConfigField[] = [
     helpWhen: (config) => {
       const theme = CBN_THEMES.find((t) => t.value === parseCbnTheme(config.theme))!
       const count = cbnThemeSubjects(theme.value).length
-      return `${count} subjects — ${theme.examples}. Every page gets its own scene.`
+      return `${count} subjects: ${theme.examples}. Every page gets its own scene.`
     },
   },
   {

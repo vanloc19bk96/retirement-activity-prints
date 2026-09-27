@@ -230,7 +230,7 @@ describe('the page', () => {
     expect(pages.length).toBeGreaterThan(2)
     for (const page of pages) expect(headingOf(page)).toBe(CBN_DEFAULT_TITLE)
     expect(texts(pages).filter((t) => t.includes('best guess'))).toHaveLength(1)
-    expect(texts(pages).join('\n')).toContain('nobody’s checking')
+    expect(texts(pages).join('\n')).toContain('Nobody’s checking')
   })
 
   it('prints “About” before every line and never a number for the retiree', () => {

@@ -30,7 +30,7 @@ export function StudioBookBuilderPanel() {
     <div className="flex h-full min-h-0 flex-col gap-3">
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-0.5">
         <p className="text-xs text-muted-foreground">
-          Generate a whole book at once — pick a random mix or choose games and quantities.
+          Generate a whole book at once: pick a random mix or choose games and quantities.
         </p>
 
         <div

@@ -82,12 +82,12 @@ export const WKB_AUDIENCES: readonly { value: WhoKnowsBestAudience; label: strin
   {
     value: 'work',
     label: 'Coworkers',
-    help: 'More about their working life — routines, desk habits and what they’re known for — plus a little life outside work.',
+    help: 'More about their working life (routines, desk habits and what they’re known for), plus a little life outside work.',
   },
   {
     value: 'family',
     label: 'Friends & family',
-    help: 'Tastes, habits, hobbies, travel and plans — no office questions.',
+    help: 'Tastes, habits, hobbies, travel and plans. No office questions.',
   },
 ]
 
@@ -149,14 +149,14 @@ export function wkbAnswersTitleFor(playerTitle: string, name: string): string {
 /** How a player plays: guess, then tick the matches. */
 export function wkbPlayerInstruction(name: string): string {
   const who = whoFor(name)
-  return `Write the answer you think ${who} would give. When the real answers are read out, tick the box beside every one you got right — close enough counts!`
+  return `Write the answer you think ${who} would give. When the real answers are read out, tick the box beside every one you got right. Close enough counts!`
 }
 
 /** How the retiree's sheet is used: filled in by them, read out, scored. */
 export function wkbAnswersInstruction(name: string, players: number): string {
   const who = whoFor(name)
   const scoreboard = players > 1 ? ' Then fill in the scoreboard.' : ''
-  return `For ${who} to fill in. Read the answers out once everyone has finished — ${who} has the final say on close calls!${scoreboard}`
+  return `For ${who} to fill in. Read the answers out once everyone has finished, and ${who} has the final say on close calls!${scoreboard}`
 }
 
 export const WKB_AI_EMPTY_MESSAGE =

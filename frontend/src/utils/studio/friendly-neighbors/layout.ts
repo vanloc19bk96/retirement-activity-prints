@@ -244,9 +244,9 @@ export function neighborsPlanFor(options: { page: StudioConfigLayoutContext; con
 export function neighborsPrintNote(options: { page?: StudioConfigLayoutContext; config: StudioConfig; level: NeighborsLevel; font: string }): string {
   const { page, config, level, font } = options
   const spec = neighborsLevelSpec(level)
-  const lead = 'Every town is built fresh and proven to have one answer, reached by logic alone — no guessing.'
+  const lead = 'Every town is built fresh and proven to have one answer, reached by logic alone, no guessing.'
   if (!page) return lead
   const plan = neighborsPlanFor({ page, config, level, font })
-  if (!plan) return `This page size is too small for ${spec.gridLabel} towns at large print — choose a larger page in Settings or an easier level.`
+  if (!plan) return `This page size is too small for ${spec.gridLabel} towns at large print. Choose a larger page in Settings or an easier level.`
   return `${lead} Houses print ${(plan.cell / DPI).toFixed(2)} in apart, the town ${(plan.grid.width / DPI).toFixed(2)} in across, numbers ${pxToPt(plan.digitSize)} pt.`
 }

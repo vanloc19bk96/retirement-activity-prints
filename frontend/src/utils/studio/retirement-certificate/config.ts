@@ -52,7 +52,7 @@ export const CR_CONFIG_SCHEMA: StudioConfigField[] = [
     type: 'text',
     default: '',
     max: 2,
-    help: 'A number, e.g. 32 — “after 32 years of dedicated service”. Leave blank for “many years”.',
+    help: 'A number, e.g. 32 for “after 32 years of dedicated service”. Leave blank for “many years”.',
   },
   {
     key: 'retirementDate',
@@ -84,7 +84,7 @@ export const CR_CONFIG_SCHEMA: StudioConfigField[] = [
     type: 'text',
     default: '',
     max: CR_TITLE_MAX,
-    help: 'Leave blank and each certificate gets its own new title to suit the tone — or type one, e.g. “Head Gardener”.',
+    help: 'Leave blank and each certificate gets its own new title to suit the tone, or type one, e.g. “Head Gardener”.',
   },
 ]
 

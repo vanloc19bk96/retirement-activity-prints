@@ -124,7 +124,7 @@ export const travelWishMapTemplate: StudioTemplateDefinition = {
   label: 'Travel Wish Map: Retirement Edition',
   category: 'keepsake',
   description:
-    'A travel wish list to dream over: check the places you’d love to see someday and jot down why, on roomy writing lines beside each one. Choose all 50 U.S. states, broad world regions, countries from every continent, or kinds of places near or far — a national park, a harbor town, where an old friend lives. Every name comes from fixed, accurate geography; type size and pages are fitted to your trim, with space for places of your own.',
+    'A travel wish list to dream over: check the places you’d love to see someday and jot down why, on roomy writing lines beside each one. Choose all 50 U.S. states, broad world regions, countries from every continent, or kinds of places near or far, like a national park, a harbor town or where an old friend lives. Every name comes from fixed, accurate geography; type size and pages are fitted to your trim, with space for places of your own.',
   pageCount: 1,
   producesAnswerKey: false,
   defaultPageTitle: TWM_DEFAULT_TITLE,

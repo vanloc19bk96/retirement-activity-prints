@@ -128,7 +128,7 @@ export const sunAndMoonTemplate: StudioTemplateDefinition = {
   label: 'Sun & Moon: Balance the Days',
   category: 'logic',
   description:
-    'The sun-and-moon grid everyone is playing on their phone (known in puzzle books as Takuzu, the binary puzzle), printed large for retirement: every row and column holds as many suns as moons, never three alike side by side, and the little = and × signs on the lines say which neighbours match. Every grid is built fresh, proven to have one answer reached by logic alone, and named for a day worth balancing — Sunrise at the Lake, the Harvest Moon Hayride, the Grandkids’ Sleepover. Three levels from the famous 6 × 6 to a 10 × 10, and an answer page with every sun and moon in place.',
+    'The sun-and-moon grid everyone is playing on their phone (known in puzzle books as Takuzu, the binary puzzle), printed large for retirement: every row and column holds as many suns as moons, never three alike side by side, and the little = and × signs on the lines say which neighbours match. Every grid is built fresh, proven to have one answer reached by logic alone, and named for a day worth balancing, such as Sunrise at the Lake, the Harvest Moon Hayride or the Grandkids’ Sleepover. Three levels from the famous 6 × 6 to a 10 × 10, and an answer page with every sun and moon in place.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: SM_DEFAULT_TITLE,

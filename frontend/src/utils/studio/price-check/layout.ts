@@ -344,7 +344,7 @@ export function pcPrintNote(options: {
 
   const plan = pcWorstCasePlan({ ...options, page })
   if (!plan) {
-    return 'This page size is too small for a Price Check page — choose a larger one in Settings.'
+    return 'This page size is too small for a Price Check page. Choose a larger one in Settings.'
   }
   const questions = plan.count === 1 ? '1 question a page' : `${plan.count} questions a page`
   return `${questions} at ${pxToPt(plan.metrics.font)} pt, ${tail}`

@@ -413,7 +413,7 @@ export function StudioBookGameList({
               ))
             ) : (
               <p className="text-sm text-muted-foreground">
-                This game has no extra settings — it uses smart defaults.
+                This game has no extra settings. It uses smart defaults.
               </p>
             )}
             {customizeOrphanError ? (

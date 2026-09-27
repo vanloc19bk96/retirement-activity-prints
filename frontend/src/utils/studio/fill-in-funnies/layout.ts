@@ -86,7 +86,7 @@ export const STEP_STORY = 'Step 2: Your Story'
 export const STEP_STORY_CONTINUED = 'Step 2: Your Story (continued)'
 export const WORDS_FOOTER = 'Now turn the page for your story!'
 export const STORY_CONTINUES = 'Continued on the next page…'
-export const STORY_END = 'The End — now read it out loud!'
+export const STORY_END = 'The End. Now read it out loud!'
 
 export const boldSpec = (font: string): FontSpec => ({ fontFamily: font, fontWeight: 700 })
 export const regularSpec = (font: string): FontSpec => ({ fontFamily: font })
@@ -638,10 +638,10 @@ export function fifPrintNote(options: {
   font: string
 }): string {
   const { page } = options
-  if (!page) return `Up to ${FIF_MAX_BLANKS} words to fill in, then the story — fitted to your page size.`
+  if (!page) return `Up to ${FIF_MAX_BLANKS} words to fill in, then the story, fitted to your page size.`
   const plan = fifWorstCasePlan({ ...options, page })
   if (!plan) {
-    return 'This page size is too small for Fill-in Funnies — choose a larger one in Settings.'
+    return 'This page size is too small for Fill-in Funnies. Choose a larger one in Settings.'
   }
   const story =
     plan.story.pages === 1

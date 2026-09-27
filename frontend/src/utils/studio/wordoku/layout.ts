@@ -271,12 +271,12 @@ export function wordokuPrintNote(
   const field = wordokuBodyField(layout, config, instruction)
   const plan = planWordokuPage({ field, pageWidth: layout.pageWidth })
   if (!plan) {
-    return `${shape} This page size is too small to print the letters at large-print size — pick a larger page in Settings.`
+    return `${shape} This page size is too small to print the letters at large-print size. Pick a larger page in Settings.`
   }
   const letterPt = pxToPt(plan.letterFont)
   const measurements = `Prints ${formatInches(plan.grid.width)} in wide with ${letterPt} pt letters`
   if (letterPt < WORDOKU_COMFORT_PT) {
-    return `${shape} ${measurements} — a larger page size in Settings gives bigger, clearer letters.`
+    return `${shape} ${measurements}. A larger page size in Settings gives bigger, clearer letters.`
   }
   return `${shape} ${measurements}, plus a matching answer page.`
 }

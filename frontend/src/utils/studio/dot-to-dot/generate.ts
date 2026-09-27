@@ -157,7 +157,7 @@ export const dotToDotTemplate: StudioTemplateDefinition = {
   label: 'Dot to Dot: Retirement Edition',
   category: 'visual',
   description:
-    'A relaxing dot-to-dot page: join large numbered dots from 1 to reveal a retirement picture — a teapot, a golf flag, a sailboat, a hammock. Big, clear numbers for older eyes; pick how many dots. Includes an answer page with the finished picture.',
+    'A relaxing dot-to-dot page: join large numbered dots from 1 to reveal a retirement picture such as a teapot, a golf flag, a sailboat or a hammock. Big, clear numbers for older eyes; pick how many dots. Includes an answer page with the finished picture.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: DTD_DEFAULT_TITLE,

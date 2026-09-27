@@ -276,9 +276,9 @@ export function cfPlanFor(options: { page: StudioConfigLayoutContext; config: St
 export function cfPrintNote(options: { page?: StudioConfigLayoutContext; config: StudioConfig; level: CfLevel; font: string }): string {
   const { page, config, level, font } = options
   const spec = cfLevelSpec(level)
-  const lead = 'Every harbor is built fresh and proven to have one answer, reached by logic alone — no guessing.'
+  const lead = 'Every harbor is built fresh and proven to have one answer, reached by logic alone, with no guessing.'
   if (!page) return lead
   const plan = cfPlanFor({ page, config, level, font })
-  if (!plan) return `This page size is too small for ${spec.gridLabel} harbors at large print — choose a larger page in Settings or an easier level.`
+  if (!plan) return `This page size is too small for ${spec.gridLabel} harbors at large print. Choose a larger page in Settings or an easier level.`
   return `${lead} Squares print ${(plan.cell / DPI).toFixed(2)} in, numbers ${pxToPt(plan.countSize)} pt.`
 }

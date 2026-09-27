@@ -65,19 +65,19 @@ export interface PictureRebusLevel {
 export const PICTURE_REBUS_LEVELS: readonly PictureRebusLevel[] = [
   {
     id: 'gentle',
-    label: 'Gentle — plain pictures, with a hint',
+    label: 'Gentle: plain pictures, with a hint',
     tiers: [1],
     showHint: true,
   },
   {
     id: 'classic',
-    label: 'Classic — the everyday puzzle',
+    label: 'Classic: the everyday puzzle',
     tiers: [1, 2],
     showHint: false,
   },
   {
     id: 'challenging',
-    label: 'Challenging — pictures that need a think',
+    label: 'Challenging: pictures that need a think',
     tiers: [2, 3],
     showHint: false,
   },

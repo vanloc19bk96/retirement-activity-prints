@@ -127,7 +127,7 @@ export const steppingStonesTemplate: StudioTemplateDefinition = {
   label: 'Stepping Stones: Walk the Path',
   category: 'logic',
   description:
-    'The number-path puzzle loved in the Sunday papers, laid out as a retiree’s favorite stroll: write 1 to the last number on the stepping stones so each number sits next to the one before it, across or down, and the walk visits every stone once. Every path is built fresh, proven to have one answer reached by logic alone, and named for a walk worth taking — the Rose Garden Path, a Seaside Boardwalk, the Grandkids’ Nature Walk. Three levels, large print, and an answer page where the numbers become a garden trail winding from the start stone to the finish.',
+    'The number-path puzzle loved in the Sunday papers, laid out as a retiree’s favorite stroll: write 1 to the last number on the stepping stones so each number sits next to the one before it, across or down, and the walk visits every stone once. Every path is built fresh, proven to have one answer reached by logic alone, and named for a walk worth taking, such as the Rose Garden Path, a Seaside Boardwalk or the Grandkids’ Nature Walk. Three levels, large print, and an answer page where the numbers become a garden trail winding from the start stone to the finish.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: STONES_DEFAULT_TITLE,

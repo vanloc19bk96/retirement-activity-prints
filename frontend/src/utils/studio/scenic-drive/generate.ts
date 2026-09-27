@@ -127,7 +127,7 @@ export const scenicDriveTemplate: StudioTemplateDefinition = {
   label: 'Scenic Drive: Add Up the Miles',
   category: 'logic',
   description:
-    'The cross-sums puzzle (Kakuro) that fills whole books in the puzzle aisle, laid out as a retiree’s road trip: every run of white squares is a leg of the drive, and its digits, 1 to 9 with none twice, add up to the miles in the gray marker before it — across or down. Every grid is built fresh, balanced like a crossword, proven to have one answer reached by logic alone, and named for a drive worth taking — the Blue Ridge Parkway, a Covered Bridge Byway, the Road Trip to the Grandkids. Three levels, large print, and an answer page with every digit written in.',
+    'The cross-sums puzzle (Kakuro) that fills whole books in the puzzle aisle, laid out as a retiree’s road trip: every run of white squares is a leg of the drive, and its digits, 1 to 9 with none twice, add up to the miles in the gray marker before it, across or down. Every grid is built fresh, balanced like a crossword, proven to have one answer reached by logic alone, and named for a drive worth taking: the Blue Ridge Parkway, a Covered Bridge Byway, the Road Trip to the Grandkids. Three levels, large print, and an answer page with every digit written in.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: DRIVE_DEFAULT_TITLE,

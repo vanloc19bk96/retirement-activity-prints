@@ -239,7 +239,7 @@ export const triviaClueWordSearchTemplate: StudioTemplateDefinition = {
   label: 'Trivia Clue Word Search',
   category: 'word',
   description:
-    'A large-print retirement word search with a trivia clue for every answer: work out the answer, then find it in the grid. Pick a theme and a level — the grid size, clue count and type sizes are fitted to your page. Includes an answer page.',
+    'A large-print retirement word search with a trivia clue for every answer: work out the answer, then find it in the grid. Pick a theme and a level; the grid size, clue count and type sizes are fitted to your page. Includes an answer page.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: TRIVIA_DEFAULT_TITLE,

@@ -119,7 +119,7 @@ export const bucketListTemplate: StudioTemplateDefinition = {
   label: 'Retirement Bucket List',
   category: 'keepsake',
   description:
-    'A big, inspiring list of 50 to 100 numbered ideas for retirement — “Take a scenic train journey”, “Grow a pot of herbs on a windowsill” — grouped under themes like Travel, Learn Something New, Give Back and Everyday Joys, each with a large box to tick once it’s done. Every list mixes free and splurge, home and away, restful and adventurous. Pick how many ideas and the mix; type size and pages are fitted to your trim. Fresh ideas every list, never repeated within your book.',
+    'A big, inspiring list of 50 to 100 numbered ideas for retirement (“Take a scenic train journey”, “Grow a pot of herbs on a windowsill”) grouped under themes like Travel, Learn Something New, Give Back and Everyday Joys, each with a large box to tick once it’s done. Every list mixes free and splurge, home and away, restful and adventurous. Pick how many ideas and the mix; type size and pages are fitted to your trim. Fresh ideas every list, never repeated within your book.',
   pageCount: 1,
   producesAnswerKey: false,
   defaultPageTitle: BL_DEFAULT_TITLE,

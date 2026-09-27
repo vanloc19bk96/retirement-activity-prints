@@ -146,7 +146,7 @@ describe('bucket-list registry', () => {
 
   it.each(TRIMS)('reports what a %s x %s trim prints', (w, h) => {
     const help = bucketListTemplate.configSchema[0]!.helpWhen!(base, kdpCtx(w, h))
-    expect(help).toMatch(/^100 ideas under about 12 themed headings — about \d+ pages in (1[4-8]) pt large print\.$/)
+    expect(help).toMatch(/^100 ideas under about 12 themed headings, about \d+ pages in (1[4-8]) pt large print\.$/)
   })
 
   it('estimates the pages the list really takes', () => {

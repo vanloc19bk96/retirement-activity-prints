@@ -80,19 +80,19 @@ const inch = (n: number) => n * DPI
 export const SG_LEVELS: readonly LevelSpec[] = [
   {
     value: 'relaxed',
-    label: 'Relaxed — big pieces, quick and easy to color',
+    label: 'Relaxed: big pieces, quick and easy to color',
     cellInches: 1.1,
     detail: { cell: inch(1.1), subjectCell: inch(1.3), minWidth: inch(0.24), minArea: inch(0.14) * DPI },
   },
   {
     value: 'classic',
-    label: 'Classic — a balanced mix of pieces',
+    label: 'Classic: a balanced mix of pieces',
     cellInches: 0.85,
     detail: { cell: inch(0.85), subjectCell: inch(1.0), minWidth: inch(0.19), minArea: inch(0.09) * DPI },
   },
   {
     value: 'intricate',
-    label: 'Intricate — more pieces for a longer session',
+    label: 'Intricate: more pieces for a longer session',
     cellInches: 0.66,
     detail: { cell: inch(0.66), subjectCell: inch(0.8), minWidth: inch(0.16), minArea: inch(0.06) * DPI },
   },

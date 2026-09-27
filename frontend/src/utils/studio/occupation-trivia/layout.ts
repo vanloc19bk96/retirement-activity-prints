@@ -502,7 +502,7 @@ export function otPrintNote(options: {
 
   const plan = otWorstCasePlan({ ...options, page })
   if (!plan) {
-    return 'This page size is too small for an Occupation Trivia Pack — choose a larger one in Settings.'
+    return 'This page size is too small for an Occupation Trivia Pack. Choose a larger one in Settings.'
   }
   const pages = plan.pages === 1 ? '1 page' : `up to ${plan.pages} pages`
   return `${plan.count} questions at ${pxToPt(plan.metrics.font)} pt on ${pages}, ${tail}`

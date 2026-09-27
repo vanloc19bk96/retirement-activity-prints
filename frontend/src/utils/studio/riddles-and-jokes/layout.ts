@@ -242,7 +242,7 @@ export function rjPrintNote(options: {
 
   const plan = rjWorstCasePlan({ ...options, page })
   if (!plan) {
-    return 'This page size is too small for a Riddles & Jokes page — choose a larger one in Settings.'
+    return 'This page size is too small for a Riddles & Jokes page. Choose a larger one in Settings.'
   }
   return `${plan.count} ${itemNoun(mix, plan.count)} a page at ${pxToPt(plan.metrics.font)} pt, ${tail}`
 }

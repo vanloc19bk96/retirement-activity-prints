@@ -66,7 +66,7 @@ export interface MissingVowelsLevel {
 export const MISSING_VOWELS_LEVELS: readonly MissingVowelsLevel[] = [
   {
     id: 'gentle',
-    label: 'Gentle — short familiar words',
+    label: 'Gentle: short familiar words',
     minLetters: 5,
     maxLetters: 7,
     maxWords: 1,
@@ -74,7 +74,7 @@ export const MISSING_VOWELS_LEVELS: readonly MissingVowelsLevel[] = [
   },
   {
     id: 'classic',
-    label: 'Classic — everyday words and short phrases',
+    label: 'Classic: everyday words and short phrases',
     minLetters: 6,
     // Nine rather than eight, because this is now the only level that prints
     // a phrase, and BOOK CLUB is eight letters while SPARE ROOM and MARKET
@@ -88,7 +88,7 @@ export const MISSING_VOWELS_LEVELS: readonly MissingVowelsLevel[] = [
   },
   {
     id: 'challenging',
-    label: 'Challenging — the longest words',
+    label: 'Challenging: the longest words',
     minLetters: 8,
     maxLetters: 10,
     // Single words, and that is what makes this the two-column level rather

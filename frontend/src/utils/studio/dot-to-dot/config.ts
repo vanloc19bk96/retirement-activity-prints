@@ -29,7 +29,7 @@ export const DTD_CONFIG_SCHEMA: StudioConfigField[] = [
     helpWhen: (config) => {
       const theme = DTD_THEMES.find((t) => t.value === parseDtdTheme(config.theme))!
       const count = dtdThemeSubjects(theme.value).length
-      return `${count} subjects — ${theme.examples}. Every page gets a different picture.`
+      return `${count} subjects: ${theme.examples}. Every page gets a different picture.`
     },
   },
   {

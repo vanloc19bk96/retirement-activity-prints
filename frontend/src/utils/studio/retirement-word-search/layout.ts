@@ -319,8 +319,8 @@ export function wordSearchPrintNote(
   const plan = planWordSearchPage({ page, config, instruction, level })
   if (!plan) {
     return (
-      'This page size is too small for a word search at this level — ' +
-      'choose a larger one in Settings, or a gentler level.'
+      'This page size is too small for a word search at this level. ' +
+      'Choose a larger one in Settings, or a gentler level.'
     )
   }
 

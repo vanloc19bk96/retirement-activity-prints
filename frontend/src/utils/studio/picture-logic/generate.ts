@@ -122,7 +122,7 @@ export const pictureLogicTemplate: StudioTemplateDefinition = {
   label: 'Picture Logic: Retirement Edition',
   category: 'logic',
   description:
-    'Nonogram picture puzzles: shade squares to match the number clues and a hand-drawn retirement picture appears — a teacup, a sailboat, a camper van, a typewriter. Every puzzle solves one line at a time with no guessing. Large-print numbers, three grid sizes, and an answer page that reveals the picture.',
+    'Nonogram picture puzzles: shade squares to match the number clues and a hand-drawn retirement picture appears: a teacup, a sailboat, a camper van, a typewriter. Every puzzle solves one line at a time with no guessing. Large-print numbers, three grid sizes, and an answer page that reveals the picture.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: PL_DEFAULT_TITLE,

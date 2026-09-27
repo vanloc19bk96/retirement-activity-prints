@@ -163,7 +163,7 @@ export const wordWheelTemplate: StudioTemplateDefinition = {
   label: 'Word Wheel',
   category: 'word',
   description:
-    'Nine big letters in a wheel: make as many words as you can, and every one must use the letter in the middle. One word uses all nine — a retirement word hidden in the ring. Pick a level; the wheel size, letter size and answer lines are fitted to your page. The answer page reveals the nine-letter word and lists the rest.',
+    'Nine big letters in a wheel: make as many words as you can, and every one must use the letter in the middle. One word uses all nine: a retirement word hidden in the ring. Pick a level; the wheel size, letter size and answer lines are fitted to your page. The answer page reveals the nine-letter word and lists the rest.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: WORD_WHEEL_DEFAULT_TITLE,

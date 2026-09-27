@@ -35,7 +35,7 @@ export interface SudokuLevel {
 export const SUDOKU_LEVELS: readonly SudokuLevel[] = [
   {
     id: 'gentle',
-    label: 'Gentle — 6×6 grid',
+    label: 'Gentle: 6×6 grid',
     size: 6,
     ceiling: 'relaxed',
     targetClues: 20,
@@ -44,7 +44,7 @@ export const SUDOKU_LEVELS: readonly SudokuLevel[] = [
   },
   {
     id: 'easy',
-    label: 'Easy — most numbers given',
+    label: 'Easy: most numbers given',
     size: 9,
     ceiling: 'relaxed',
     targetClues: 40,
@@ -53,7 +53,7 @@ export const SUDOKU_LEVELS: readonly SudokuLevel[] = [
   },
   {
     id: 'medium',
-    label: 'Medium — the classic puzzle',
+    label: 'Medium: the classic puzzle',
     size: 9,
     ceiling: 'relaxed',
     targetClues: 32,
@@ -62,7 +62,7 @@ export const SUDOKU_LEVELS: readonly SudokuLevel[] = [
   },
   {
     id: 'challenging',
-    label: 'Challenging — fewest numbers given',
+    label: 'Challenging: fewest numbers given',
     size: 9,
     ceiling: 'classic',
     targetClues: 30,

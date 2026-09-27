@@ -81,22 +81,22 @@ export const RD_FOCUSES: readonly { value: RollADayFocus; label: string; help: s
   {
     value: 'home',
     label: 'Cosy days close to home',
-    help: 'More home comforts, games and free pleasures — still with a stroll and a friend in the mix.',
+    help: 'More home comforts, games and free pleasures, still with a stroll and a friend in the mix.',
   },
   {
     value: 'outings',
     label: 'Out & about nearby',
-    help: 'More small local outings and discoveries — still mixed with quieter ideas at home.',
+    help: 'More small local outings and discoveries, still mixed with quieter ideas at home.',
   },
   {
     value: 'creative',
     label: 'Creative & curious',
-    help: 'More making, learning and home projects — still mixed with fresh air and people.',
+    help: 'More making, learning and home projects, still mixed with fresh air and people.',
   },
   {
     value: 'social',
     label: 'Friends & community',
-    help: 'More time with friends, neighbours and local groups — still with quiet moments too.',
+    help: 'More time with friends, neighbours and local groups, still with quiet moments too.',
   },
 ]
 
@@ -106,7 +106,7 @@ export function parseRdFocus(raw: unknown): RollADayFocus {
 
 /** The how-to line: roll, roll, combine. */
 export const RD_INSTRUCTION =
-  'Roll a die for your morning, then roll again for your afternoon. Put the two together — that’s your day!'
+  'Roll a die for your morning, then roll again for your afternoon. Put the two together, and that’s your day!'
 
 /** Section headings: which roll, and which half of the day it plans. */
 export const RD_HEADINGS: Readonly<Record<RdSide, string>> = {
@@ -382,7 +382,7 @@ export function rdTableProblem(table: RdTable): string | null {
   }
   const keys = [...table.morning, ...table.afternoon].map((entry) => activityKey(entry.activity, entry.concept))
   if (keys.some((key, i) => keys.slice(0, i).some((other) => activitiesClash(key, other)))) {
-    return 'Two ideas on this page are too alike — some days would do the same thing twice.'
+    return 'Two ideas on this page are too alike: some days would do the same thing twice.'
   }
   return null
 }

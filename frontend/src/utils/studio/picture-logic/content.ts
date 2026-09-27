@@ -51,9 +51,9 @@ const inch = (n: number) => Math.round(n * DPI * 100) / 100
  * big enough to shade with a pencil.
  */
 export const PL_LEVELS: readonly PlLevelSpec[] = [
-  { value: 'gentle', label: 'Gentle — up to 10 × 10', gridLabel: '10 × 10', maxSide: 10, minCell: inch(0.3) },
-  { value: 'classic', label: 'Classic — up to 15 × 15', gridLabel: '15 × 15', maxSide: 15, minCell: inch(0.24) },
-  { value: 'challenging', label: 'Challenging — up to 20 × 20', gridLabel: '20 × 20', maxSide: 20, minCell: inch(0.22) },
+  { value: 'gentle', label: 'Gentle: up to 10 × 10', gridLabel: '10 × 10', maxSide: 10, minCell: inch(0.3) },
+  { value: 'classic', label: 'Classic: up to 15 × 15', gridLabel: '15 × 15', maxSide: 15, minCell: inch(0.24) },
+  { value: 'challenging', label: 'Challenging: up to 20 × 20', gridLabel: '20 × 20', maxSide: 20, minCell: inch(0.22) },
 ]
 
 export const DEFAULT_PL_LEVEL: PlLevel = 'classic'

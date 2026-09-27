@@ -62,7 +62,7 @@ export const CBN_WORKPLACES: readonly { value: CareerNumbersWorkplace; label: st
   {
     value: 'any',
     label: 'Any kind of work',
-    help: 'Questions anyone who has worked can answer — no desks, email or commute assumed.',
+    help: 'Questions anyone who has worked can answer: no desks, email or commute assumed.',
   },
   {
     value: 'office',
@@ -77,7 +77,7 @@ export const CBN_WORKPLACES: readonly { value: CareerNumbersWorkplace; label: st
   {
     value: 'healthcare',
     label: 'Hospital, clinic or care',
-    help: 'Shifts, handovers and patients helped join in — never anything medical.',
+    help: 'Shifts, handovers and patients helped join in, but never anything medical.',
   },
   {
     value: 'service',
@@ -119,7 +119,7 @@ export function cbnTitleFor(rawTitle: unknown, name: string): string {
  * estimate might lean on is offered, clearly as a rough guide.
  */
 export const CBN_INSTRUCTION =
-  'Your working life in numbers! Write a best guess on each line — nobody’s checking. Tip: a full-time year is about 48 working weeks.'
+  'Your working life in numbers! Write a best guess on each line. Nobody’s checking. Tip: a full-time year is about 48 working weeks.'
 
 export const CBN_AI_EMPTY_MESSAGE = 'Could not write fresh career questions this time. Please try again.'
 export const CBN_SHORT_MESSAGE =

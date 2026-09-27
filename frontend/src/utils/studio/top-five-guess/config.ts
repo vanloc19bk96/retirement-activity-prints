@@ -53,7 +53,7 @@ export const TOP_FIVE_CONFIG_SCHEMA: StudioConfigField[] = [
     helpWhen: (config, layout) => {
       const theme =
         parseRetirementThemeChoice(config) === RETIREMENT_THEME_MIXED
-          ? 'A different retirement theme each page — the right pick for a whole book.'
+          ? 'A different retirement theme each page, the right pick for a whole book.'
           : 'Fresh questions are written for this theme every time.'
       const note = topFivePrintNote({
         page: layout,
@@ -71,7 +71,7 @@ export const TOP_FIVE_CONFIG_SCHEMA: StudioConfigField[] = [
     default: '',
     max: AI_THEME_MAX_LENGTH,
     visibleWhen: isCustomRetirementTheme,
-    help: `What the questions should be about — for example, weekends at the lake. Max ${AI_THEME_MAX_LENGTH} characters.`,
+    help: `What the questions should be about, for example weekends at the lake. Max ${AI_THEME_MAX_LENGTH} characters.`,
     warningWhen: (config) => themeIpWarning(String(config.customTheme ?? '')),
   },
 ]

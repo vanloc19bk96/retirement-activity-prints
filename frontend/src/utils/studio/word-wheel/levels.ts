@@ -88,7 +88,7 @@ export const WORD_WHEEL_LETTER_COUNT = 9
 export const WORD_WHEEL_LEVELS: readonly WordWheelLevel[] = [
   {
     id: 'gentle',
-    label: 'Gentle — fewer words, first letter given',
+    label: 'Gentle: fewer words, first letter given',
     minWordLength: 4,
     minAnswers: 20,
     maxAnswers: 32,
@@ -99,7 +99,7 @@ export const WORD_WHEEL_LEVELS: readonly WordWheelLevel[] = [
   },
   {
     id: 'classic',
-    label: 'Classic — the everyday puzzle',
+    label: 'Classic: the everyday puzzle',
     minWordLength: 4,
     minAnswers: 18,
     maxAnswers: 30,
@@ -110,7 +110,7 @@ export const WORD_WHEEL_LEVELS: readonly WordWheelLevel[] = [
   },
   {
     id: 'challenging',
-    label: 'Challenging — five letters or more',
+    label: 'Challenging: five letters or more',
     minWordLength: 5,
     minAnswers: 10,
     maxAnswers: 22,

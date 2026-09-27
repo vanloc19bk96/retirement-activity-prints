@@ -199,9 +199,9 @@ export function hcPlanFor(options: { page: StudioConfigLayoutContext; config: St
 export function hcPrintNote(options: { page?: StudioConfigLayoutContext; config: StudioConfig; level: HcLevel; font: string }): string {
   const { page, config, level, font } = options
   const spec = hcLevelSpec(level)
-  const lead = 'Every grid is built fresh and proven to have one answer, reached by logic alone — no guessing.'
+  const lead = 'Every grid is built fresh and proven to have one answer, reached by logic alone, with no guessing.'
   if (!page) return lead
   const plan = hcPlanFor({ page, config, level, font })
-  if (!plan) return `This page size is too small for ${spec.gridLabel} grids at large print — choose a larger page in Settings or an easier level.`
+  if (!plan) return `This page size is too small for ${spec.gridLabel} grids at large print. Choose a larger page in Settings or an easier level.`
   return `${lead} Squares print at ${(plan.cell / DPI).toFixed(2)} in, numbers at ${pxToPt(plan.countSize)} pt.`
 }

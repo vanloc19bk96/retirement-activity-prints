@@ -360,8 +360,8 @@ export function twmPrintNote(options: {
 
   const fields = twmFields(page, config, instruction)
   const plan = planTravelWishMap(fields, font, mode, space)
-  if (!plan) return 'This page size is too small for a travel wish map — choose a larger one in Settings.'
+  if (!plan) return 'This page size is too small for a travel wish map. Choose a larger one in Settings.'
   const pages = paginateTravelWishMap(sampleSections(mode), plan, usableHeight(plan, fields), { writeIn: false })
   const spread = pages ? `${pages.length} pages` : 'several pages'
-  return `${what} — ${spread} in ${pxToPt(plan.metrics.font)} pt large print.`
+  return `${what}, ${spread} in ${pxToPt(plan.metrics.font)} pt large print.`
 }

@@ -191,10 +191,10 @@ export function pearlPlanFor(options: { page: StudioConfigLayoutContext; config:
 export function pearlPrintNote(options: { page?: StudioConfigLayoutContext; config: StudioConfig; level: PearlLevel; font: string }): string {
   const { page, config, level, font } = options
   const spec = pearlLevelSpec(level)
-  const lead = 'Every board is built fresh and proven to have one necklace, reached by logic alone — no guessing.'
+  const lead = 'Every board is built fresh and proven to have one necklace, reached by logic alone, with no guessing.'
   if (!page) return lead
   const plan = pearlPlanFor({ page, config, level, font })
-  if (!plan) return `This page size is too small for ${spec.gridLabel} boards at large print — choose a larger page in Settings or an easier level.`
+  if (!plan) return `This page size is too small for ${spec.gridLabel} boards at large print. Choose a larger page in Settings or an easier level.`
   const pearl = (plan.cell * PEARL_RADIUS_OF_CELL * 2) / DPI
   return `${lead} Squares print ${(plan.cell / DPI).toFixed(2)} in, the board ${((plan.cell * plan.size) / DPI).toFixed(2)} in across, pearls ${pearl.toFixed(2)} in wide.`
 }

@@ -10,7 +10,7 @@ export function instructionFor(config: StudioConfig): string {
 }
 
 const LEVEL_BLURBS: Record<string, string> = {
-  gentle: 'Plain, direct clues — a relaxed first puzzle.',
+  gentle: 'Plain, direct clues for a relaxed first puzzle.',
   classic: 'A satisfying mix of clue types.',
   challenging: 'Fewer giveaways; more either/or, pairs and exact order.',
 }

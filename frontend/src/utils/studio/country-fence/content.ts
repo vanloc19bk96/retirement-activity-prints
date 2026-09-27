@@ -59,11 +59,11 @@ const inch = (n: number) => Math.round(n * DPI * 100) / 100
  * Challenging fields, a size larger, need "what if" at least once.
  */
 export const FENCE_LEVELS: readonly FenceLevelSpec[] = [
-  { value: 'gentle', label: 'Gentle — 6 × 6 field', gridLabel: '6 × 6', size: 6, area: [0.4, 0.6], length: 1, rules: 'local', beyond: null, minCell: inch(0.55) },
-  { value: 'classic', label: 'Classic — 8 × 8 field', gridLabel: '8 × 8', size: 8, area: [0.4, 0.6], length: 1, rules: 'loop', beyond: 'local', minCell: inch(0.48) },
+  { value: 'gentle', label: 'Gentle: 6 × 6 field', gridLabel: '6 × 6', size: 6, area: [0.4, 0.6], length: 1, rules: 'local', beyond: null, minCell: inch(0.55) },
+  { value: 'classic', label: 'Classic: 8 × 8 field', gridLabel: '8 × 8', size: 8, area: [0.4, 0.6], length: 1, rules: 'loop', beyond: 'local', minCell: inch(0.48) },
   {
     value: 'challenging',
-    label: 'Challenging — 10 × 10 field',
+    label: 'Challenging: 10 × 10 field',
     gridLabel: '10 × 10',
     size: 10,
     area: [0.4, 0.6],

@@ -39,7 +39,7 @@ export const SM_CONFIG_SCHEMA: StudioConfigField[] = [
     helpWhen: (config) => {
       const theme = SM_THEMES.find((t) => t.value === parseSmTheme(config.theme))!
       const count = smThemeShapes(theme.value).length
-      return `${count} shapes — ${theme.examples}. Each journey starts at work and ends somewhere better.`
+      return `${count} shapes: ${theme.examples}. Each journey starts at work and ends somewhere better.`
     },
   },
   {

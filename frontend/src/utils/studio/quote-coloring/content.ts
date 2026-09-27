@@ -72,7 +72,7 @@ export interface QcDetailSpec {
 export const QC_DETAILS: readonly QcDetailSpec[] = [
   {
     value: 'relaxed',
-    label: 'Relaxed — big, easy spaces to color',
+    label: 'Relaxed: big, easy spaces to color',
     floor: { minWidth: inch(0.125), minArea: inch(0.2) * inch(0.2) },
     pack: [inch(0.4), inch(0.9)],
     lattice: inch(0.56),
@@ -88,7 +88,7 @@ export const QC_DETAILS: readonly QcDetailSpec[] = [
   },
   {
     value: 'detailed',
-    label: 'Detailed — more, smaller shapes',
+    label: 'Detailed: more, smaller shapes',
     floor: { minWidth: 9, minArea: 220 },
     pack: [inch(0.25), inch(0.6)],
     lattice: inch(0.38),

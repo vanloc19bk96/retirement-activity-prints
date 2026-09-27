@@ -44,7 +44,7 @@ export const CRYPTOGRAM_CONFIG_SCHEMA: StudioConfigField[] = [
     options: retirementThemeSelectOptions(),
     helpWhen: (config) =>
       parseRetirementThemeChoice(config) === RETIREMENT_THEME_MIXED
-        ? 'A different retirement theme each page — the right pick for a whole book.'
+        ? 'A different retirement theme each page: the right pick for a whole book.'
         : 'Fresh sayings are written for this theme every time.',
   },
   {
@@ -54,7 +54,7 @@ export const CRYPTOGRAM_CONFIG_SCHEMA: StudioConfigField[] = [
     default: '',
     max: AI_THEME_MAX_LENGTH,
     visibleWhen: isCustomRetirementTheme,
-    help: `What the sayings should be about — for example, weekends in the garden. Max ${AI_THEME_MAX_LENGTH} characters.`,
+    help: `What the sayings should be about (for example, weekends in the garden). Max ${AI_THEME_MAX_LENGTH} characters.`,
     warningWhen: (config) => themeIpWarning(String(config.customTheme ?? '')),
   },
   {

@@ -506,7 +506,7 @@ export function anagramPrintNote(options: {
 
   const plan = anagramWorstCasePlan({ level, page, config, instruction, font })
   if (!plan) {
-    return 'This page size is too small for an anagram page at this level — choose a larger one in Settings, or a gentler level.'
+    return 'This page size is too small for an anagram page at this level. Choose a larger one in Settings, or a gentler level.'
   }
 
   const words = `${plan.itemCount} ${plan.itemCount === 1 ? 'word' : 'words'} a page`

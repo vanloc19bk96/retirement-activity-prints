@@ -621,7 +621,7 @@ export function rqPrintNote(options: {
   }
   const plan = rqWorstCasePlan({ ...options, page })
   if (!plan) {
-    return 'This page size is too small for a What Kind of Retiree quiz — choose a larger one in Settings.'
+    return 'This page size is too small for a What Kind of Retiree quiz. Choose a larger one in Settings.'
   }
   const { quiz, results } = plan
   const pages = quiz.pages === 1 ? '1 page' : `${quiz.pages} pages`

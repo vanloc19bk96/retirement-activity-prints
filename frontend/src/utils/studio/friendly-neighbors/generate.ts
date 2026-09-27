@@ -127,7 +127,7 @@ export const friendlyNeighborsTemplate: StudioTemplateDefinition = {
   label: 'Friendly Neighbors: Number the Houses',
   category: 'logic',
   description:
-    'The number-block puzzle Europe’s puzzle lovers adore (Suguru), laid out as a retiree’s dream street: blocks of one to five houses sit between the streets, and every block holds 1 up to its number of houses, while touching houses — even corner to corner or across the street — never share a number. Every town is built fresh, proven to have one answer reached by logic alone, and named for a street worth moving to — Maple Lane, Harbor View Cottages, the Grandkids’ Cul-de-Sac. Three levels, large print, and an answer page where the town becomes a map with its streets paved.',
+    'The number-block puzzle Europe’s puzzle lovers adore (Suguru), laid out as a retiree’s dream street: blocks of one to five houses sit between the streets, and every block holds 1 up to its number of houses, while touching houses (even corner to corner or across the street) never share a number. Every town is built fresh, proven to have one answer reached by logic alone, and named for a street worth moving to: Maple Lane, Harbor View Cottages, the Grandkids’ Cul-de-Sac. Three levels, large print, and an answer page where the town becomes a map with its streets paved.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: NEIGHBORS_DEFAULT_TITLE,

@@ -178,9 +178,9 @@ interface LevelSpec {
 }
 
 export const OR_LEVELS: readonly LevelSpec[] = [
-  { value: 'gentle', label: 'Gentle — familiar objects, with a word bank', tierRank: { 1: 0, 2: 1, 3: 2 }, wordBank: true },
-  { value: 'classic', label: 'Classic — a mix of the well known and the half forgotten', tierRank: { 1: 0, 2: 0, 3: 1 }, wordBank: false },
-  { value: 'challenging', label: 'Challenging — rarer relics for sharp memories', tierRank: { 1: 1, 2: 0, 3: 0 }, wordBank: false },
+  { value: 'gentle', label: 'Gentle: familiar objects, with a word bank', tierRank: { 1: 0, 2: 1, 3: 2 }, wordBank: true },
+  { value: 'classic', label: 'Classic: a mix of the well known and the half forgotten', tierRank: { 1: 0, 2: 0, 3: 1 }, wordBank: false },
+  { value: 'challenging', label: 'Challenging: rarer relics for sharp memories', tierRank: { 1: 1, 2: 0, 3: 0 }, wordBank: false },
 ]
 
 export const DEFAULT_OR_LEVEL: OfficeRelicsLevel = 'classic'

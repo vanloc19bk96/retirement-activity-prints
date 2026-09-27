@@ -205,7 +205,7 @@ describe('the page', () => {
     const pages = generate({ ...base, awards: 24 }, kdpCtx(6, 9))
     expect(pages.length).toBeGreaterThan(2)
     for (const page of pages) expect(headingOf(page)).toBe(OA_DEFAULT_TITLE)
-    expect(texts(pages).filter((t) => t.includes('anyone can win'))).toHaveLength(1)
+    expect(texts(pages).filter((t) => t.includes('Anyone can win'))).toHaveLength(1)
   })
 })
 

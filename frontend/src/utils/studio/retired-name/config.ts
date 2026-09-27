@@ -68,7 +68,7 @@ export const RN_CONFIG_SCHEMA: StudioConfigField[] = [
     default: '',
     max: AI_THEME_MAX_LENGTH,
     visibleWhen: isCustomRetirementTheme,
-    help: `What the names should be about — for example, summers at the lake. Max ${AI_THEME_MAX_LENGTH} characters.`,
+    help: `What the names should be about (for example, summers at the lake). Max ${AI_THEME_MAX_LENGTH} characters.`,
     warningWhen: (config) => themeIpWarning(String(config.customTheme ?? '')),
   },
 ]

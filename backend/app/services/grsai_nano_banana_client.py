@@ -117,7 +117,7 @@ def poll_until_done(
         if status == "failed":
             reason = last.get("failure_reason", "")
             detail = last.get("error", "")
-            raise RuntimeError(f"GRSAI task failed: {reason} — {detail}")
+            raise RuntimeError(f"GRSAI task failed: {reason}: {detail}")
         time.sleep(interval_sec)
     raise TimeoutError(f"GRSAI timeout waiting for task {task_id}; last={last}")
 

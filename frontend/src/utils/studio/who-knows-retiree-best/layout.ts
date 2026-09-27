@@ -469,7 +469,7 @@ export function wkbPrintNote(options: {
     return `Each player gets an answer sheet with the same ${WKB_QUESTIONS} questions; ${answers} follow for the retiree.`
   }
   const layout = wkbLayout({ ...options, page })
-  if (!layout) return 'This page size is too small for Who Knows the Retiree Best? — choose a larger one in Settings.'
+  if (!layout) return 'This page size is too small for Who Knows the Retiree Best? Choose a larger one in Settings.'
   const { plan } = layout
   const sample: FittedWkbQuestion[] = SAMPLE_ANSWERS.map((answer, i) => {
     const question = SAMPLE_QUESTIONS[i % SAMPLE_QUESTIONS.length]!
@@ -490,10 +490,10 @@ export function wkbPrintNote(options: {
   const perPlayer = sheet(layout.player)
   const forRetiree = sheet(layout.answers)
   if (!perPlayer || !forRetiree) {
-    return 'This page size is too small for Who Knows the Retiree Best? — choose a larger one in Settings.'
+    return 'This page size is too small for Who Knows the Retiree Best? Choose a larger one in Settings.'
   }
   const pages = (count: number) => (count === 1 ? '1 page' : `${count} pages`)
   const who = players === 1 ? 'One player gets' : `Each of ${players} players gets`
   const total = players * perPlayer + forRetiree
-  return `${who} a ${perPlayer}-page answer sheet, then ${answers} take ${pages(forRetiree)} — about ${total} pages in ${pxToPt(plan.metrics.font)} pt large print.`
+  return `${who} a ${perPlayer}-page answer sheet, then ${answers} take ${pages(forRetiree)}, about ${total} pages in all at ${pxToPt(plan.metrics.font)} pt large print.`
 }

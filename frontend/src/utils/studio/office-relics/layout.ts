@@ -393,7 +393,7 @@ export function orPrintNote(options: {
   const tail = 'plus an answer page.'
   if (!page) return `Up to ${MAX_ITEMS_PER_PAGE} pictures a page, ${tail}`
   const plan = orWorstCasePlan({ ...options, page })
-  if (!plan) return 'This page size is too small for Office Relics pictures — choose a larger one in Settings.'
+  if (!plan) return 'This page size is too small for Office Relics pictures. Choose a larger one in Settings.'
   return (
     `${plan.count} pictures a page, each about ${pxToIn(plan.pictureWidth)} x ${pxToIn(plan.pictureHeight)} in, ` +
     tail

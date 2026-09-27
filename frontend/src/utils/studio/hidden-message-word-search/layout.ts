@@ -522,8 +522,8 @@ export function hiddenMessagePrintNote(
     // fits, and telling a seller to try a gentler one sends them round a loop
     // that ends where it started.
     return gentlerLevelFits(level, page, config)
-      ? 'This page size is too small for this level — choose a gentler level, or a larger page in Settings.'
-      : 'This page size is too small for a hidden message word search — choose a larger page in Settings.'
+      ? 'This page size is too small for this level. Choose a gentler level, or a larger page in Settings.'
+      : 'This page size is too small for a hidden message word search. Choose a larger page in Settings.'
   }
 
   return (

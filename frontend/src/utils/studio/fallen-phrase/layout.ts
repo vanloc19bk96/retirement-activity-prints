@@ -303,7 +303,7 @@ export function fallenPhrasePrintNote(options: {
 
   const plan = fallenPhraseProbePlan({ level, page, config, instruction })
   if (!plan) {
-    return 'This page size is too small for a Fallen Phrase grid — choose a larger one in Settings.'
+    return 'This page size is too small for a Fallen Phrase grid. Choose a larger one in Settings.'
   }
 
   const grid = `About a ${plan.cols} x ${plan.rowCount} grid`

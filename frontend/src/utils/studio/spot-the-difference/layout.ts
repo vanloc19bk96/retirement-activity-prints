@@ -111,7 +111,7 @@ export function sdPrintNote(options: { page?: StudioConfigLayoutContext; config:
   const change = `Every difference is at least ${minExtent.toFixed(2).replace(/0$/, '')} in across and circled on the answer page`
   if (!page) return `${change}.`
   const size = sdPanelFor(page, config)
-  if (!size) return 'This page size is too small for two pictures to compare — choose a larger one in Settings.'
+  if (!size) return 'This page size is too small for two pictures to compare. Choose a larger one in Settings.'
   const inches = (px: number) => (px / DPI).toFixed(1)
   return `Each picture prints ${inches(size.w)} × ${inches(size.h)} in. ${change}.`
 }

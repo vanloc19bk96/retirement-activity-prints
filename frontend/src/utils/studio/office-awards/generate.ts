@@ -124,12 +124,12 @@ export const officeAwardsTemplate: StudioTemplateDefinition = {
   label: 'Office Awards: Retirement Edition',
   category: 'party',
   description:
-    'A retirement-party favourite: light, warm workplace awards — “Keeper of the Spare Phone Charger”, “Calmest Voice on a Busy Shift” — and coworkers write the name of the colleague who deserves each one. A mix of playful and heartfelt, never mean: nothing about looks, age, health or money, and one award for the retiree’s farewell. Each award sits in its own framed card with a numbered rosette and a big “Winner:” line, plus an optional “Why:” line for keepsake books. No coworker names needed. Pick the workplace and how many awards; type size and pages are fitted to your trim. Fresh awards every time, never repeated within your book.',
+    'A retirement-party favourite: light, warm workplace awards (“Keeper of the Spare Phone Charger”, “Calmest Voice on a Busy Shift”), and coworkers write the name of the colleague who deserves each one. A mix of playful and heartfelt, never mean: nothing about looks, age, health or money, and one award for the retiree’s farewell. Each award sits in its own framed card with a numbered rosette and a big “Winner:” line, plus an optional “Why:” line for keepsake books. No coworker names needed. Pick the workplace and how many awards; type size and pages are fitted to your trim. Fresh awards every time, never repeated within your book.',
   pageCount: 1,
   producesAnswerKey: false,
   defaultPageTitle: OA_DEFAULT_TITLE,
   pageTitleHelp:
-    'Leave as “Office Awards” — with the retiree’s name set below, it reads “Linda’s Farewell Office Awards” — or type your own heading.',
+    'Leave as “Office Awards” (with the retiree’s name set below, it reads “Linda’s Farewell Office Awards”) or type your own heading.',
   prefetch: officeAwardsPrefetch,
   validateConfig: validateOaConfig,
   thumbnail: `<svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg">

@@ -104,7 +104,7 @@ const inch2 = (n: number) => n * DPI * DPI
 export const CBN_LEVELS: readonly CbnLevelSpec[] = [
   {
     value: 'relaxed',
-    label: 'Relaxed — fewer, bigger spaces and large numbers',
+    label: 'Relaxed: fewer, bigger spaces and large numbers',
     rules: { numberSize: 16, minNumberSize: 13, minArea: inch2(0.08) },
     richness: 0,
     budget: 4,
@@ -114,7 +114,7 @@ export const CBN_LEVELS: readonly CbnLevelSpec[] = [
   },
   {
     value: 'classic',
-    label: 'Classic — a fuller scene',
+    label: 'Classic: a fuller scene',
     rules: { numberSize: 14, minNumberSize: 12, minArea: inch2(0.055) },
     richness: 1,
     budget: 5,
@@ -124,7 +124,7 @@ export const CBN_LEVELS: readonly CbnLevelSpec[] = [
   },
   {
     value: 'detailed',
-    label: 'Detailed — more spaces for a longer session',
+    label: 'Detailed: more spaces for a longer session',
     rules: { numberSize: 13, minNumberSize: 12, minArea: inch2(0.045) },
     richness: 2,
     budget: 6,

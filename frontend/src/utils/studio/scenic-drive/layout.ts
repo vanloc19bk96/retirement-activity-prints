@@ -252,9 +252,9 @@ export function drivePlanFor(options: { page: StudioConfigLayoutContext; config:
 export function drivePrintNote(options: { page?: StudioConfigLayoutContext; config: StudioConfig; level: DriveLevel; font: string }): string {
   const { page, config, level, font } = options
   const spec = driveLevelSpec(level)
-  const lead = 'Every grid is built fresh and proven to have one answer, reached by logic alone — no guessing.'
+  const lead = 'Every grid is built fresh and proven to have one answer, reached by logic alone, with no guessing.'
   if (!page) return lead
   const plan = drivePlanFor({ page, config, level, font })
-  if (!plan) return `This page size is too small for ${spec.gridLabel} grids at large print — choose a larger page in Settings or an easier level.`
+  if (!plan) return `This page size is too small for ${spec.gridLabel} grids at large print. Choose a larger page in Settings or an easier level.`
   return `${lead} Squares print ${(plan.cell / DPI).toFixed(2)} in, the grid ${(plan.grid.width / DPI).toFixed(2)} in across, digits ${pxToPt(plan.digitSize)} pt, totals ${pxToPt(plan.totalSize)} pt.`
 }

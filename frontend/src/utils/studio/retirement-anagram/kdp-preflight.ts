@@ -106,7 +106,7 @@ export function runAnagramKdpPreflight(options: {
 
   if (items.length < 4) {
     warnings.push(
-      `Printed ${items.length} words — a larger page size in Settings fits more.`,
+      `Printed ${items.length} words. A larger page size in Settings fits more.`,
     )
   }
 

@@ -130,7 +130,7 @@ export const wordokuTemplate: StudioTemplateDefinition = {
   label: 'Word-oku',
   category: 'logic',
   description:
-    'Sudoku with nine letters instead of numbers. Solve it and the shaded diagonal spells a hidden retirement word. Large-print letters, one puzzle to a page, a letter bank and a gentle hint — pick a level and every page has exactly one solution, plus its own answer page.',
+    'Sudoku with nine letters instead of numbers. Solve it and the shaded diagonal spells a hidden retirement word. Large-print letters, one puzzle to a page, a letter bank and a gentle hint. Pick a level and every page has exactly one solution, plus its own answer page.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: WORDOKU_DEFAULT_TITLE,

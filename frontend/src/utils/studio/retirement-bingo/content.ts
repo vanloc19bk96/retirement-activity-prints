@@ -97,7 +97,7 @@ export const BINGO_CUSTOM_PER_CARD_MAX = 8
 export const BINGO_CUSTOM_MAX = 100
 
 export const RETIREMENT_BINGO_PAGE_TOO_SMALL_MESSAGE =
-  'This page size is too small for a bingo card — the squares would print ' +
+  'This page size is too small for a bingo card: the squares would print ' +
   'below a comfortable reading size. Choose a larger page in Settings.'
 
 export const RETIREMENT_BINGO_BUILD_FAILED_MESSAGE =

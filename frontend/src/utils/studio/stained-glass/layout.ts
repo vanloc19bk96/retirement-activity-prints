@@ -94,7 +94,7 @@ export function sgPrintNote(options: { page?: StudioConfigLayoutContext; config:
   const { page, config, level } = options
   if (!page) return ''
   const panel = worstPanel(page, config)
-  if (!panelFits(panel)) return 'This page size is too small for a stained-glass design — choose a larger one in Settings.'
+  if (!panelFits(panel)) return 'This page size is too small for a stained-glass design. Choose a larger one in Settings.'
   const [low, high] = sgPieceEstimate(panel, level)
   return `About ${low}–${high} pieces to color on this page size.`
 }

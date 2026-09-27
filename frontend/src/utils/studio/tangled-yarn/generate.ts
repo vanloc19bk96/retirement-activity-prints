@@ -127,7 +127,7 @@ export const tangledYarnTemplate: StudioTemplateDefinition = {
   label: 'Tangled Yarn: Link the Pairs',
   category: 'logic',
   description:
-    'A cozy knitting-basket Numberlink puzzle for retirement: join each pair of matching yarn balls with one strand, square to square, never crossing, until every square is filled. Every grid is built fresh, proven to have one answer reached by logic alone, and tagged with a retiree’s knitting project — Sunday Morning Scarf, Rocking Chair Afghan, Snow Day Mittens. Three levels, large print, and an answer page with every strand drawn.',
+    'A cozy knitting-basket Numberlink puzzle for retirement: join each pair of matching yarn balls with one strand, square to square, never crossing, until every square is filled. Every grid is built fresh, proven to have one answer reached by logic alone, and tagged with a retiree’s knitting project: Sunday Morning Scarf, Rocking Chair Afghan, Snow Day Mittens. Three levels, large print, and an answer page with every strand drawn.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: TY_DEFAULT_TITLE,

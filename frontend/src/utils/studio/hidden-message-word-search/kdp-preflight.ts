@@ -132,7 +132,7 @@ export function runHiddenMessageKdpPreflight(options: {
 
   if (puzzle.words.length < level.minWords + 2) {
     warnings.push(
-      `Printed ${puzzle.words.length} words — a broader theme usually fills the grid with more.`,
+      `Printed ${puzzle.words.length} words. A broader theme usually fills the grid with more.`,
     )
   }
 

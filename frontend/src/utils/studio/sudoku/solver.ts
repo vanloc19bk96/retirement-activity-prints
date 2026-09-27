@@ -112,7 +112,7 @@ export function generateSolvedGrid(size: SudokuSize, rng: StudioRng): number[][]
 
   const ok = fillCell(grid, 0, size, rng)
   if (!ok) {
-    throw new Error('Sudoku generation failed — should not happen for valid sizes')
+    throw new Error('Sudoku generation failed: should not happen for valid sizes')
   }
   return grid
 }

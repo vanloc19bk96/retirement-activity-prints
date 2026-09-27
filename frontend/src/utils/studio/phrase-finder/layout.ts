@@ -524,7 +524,7 @@ export function phraseFinderPrintNote(options: {
 
   const plan = phraseFinderWorstCasePlan({ level, page, config, instruction, font })
   if (!plan) {
-    return 'This page size is too small for a Phrase Finder page at this level — choose a larger one in Settings, or a gentler level.'
+    return 'This page size is too small for a Phrase Finder page at this level. Choose a larger one in Settings, or a gentler level.'
   }
 
   const puzzles = `${plan.puzzleCount} ${plan.puzzleCount === 1 ? 'phrase' : 'phrases'} a page`

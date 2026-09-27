@@ -246,7 +246,7 @@ export function rdPrintNote(options: {
   if (!page) return 'Six morning and six afternoon ideas on one page, fitted to your page size.'
   const plan = rdWorstCasePlan({ ...options, page })
   if (!plan) {
-    return 'This page size is too small for a Roll-a-Day table — choose a larger one in Settings.'
+    return 'This page size is too small for a Roll-a-Day table. Choose a larger one in Settings.'
   }
   const extras = plan.writeIn ? ', with boxes to note your rolls' : ''
   return `Six morning and six afternoon ideas in ${pxToPt(plan.metrics.font)} pt type${extras}.`

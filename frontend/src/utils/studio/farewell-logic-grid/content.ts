@@ -17,7 +17,7 @@ export const LG_TEMPLATE_KEY = 'farewell-logic-grid'
 export const LG_DEFAULT_TITLE = 'Logic Grid: Farewell Party'
 
 export const LG_PAGE_TOO_SMALL_MESSAGE =
-  'This page size is too small for a logic grid — choose a larger page size in Settings.'
+  'This page size is too small for a logic grid. Choose a larger page size in Settings.'
 export const LG_BUILD_FAILED_MESSAGE =
   'A puzzle that solves cleanly could not be built this time. Please generate again.'
 

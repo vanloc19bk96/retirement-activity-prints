@@ -216,9 +216,9 @@ export function ihPlanFor(options: { page: StudioConfigLayoutContext; config: St
 export function ihPrintNote(options: { page?: StudioConfigLayoutContext; config: StudioConfig; level: IhLevel; font: string }): string {
   const { page, config, level, font } = options
   const spec = ihLevelSpec(level)
-  const lead = 'Every chart is built fresh and proven to have one answer, reached by logic alone — no guessing.'
+  const lead = 'Every chart is built fresh and proven to have one answer, reached by logic alone, with no guessing.'
   if (!page) return lead
   const plan = ihPlanFor({ page, config, level, font })
-  if (!plan) return `This page size is too small for ${spec.gridLabel} charts at large print — choose a larger page in Settings or an easier level.`
+  if (!plan) return `This page size is too small for ${spec.gridLabel} charts at large print. Choose a larger page in Settings or an easier level.`
   return `${lead} Islands print ${((plan.islandRadius * 2) / DPI).toFixed(2)} in across, ${(plan.cell / DPI).toFixed(2)} in apart, numbers at ${pxToPt(plan.numberSize)} pt.`
 }

@@ -125,7 +125,7 @@ export const yardSaleTemplate: StudioTemplateDefinition = {
   label: 'Yard Sale: Clear the Clutter',
   category: 'logic',
   description:
-    'The shade-the-repeats number grid puzzle fans swear by (known in puzzle books as Hitori), set as a retiree’s big clear-out: shade the repeated numbers until no row or column shows one twice, never two shaded squares side by side, and every white square still joined. Every grid is built fresh, proven to have one answer reached by logic alone, and named for a clear-out worth getting round to — the Attic Treasures Sale, the Workshop Clear-Out, the Grandkids’ Toy Swap. Three levels from a 6 × 6 to a 9 × 9, and an answer page with every square to shade shaded.',
+    'The shade-the-repeats number grid puzzle fans swear by (known in puzzle books as Hitori), set as a retiree’s big clear-out: shade the repeated numbers until no row or column shows one twice, never two shaded squares side by side, and every white square still joined. Every grid is built fresh, proven to have one answer reached by logic alone, and named for a clear-out worth getting round to, like the Attic Treasures Sale, the Workshop Clear-Out, the Grandkids’ Toy Swap. Three levels from a 6 × 6 to a 9 × 9, and an answer page with every square to shade shaded.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: YS_DEFAULT_TITLE,

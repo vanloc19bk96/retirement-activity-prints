@@ -31,7 +31,7 @@ export const WW_AUDIENCES: readonly { value: WwAudience; label: string; help: st
   {
     value: 'everyone',
     label: 'Everyone',
-    help: 'Wording that suits coworkers, friends and family alike — ideal for a party book.',
+    help: 'Wording that suits coworkers, friends and family alike, ideal for a party book.',
   },
   {
     value: 'coworkers',

@@ -103,22 +103,22 @@ export const WF_FOCUSES: readonly { value: WeeksOfFirstsFocus; label: string; he
   {
     value: 'close-to-home',
     label: 'Close to home & low-cost',
-    help: 'More cooking, growing, home projects and slow pleasures — still with outings and people in the mix.',
+    help: 'More cooking, growing, home projects and slow pleasures, still with outings and people in the mix.',
   },
   {
     value: 'out-and-about',
     label: 'Out & about',
-    help: 'More local discoveries, nature, culture and small adventures — still mixed with quieter weeks at home.',
+    help: 'More local discoveries, nature, culture and small adventures, still mixed with quieter weeks at home.',
   },
   {
     value: 'creative',
     label: 'Creative & curious',
-    help: 'More making, pictures, words and music — still mixed with fresh air and people.',
+    help: 'More making, pictures, words and music, still mixed with fresh air and people.',
   },
   {
     value: 'social',
     label: 'Friends & community',
-    help: 'More time with friends and neighbours, kindness, games and food out — still with quiet weeks too.',
+    help: 'More time with friends and neighbours, kindness, games and food out, still with quiet weeks too.',
   },
 ]
 

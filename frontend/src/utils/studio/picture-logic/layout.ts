@@ -239,7 +239,7 @@ export function plPrintNote(options: { page?: StudioConfigLayoutContext; config:
   const { page, config, level } = options
   const spec = plLevelSpec(level)
   const count = plLevelPictures(level).length
-  const lead = `${count} hand-drawn pictures, each proven to solve one line at a time — no guessing.`
+  const lead = `${count} hand-drawn pictures, each proven to solve one line at a time, with no guessing.`
   if (!page) return lead
   const panel = plPanelFor(page, config)
   let smallest: PlPlan | null = null
@@ -250,12 +250,12 @@ export function plPrintNote(options: { page?: StudioConfigLayoutContext; config:
     fitting++
     if (!smallest || plan.cell < smallest.cell) smallest = plan
   }
-  if (!smallest) return `This page size is too small for ${spec.gridLabel} squares at large print — choose a larger page in Settings or an easier level.`
+  if (!smallest) return `This page size is too small for ${spec.gridLabel} squares at large print. Choose a larger page in Settings or an easier level.`
   const inches = (smallest.cell / DPI).toFixed(2)
   const pt = Math.round(((smallest.clueSize * 72) / DPI) * 2) / 2
   const sizes = `Squares print at ${inches} in or larger, numbers at ${pt} pt or larger.`
   if (fitting < count) {
-    return `${fitting} of ${count} pictures fit this page size at large print (the rest need a larger page), each proven to solve one line at a time — no guessing. ${sizes}`
+    return `${fitting} of ${count} pictures fit this page size at large print (the rest need a larger page), each proven to solve one line at a time, with no guessing. ${sizes}`
   }
   return `${lead} ${sizes}`
 }

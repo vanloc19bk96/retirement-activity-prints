@@ -130,7 +130,7 @@ export const topFiveGuessTemplate: StudioTemplateDefinition = {
   label: 'Top Five Guess',
   category: 'party',
   description:
-    'Light retirement questions — “Name something you will never miss about the office” — with five lines to guess the most likely answers. The top answer scores 5 points, down to 1 for the fifth. Pick a theme; the number of questions, line spacing and type sizes are fitted to your page. Fresh questions every page. Includes an answer page.',
+    'Light retirement questions, like “Name something you will never miss about the office”, with five lines to guess the most likely answers. The top answer scores 5 points, down to 1 for the fifth. Pick a theme; the number of questions, line spacing and type sizes are fitted to your page. Fresh questions every page. Includes an answer page.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: TOP_FIVE_DEFAULT_TITLE,

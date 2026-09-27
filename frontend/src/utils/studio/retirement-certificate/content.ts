@@ -38,17 +38,17 @@ export const CR_TONES: readonly { value: CrTone; label: string; help: string }[]
   {
     value: 'playful',
     label: 'Fun',
-    help: 'A funny new job title and a light-hearted citation — “Chief Leisure Officer”. Great for coworker books.',
+    help: 'A funny new job title like “Chief Leisure Officer” and a light-hearted citation. Great for coworker books.',
   },
   {
     value: 'warm',
     label: 'Heartfelt',
-    help: 'Grateful, gentle wording and a kind new title — “Collector of Sunsets”. Ideal from family and friends.',
+    help: 'Grateful, gentle wording and a kind new title, like “Collector of Sunsets”. Ideal from family and friends.',
   },
   {
     value: 'classic',
     label: 'Classic',
-    help: 'Formal certificate wording with a dignified honorary title — “Retiree Emeritus”.',
+    help: 'Formal certificate wording with a dignified honorary title, like “Retiree Emeritus”.',
   },
 ]
 
@@ -283,7 +283,7 @@ export const CR_CITATIONS: readonly CrCitation[] = [
     id: 'own-hours',
     for: FUN,
     kind: 'that',
-    text: 'has completed {service} and is now free to set their own hours — all of them.',
+    text: 'has completed {service} and is now free to set their own hours, all of them.',
   },
   {
     id: 'inbox',
@@ -313,7 +313,7 @@ export const CR_CITATIONS: readonly CrCitation[] = [
     id: 'weekdays',
     for: FUN,
     kind: 'to',
-    text: 'for {service} — and a lifetime supply of free weekdays.',
+    text: 'for {service}, and a lifetime supply of free weekdays.',
   },
   {
     id: 'out-of-office',

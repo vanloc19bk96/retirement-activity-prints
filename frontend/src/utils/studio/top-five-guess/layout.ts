@@ -262,7 +262,7 @@ export function topFivePrintNote(options: {
 
   const plan = topFiveWorstCasePlan({ ...options, page })
   if (!plan) {
-    return 'This page size is too small for a Top Five Guess page — choose a larger one in Settings.'
+    return 'This page size is too small for a Top Five Guess page. Choose a larger one in Settings.'
   }
   const questions = plan.count === 1 ? '1 question a page' : `${plan.count} questions a page`
   return `${questions}, questions at ${pxToPt(plan.metrics.questionFont)} pt, ${tail}`

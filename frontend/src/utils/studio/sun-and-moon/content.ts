@@ -62,11 +62,11 @@ const inch = (n: number) => Math.round(n * DPI * 100) / 100
  * must.
  */
 export const SM_LEVELS: readonly SmLevelSpec[] = [
-  { value: 'gentle', label: 'Gentle — 6 × 6 grid', gridLabel: '6 × 6', size: 6, rules: 'basic', beyond: null, minHard: 0, signShare: 0.55, clues: [0.18, 0.45], minCell: inch(0.6) },
-  { value: 'classic', label: 'Classic — 8 × 8 grid', gridLabel: '8 × 8', size: 8, rules: 'lines', beyond: 'basic', minHard: 2, signShare: 0.55, clues: [0.16, 0.36], minCell: inch(0.5) },
+  { value: 'gentle', label: 'Gentle: 6 × 6 grid', gridLabel: '6 × 6', size: 6, rules: 'basic', beyond: null, minHard: 0, signShare: 0.55, clues: [0.18, 0.45], minCell: inch(0.6) },
+  { value: 'classic', label: 'Classic: 8 × 8 grid', gridLabel: '8 × 8', size: 8, rules: 'lines', beyond: 'basic', minHard: 2, signShare: 0.55, clues: [0.16, 0.36], minCell: inch(0.5) },
   {
     value: 'challenging',
-    label: 'Challenging — 10 × 10 grid',
+    label: 'Challenging: 10 × 10 grid',
     gridLabel: '10 × 10',
     size: 10,
     rules: 'probe',

@@ -491,7 +491,7 @@ export function rnPrintNote(options: {
   if (!page) return 'All 26 letters and 12 months on one page, fitted to your page size.'
   const plan = rnWorstCasePlan({ ...options, page })
   if (!plan) {
-    return 'This page size is too small for a retired-name table — choose a larger one in Settings.'
+    return 'This page size is too small for a retired-name table. Choose a larger one in Settings.'
   }
   const extras = plan.example ? ', with a worked example' : ''
   return `All 26 letters and 12 months on one page in ${pxToPt(plan.metrics.font)} pt type${extras}.`

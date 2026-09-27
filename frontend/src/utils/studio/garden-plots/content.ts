@@ -56,9 +56,9 @@ const inch = (n: number) => Math.round(n * DPI * 100) / 100
  * larger, need group counting or a "what if" check at least twice.
  */
 export const GP_LEVELS: readonly GpLevelSpec[] = [
-  { value: 'gentle', label: 'Gentle — 7 × 7, 7 flowers', gridLabel: '7 × 7', size: 7, rules: 'basic', beyond: null, minSets: 0, minCell: inch(0.5) },
-  { value: 'classic', label: 'Classic — 8 × 8, 8 flowers', gridLabel: '8 × 8', size: 8, rules: 'sets', beyond: 'basic', minSets: 1, minCell: inch(0.5) },
-  { value: 'challenging', label: 'Challenging — 9 × 9, 9 flowers', gridLabel: '9 × 9', size: 9, rules: 'probe', beyond: 'basic', minSets: 2, minCell: inch(0.45) },
+  { value: 'gentle', label: 'Gentle: 7 × 7, 7 flowers', gridLabel: '7 × 7', size: 7, rules: 'basic', beyond: null, minSets: 0, minCell: inch(0.5) },
+  { value: 'classic', label: 'Classic: 8 × 8, 8 flowers', gridLabel: '8 × 8', size: 8, rules: 'sets', beyond: 'basic', minSets: 1, minCell: inch(0.5) },
+  { value: 'challenging', label: 'Challenging: 9 × 9, 9 flowers', gridLabel: '9 × 9', size: 9, rules: 'probe', beyond: 'basic', minSets: 2, minCell: inch(0.45) },
 ]
 
 export const DEFAULT_GP_LEVEL: GpLevel = 'classic'
@@ -75,10 +75,10 @@ export const gpLevelSpec = (level: GpLevel): GpLevelSpec => GP_LEVELS.find((l) =
  * ------------------------------------------------------------------ */
 
 export const GP_INSTRUCTION =
-  'Plant one flower in every row, every column and every garden bed (the areas inside the heavy lines). Flowers never touch — not even corner to corner.'
+  'Plant one flower in every row, every column and every garden bed (the areas inside the heavy lines). Flowers never touch, not even corner to corner.'
 
 /** Gentle adds the first trick every Queens solver learns. */
-export const GP_GENTLE_TIP = 'Tip: a bed that lies all in one row or column puts its flower there — cross off the rest of that line.'
+export const GP_GENTLE_TIP = 'Tip: a bed that lies all in one row or column puts its flower there, so cross off the rest of that line.'
 
 export function gpInstruction(config: StudioConfig, level: GpLevel): string {
   if (config.showInstructions === false) return ''

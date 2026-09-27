@@ -497,6 +497,9 @@ async def _call_writer(prompt: str) -> str:
         max_output_tokens=int_value(_limits(), "maxOutputTokens"),
         response_schema=QuoteColoringModelOutput,
         label="quote_coloring",
+        # normalize_saying reads the raw dash: it rejects a "— Author" tail
+        # and folds any other spaced dash into a comma itself.
+        soften_dashes=False,
     )
 
 

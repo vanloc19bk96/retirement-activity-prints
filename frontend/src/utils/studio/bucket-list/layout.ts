@@ -437,8 +437,8 @@ export function blPrintNote(options: {
 
   const fields = blFields(page, config, instruction)
   const plan = planBucketList(fields, font)
-  if (!plan) return 'This page size is too small for a bucket list — choose a larger one in Settings.'
+  if (!plan) return 'This page size is too small for a bucket list. Choose a larger one in Settings.'
   const pages = estimatePages(plan, fields, count, font)
   const spread = pages ? `about ${pages} pages` : 'several pages'
-  return `${count} ideas under about ${headings} themed headings — ${spread} in ${pxToPt(plan.metrics.font)} pt large print.`
+  return `${count} ideas under about ${headings} themed headings, ${spread} in ${pxToPt(plan.metrics.font)} pt large print.`
 }

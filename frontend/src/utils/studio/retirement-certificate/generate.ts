@@ -308,12 +308,12 @@ export const retirementCertificateTemplate: StudioTemplateDefinition = {
   label: 'Certificate of Retirement',
   category: 'keepsake',
   description:
-    'A framed, gift-worthy certificate for a retirement or farewell book: the retiree’s name, their years of service and an “Officially promoted to…” title such as “Chief Leisure Officer”, with lines to sign and date. Every detail is optional — leave one blank and the certificate still reads complete, with a line to write it in by hand. Each certificate gets its own wording, frame and emblem — black ink only, print-ready.',
+    'A framed, gift-worthy certificate for a retirement or farewell book: the retiree’s name, their years of service and an “Officially promoted to…” title such as “Chief Leisure Officer”, with lines to sign and date. Every detail is optional: leave one blank and the certificate still reads complete, with a line to write it in by hand. Each certificate gets its own wording, frame and emblem. Black ink only, print-ready.',
   pageCount: 1,
   producesAnswerKey: false,
   defaultPageTitle: CR_DEFAULT_TITLE,
   pageTitleHelp:
-    'Leave as “Certificate of Retirement” and each certificate gets its own heading — “Official License to Retire”, “Certificate of Well-Earned Freedom”… Or type your own.',
+    'Leave as “Certificate of Retirement” and each certificate gets its own heading, such as “Official License to Retire” or “Certificate of Well-Earned Freedom”. Or type your own.',
   hidesInstructionsToggle: true,
   prefetch: retirementCertificatePrefetch,
   validateConfig: validateCrConfig,

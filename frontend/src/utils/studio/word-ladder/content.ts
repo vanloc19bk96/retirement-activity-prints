@@ -49,9 +49,9 @@ const inch = (n: number) => Math.round(n * DPI * 100) / 100
  * reader only has to find the new letter.
  */
 export const WL_LEVELS: readonly WlLevelSpec[] = [
-  { value: 'gentle', label: 'Gentle — 2 or 3 rungs, changing letter shaded', minRungs: 2, maxRungs: 3, shadeChange: true, minCell: inch(0.4) },
-  { value: 'classic', label: 'Classic — 3 or 4 rungs', minRungs: 3, maxRungs: 4, shadeChange: false, minCell: inch(0.38) },
-  { value: 'challenging', label: 'Challenging — 5 or 6 rungs', minRungs: 5, maxRungs: 6, shadeChange: false, minCell: inch(0.36) },
+  { value: 'gentle', label: 'Gentle: 2 or 3 rungs, changing letter shaded', minRungs: 2, maxRungs: 3, shadeChange: true, minCell: inch(0.4) },
+  { value: 'classic', label: 'Classic: 3 or 4 rungs', minRungs: 3, maxRungs: 4, shadeChange: false, minCell: inch(0.38) },
+  { value: 'challenging', label: 'Challenging: 5 or 6 rungs', minRungs: 5, maxRungs: 6, shadeChange: false, minCell: inch(0.36) },
 ]
 
 export const DEFAULT_WL_LEVEL: WlLevel = 'classic'

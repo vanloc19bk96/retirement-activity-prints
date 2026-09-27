@@ -202,7 +202,7 @@ export const stainedGlassTemplate: StudioTemplateDefinition = {
   label: 'Stained Glass Coloring',
   category: 'coloring',
   description:
-    'A relaxing coloring page: a retirement favorite — a rocking chair, a teapot, a sailboat, a sunflower — set in a stained-glass window of bold, closed pieces. Pick a theme and a piece size; every page deals its own subject, window, border and background, each book gets its own look, and a book never repeats a design.',
+    'A relaxing coloring page: a retirement favorite (a rocking chair, a teapot, a sailboat, a sunflower) set in a stained-glass window of bold, closed pieces. Pick a theme and a piece size; every page deals its own subject, window, border and background, each book gets its own look, and a book never repeats a design.',
   pageCount: 1,
   producesAnswerKey: false,
   defaultPageTitle: SG_DEFAULT_TITLE,

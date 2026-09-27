@@ -76,9 +76,9 @@ export const TTF_SUBJECTS: readonly { value: TwoTruthsFibSubject; label: string 
 ]
 
 export const TTF_LEVELS: readonly { value: TwoTruthsFibLevel; label: string }[] = [
-  { value: 'gentle', label: 'Gentle — familiar facts' },
-  { value: 'classic', label: 'Classic — lesser-known facts' },
-  { value: 'challenging', label: 'Challenging — surprising facts' },
+  { value: 'gentle', label: 'Gentle: familiar facts' },
+  { value: 'classic', label: 'Classic: lesser-known facts' },
+  { value: 'challenging', label: 'Challenging: surprising facts' },
 ]
 
 export function parseTtfSubject(raw: unknown): TwoTruthsFibSubject {

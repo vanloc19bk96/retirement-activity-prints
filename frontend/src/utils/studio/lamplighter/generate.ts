@@ -126,7 +126,7 @@ export const lamplighterTemplate: StudioTemplateDefinition = {
   label: 'Lamplighter: Light the House',
   category: 'logic',
   description:
-    'The classic Light Up (Akari) puzzle, moved into a retiree’s home: put lamps on the white squares until every square is lit — each lamp shines along its row and column until a wall stops it, no lamp may shine on another, and a number on a wall says how many lamps touch it. Every house is built fresh, proven to have one answer reached by logic alone, and named for a retiree’s home — Lakeside Cabin, Grandma’s Farmhouse, Lighthouse Keeper’s House. Three levels, large print, and an answer page that switches every lamp on, its light beaming down the rows and columns.',
+    'The classic Light Up (Akari) puzzle, moved into a retiree’s home: put lamps on the white squares until every square is lit. Each lamp shines along its row and column until a wall stops it, no lamp may shine on another, and a number on a wall says how many lamps touch it. Every house is built fresh, proven to have one answer reached by logic alone, and named for a retiree’s home, such as Lakeside Cabin, Grandma’s Farmhouse or Lighthouse Keeper’s House. Three levels, large print, and an answer page that switches every lamp on, its light beaming down the rows and columns.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: LAMP_DEFAULT_TITLE,
