@@ -26,6 +26,7 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'garden-plots',
   'cruise-fleet',
   'patchwork-quilt',
+  'lamplighter',
   'word-search',
   'hidden-message-word-search',
   'trivia-clue-word-search',

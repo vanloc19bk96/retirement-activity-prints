@@ -65,7 +65,7 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ---
 
-## Logic (9 games)
+## Logic (10 games)
 
 ### Sudoku (`sudoku`)
 Classic number Sudoku for a large-print retirement book. Fill every row, column
@@ -775,6 +775,111 @@ one of the 44 quilt names before one returns, never the previous page's,
 and never prints the same quilt twice. A seller's next book opens at
 quilts their last one used least recently.
 Pages: 1 · Answer key: yes (the whole quilt sewn) · AI content: no
+
+### Lamplighter: Light the House (`lamplighter`)
+The classic Light Up (Akari) puzzle, moved into a retiree's home. Each page
+is one square house of white floor squares and solid black walls, some
+walls carrying a bold white number. The reader puts lamps on white squares
+until every white square is lit: a lamp shines along its row and its
+column, both ways, until a wall or the house's edge stops it; no lamp may
+shine on another; and a number on a wall is how many lamps touch its sides
+(a wall with no number may have any). Over the house hangs its name board,
+a double-ruled board naming a retiree's home: Lakeside Cabin, Grandma's
+Farmhouse, Lighthouse Keeper's House, Treehouse for Grandkids. Under it a
+legend shows a light bulb with how many lamps there are to place ("14
+lamps") and a sample wall with its 2 ("= 2 lamps touch it"). The answer
+page switches every lamp on: a white bulb with rays on a white halo in
+every answer square, and its light running down its row and column as a
+soft gray beam, wide at the lamp and fading toward the wall that stops it,
+so the reader sees at a glance how every square is lit.
+
+Settings: the level only.
+- Gentle: 7 × 7, 13 walls, at least 4 numbers. Finished by counting round
+  the numbers and "only one place can light this square", and the how-to
+  line adds "Tip: dot every square a lamp already lights."
+- Classic: 9 × 9, 21 walls, at least 6 numbers. Always needs "wherever the
+  light comes from" at least once (the Gentle steps alone never finish it).
+- Challenging: 10 × 10, 26 walls, at least 8 numbers. Always needs "what if"
+  at least once (the Classic steps alone never finish it).
+No level needs trial and error beyond one "what if" step followed by
+counting. Which home, which walls, how many numbers and the square size
+are not settings. The help line reports what the trim in Settings prints
+(square size, the house's width and the number size), or that the trim is
+too small.
+
+Every page is built in the browser (no AI). The walls come first, laid in
+pairs that mirror each other through the house's centre (the puzzle's
+classic look), never four in a 2 × 2 block and never walling off a room:
+every white square can walk to every other. The answer comes next: lamps
+dropped one at a time, in random order, on squares still in the dark,
+until the whole house is lit (so no lamp ever shines on another). Every
+wall then carries the number of lamps beside it, and numbers are rubbed
+out one by one, in random order, as long as the level's steps still finish
+the house on the same answer (down to the level's fewest numbers). The
+solver (`solver.ts`) marks each white square as a lamp, a dot (no lamp
+here) or open, and works the house the way a reader does, one sure step at
+a time:
+- basic: a square a lamp shines on gets a dot; a number with all its lamps
+  gets dots on its other sides; a number with just enough open sides left
+  gets lamps on all of them; a dark square only one place can still light
+  gets its lamp there.
+- shine (Classic and up): when every place that could light a dark square
+  would also shine on some other square, that square gets a dot; and a
+  square that sees more of a number's open sides than the number can leave
+  dark gets a dot (the diagonal trick round a 3, or a 1 in a corner).
+- probe (Challenging): a lamp on a square that leads, by the basic steps,
+  straight to a broken rule is crossed off.
+Every step is sound, so a house the solver finishes has exactly one
+answer. Only houses the level's steps finish on exactly their own answer
+are kept, and (at Classic and Challenging) only houses the easier steps
+cannot finish. Tests cross-check the solver against a brute-force count of
+answers on over forty houses, and check that houses with several answers
+are never called solved. A page builds in a few milliseconds (Challenging
+under a tenth of a second at worst).
+
+Layout: top to bottom, the name board, the house and the legend. The page
+is planned from the level and the trim alone, before a house is built, so
+every page of a run matches. Squares are as large as the trim allows, up to
+0.8 in, and never smaller than the level's floor (Gentle 0.5 in, Classic
+0.45 in, Challenging 0.4 in). The numbers print bold and white at half a
+square, 16–22 pt (never under 16 pt), on solid black walls; mid-gray soft
+rules run over floor and walls alike, so every wall square counts on its
+own, inside a 3 pt black frame. The board prints 16 pt (14 pt on a narrow
+trim, or broken between words when one line is still too wide), clear of
+the house by about half a square (never under 26 px). The legend prints 14
+pt, 24 px under the house, on one row or, on a narrow trim, one entry over
+the other. Typical results: 8.5 × 11 prints 0.80 / 0.80 / 0.73 in squares
+(Gentle / Classic / Challenging); 6 × 9 0.68 / 0.53 / 0.48 in; 5.5 × 8.5
+0.60 / 0.47 / 0.43 in (numbers 16 pt at the smallest).
+
+Quality gate (`kdp-preflight.ts`) runs before a page is accepted:
+- The house is the level's size; every square is floor, a plain wall or a
+  wall numbered 0–4; the walls mirror through the centre, stand four in a
+  block nowhere and wall off no room; the house prints at least the level's
+  fewest numbers; the answer keeps every rule; the level's steps finish the
+  house on exactly that answer, and the easier steps alone do not where the
+  level asks for more.
+- Squares, numbers and the board are at their large-print floors or larger.
+- The home's name fits its board; the board, house and legend are on the
+  printable panel and clear of each other, with the board's full air above
+  the house.
+- The home is not one the book already uses while others wait, and the
+  house is not one the book already prints.
+The drawn check then confirms every wall on its square and no other, every
+number on its wall, the frame, a hidden lamp (bulb, base, rays and halo) on
+exactly every square of the answer, a hidden beam for every stretch of
+light each lamp throws and no other, the board naming the home, and the
+legend counting the lamps.
+
+Uniqueness: each puzzle stamps `home|level|house`, where the house part is
+a digest of the walls and numbers that is the same however the house is
+turned or mirrored (also used as the canonical key). Houses come from the
+seller's puzzle salt and the page seed, so two sellers never share a book
+and the same seed reprints the same page. A book works through every one
+of the 44 homes before one returns, never the previous page's, and never
+prints the same house twice. A seller's next book opens at homes their
+last one used least recently.
+Pages: 1 · Answer key: yes (every lamp lit, its light beamed) · AI content: no
 
 ---
 
@@ -2911,6 +3016,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | garden-plots | Garden Plots: Plant the Flowers | logic | 1 | yes | no |
 | cruise-fleet | Cruise Fleet: Find the Ships | logic | 1 | yes | no |
 | patchwork-quilt | Patchwork Quilt: Piece the Patches | logic | 1 | yes | no |
+| lamplighter | Lamplighter: Light the House | logic | 1 | yes | no |
 | word-search | Word Search | word | 1 | yes | yes |
 | hidden-message-word-search | Hidden Message Word Search | word | 1 | yes | yes |
 | trivia-clue-word-search | Trivia Clue Word Search | word | 1 | yes | yes |
@@ -2951,4 +3057,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 48 games** (9 logic · 32 word · 7 spatial).
+**Total: 49 games** (10 logic · 32 word · 7 spatial).

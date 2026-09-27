@@ -19,6 +19,7 @@ import { tangledYarnTemplate } from '@/utils/studio/tangled-yarn/generate'
 import { gardenPlotsTemplate } from '@/utils/studio/garden-plots/generate'
 import { cruiseFleetTemplate } from '@/utils/studio/cruise-fleet/generate'
 import { patchworkQuiltTemplate } from '@/utils/studio/patchwork-quilt/generate'
+import { lamplighterTemplate } from '@/utils/studio/lamplighter/generate'
 import { wordSearchTemplate } from '@/utils/studio/retirement-word-search/generate'
 import { crosswordTemplate } from '@/utils/studio/crossword/generate'
 import { retirementAnagramTemplate } from '@/utils/studio/retirement-anagram/generate'
@@ -80,6 +81,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   gardenPlotsTemplate,
   cruiseFleetTemplate,
   patchworkQuiltTemplate,
+  lamplighterTemplate,
 
   // Word
   wordSearchTemplate,
