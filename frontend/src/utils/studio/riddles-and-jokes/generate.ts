@@ -124,7 +124,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 export const riddlesJokesTemplate: StudioTemplateDefinition = {
   key: RJ_TEMPLATE_KEY,
   label: 'Riddles & Jokes',
-  category: 'word',
+  category: 'trivia',
   description:
     'Retirement Edition: about eight short, clean riddles and jokes a page — naps, golf, gardening, coffee, travel, retirement parties and life without alarm clocks. Guess each answer, then check the answer page. Every item is checked for a clear answer and a real punchline before it prints. Pick a theme and the mix; items per page and type size are fitted to your page. Fresh, original items every page, never repeated within your book.',
   pageCount: 1,

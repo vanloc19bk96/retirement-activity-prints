@@ -239,7 +239,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 export const spotTheDifferenceTemplate: StudioTemplateDefinition = {
   key: SD_TEMPLATE_KEY,
   label: 'Spot the Differences: Retirement Edition',
-  category: 'spatial',
+  category: 'visual',
   description:
     'Two retirement scenes â€” a front porch, a tea table, a beach day, a fishing dock â€” one above the other, with 5 to 10 deliberate differences to circle. Clear black-and-white line art sized for print; every difference is measured to be fair and easy to see. Includes an answer page with each difference circled and listed.',
   pageCount: 1,

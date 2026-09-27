@@ -90,7 +90,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 export const rollADayTemplate: StudioTemplateDefinition = {
   key: RD_TEMPLATE_KEY,
   label: 'Roll-a-Day: Retirement Edition',
-  category: 'word',
+  category: 'party',
   description:
     'A playful plan-your-day game for retirement books: roll a die for your morning, roll again for your afternoon, and put the two together — “Take a slow walk and grab a coffee” + “Bake a small batch of scones”. Six morning and six afternoon ideas beside their die faces make 36 possible days, and every pairing works. Each side mixes calm and active, home and out, solo and social, and never assumes a car, a big budget or great fitness. Pick the mix; type size is fitted to your page. Fresh ideas every page, never repeated within your book.',
   pageCount: 1,

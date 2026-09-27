@@ -135,10 +135,10 @@ runGeneratorContractTests(officeRelicsTemplate, {
 assertGeneratorEntropy(officeRelicsTemplate, { seeds: 60 })
 
 describe('office-relics registry', () => {
-  it('is registered once, in the word tab, with an answer page in black ink', () => {
+  it('is registered once, in the trivia tab, with an answer page in black ink', () => {
     const found = STUDIO_TEMPLATES.filter((t) => t.key === 'office-relics')
     expect(found).toHaveLength(1)
-    expect(found[0]!.category).toBe('word')
+    expect(found[0]!.category).toBe('trivia')
     expect(found[0]!.producesAnswerKey).toBe(true)
     expect(STUDIO_ANSWER_INK_MONO_TEMPLATES.has('office-relics')).toBe(true)
   })

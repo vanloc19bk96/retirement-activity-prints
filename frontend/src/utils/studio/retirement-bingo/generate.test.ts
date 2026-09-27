@@ -572,7 +572,7 @@ describe('retirement bingo page', () => {
   it('is registered as a Word game with no answer page', () => {
     const registered = STUDIO_TEMPLATES.find((t) => t.key === 'retirement-bingo')
     expect(registered).toBeDefined()
-    expect(registered!.category).toBe('word')
+    expect(registered!.category).toBe('party')
     expect(registered!.producesAnswerKey).toBe(false)
     expect(registered!.pageCount).toBe(1)
     expect(registered!.prefetch).toBeUndefined()

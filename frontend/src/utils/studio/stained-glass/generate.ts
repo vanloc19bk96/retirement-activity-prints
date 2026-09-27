@@ -200,7 +200,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 export const stainedGlassTemplate: StudioTemplateDefinition = {
   key: SG_TEMPLATE_KEY,
   label: 'Stained Glass Coloring',
-  category: 'spatial',
+  category: 'coloring',
   description:
     'A relaxing coloring page: a retirement favorite — a rocking chair, a teapot, a sailboat, a sunflower — set in a stained-glass window of bold, closed pieces. Pick a theme and a piece size; every page deals its own subject, window, border and background, each book gets its own look, and a book never repeats a design.',
   pageCount: 1,

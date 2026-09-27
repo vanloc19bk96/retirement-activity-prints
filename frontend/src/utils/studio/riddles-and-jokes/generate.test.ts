@@ -109,10 +109,10 @@ runGeneratorContractTests(riddlesJokesTemplate, {
 })
 
 describe('riddles-and-jokes registry', () => {
-  it('is registered once, in the word tab, with an answer page', () => {
+  it('is registered once, in the trivia tab, with an answer page', () => {
     expect(STUDIO_TEMPLATES.filter((t) => t.key === 'riddles-and-jokes')).toHaveLength(1)
     const registered = getStudioTemplate('riddles-and-jokes')!
-    expect(registered.category).toBe('word')
+    expect(registered.category).toBe('trivia')
     expect(registered.producesAnswerKey).toBe(true)
     expect(registered.defaultPageTitle).toBe(RJ_DEFAULT_TITLE)
     expect(registered.prefetch).toBeTypeOf('function')

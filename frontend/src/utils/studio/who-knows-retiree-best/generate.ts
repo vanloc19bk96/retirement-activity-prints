@@ -155,7 +155,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 export const whoKnowsBestTemplate: StudioTemplateDefinition = {
   key: WKB_TEMPLATE_KEY,
   label: 'Who Knows the Retiree Best?',
-  category: 'word',
+  category: 'party',
   description:
     'A warm party game for coworkers, friends and family: 12 light questions about the retiree — “What was the very first job they were paid for?”, “Tea, coffee or hot chocolate: which do they reach for first?” — each with room for a handwritten guess and a box to tick. Every player gets their own answer sheet with the same questions; the retiree fills in the real answers on the last sheet, and a scoreboard shows who knows them best. Nothing about the retiree is invented or needed — just an optional name. Pick who’s playing and how many; type size and pages are fitted to your trim. Fresh questions every time, never repeated within your book.',
   pageCount: 1,

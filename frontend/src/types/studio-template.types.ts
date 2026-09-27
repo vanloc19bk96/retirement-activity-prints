@@ -14,14 +14,26 @@ export type StudioFabricType =
 /**
  * Buyer-facing template taxonomy. Values match the tab labels in
  * `constants/studio-categories.ts` so code and UI never drift apart.
+ *
+ * Sorted by what the reader does on the page, not by theme, so every
+ * template has exactly one home. The first four are puzzles with one right
+ * answer; the last three are played, answered or kept, never "solved".
  */
 export type StudioCategory =
-  /** Deduction, number and pattern puzzles with one right answer. */
-  | 'logic'
-  /** Words and language. */
+  /** Letter and word puzzles: search, cross, decode, unscramble. */
   | 'word'
-  /** Visual-spatial reasoning and drawing. */
-  | 'spatial'
+  /** Deduction and number puzzles on a grid, one answer reached by logic. */
+  | 'logic'
+  /** Pencil puzzles solved by eye: mazes, dot-to-dot, spot the difference. */
+  | 'visual'
+  /** Pages to color, with no answer to find. */
+  | 'coloring'
+  /** Questions with a real, checkable answer: quizzes, riddles, matching. */
+  | 'trivia'
+  /** Games for fun or a group, where answers are opinions, guesses or laughs. */
+  | 'party'
+  /** Write-in pages to keep: lists, journals, certificates, signatures. */
+  | 'keepsake'
 
 export type StudioRole = 'prompt' | 'answer' | 'key' | 'decoration' | 'structure'
 

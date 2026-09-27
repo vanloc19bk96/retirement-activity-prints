@@ -105,7 +105,7 @@ describe('shaped maze form', () => {
   it('is registered next to the Maze, with a black answer key and no manual answer-key fields', () => {
     const registered = getStudioTemplate('shaped-maze')
     expect(registered).toBeDefined()
-    expect(registered!.category).toBe('spatial')
+    expect(registered!.category).toBe('visual')
     expect(registered!.producesAnswerKey).toBe(true)
     expect(STUDIO_ANSWER_INK_MONO_TEMPLATES.has('shaped-maze')).toBe(true)
     const keys = new Set(registered!.configSchema.map((field) => field.key))

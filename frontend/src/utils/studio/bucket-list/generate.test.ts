@@ -128,10 +128,10 @@ runGeneratorContractTests(bucketListTemplate, {
 })
 
 describe('bucket-list registry', () => {
-  it('is registered once, in the word tab, with no answer page', () => {
+  it('is registered once, in the keepsake tab, with no answer page', () => {
     expect(STUDIO_TEMPLATES.filter((t) => t.key === 'bucket-list')).toHaveLength(1)
     const registered = getStudioTemplate('bucket-list')!
-    expect(registered.category).toBe('word')
+    expect(registered.category).toBe('keepsake')
     expect(registered.producesAnswerKey).toBe(false)
     expect(registered.defaultPageTitle).toBe(BL_DEFAULT_TITLE)
     expect(registered.prefetch).toBeTypeOf('function')

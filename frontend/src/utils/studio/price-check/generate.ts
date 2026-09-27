@@ -118,7 +118,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 export const priceCheckTemplate: StudioTemplateDefinition = {
   key: PC_TEMPLATE_KEY,
   label: 'Price Check: Then & Now',
-  category: 'word',
+  category: 'trivia',
   description:
     'How much was a movie ticket in 1975, or a gallon of gas in 1962? Guess each everyday price from four choices, then check the answer page. Every price is a real U.S. figure from published records — national averages and official postage rates, 1950 to 2000 — never invented. Pick a level; questions per page and type size are fitted to your page. Never repeats an item and year already in your book.',
   pageCount: 1,

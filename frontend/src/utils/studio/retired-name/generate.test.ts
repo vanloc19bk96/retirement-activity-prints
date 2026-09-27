@@ -131,10 +131,10 @@ runGeneratorContractTests(retiredNameTemplate, {
 })
 
 describe('retired-name registry', () => {
-  it('is registered once, in the word tab, with no answer page', () => {
+  it('is registered once, in the party tab, with no answer page', () => {
     expect(STUDIO_TEMPLATES.filter((t) => t.key === 'retired-name')).toHaveLength(1)
     const registered = getStudioTemplate('retired-name')!
-    expect(registered.category).toBe('word')
+    expect(registered.category).toBe('party')
     expect(registered.producesAnswerKey).toBe(false)
     expect(registered.pageCount).toBe(1)
     expect(registered.defaultPageTitle).toBe(RN_DEFAULT_TITLE)

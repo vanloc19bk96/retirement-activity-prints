@@ -132,10 +132,10 @@ runGeneratorContractTests(priceCheckTemplate, {
 assertGeneratorEntropy(priceCheckTemplate, { seeds: 60 })
 
 describe('price-check registry', () => {
-  it('is registered once, in the word tab, with an answer page', () => {
+  it('is registered once, in the trivia tab, with an answer page', () => {
     expect(STUDIO_TEMPLATES.filter((t) => t.key === 'price-check')).toHaveLength(1)
     const registered = getStudioTemplate('price-check')!
-    expect(registered.category).toBe('word')
+    expect(registered.category).toBe('trivia')
     expect(registered.producesAnswerKey).toBe(true)
     expect(registered.defaultPageTitle).toBe(PC_DEFAULT_TITLE)
   })

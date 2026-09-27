@@ -26,9 +26,13 @@ import type {
  * crossword never claims to be “writing your story”.
  */
 const CONTENT_PHASE_LABEL: Record<StudioCategory, string> = {
-  logic: 'Working out the puzzle…',
   word: 'Picking the words…',
-  spatial: 'Sketching the puzzle…',
+  logic: 'Working out the puzzle…',
+  visual: 'Sketching the puzzle…',
+  coloring: 'Sketching the picture…',
+  trivia: 'Writing the questions…',
+  party: 'Thinking up the fun…',
+  keepsake: 'Writing the prompts…',
 }
 
 export function useStudioTemplateConfigForm(template: StudioTemplateDefinition) {

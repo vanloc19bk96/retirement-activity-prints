@@ -155,7 +155,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 export const dotToDotTemplate: StudioTemplateDefinition = {
   key: DTD_TEMPLATE_KEY,
   label: 'Dot to Dot: Retirement Edition',
-  category: 'spatial',
+  category: 'visual',
   description:
     'A relaxing dot-to-dot page: join large numbered dots from 1 to reveal a retirement picture — a teapot, a golf flag, a sailboat, a hammock. Big, clear numbers for older eyes; pick how many dots. Includes an answer page with the finished picture.',
   pageCount: 1,

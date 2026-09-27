@@ -118,7 +118,7 @@ describe('retirement-certificate registry', () => {
     expect(def).toBeDefined()
     expect(def!.producesAnswerKey).toBe(false)
     expect(def!.pageCount).toBe(1)
-    expect(def!.category).toBe('word')
+    expect(def!.category).toBe('keepsake')
     expect(retirementCertificateTemplate.configSchema.map((f) => f.key)).toEqual([
       'retireeName',
       'yearsOfService',

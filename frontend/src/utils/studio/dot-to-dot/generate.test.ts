@@ -105,10 +105,10 @@ runGeneratorContractTests(dotToDotTemplate, {
 assertGeneratorEntropy(dotToDotTemplate, { seeds: 16 })
 
 describe('dot-to-dot registry and form', () => {
-  it('is registered once, in the spatial tab, with an answer page in black ink', () => {
+  it('is registered once, in the visual tab, with an answer page in black ink', () => {
     const found = STUDIO_TEMPLATES.filter((t) => t.key === DTD_TEMPLATE_KEY)
     expect(found).toHaveLength(1)
-    expect(found[0]!.category).toBe('spatial')
+    expect(found[0]!.category).toBe('visual')
     expect(found[0]!.producesAnswerKey).toBe(true)
     expect(found[0]!.defaultPageTitle).toBe(DTD_DEFAULT_TITLE)
     expect(found[0]!.label).toMatch(/retirement/i)

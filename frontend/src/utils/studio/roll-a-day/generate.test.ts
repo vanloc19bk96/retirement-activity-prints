@@ -126,10 +126,10 @@ runGeneratorContractTests(rollADayTemplate, {
 })
 
 describe('roll-a-day registry', () => {
-  it('is registered once, in the word tab, with no answer page', () => {
+  it('is registered once, in the party tab, with no answer page', () => {
     expect(STUDIO_TEMPLATES.filter((t) => t.key === 'roll-a-day')).toHaveLength(1)
     const registered = getStudioTemplate('roll-a-day')!
-    expect(registered.category).toBe('word')
+    expect(registered.category).toBe('party')
     expect(registered.producesAnswerKey).toBe(false)
     expect(registered.pageCount).toBe(1)
     expect(registered.defaultPageTitle).toBe(RD_DEFAULT_TITLE)

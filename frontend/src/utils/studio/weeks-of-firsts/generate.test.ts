@@ -113,10 +113,10 @@ runGeneratorContractTests(weeksOfFirstsTemplate, {
 })
 
 describe('weeks-of-firsts registry', () => {
-  it('is registered once, in the word tab, with no answer page', () => {
+  it('is registered once, in the keepsake tab, with no answer page', () => {
     expect(STUDIO_TEMPLATES.filter((t) => t.key === 'weeks-of-firsts')).toHaveLength(1)
     const registered = getStudioTemplate('weeks-of-firsts')!
-    expect(registered.category).toBe('word')
+    expect(registered.category).toBe('keepsake')
     expect(registered.producesAnswerKey).toBe(false)
     expect(registered.defaultPageTitle).toBe(WF_DEFAULT_TITLE)
     expect(registered.prefetch).toBeTypeOf('function')

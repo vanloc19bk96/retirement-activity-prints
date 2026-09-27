@@ -112,10 +112,10 @@ runGeneratorContractTests(workLingoTemplate, {
 })
 
 describe('work-lingo-match registry', () => {
-  it('is registered once, in the word tab, with an answer page in black ink', () => {
+  it('is registered once, in the trivia tab, with an answer page in black ink', () => {
     expect(STUDIO_TEMPLATES.filter((t) => t.key === 'work-lingo-match')).toHaveLength(1)
     const registered = getStudioTemplate('work-lingo-match')!
-    expect(registered.category).toBe('word')
+    expect(registered.category).toBe('trivia')
     expect(registered.producesAnswerKey).toBe(true)
     expect(registered.defaultPageTitle).toBe(WL_DEFAULT_TITLE)
     expect(registered.prefetch).toBeTypeOf('function')

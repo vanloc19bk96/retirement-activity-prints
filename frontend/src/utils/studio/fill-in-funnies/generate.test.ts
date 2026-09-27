@@ -121,10 +121,10 @@ runGeneratorContractTests(fillInFunniesTemplate, {
 })
 
 describe('fill-in-funnies registry', () => {
-  it('is registered once, in the word tab, as a two-step activity with no answer page', () => {
+  it('is registered once, in the party tab, as a two-step activity with no answer page', () => {
     expect(STUDIO_TEMPLATES.filter((t) => t.key === 'fill-in-funnies')).toHaveLength(1)
     const registered = getStudioTemplate('fill-in-funnies')!
-    expect(registered.category).toBe('word')
+    expect(registered.category).toBe('party')
     expect(registered.producesAnswerKey).toBe(false)
     expect(registered.pageCount).toBe(2)
     expect(registered.defaultPageTitle).toBe(FIF_DEFAULT_TITLE)

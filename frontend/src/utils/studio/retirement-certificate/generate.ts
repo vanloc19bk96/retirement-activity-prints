@@ -306,7 +306,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 export const retirementCertificateTemplate: StudioTemplateDefinition = {
   key: CR_TEMPLATE_KEY,
   label: 'Certificate of Retirement',
-  category: 'word',
+  category: 'keepsake',
   description:
     'A framed, gift-worthy certificate for a retirement or farewell book: the retiree’s name, their years of service and an “Officially promoted to…” title such as “Chief Leisure Officer”, with lines to sign and date. Every detail is optional — leave one blank and the certificate still reads complete, with a line to write it in by hand. Each certificate gets its own wording, frame and emblem — black ink only, print-ready.',
   pageCount: 1,

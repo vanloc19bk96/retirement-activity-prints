@@ -272,7 +272,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 export const wellWishesTemplate: StudioTemplateDefinition = {
   key: WW_TEMPLATE_KEY,
   label: 'Well Wishes & Signatures',
-  category: 'word',
+  category: 'keepsake',
   description:
     'A keepsake signature section for a retirement or farewell book: framed boxes where coworkers, friends and family write a wish or a favorite memory and sign their name. Each box has a gentle prompt, roomy writing lines and a signature line, sized to your trim for real handwriting. Every set gets its own warm heading, frame style and prompts — black ink only, print-ready.',
   pageCount: 1,

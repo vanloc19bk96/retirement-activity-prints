@@ -227,7 +227,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 export const retireeQuizTemplate: StudioTemplateDefinition = {
   key: RQ_TEMPLATE_KEY,
   label: 'What Kind of Retiree Are You?',
-  category: 'word',
+  category: 'party',
   description:
     'A lighthearted retirement personality quiz: 8 to 10 relatable questions, each with four answers — one for The Explorer, The Tinkerer, The Social Butterfly and The Professional Napper. Readers circle their answers, tally them on an easy scoring grid and read a fun write-up of their retirement style. Every style gets an equal chance, and every question is checked before it prints. Fresh questions every quiz, never repeated within your book; question count and type size are fitted to your page.',
   pageCount: 1,

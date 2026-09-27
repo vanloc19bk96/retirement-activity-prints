@@ -100,10 +100,10 @@ runGeneratorContractTests(careerNumbersTemplate, {
 })
 
 describe('career-by-the-numbers registry', () => {
-  it('is registered once, in the word tab, with no answer key', () => {
+  it('is registered once, in the keepsake tab, with no answer key', () => {
     expect(STUDIO_TEMPLATES.filter((t) => t.key === 'career-by-the-numbers')).toHaveLength(1)
     const registered = getStudioTemplate('career-by-the-numbers')!
-    expect(registered.category).toBe('word')
+    expect(registered.category).toBe('keepsake')
     expect(registered.producesAnswerKey).toBe(false)
     expect(registered.defaultPageTitle).toBe(CBN_DEFAULT_TITLE)
     expect(registered.prefetch).toBeTypeOf('function')

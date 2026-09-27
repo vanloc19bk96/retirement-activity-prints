@@ -124,7 +124,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 export const workLingoTemplate: StudioTemplateDefinition = {
   key: WL_TEMPLATE_KEY,
   label: 'Work Lingo Match',
-  category: 'word',
+  category: 'trivia',
   description:
     'Retirement Edition: how many of these workplace phrases do you remember? Match office classics like "circle back", "touch base" and "low-hanging fruit" to their plain-English meanings by writing a letter in each box. Every phrase is checked to be real, with one clear meaning on the page. Pick a level; the number of pairs and type size are fitted to your page. Fresh phrases every page, never repeated within your book.',
   pageCount: 1,

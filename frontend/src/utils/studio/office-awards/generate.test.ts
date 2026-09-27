@@ -100,10 +100,10 @@ runGeneratorContractTests(officeAwardsTemplate, {
 })
 
 describe('office-awards registry', () => {
-  it('is registered once, in the word tab, with no answer key', () => {
+  it('is registered once, in the party tab, with no answer key', () => {
     expect(STUDIO_TEMPLATES.filter((t) => t.key === 'office-awards')).toHaveLength(1)
     const registered = getStudioTemplate('office-awards')!
-    expect(registered.category).toBe('word')
+    expect(registered.category).toBe('party')
     expect(registered.producesAnswerKey).toBe(false)
     expect(registered.defaultPageTitle).toBe(OA_DEFAULT_TITLE)
     expect(registered.prefetch).toBeTypeOf('function')

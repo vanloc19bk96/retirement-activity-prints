@@ -103,10 +103,10 @@ runGeneratorContractTests(retireeQuizTemplate, {
 })
 
 describe('what-kind-of-retiree registry', () => {
-  it('is registered once, in the word tab, with no answer key', () => {
+  it('is registered once, in the party tab, with no answer key', () => {
     expect(STUDIO_TEMPLATES.filter((t) => t.key === 'what-kind-of-retiree')).toHaveLength(1)
     const registered = getStudioTemplate('what-kind-of-retiree')!
-    expect(registered.category).toBe('word')
+    expect(registered.category).toBe('party')
     expect(registered.producesAnswerKey).toBe(false)
     expect(registered.defaultPageTitle).toBe(RQ_DEFAULT_TITLE)
     expect(registered.prefetch).toBeTypeOf('function')

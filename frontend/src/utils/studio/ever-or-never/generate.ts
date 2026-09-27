@@ -101,7 +101,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 export const everOrNeverTemplate: StudioTemplateDefinition = {
   key: EON_TEMPLATE_KEY,
   label: 'Ever or Never',
-  category: 'word',
+  category: 'party',
   description:
     'Retirement Edition: short, funny, relatable statements — “Ever taken a nap before lunch on a Tuesday?” — each with an Ever box and a Never box to tick, plus a tally to compare with friends. Great for parties, couples and keepsake books. Pick a theme and tone; statements per page and type size are fitted to your page. Fresh statements every page, never repeated within your book.',
   pageCount: 1,

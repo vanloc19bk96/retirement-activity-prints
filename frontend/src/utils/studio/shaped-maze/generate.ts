@@ -240,7 +240,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 export const shapedMazeTemplate: StudioTemplateDefinition = {
   key: SM_TEMPLATE_KEY,
   label: 'Shaped Maze: Retirement Edition',
-  category: 'spatial',
+  category: 'visual',
   description:
     'A maze inside a retirement shape: a teapot, a motorhome, a sun hat, a golf cart and more. Each page runs from a workday Start (the Office, the Alarm Clock) to a Finish the shape stands for (Tea Time, the Open Road). One way through, wide paths, and an answer page tracing the route.',
   pageCount: 1,

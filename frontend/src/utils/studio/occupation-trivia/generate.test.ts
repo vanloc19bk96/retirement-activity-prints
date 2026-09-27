@@ -106,10 +106,10 @@ runGeneratorContractTests(occupationTriviaTemplate, {
 })
 
 describe('occupation-trivia registry', () => {
-  it('is registered once, in the word tab, with an answer page in black ink', () => {
+  it('is registered once, in the trivia tab, with an answer page in black ink', () => {
     expect(STUDIO_TEMPLATES.filter((t) => t.key === 'occupation-trivia')).toHaveLength(1)
     const registered = getStudioTemplate('occupation-trivia')!
-    expect(registered.category).toBe('word')
+    expect(registered.category).toBe('trivia')
     expect(registered.producesAnswerKey).toBe(true)
     expect(registered.prefetch).toBeTypeOf('function')
     expect(STUDIO_ANSWER_INK_MONO_TEMPLATES.has('occupation-trivia')).toBe(true)

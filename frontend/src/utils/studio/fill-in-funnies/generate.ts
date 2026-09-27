@@ -125,7 +125,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 export const fillInFunniesTemplate: StudioTemplateDefinition = {
   key: FIF_TEMPLATE_KEY,
   label: 'Fill-in Funnies',
-  category: 'word',
+  category: 'party',
   description:
     'Retirement Edition: a laugh-out-loud word game for parties, couples and keepsake books. Step 1: write a word for each numbered prompt — a describing word, a food, a coworker’s name — without peeking. Step 2: copy them into a short, original retirement story and read it aloud. Every story is checked so each blank reads right with any word; fresh stories every time, never repeated within your book. Type size and layout are fitted to your page.',
   pageCount: 2,

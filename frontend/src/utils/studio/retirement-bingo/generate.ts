@@ -163,7 +163,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 export const retirementBingoTemplate: StudioTemplateDefinition = {
   key: TEMPLATE_KEY,
   label: 'Retirement Bingo',
-  category: 'word',
+  category: 'party',
   description:
     'A 5 x 5 bingo card of everyday retirement moments — “Slept past 9”, “Had coffee with no rush”, “Started a new hobby” — with a free NAP square in the middle. Readers cross off each moment as it happens. Your account gets its own set of moments, wording and card style, so your books don’t read like anyone else’s — and you can add moments of your own. Square and type sizes are fitted to your page. Double-click any square on the page to reword it.',
   pageCount: 1,

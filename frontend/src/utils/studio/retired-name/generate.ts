@@ -113,7 +113,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 export const retiredNameTemplate: StudioTemplateDefinition = {
   key: RN_TEMPLATE_KEY,
   label: 'What’s Your Retired Name?',
-  category: 'word',
+  category: 'party',
   description:
     'A party favourite for retirement books: find the first letter of your first name and your birth month to discover a funny retired name — “Captain Hammock Snoozer”. The A–Z and month tables, a worked example and a line to write your new name are sized to your page automatically. Pick a theme; fresh names are written for every page and never repeated within your book.',
   pageCount: 1,

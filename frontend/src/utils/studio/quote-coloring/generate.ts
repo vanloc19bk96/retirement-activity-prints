@@ -166,7 +166,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 export const quoteColoringTemplate: StudioTemplateDefinition = {
   key: QC_TEMPLATE_KEY,
   label: 'Quote Coloring Page',
-  category: 'spatial',
+  category: 'coloring',
   description:
     'An original retirement saying in big outline letters to color, framed by a pattern of flowers, shapes or hobbies. Every saying is freshly written and checked for originality; every page gets its own lettering, border and pattern, and a book never repeats a saying.',
   pageCount: 1,

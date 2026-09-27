@@ -128,7 +128,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 export const mazeTemplate: StudioTemplateDefinition = {
   key: 'maze',
   label: 'Maze',
-  category: 'spatial',
+  category: 'visual',
   description:
     'A large-print maze with exactly one way through. Pick a level and the path width, grid size and wall weight are sized for your page. Includes an answer page tracing the route.',
   pageCount: 1,

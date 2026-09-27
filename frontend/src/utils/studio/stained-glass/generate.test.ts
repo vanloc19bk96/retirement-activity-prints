@@ -106,10 +106,10 @@ runGeneratorContractTests(stainedGlassTemplate, {
 assertGeneratorEntropy(stainedGlassTemplate, { seeds: 24 })
 
 describe('stained-glass registry and form', () => {
-  it('is registered once, in the spatial tab, with no answer page', () => {
+  it('is registered once, in the coloring tab, with no answer page', () => {
     const found = STUDIO_TEMPLATES.filter((t) => t.key === SG_TEMPLATE_KEY)
     expect(found).toHaveLength(1)
-    expect(found[0]!.category).toBe('spatial')
+    expect(found[0]!.category).toBe('coloring')
     expect(found[0]!.producesAnswerKey).toBe(false)
     expect(found[0]!.defaultPageTitle).toBe(SG_DEFAULT_TITLE)
   })

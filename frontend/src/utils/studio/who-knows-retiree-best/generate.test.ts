@@ -110,10 +110,10 @@ runGeneratorContractTests(whoKnowsBestTemplate, {
 })
 
 describe('who-knows-retiree-best registry', () => {
-  it('is registered once, in the word tab, with no answer key', () => {
+  it('is registered once, in the party tab, with no answer key', () => {
     expect(STUDIO_TEMPLATES.filter((t) => t.key === 'who-knows-retiree-best')).toHaveLength(1)
     const registered = getStudioTemplate('who-knows-retiree-best')!
-    expect(registered.category).toBe('word')
+    expect(registered.category).toBe('party')
     expect(registered.producesAnswerKey).toBe(false)
     expect(registered.defaultPageTitle).toBe(WKB_DEFAULT_TITLE)
     expect(registered.prefetch).toBeTypeOf('function')

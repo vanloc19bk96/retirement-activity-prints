@@ -90,11 +90,11 @@ runGeneratorContractTests(topFiveGuessTemplate, {
 })
 
 describe('top-five-guess registry', () => {
-  it('is registered once, in the word tab, with an answer page', () => {
+  it('is registered once, in the party tab, with an answer page', () => {
     const matches = STUDIO_TEMPLATES.filter((t) => t.key === 'top-five-guess')
     expect(matches).toHaveLength(1)
     const registered = getStudioTemplate('top-five-guess')!
-    expect(registered.category).toBe('word')
+    expect(registered.category).toBe('party')
     expect(registered.producesAnswerKey).toBe(true)
     expect(registered.defaultPageTitle).toBe(TOP_FIVE_DEFAULT_TITLE)
     expect(registered.prefetch).toBeTypeOf('function')

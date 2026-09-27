@@ -124,7 +124,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 export const twoTruthsFibTemplate: StudioTemplateDefinition = {
   key: TTF_TEMPLATE_KEY,
   label: 'Two Truths and a Fib',
-  category: 'word',
+  category: 'trivia',
   description:
     'Retirement Edition: sets of three short statements about work, inventions, home life, travel, food and more — two are true and one is a fib. Circle the fib! Every fact is checked before it prints, and the answer page explains each fib. Pick a subject and level; puzzles per page and type size are fitted to your page. Fresh puzzles every page, never repeated within your book.',
   pageCount: 1,

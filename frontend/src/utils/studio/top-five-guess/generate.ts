@@ -128,7 +128,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 export const topFiveGuessTemplate: StudioTemplateDefinition = {
   key: TOP_FIVE_TEMPLATE_KEY,
   label: 'Top Five Guess',
-  category: 'word',
+  category: 'party',
   description:
     'Light retirement questions — “Name something you will never miss about the office” — with five lines to guess the most likely answers. The top answer scores 5 points, down to 1 for the fifth. Pick a theme; the number of questions, line spacing and type sizes are fitted to your page. Fresh questions every page. Includes an answer page.',
   pageCount: 1,

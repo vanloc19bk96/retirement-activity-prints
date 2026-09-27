@@ -101,7 +101,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 export const wouldYouRatherTemplate: StudioTemplateDefinition = {
   key: WYR_TEMPLATE_KEY,
   label: 'Would You Rather',
-  category: 'word',
+  category: 'party',
   description:
     'Retirement Edition: two tempting choices from one scenario — “spend a spring weekend in a cottage by the sea” or “at a farmhouse in the hills” — with a box to tick. Great for conversation, couples and parties. Pick a theme and tone; questions per page and type size are fitted to your page. Fresh questions every page, never repeated within your book.',
   pageCount: 1,

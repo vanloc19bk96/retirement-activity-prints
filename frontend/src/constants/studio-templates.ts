@@ -78,6 +78,23 @@ import { occupationTriviaTemplate } from '@/utils/studio/occupation-trivia/gener
  * `STUDIO_CATEGORIES`, so the "All" grid reads like the tabs above it.
  */
 const RAW_TEMPLATES: StudioTemplateDefinition[] = [
+  // Word
+  wordSearchTemplate,
+  hiddenMessageWordSearchTemplate,
+  triviaClueWordSearchTemplate,
+  atoZWordSearchTemplate,
+  crosswordTemplate,
+  codewordTemplate,
+  cryptogramTemplate,
+  fallenPhraseTemplate,
+  phraseFinderTemplate,
+  retirementAnagramTemplate,
+  wordWheelTemplate,
+  wordLadderTemplate,
+  riddleScrambleTemplate,
+  missingVowelsTemplate,
+  pictureRebusTemplate,
+
   // Logic
   sudokuTemplate,
   wordokuTemplate,
@@ -99,53 +116,44 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   sunAndMoonTemplate,
   yardSaleTemplate,
 
-  // Word
-  wordSearchTemplate,
-  hiddenMessageWordSearchTemplate,
-  triviaClueWordSearchTemplate,
-  atoZWordSearchTemplate,
-  crosswordTemplate,
-  codewordTemplate,
-  cryptogramTemplate,
-  fallenPhraseTemplate,
-  phraseFinderTemplate,
-  retirementAnagramTemplate,
-  wordWheelTemplate,
-  wordLadderTemplate,
-  riddleScrambleTemplate,
-  missingVowelsTemplate,
-  pictureRebusTemplate,
-  retirementBingoTemplate,
-  topFiveGuessTemplate,
+  // Visual
+  mazeTemplate,
+  shapedMazeTemplate,
+  dotToDotTemplate,
+  spotTheDifferenceTemplate,
+
+  // Coloring
+  colorByNumberTemplate,
+  stainedGlassTemplate,
+  quoteColoringTemplate,
+
+  // Trivia
+  priceCheckTemplate,
+  occupationTriviaTemplate,
+  officeRelicsTemplate,
+  workLingoTemplate,
+  twoTruthsFibTemplate,
+  riddlesJokesTemplate,
+
+  // Party
   wouldYouRatherTemplate,
   everOrNeverTemplate,
+  topFiveGuessTemplate,
+  whoKnowsBestTemplate,
+  fillInFunniesTemplate,
+  retireeQuizTemplate,
+  retiredNameTemplate,
+  officeAwardsTemplate,
+  retirementBingoTemplate,
+  rollADayTemplate,
+
+  // Keepsake
   bucketListTemplate,
   weeksOfFirstsTemplate,
   travelWishMapTemplate,
-  whoKnowsBestTemplate,
+  careerNumbersTemplate,
   wellWishesTemplate,
   retirementCertificateTemplate,
-  officeAwardsTemplate,
-  careerNumbersTemplate,
-  retiredNameTemplate,
-  rollADayTemplate,
-  twoTruthsFibTemplate,
-  retireeQuizTemplate,
-  fillInFunniesTemplate,
-  riddlesJokesTemplate,
-  priceCheckTemplate,
-  officeRelicsTemplate,
-  workLingoTemplate,
-  occupationTriviaTemplate,
-
-  // Spatial
-  mazeTemplate,
-  shapedMazeTemplate,
-  stainedGlassTemplate,
-  quoteColoringTemplate,
-  colorByNumberTemplate,
-  dotToDotTemplate,
-  spotTheDifferenceTemplate,
 ]
 
 function withCommonFields(def: StudioTemplateDefinition): StudioTemplateDefinition {

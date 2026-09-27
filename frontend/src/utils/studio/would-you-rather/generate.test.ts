@@ -109,10 +109,10 @@ runGeneratorContractTests(wouldYouRatherTemplate, {
 })
 
 describe('would-you-rather registry', () => {
-  it('is registered once, in the word tab, with no answer page', () => {
+  it('is registered once, in the party tab, with no answer page', () => {
     expect(STUDIO_TEMPLATES.filter((t) => t.key === 'would-you-rather')).toHaveLength(1)
     const registered = getStudioTemplate('would-you-rather')!
-    expect(registered.category).toBe('word')
+    expect(registered.category).toBe('party')
     expect(registered.producesAnswerKey).toBe(false)
     expect(registered.pageCount).toBe(1)
     expect(registered.defaultPageTitle).toBe(WYR_DEFAULT_TITLE)

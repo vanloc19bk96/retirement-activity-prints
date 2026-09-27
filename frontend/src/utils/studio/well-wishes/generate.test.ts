@@ -115,7 +115,7 @@ describe('well-wishes registry', () => {
     const def = getStudioTemplate('well-wishes-signatures')
     expect(def).toBeDefined()
     expect(def!.producesAnswerKey).toBe(false)
-    expect(def!.category).toBe('word')
+    expect(def!.category).toBe('keepsake')
     const own = wellWishesTemplate.configSchema.map((f) => f.key)
     expect(own).toEqual(['retireeName', 'audience', 'pages'])
   })
