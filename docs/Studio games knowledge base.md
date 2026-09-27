@@ -65,7 +65,7 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ---
 
-## Logic (5 games)
+## Logic (6 games)
 
 ### Sudoku (`sudoku`)
 Classic number Sudoku for a large-print retirement book. Fill every row, column
@@ -365,6 +365,110 @@ page. A book sails to every one of the 42 island chains before one returns,
 never the previous page's, and never prints the same chart twice. A seller's
 next book opens at chains their last one visited least recently.
 Pages: 1 · Answer key: yes (every bridge built) · AI content: no
+
+### Tangled Yarn: Link the Pairs (`tangled-yarn`)
+A Numberlink (Flow) logic puzzle dressed as a retiree's knitting basket. Each
+page is one square grid with pairs of yarn balls on it, each pair printed
+with the same bold letter. The reader draws one strand of yarn between the
+two balls of every pair. Strands run from square to square, straight across
+or down, never cross, branch or share a square, and together they fill
+every square of the grid. Over the grid hangs the project's tag, a
+double-ruled board naming a knitting project: Sunday Morning Scarf, Rocking
+Chair Afghan, Snow Day Mittens, Grandbaby Blanket. Under it a legend shows
+the yarn ball the reader is given, with how many pairs ("Yarn ball (9
+pairs)"), and the strand they draw ("Strand of yarn"). The answer page draws
+every strand, thick and round-cornered like a length of yarn, from ball to
+ball through the middle of every square it fills.
+
+Settings: the level only.
+- Gentle: 6 × 6, 5 to 7 pairs. Finished by counting alone, and the how-to
+  line adds "Tip: a square with only two open sides must use both — start in
+  the corners."
+- Classic: 8 × 8, 8 to 11 pairs. Always needs following a yarn at least once
+  (counting alone never finishes it).
+- Challenging: 10 × 10, 12 to 16 pairs. Always needs a "what if" check
+  (counting and following never finish it).
+Which project, which grid, square size and letter size are not settings. The
+help line reports what the trim in Settings prints (square, ball and letter
+size), or that the trim is too small.
+
+Every page is built in the browser (no AI). Every square starts as a strand
+of its own; again and again two strands whose ends sit side by side are
+tied into one, shortest strands first more often than not, but only when
+the new strand never runs beside itself (a strand that doubles back
+alongside itself could take a short cut, and such grids nearly always have
+two answers). A scrap too short for a pair of balls with nowhere to tie cuts
+a neighbouring strand where it touches and ties onto one piece. When few
+enough strands are left, each strand's two ends become a lettered pair of
+balls; no strand is shorter than three squares, so a pair's balls never sit
+side by side. The solver (`solver.ts`) keeps a pencil mark on every side two
+squares share (strand, no strand, not yet known) and, where it can tell,
+which yarn fills each square, and works the grid the way a reader does, one
+sure step at a time and never guessing:
+- basic: a ball has one strand leaving it and any other square two, so a
+  square with only as many open sides as it needs uses them all and a full
+  square closes the rest; a strand carries its yarn along, never joins two
+  different yarns and never closes a loop.
+- reach (Classic and up): a yarn can reach only the squares open to it from
+  its ball; a square no yarn can reach breaks the grid, a square only one
+  yarn can reach is that yarn's, two squares no yarn could share never join,
+  and a square every way between a pair's balls passes through is that
+  pair's.
+- probe (Challenging): a strand (or a gap) on a side that leads by the steps
+  above straight to a broken rule is ruled out.
+Every step is sound, so a grid the solver finishes has exactly one answer.
+Only grids the level's steps finish on exactly their own strands are kept,
+and (at Classic and Challenging) only grids the level below's steps cannot
+finish. Tests cross-check the solver against a brute-force count of answers
+on over a hundred grids, and check that grids with several answers are
+never called solved.
+
+Layout: top to bottom, the tag, the grid and the legend. The page is planned
+from the level and the trim alone, before a grid is built, so every page of
+a run matches. Squares are as large as the trim allows, up to 0.8 in, and
+never smaller than the level's floor (Gentle 0.55 in, Classic 0.44 in,
+Challenging 0.38 in). The grid has soft gray rules in a heavy black frame.
+Each yarn ball is a white ball with a black outline, 0.84 of its square
+across, with a short tail of yarn curling into the square's lower-left
+corner (clear of every strand, which leaves a square through the middle of
+its sides). Its letter prints 16–26 pt with clear white all round it; the
+letters skip I and O (they read as 1 and 0), Q (it reads as O), and M and W
+(too wide for a small ball). The tag prints 16 pt (14 pt on a narrow trim,
+or broken between words when one line is still too wide), stands clear of
+the grid by about half a square (never under 26 px), and its words are set
+in a box at least as wide as the board, so a font that sets wider than
+measured runs into the board's padding instead of wrapping. The legend
+prints 14 pt, 22 px under the grid, on one row or, on a narrow trim, one
+entry over the other. Typical results: 8.5 × 11 prints 0.80 / 0.80 / 0.73 in
+squares (Gentle / Classic / Challenging); 6 × 9 0.75 / 0.59 / 0.48 in;
+5.5 × 8.5 0.56 / 0.49 / 0.40 in.
+
+Quality gate (`kdp-preflight.ts`) runs before a page is accepted:
+- The grid is the level's size and pair count; the balls match the answer's
+  strand ends; no pair's balls sit side by side; the answer keeps every
+  rule; the level's steps finish the grid on exactly that answer, and the
+  level below's steps do not.
+- Squares, letters (at least 16 pt with clear white round them inside their
+  balls) and the tag are at their large-print floors or larger.
+- The project's name fits its tag; the tag, grid and legend are on the
+  printable panel and clear of each other, with the tag's full air above
+  the grid.
+- The project is not one the book already uses while others wait, and the
+  grid is not one the book already prints.
+The drawn check then confirms every ball drawn once in its square with its
+pair's letter printed once on it, a hidden strand for every pair on exactly
+the answer's squares, the tag naming the project, and the legend counting
+the pairs and showing the strand.
+
+Uniqueness: each puzzle stamps `project|level|grid`, where the grid part is a
+digest that is the same however the grid is turned or mirrored (its pairs
+relettered to match; also used as the canonical key). Grids come from the
+seller's puzzle salt and the page seed, so two sellers never share a book
+and the same seed reprints the same page. A book works through every one of
+the 42 projects before one returns, never the previous page's, and never
+prints the same grid twice. A seller's next book opens at projects their
+last one used least recently.
+Pages: 1 · Answer key: yes (every strand drawn) · AI content: no
 
 ---
 
@@ -2497,6 +2601,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | picture-logic | Picture Logic: Retirement Edition | logic | 1 | yes | no |
 | happy-campers | Happy Campers: Tents & Trees | logic | 1 | yes | no |
 | island-hopping | Island Hopping: Bridges | logic | 1 | yes | no |
+| tangled-yarn | Tangled Yarn: Link the Pairs | logic | 1 | yes | no |
 | word-search | Word Search | word | 1 | yes | yes |
 | hidden-message-word-search | Hidden Message Word Search | word | 1 | yes | yes |
 | trivia-clue-word-search | Trivia Clue Word Search | word | 1 | yes | yes |
@@ -2537,4 +2642,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 44 games** (5 logic · 32 word · 7 spatial).
+**Total: 45 games** (6 logic · 32 word · 7 spatial).

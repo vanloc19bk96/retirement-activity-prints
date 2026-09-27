@@ -22,6 +22,7 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'picture-logic',
   'happy-campers',
   'island-hopping',
+  'tangled-yarn',
   'word-search',
   'hidden-message-word-search',
   'trivia-clue-word-search',
