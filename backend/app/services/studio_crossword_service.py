@@ -128,13 +128,13 @@ Seed for variety: {req.seed}. Lean towards {angle} where it suits the theme.
 {_difficulty_line(req.difficulty)}
 
 Rules:
-- Clearly related to retirement / the theme — not generic filler vocabulary.
+- Clearly related to retirement / the theme, not generic filler vocabulary.
 - Everyday English an older adult would recognise.
 - No brand names, celebrities, franchises, song/movie/book titles, sports teams,
   slogans, politics, medical claims, or adult content.
-- Positive, respectful tone — never age stereotypes (frail, senile, useless).
-- Distinct answers — avoid near-duplicates (TRAVEL / TRAVELING).
-- Clue is 2–10 words and at most {req.max_clue_chars} characters — it is set
+- Positive, respectful tone. Never age stereotypes (frail, senile, useless).
+- Distinct answers: avoid near-duplicates (TRAVEL / TRAVELING).
+- Clue is 2–10 words and at most {req.max_clue_chars} characters, since it is set
   in large print, two lists to a page.
 - The clue must not contain the answer or an obvious stem (travel/traveler).
 - Exactly one intended answer; avoid ambiguous multi-answer clues.
@@ -155,7 +155,7 @@ Write ONE clue per word.
 
 Rules:
 - Clue is 2–10 words. No quotation marks around the whole clue.
-- The clue must not contain the answer word or any stem of it — a solver who
+- The clue must not contain the answer word or any stem of it. A solver who
   already sees the answer has nothing to solve.
 - Exactly one answer must fit the clue. Avoid clues that several words satisfy.
 - No proper-noun trivia unless the word itself is a proper noun.

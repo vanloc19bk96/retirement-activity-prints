@@ -198,7 +198,7 @@ def _build_prompt(req: WordSearchRequest, *, seed: int | None = None) -> str:
 Theme: {req.theme.strip()}
 Variety angle: {angle}
 
-Length (hard constraint — count the letters before writing):
+Length (hard constraint, count the letters before writing):
 - {low} to {high} letters once spaces, apostrophes and hyphens are removed.
 
 Rules:

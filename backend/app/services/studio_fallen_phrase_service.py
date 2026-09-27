@@ -136,7 +136,7 @@ Each one is printed into a grid of {rows} rows of letter boxes, so its shape
 matters as much as its sense. Seed for variety: {req.seed}. Lean towards
 {angle} where it suits the theme.
 
-Shape (hard constraints — count before writing):
+Shape (hard constraints, count before writing):
 - {int_value(band, "minLetters")}-{int_value(band, "maxLetters")} letters in total, spaces not counted.
 - {int_value(band, "minWords")}-{int_value(band, "maxWords")} words. Plenty of short, everyday words is exactly right.
 - No word longer than {max_word} letters.

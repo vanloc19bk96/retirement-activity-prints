@@ -257,7 +257,7 @@ Variety angle: {angle}
 The saying:
 {message_rules}
 
-The word pool — {want} retirement words or short phrases on the same theme:
+The word pool: {want} retirement words or short phrases on the same theme:
 - {low} to {high} letters each, once spaces, apostrophes and hyphens are removed.
 - Mix the lengths across that whole band. The grid is filled exactly, so a pool
   of one length cannot be made to add up.

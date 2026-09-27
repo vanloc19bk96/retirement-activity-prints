@@ -105,14 +105,14 @@ Theme (must match every word): {theme}
 These words are hidden in a letter grid, so length is a hard constraint.
 Seed for variety: {req.seed}. Within the theme only, {variety}.
 
-STRICT theme fidelity — the puzzle is ruined if words drift off-theme:
+STRICT theme fidelity: the puzzle is ruined if words drift off-theme:
 - Every word must clearly belong to "{theme}". A reasonable adult should
   instantly agree it fits; near-misses and loose associations are rejected.
 - Do NOT pad with animals, plants, foods, or objects from a different setting
   just to fill the count (e.g. for a beach theme: shell, towel, seagull, tide
   are fine; moose, owl, hyena, gibbon, turkey, toad, or freshwater fish are not).
 - Return as many solid on-theme words as you can, up to {want}. Stay inside
-  the theme — never jump to a different category to pad the list.
+  the theme. Never jump to a different category to pad the list.
 
 Length and form rules:
 - Every word is {req.min_letters}-{req.max_letters} letters long. Count the

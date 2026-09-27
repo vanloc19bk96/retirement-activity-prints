@@ -17,9 +17,9 @@
     "classic": "classic picture-book illustration style, warm storybook feel reminiscent of traditional children's books, natural organic shapes with a gentle hand-drawn quality"
   },
   "lineWeights": {
-    "thin": "THIN, fine outlines like a sharp fine-liner pen (~0.3 mm). Narrow stroke so small interior details stay readable. Uniform width throughout — same thickness on body outlines and interior details, no tapering.",
-    "medium": "MEDIUM-WEIGHT outlines like a standard felt-tip pen (~0.7 mm). Confident and clear; prints cleanly without feeling heavy. Uniform width throughout — same thickness on body outlines and interior details, no tapering.",
-    "thick": "THICK, BOLD outlines like a broad permanent marker (~2 mm). Wide and dominant, easy for young children to follow. Uniform width throughout — same thickness on body outlines and interior details, no tapering."
+    "thin": "THIN, fine outlines like a sharp fine-liner pen (~0.3 mm). Narrow stroke so small interior details stay readable. Uniform width throughout: same thickness on body outlines and interior details, no tapering.",
+    "medium": "MEDIUM-WEIGHT outlines like a standard felt-tip pen (~0.7 mm). Confident and clear; prints cleanly without feeling heavy. Uniform width throughout: same thickness on body outlines and interior details, no tapering.",
+    "thick": "THICK, BOLD outlines like a broad permanent marker (~2 mm). Wide and dominant, easy for young children to follow. Uniform width throughout: same thickness on body outlines and interior details, no tapering."
   },
   "interiorTemplate": "SUBJECT: {idea}. STYLE: {style}. LINE QUALITY: {line_weight}"
 }

@@ -164,7 +164,7 @@ def _build_prompt(req: MissingVowelsRequest) -> str:
     stem = int_value(_limits(), "clueStemLetters")
     min_vowels = int_value(_limits(), "minVowels")
     words_line = (
-        "- One word only — no phrases, hyphens or abbreviations."
+        "- One word only: no phrases, hyphens or abbreviations."
         if req.max_words == 1
         else f"- One word, or a phrase of at most {req.max_words} words."
     )
@@ -182,7 +182,7 @@ Answer rules:
 - {req.min_letters}-{req.max_letters} letters, not counting spaces. Count before writing.
 {words_line}
 - A-Z only. No digits, accents, apostrophes or hyphens.
-- At least {min_vowels} vowels (A E I O U — Y is not a vowel) and at least two
+- At least {min_vowels} vowels (A E I O U; Y is not a vowel) and at least two
   consonants, so the row has something to solve and something to recognise.
 - Familiar vocabulary for adults and seniors, clearly on the theme.
 - No proper nouns, brands, celebrities, titles, abbreviations or slang.
@@ -198,7 +198,7 @@ Clue rules:
   one is dropped.
 - A plain definition or description, not wordplay, riddles or cryptic hints.
 - Never contains the answer, and never a word sharing its first {stem} letters.
-- Exactly one answer fits the clue — a solver who knows it must reach that word.
+- Exactly one answer fits the clue. A solver who knows it must reach that word.
 - No trailing full stop, no quotation marks around the clue.
 
 {language_line}

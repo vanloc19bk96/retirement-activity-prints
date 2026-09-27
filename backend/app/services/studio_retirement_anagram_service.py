@@ -118,7 +118,7 @@ Seed for variety: {req.seed}.
 
 Word rules:
 - {req.min_letters}-{req.max_letters} letters, A-Z only. Count the letters before writing.
-- Single words only — no phrases, hyphens, spaces or plurals of another entry.
+- Single words only: no phrases, hyphens, spaces or plurals of another entry.
 - Familiar vocabulary for adults and seniors.
 - Must clearly relate to the theme above.
 - No proper nouns, brands, abbreviations or slang.
@@ -132,7 +132,7 @@ Clue rules:
   hard limit: the clue is set on one printed line and a longer one is dropped.
 - A plain definition or description, not wordplay, riddles or cryptic hints.
 - Never contains the answer, and never a word sharing its first {stem} letters.
-- Exactly one word fits the clue — a solver who knows it must reach that word.
+- Exactly one word fits the clue. A solver who knows it must reach that word.
 - No trailing full stop, no quotation marks around the clue.
 
 {language_line}

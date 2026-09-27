@@ -182,7 +182,7 @@ letters filled in for the solver and its clue printed above it. Its shape
 matters as much as its sense.
 Seed for variety: {req.seed}. Lean towards {angle} where it suits the theme.
 
-Shape (hard constraints — count before writing):
+Shape (hard constraints, count before writing):
 - {int_value(band, "minLetters")}-{int_value(band, "maxLetters")} letters in total, spaces not counted.
 - {int_value(band, "minWords")}-{int_value(band, "maxWords")} words.
 - No word longer than {max_word} letters.
@@ -206,7 +206,7 @@ Clue rules (a solver cannot reach the saying without one):
 - At most {req.max_clue_chars} characters, counted including spaces. This is a hard
   limit: the clue is set in a column the page has already sized, and a longer
   one is dropped.
-- Say what the saying is ABOUT in plain words — the moment, the feeling or the
+- Say what the saying is ABOUT in plain words: the moment, the feeling or the
   situation behind it. Not wordplay, riddles or cryptic hints.
 - Point at one saying closely enough that a solver who has filled in half the
   blanks can tell which wording is meant.

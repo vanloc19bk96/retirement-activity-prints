@@ -137,7 +137,7 @@ def _build_prompt(req: CryptogramRequest) -> str:
 Each one is enciphered letter-by-letter on a puzzle page, so its length matters.
 Seed for variety: {req.seed}. Lean towards {angle} where it suits the theme.
 
-Length (hard constraint — count before writing):
+Length (hard constraint, count before writing):
 - {min_letters}-{max_letters} letters in total, spaces not counted.
 - That is roughly {min_words}-{max_words} words. No word longer than
   {int_value(limits, "maxWordLetters")} letters.
