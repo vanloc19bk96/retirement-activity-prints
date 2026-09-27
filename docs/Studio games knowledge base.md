@@ -65,7 +65,7 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ---
 
-## Logic (8 games)
+## Logic (9 games)
 
 ### Sudoku (`sudoku`)
 Classic number Sudoku for a large-print retirement book. Fill every row, column
@@ -677,6 +677,104 @@ harbor names before one returns, never the previous page's, and never hides
 the same fleet twice. A seller's next book opens at harbors their last one
 used least recently.
 Pages: 1 · Answer key: yes (every ship sails in) · AI content: no
+
+### Patchwork Quilt: Piece the Patches (`patchwork-quilt`)
+The classic Shikaku puzzle, pieced for retirement. Each page is one square
+quilt with a bold number in some of its squares. The reader sews the quilt
+into patches along the lines: every patch is a rectangle (or square)
+holding exactly one number, and that number is how many squares the patch
+covers. Over the quilt hangs its label, a board with a running-stitch
+inner rule naming a retiree's quilt: Sunday Porch Quilt, Log Cabin Quilt,
+Farewell Party Quilt, Grandkids' Nap Quilt. Under it a legend shows a
+sample patch of two squares with its 2 ("= 2 squares") and a pinstriped
+swatch with how many patches there are to sew ("17 patches"). The answer
+page turns the solution into a finished patchwork quilt: every patch cut
+from one of four fabrics (a light plain, gray polka dots, pinstripes, a
+deeper plain; no two patches that share a side alike), quilted with a
+running stitch just inside its edge, joined by heavy seams, and every
+number on a white button so it reads over any fabric.
+
+Settings: the level only.
+- Gentle: 7 × 7, patches of 2 to 8 squares. Finished by laying one
+  number's patch at a time, and the how-to line adds "Tip: start with a
+  number whose patch fits only one way."
+- Classic: 9 × 9, patches of 2 to 12. Always needs "only one number can
+  reach this square" at least once (number-by-number steps alone never
+  finish it).
+- Challenging: 10 × 10, patches of 2 to 18. Always needs "would it block"
+  at least once (the Classic steps alone never finish it).
+No level needs trial and error, and no patch is a single square. Which
+quilt, which patches and the square size are not settings. The help line
+reports what the trim in Settings prints (square size, the quilt's width
+and the number size), or that the trim is too small.
+
+Every page is built in the browser (no AI). The answer comes first: the
+quilt is cut into patches from the top left, each new patch a rectangle of
+two squares or more that starts on the first square still uncut (so the
+patches always tile the quilt), bigger patches a little likelier than the
+smallest and long thin strips rarer. Every patch gets its number on a
+random square of its own. A freshly pieced quilt often has other answers
+too; every other answer lays some number's patch another way, and moving
+that number to a square of its true patch the other way misses rules the
+other answer out. Round by round the move that leaves fewest answers is
+made (the true answer always survives) until one answer is left. The
+solver (`solver.ts`) keeps, for every number, the ways its patch could
+still lie, and works the quilt the way a reader does, one sure step at a
+time and never guessing:
+- basic: a way across a square another number already owns is crossed off;
+  squares every way of a number covers are that number's (a number with one
+  way left is sewn).
+- reach (Classic and up): a square only one number's patch can still reach
+  is that number's, and its ways that miss the square are crossed off.
+- block (Challenging): a way that would leave some other square with no
+  patch to reach it, or another number with no way at all, is crossed off.
+Every step is sound, so a quilt the solver finishes has exactly one
+answer. Only quilts the level's steps finish on exactly their own answer
+are kept, and (at Classic and Challenging) only quilts the easier steps
+cannot finish. Tests cross-check the solver against a brute-force count of
+answers on over sixty quilts, and check that quilts with several answers
+are never called solved.
+
+Layout: top to bottom, the label, the quilt and the legend. The page is
+planned from the level and the trim alone, before a quilt is pieced, so
+every page of a run matches. Squares are as large as the trim allows, up to
+0.8 in, and never smaller than the level's floor (Gentle 0.5 in, Classic
+0.45 in, Challenging 0.4 in). The numbers print bold at half a square,
+16–22 pt (never under 16 pt), in softly ruled mid-gray squares inside a
+3 pt black binding. The label prints 16 pt (14 pt on a narrow trim, or
+broken between words when one line is still too wide), clear of the quilt
+by about half a square (never under 26 px). The legend prints 14 pt, 24 px
+under the quilt, on one row or, on a narrow trim, one entry over the other.
+Typical results: 8.5 × 11 prints 0.80 / 0.78 / 0.71 in squares (Gentle /
+Classic / Challenging); 6 × 9 0.65 / 0.53 / 0.48 in; 5.5 × 8.5 0.57 / 0.47 /
+0.43 in (numbers 16 pt at the smallest).
+
+Quality gate (`kdp-preflight.ts`) runs before a page is accepted:
+- The quilt is the level's size; the numbers add up to the quilt, none is
+  1 and none is larger than the level's biggest patch; the answer keeps
+  every rule; the level's steps finish the quilt on exactly that answer,
+  and the easier steps alone do not where the level asks for more.
+- Squares, numbers and the label are at their large-print floors or larger.
+- The quilt's name fits its label; the label, quilt and legend are on the
+  printable panel and clear of each other, with the label's full air above
+  the quilt.
+- The quilt's name is not one the book already uses while others wait, and
+  the numbers are not ones the book already prints.
+The drawn check then confirms every number on its square and no other,
+the binding, a hidden fabric on exactly every patch of the answer (no two
+neighbours alike), a stitch round each, a seam on every stretch where two
+patches meet and nowhere else, a button under every number, the label
+naming the quilt, and the legend counting the patches.
+
+Uniqueness: each puzzle stamps `quilt|level|numbers`, where the numbers
+part is a digest of the printed numbers that is the same however the quilt
+is turned or mirrored (also used as the canonical key). Quilts come from
+the seller's puzzle salt and the page seed, so two sellers never share a
+book and the same seed reprints the same page. A book works through every
+one of the 44 quilt names before one returns, never the previous page's,
+and never prints the same quilt twice. A seller's next book opens at
+quilts their last one used least recently.
+Pages: 1 · Answer key: yes (the whole quilt sewn) · AI content: no
 
 ---
 
@@ -2812,6 +2910,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | tangled-yarn | Tangled Yarn: Link the Pairs | logic | 1 | yes | no |
 | garden-plots | Garden Plots: Plant the Flowers | logic | 1 | yes | no |
 | cruise-fleet | Cruise Fleet: Find the Ships | logic | 1 | yes | no |
+| patchwork-quilt | Patchwork Quilt: Piece the Patches | logic | 1 | yes | no |
 | word-search | Word Search | word | 1 | yes | yes |
 | hidden-message-word-search | Hidden Message Word Search | word | 1 | yes | yes |
 | trivia-clue-word-search | Trivia Clue Word Search | word | 1 | yes | yes |
@@ -2852,4 +2951,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 47 games** (8 logic · 32 word · 7 spatial).
+**Total: 48 games** (9 logic · 32 word · 7 spatial).
