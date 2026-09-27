@@ -65,7 +65,7 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ---
 
-## Logic (17 games)
+## Logic (18 games)
 
 ### Sudoku (`sudoku`)
 Classic number Sudoku for a large-print retirement book. Fill every row, column
@@ -1723,6 +1723,122 @@ book works through every one of the 46 days before one returns, never the
 previous page's, and never prints the same grid twice. A seller's next book
 opens at days their last one used least recently.
 Pages: 1 · Answer key: yes (a sun or a moon in every square) · AI content: no
+
+### Yard Sale: Clear the Clutter (`yard-sale`)
+The shade-the-repeats number grid puzzle fans swear by (known in puzzle
+books as Hitori), set as a retiree's big clear-out — the downsizing,
+decluttering and swapping so many retirees finally get round to. Each page
+is one square grid with a bold number in every square, 1 up to the grid's
+size. The reader shades some of the repeated numbers so that no number
+shows twice in any row or column among the white squares; shaded squares
+never touch side by side (corners may meet), and the white squares all stay
+joined in one piece. Over the grid stands its sign, a double-ruled board
+naming a clear-out worth getting round to: the Attic Treasures Sale, the
+Workshop Clear-Out, Moving to the Lake House, the Grandkids' Toy Swap.
+Under it a legend shows two 4s side by side with one shaded ("shade one")
+and two shaded squares side by side with a cross between them on a white
+disc ("never touch"), so the how-to line can stay short. The answer page
+shades every square to shade a mid gray (#B4B4B4) with its number still
+readable through it, so a reader can check their grid square by square.
+
+Only a repeated number is ever shaded (one that shows more than once in its
+row or column as printed); the how-to says so ("Shade some repeated
+numbers"), and it is what makes every grid's answer the only one.
+
+Settings: the level only.
+- Gentle: 6 × 6. Finished by the first steps alone, and the how-to adds, on
+  a line of its own, "Tip: in 4 2 4, the 2 always stays white."
+- Classic: 8 × 8. Always needs "never wall off" at least twice (the first
+  steps alone never finish it).
+- Challenging: 9 × 9. Always needs "what if" at least twice (the Classic
+  steps alone never finish it).
+Every level shades a quarter to a third of the squares (Gentle up to 36%),
+the share puzzle books print. Which sale, which grid and the square size
+are not settings. The help line reports what the trim in Settings prints
+(square size, the grid's width and the numbers' size), or that the trim is
+too small.
+
+Every page is built in the browser (no AI). The answer comes first: a Latin
+square (every number once in every row and column), drawn square by square
+in a random order, and a shading on it — squares taken at random, never two
+side by side and never one that would cut the white squares in two, up to
+the level's share. The white squares keep their numbers; every shaded
+square is given a number a white square in its row or column already holds,
+so it is a real repeat. The shaded squares' numbers are then tuned until
+the grid tells its answer: the level's steps (short of "what if") solve the
+grid as far as they can, six shaded squares in the rows and columns they
+could not finish are each tried with another repeat, and the change that
+leaves the fewest squares open is kept. A grid those steps finish is kept
+when it is no easier than the level; one that is too easy has single
+numbers changed until one makes a grid only the level's own steps finish
+(at Challenging every grid comes this way). The solver (`solver.ts`) keeps a
+pencil mark on every square (white, shaded, not yet known) and works the
+way a reader does, one sure step at a time:
+- the first steps (Gentle): a number that is not repeated stays white
+  ("singles"); two alike with one square between keep the middle white
+  ("sandwich"); two alike side by side leave every other one of that number
+  in the line shaded ("pairs"); a white number shades its twins in its row
+  and column ("repeats"); a shaded square's neighbours are white
+  ("neighbours"). Two white twins in a line or two shaded side by side is a
+  broken grid.
+- never wall off (Classic and up): a square whose shading would cut the
+  white squares in two (a cut point of what is not shaded) stays white;
+  white squares already cut in two is a broken grid.
+- what if (Challenging): a square whose shading, or whose staying white,
+  leads by the earlier steps straight to a broken rule takes the other.
+Every step is sound, so a grid the solver finishes has exactly one answer.
+Only grids the level's steps finish on exactly their own answer are kept,
+and (at Classic and Challenging) only grids the easier steps cannot finish.
+Tests cross-check the solver against a plain search that counts answers on
+5 × 5 to 8 × 8 grids (and on a 9 × 9), and check that grids with several
+answers, or none, are never called solved. A grid builds in about a
+thousandth of a second at Gentle, a few thousandths at Classic and about a
+tenth of a second at Challenging (under a second at worst).
+
+Layout: top to bottom, the sign, the grid and the legend. The page is
+planned from the level and the trim alone, before a grid is built, so every
+page of a run matches. Squares are as large as the trim allows, up to
+0.8 in, and never smaller than the level's floor (Gentle 0.6 in, Classic
+0.5 in, Challenging 0.45 in). Lines between squares are 1.5 px mid gray and
+the frame a 3 px black rule flush inside the grid's edge. Numbers print
+bold in the digit face at a little under half a square, 16–26 pt (never
+under 16 pt), with at least 6 px of air each side in their square. The sign
+prints 16 pt (14 pt on a narrow trim, or broken between words when one line
+is still too wide), clear of the grid by about four tenths of a square
+(never under 26 px). The legend prints 14 pt, 24 px under the grid, on one
+row on every common trim (one entry over the other if a wide font needs
+it). Typical results (square size, Gentle / Classic / Challenging):
+8.5 × 11 prints 0.80 / 0.80 / 0.78 in; 6 × 9 0.74 / 0.59 / 0.53 in;
+5.5 × 8.5 0.67 / 0.53 / 0.47 in.
+
+Quality gate (`kdp-preflight.ts`) runs before a page is accepted:
+- The grid is the level's size and well formed; the answer keeps every
+  rule (no white twins in a line, only repeats shaded, never two shaded
+  side by side, the white squares one piece) and shades the level's share;
+  the level's steps finish the grid on exactly that answer, and the easier
+  steps alone do not where the level asks for more (with the level's count
+  of its own steps).
+- Squares, numbers and the sign are at their large-print floors or larger;
+  every number has air round it in its square.
+- The sale's name fits its sign; the sign, grid and legend are on the
+  printable panel and clear of each other, with the sign's full air above
+  the grid.
+- The sale is not one the book already uses while others wait, and the
+  grid is not one the book already prints.
+The drawn check then confirms its own number in every square and showing,
+the gray shading waiting hidden on exactly the answer's squares, every line
+and the frame whole, the sign naming the sale, and the legend showing 4 4
+with one shaded and two shaded squares crossed out.
+
+Uniqueness: each puzzle stamps `sale|level|grid`, where the grid part is a
+digest of the numbers that is the same when the grid is turned or mirrored,
+or its numbers renamed (every 3 a 5 and every 5 a 3; also used as the
+canonical key). Grids come from the seller's puzzle salt and the page seed,
+so two sellers never share a book and the same seed reprints the same page.
+A book works through every one of the 46 sales before one returns, never
+the previous page's, and never prints the same grid twice. A seller's next
+book opens at sales their last one used least recently.
+Pages: 1 · Answer key: yes (every square to shade shaded gray, numbers showing) · AI content: no
 
 ---
 
@@ -3867,6 +3983,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | friendly-neighbors | Friendly Neighbors: Number the Houses | logic | 1 | yes | no |
 | scenic-drive | Scenic Drive: Add Up the Miles | logic | 1 | yes | no |
 | sun-and-moon | Sun & Moon: Balance the Days | logic | 1 | yes | no |
+| yard-sale | Yard Sale: Clear the Clutter | logic | 1 | yes | no |
 | word-search | Word Search | word | 1 | yes | yes |
 | hidden-message-word-search | Hidden Message Word Search | word | 1 | yes | yes |
 | trivia-clue-word-search | Trivia Clue Word Search | word | 1 | yes | yes |
