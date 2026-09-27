@@ -26,6 +26,7 @@ import { countryFenceTemplate } from '@/utils/studio/country-fence/generate'
 import { steppingStonesTemplate } from '@/utils/studio/stepping-stones/generate'
 import { friendlyNeighborsTemplate } from '@/utils/studio/friendly-neighbors/generate'
 import { scenicDriveTemplate } from '@/utils/studio/scenic-drive/generate'
+import { sunAndMoonTemplate } from '@/utils/studio/sun-and-moon/generate'
 import { wordSearchTemplate } from '@/utils/studio/retirement-word-search/generate'
 import { crosswordTemplate } from '@/utils/studio/crossword/generate'
 import { retirementAnagramTemplate } from '@/utils/studio/retirement-anagram/generate'
@@ -94,6 +95,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   steppingStonesTemplate,
   friendlyNeighborsTemplate,
   scenicDriveTemplate,
+  sunAndMoonTemplate,
 
   // Word
   wordSearchTemplate,

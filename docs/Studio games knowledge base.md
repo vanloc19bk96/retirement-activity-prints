@@ -65,7 +65,7 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ---
 
-## Logic (16 games)
+## Logic (17 games)
 
 ### Sudoku (`sudoku`)
 Classic number Sudoku for a large-print retirement book. Fill every row, column
@@ -1605,6 +1605,124 @@ same page. A book works through every one of the 46 routes before one
 returns, never the previous page's, and never prints the same grid twice.
 A seller's next book opens at routes their last one used least recently.
 Pages: 1 · Answer key: yes (every digit written in) · AI content: no
+
+### Sun & Moon: Balance the Days (`sun-and-moon`)
+The sun-and-moon grid millions now solve every morning on their phones
+(known in puzzle books as Takuzu, the binary puzzle), printed large for
+retirement. Each page is one square grid. The reader draws a sun or a moon
+in every square so that every row and every column is half suns and half
+moons, with never three alike side by side, across or down. Some squares
+come printed, on a pale gray square; the rest are the reader's. Small signs
+sit on the lines between some squares: two squares joined by = hold the
+same, two joined by × hold opposites. Over the grid stands its sign, a
+double-ruled board naming a day worth balancing: Sunrise at the Lake, the
+Harvest Moon Hayride, Porch Swing Sunset, Night Owl Book Club, the
+Grandkids' Sleepover. Under it a legend shows two squares joined by =, both
+suns ("alike"), and two joined by ×, a sun and a moon ("opposite"), so the
+how-to line can stay short. The answer page draws a sun or a moon in every
+square.
+
+A sun is a white disc ringed in black with eight short rays; a moon a solid
+black crescent opening to the top right. The two are told apart at a glance
+and easy to copy with a pencil (a ring, a crescent), and a ringed sun
+weighs about what a solid moon does on the page.
+
+Settings: the level only.
+- Gentle: 6 × 6, the famous size. Finished by the four first steps alone,
+  and the how-to adds, on a line of its own, "Tip: two suns together? Moons
+  go at both ends."
+- Classic: 8 × 8. Always needs "make the row fit" at least twice (the four
+  first steps alone never finish it).
+- Challenging: 10 × 10. Always needs "what if" at least twice (the Classic
+  steps alone never finish it).
+Which day, which grid, how many clues and the square size are not settings.
+The help line reports what the trim in Settings prints (square size and the
+grid's width), or that the trim is too small.
+
+Every page is built in the browser (no AI). The answer comes first: a sun
+or a moon on every square, row by row in a random order, never three alike
+and never more than half of one in any row or column. Clues come next, one
+at a time where a reader would be stuck: the level's steps (short of "what
+if") solve the grid as far as they can, a square they could not reach is
+picked at random, and it gets either its own sun or moon printed or a sign
+(= or ×) to one of its neighbours, a sign a little more often than not.
+When the steps finish the grid, every clue is tried without, in a random
+order, and dropped for good when the level's own steps still finish the
+grid on its one answer — so every clue left matters. A grid is kept only
+with both kinds of clue and the level's share of them (Gentle 18–45% of
+the squares, typically about 10 clues; Classic 16–36%, about 16;
+Challenging 15–34%, about 22). The solver (`solver.ts`) keeps a pencil mark
+on every square and works the way a reader does, one sure step at a time:
+- the four first steps (Gentle): a square joined by = or × to a known one
+  takes its sign's answer ("signs"); two alike side by side put the other
+  at both ends ("pairs"); two alike with one square between put the other
+  in the middle ("gaps"); a row or column with its half of one already
+  fills the rest with the other ("counting"). Three alike, a line over its
+  half, or a sign not kept is a broken grid.
+- make the row fit (Classic and up): of every way to finish one row or
+  column that keeps its own rules and signs (14 ways for a line of 6, 34
+  for 8, 84 for 10, before the signs and known squares thin them), a square
+  that comes out the same in all of them takes that answer ("the last sun
+  cannot go there — three moons would meet").
+- what if (Challenging): a square where a sun (or a moon) would lead, by
+  the earlier steps, straight to a broken rule takes the other.
+Every step is sound, so a grid the solver finishes has exactly one answer.
+Only grids the level's steps finish on exactly their own answer are kept,
+and (at Classic and Challenging) only grids the easier steps cannot finish.
+Tests cross-check the solver against a plain search that counts answers on
+4 × 4 to 8 × 8 grids (and on a 10 × 10), and check that grids with several
+answers, or a broken sign, are never called solved. A grid builds in about
+a thousandth of a second at Gentle, four thousandths at Classic and a fifth
+of a second at Challenging (half a second at worst).
+
+Layout: top to bottom, the sign, the grid and the legend. The page is
+planned from the level and the trim alone, before a grid is built, so every
+page of a run matches. Squares are as large as the trim allows, up to
+0.8 in, and never smaller than the level's floor (Gentle 0.6 in, Classic
+0.5 in, Challenging 0.41 in). Lines between squares are 1.5 px mid gray,
+the frame a 3 px black rule flush inside the grid's edge, and printed
+squares #E4E4E4 (pale enough for any interior, dark enough to tell from the
+reader's squares). Suns and moons print half a square wide. Each sign sits
+on a white disc that parts the line (radius about a fifth of a square,
+never under 8 px), with = or × as large as the disc allows, upright
+wherever it sits; the preflight keeps every sun and moon at least 2 px
+clear of the discs on its lines. The sign prints 16 pt (14 pt on a narrow
+trim, or broken between words when one line is still too wide), clear of
+the grid by about four tenths of a square (never under 26 px). The legend
+prints 14 pt, 24 px under the grid, on one row (one entry over the other if
+a wide font needs it). Typical results (square size, Gentle / Classic /
+Challenging): 8.5 × 11 prints 0.80 / 0.80 / 0.73 in; 6 × 9
+0.79 / 0.59 / 0.48 in; 5.5 × 8.5 0.67 / 0.53 / 0.43 in.
+
+Quality gate (`kdp-preflight.ts`) runs before a page is accepted:
+- The grid is the level's size and well formed; the answer keeps every
+  rule, every printed square and every sign; the level's steps finish the
+  grid on exactly that answer, and the easier steps alone do not where the
+  level asks for more (with the level's count of its own steps); both
+  kinds of clue print, at the level's share.
+- Squares, signs and the sign board are at their large-print floors or
+  larger; every sun and moon is clear of the signs on its lines.
+- The day's name fits its sign; the sign, grid and legend are on the
+  printable panel and clear of each other, with the sign's full air above
+  the grid.
+- The day is not one the book already uses while others wait, and the grid
+  is not one the book already prints.
+The drawn check then confirms pale gray behind every printed square and no
+other, every printed sun and moon showing in its own square, every other
+square's answer waiting hidden, every sun whole with its rays, every sign
+on its own line (and a disc under it) and no other, every line and the
+frame whole, the sign naming the day, and the legend showing = between two
+suns and × between a sun and a moon.
+
+Uniqueness: each puzzle stamps `day|level|grid`, where the grid part is a
+digest of the printed squares and signs that is the same when the grid is
+turned or mirrored, or with every sun a moon (also used as the canonical
+key). Grids come from the seller's puzzle salt and the page seed, so two
+sellers never share a book and the same seed reprints the same page. A
+book works through every one of the 46 days before one returns, never the
+previous page's, and never prints the same grid twice. A seller's next book
+opens at days their last one used least recently.
+Pages: 1 · Answer key: yes (a sun or a moon in every square) · AI content: no
 
 ---
 
@@ -3748,6 +3866,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | stepping-stones | Stepping Stones: Walk the Path | logic | 1 | yes | no |
 | friendly-neighbors | Friendly Neighbors: Number the Houses | logic | 1 | yes | no |
 | scenic-drive | Scenic Drive: Add Up the Miles | logic | 1 | yes | no |
+| sun-and-moon | Sun & Moon: Balance the Days | logic | 1 | yes | no |
 | word-search | Word Search | word | 1 | yes | yes |
 | hidden-message-word-search | Hidden Message Word Search | word | 1 | yes | yes |
 | trivia-clue-word-search | Trivia Clue Word Search | word | 1 | yes | yes |
@@ -3788,4 +3907,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 55 games** (16 logic · 32 word · 7 spatial).
+**Total: 56 games** (17 logic · 32 word · 7 spatial).
