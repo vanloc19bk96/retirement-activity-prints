@@ -65,7 +65,7 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ---
 
-## Logic (14 games)
+## Logic (15 games)
 
 ### Sudoku (`sudoku`)
 Classic number Sudoku for a large-print retirement book. Fill every row, column
@@ -1354,6 +1354,134 @@ the same page. A book works through every one of the 46 walks before one
 returns, never the previous page's, and never prints the same path twice. A
 seller's next book opens at walks their last one used least recently.
 Pages: 1 · Answer key: yes (the walk traced as a gray garden trail through every stone, every number written in) · AI content: no
+
+### Friendly Neighbors: Number the Houses (`friendly-neighbors`)
+The number-block puzzle Europe's puzzle lovers adore (Suguru, or Tectonic),
+laid out as a retiree's dream street. Each page is one square town of
+houses, gathered by streets into blocks of one to five houses: every block
+is a bold rounded outline, half a street clear of the next, with fine gray
+lines between its houses, and a bold number is printed in a few houses. The
+reader writes a number in every house so that each block holds 1 up to its
+number of houses, once each (a block of 3 holds 1, 2 and 3; a house alone on
+its block is 1), and two houses that touch — side by side or corner to
+corner, even across a street — never hold the same number. Over the town
+hangs its street sign, a double-ruled board naming a street worth moving
+to: Maple Lane, Harbor View Cottages, Bluebird Hill, Front Porch Lane, the
+Grandkids' Cul-de-Sac. Under it a legend shows a block of three houses
+numbered 1, 2, 3 ("= a block of 3 holds 1, 2, 3") and two houses either
+side of a street, both 2, crossed out ("= no matching neighbors"). The
+answer page turns the town into a map: the streets between the blocks are
+paved a soft gray, and every missing number is written in (the printed
+numbers stay bold, the found ones plain).
+
+Settings: the level only.
+- Gentle: 6 × 6, more small blocks (threes and fours among the fives),
+  11 numbers printed. Finished by "one left" alone, and the how-to adds, on
+  a line of its own, "Tip: a block of 2 holds only 1 and 2."
+- Classic: 8 × 8, mostly blocks of four and five, 13 or more numbers
+  printed. Always needs "all touch one house" at least once ("one left"
+  alone never finishes it).
+- Challenging: 9 × 9, nearly all blocks of four and five, 9–22 numbers
+  printed. Always needs "claimed numbers" or "what if" at least once (the
+  Classic steps alone never finish it).
+Which street, which town, which numbers and the house size are not
+settings. The help line reports what the trim in Settings prints (house
+pitch, the town's width and the numbers' size), or that the trim is too
+small.
+
+Every page is built in the browser (no AI). The streets come first: the
+town is cut into blocks, each starting at the free house with the fewest
+free neighbours and growing the same way (with a little chance, so blocks
+do not all grow alike) to a size drawn from the level's mix; a lone house
+left over joins a neighbouring block with room for it, most of the time.
+Cuts with too many lone houses or pairs, or with fewer than half the houses
+in blocks of four or five, are not kept. The house numbers come next: a
+search writes a number in every house by the rules, trying numbers in a
+random order; a cut it cannot number within 300 steps is set aside for
+another (most big-block cuts cannot be numbered at all, and are found out
+at once). The printed numbers come last: every house starts numbered, and
+numbers are then taken away one by one — the most crowded first, so the
+ones left spread over the whole town — as long as the level's steps still
+finish the town on the same numbers, down to the level's fair share
+(Gentle 30%, Classic 20%, Challenging 11% of the houses; at Challenging
+first as long as the Classic steps do, then up to twelve more that only the
+deeper steps can spare). The solver (`solver.ts`) keeps a pencil list of
+the numbers each empty house could still take — writing a number crosses
+it off the rest of the block and off every house touching it — and works
+the way a reader does, one sure step at a time:
+- single ("one left"): a house with one number left takes it, and a number
+  with one house left in its block goes there; a house with none left, or
+  a number with nowhere to go, is a broken puzzle.
+- touch (Classic and up, "all touch one house"): when every house of a
+  block that could still take a number touches the same house outside the
+  block, that house cannot take it.
+- probe (Challenging): "claimed numbers" — two houses of a block with only
+  the same two numbers left (or three with three) keep them, so the block's
+  other houses do not get them — and "what if": on a house with two or
+  three numbers left, a number that leads by every earlier step straight to
+  a broken rule is crossed off.
+Every step is sound, so a town the solver finishes has exactly one answer.
+Only towns the level's steps finish on exactly their own numbers are kept,
+and (at Classic and Challenging) only towns the easier steps cannot finish.
+Tests cross-check the solver against a plain search that counts answers on
+4 × 4 and 5 × 5 towns, and check that towns with several answers are never
+called solved. A page builds in about a hundredth of a second at Gentle,
+three hundredths at Classic, and under a fifth of a second at Challenging
+(about half a second at worst).
+
+Layout: top to bottom, the street sign, the town and the legend. The page is
+planned from the level and the trim alone, before a town is built, so every
+page of a run matches. Houses are as large as the trim allows, up to 0.8 in
+apart, and never closer than the level's floor (Gentle 0.6 in, Classic
+0.5 in, Challenging 0.45 in). Streets are 16% of the pitch (never under
+6 px), half on each side of a block's edge; a block's outline is a 2.5 px
+black rule with its outer corners rounded to a fifth of a house and its
+inner corners to half a street, filled white; the lines between its houses
+are 1.5 px mid-gray. Numbers print in the digit face at a little under half
+the pitch, 16–24 pt (never under 16 pt), bold where printed and plain where
+written in, centred on the pitch so the town's rows and columns stay true
+across the streets. The sign prints 16 pt (14 pt on a narrow trim, or
+broken between words when one line is still too wide), clear of the town by
+about four tenths of a pitch (never under 26 px). The legend prints 14 pt,
+24 px under the town, on one row or, on a narrow trim, one entry over the
+other. On the answer page the paved streets are #DDDDDD (about 13% gray,
+dark enough for KDP's printers), laid under the white blocks so they show
+only between them and as a ring road round the town. Typical results (house
+pitch): 8.5 × 11 prints 0.80 / 0.80 / 0.80 in (Gentle / Classic /
+Challenging); 6 × 9 0.73 / 0.58 / 0.52 in; 5.5 × 8.5 0.65 / 0.52 / 0.46 in.
+
+Quality gate (`kdp-preflight.ts`) runs before a page is accepted:
+- The town is the level's size; every block is one piece of one to five
+  houses and the town is not crowded with small ones; every house is blank
+  or a number its block can hold, none twice in a block; the answer numbers
+  every block 1 up to its size with no touching houses alike and keeps every
+  printed number; the page prints the level's share of numbers; the level's
+  steps finish the town on exactly that answer, and the easier steps alone
+  do not where the level asks for more.
+- Houses, numbers and the sign are at their large-print floors or larger;
+  numbers have room round them even in a house between two streets; the
+  streets are wide enough to see.
+- The street's name fits its sign; the sign, town and legend are on the
+  printable panel and clear of each other, with the sign's full air above
+  the town.
+- The street is not one the book already uses while others wait, and the
+  town is not one the book already prints.
+The drawn check then confirms every block outlined as the town has it, a
+fine line on every side two houses of a block share, every printed number
+bold in its house and no other, every other number waiting hidden in its
+own house, the streets waiting hidden to be paved, the sign naming the
+street, and the legend showing the block of three and the crossed-out
+neighbours.
+
+Uniqueness: each puzzle stamps `street|level|town`, where the town part is a
+digest of the blocks and printed numbers that is the same however the town
+is turned or mirrored, whatever its blocks were called while building (also
+used as the canonical key). Towns come from the seller's puzzle salt and the
+page seed, so two sellers never share a book and the same seed reprints the
+same page. A book works through every one of the 46 streets before one
+returns, never the previous page's, and never prints the same town twice. A
+seller's next book opens at streets their last one used least recently.
+Pages: 1 · Answer key: yes (the town as a map: streets paved gray, every number written in) · AI content: no
 
 ---
 
@@ -3495,6 +3623,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | skyline-tour | Skyline Tour: Raise the Towers | logic | 1 | yes | no |
 | country-fence | Country Fence: Fence the Pasture | logic | 1 | yes | no |
 | stepping-stones | Stepping Stones: Walk the Path | logic | 1 | yes | no |
+| friendly-neighbors | Friendly Neighbors: Number the Houses | logic | 1 | yes | no |
 | word-search | Word Search | word | 1 | yes | yes |
 | hidden-message-word-search | Hidden Message Word Search | word | 1 | yes | yes |
 | trivia-clue-word-search | Trivia Clue Word Search | word | 1 | yes | yes |
@@ -3535,4 +3664,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 53 games** (14 logic · 32 word · 7 spatial).
+**Total: 54 games** (15 logic · 32 word · 7 spatial).
