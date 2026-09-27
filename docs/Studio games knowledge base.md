@@ -65,7 +65,7 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ---
 
-## Logic (10 games)
+## Logic (11 games)
 
 ### Sudoku (`sudoku`)
 Classic number Sudoku for a large-print retirement book. Fill every row, column
@@ -880,6 +880,121 @@ of the 44 homes before one returns, never the previous page's, and never
 prints the same house twice. A seller's next book opens at homes their
 last one used least recently.
 Pages: 1 · Answer key: yes (every lamp lit, its light beamed) · AI content: no
+
+### String of Pearls: Thread the Necklace (`string-of-pearls`)
+The classic Masyu puzzle, strung as a necklace from a retiree's life. Each
+page is one square board of softly ruled squares, some holding a white or
+a black pearl. The reader draws one loop through the squares, side to side
+between neighbours, that visits every pearl and never crosses or touches
+itself: at a white pearl the loop goes straight through, and turns in the
+square just before or just after (or both); at a black pearl it turns, and
+goes straight through the next square on both sides (two squares straight
+each way). Squares without a pearl may be visited or not. Over the board
+hangs its name board, a double-ruled board naming a necklace worth
+remembering: Golden Anniversary Pearls, Grandma's Sunday Pearls, Opera
+Night Strand, the Grandkids' Macaroni Necklace. Under it a legend shows a
+white pearl ("= go straight through") and a black pearl ("= turn on it").
+Every pearl carries a small shine (gray on white pearls, white on black) so
+it reads as a pearl, not a dot. The answer page turns the loop into the
+necklace itself: a smooth black cord through every square it visits,
+rounding each turn, running under the pearls, with a small white bead
+strung on every square between them.
+
+Settings: the level only.
+- Gentle: 6 × 6, at least 6 pearls. Finished by the pearls' own rules, one
+  square at a time, and the how-to line adds "Tip: a black pearl within two
+  squares of an edge runs away from that edge."
+- Classic: 8 × 8, at least 8 pearls. Always needs "don't close the loop
+  early" at least once (the pearls' own rules alone never finish it).
+- Challenging: 10 × 10, at least 12 pearls. Always needs "what if" at least
+  once (the Classic steps alone never finish it).
+Every board has at least one pearl of each colour, and its necklace visits
+at least 60% of the squares. Which necklace, which loop, how many pearls
+and the square size are not settings. The help line reports what the trim
+in Settings prints (square size, the board's width and the pearls' width),
+or that the trim is too small.
+
+Every page is built in the browser (no AI). The necklace comes first: a
+patch of the board's inner corners grows one corner square at a time from
+a random start, never leaving a hole and never touching itself corner to
+corner, and its outline is the loop, so it is always one closed loop that
+never crosses or touches itself. The patch grows mostly where the outline
+is left least "bare" — a turn right beside another turn, or a straight in
+the middle of a long run, is a square no pearl can mark, and the loop is
+free to wander there — so the necklace runs in short straights and wide
+bends; necklaces with more than a fifth of their squares bare, or visiting
+under 60% of the board, are not kept. The pearls come next: a black pearl
+on every turn with a straight on both sides, a white pearl on every
+straight with a turn beside it. Pearls are then taken away one by one, in
+random order (never the last of a colour), as long as the level's steps
+still finish the board on the same necklace. The solver (`solver.ts`)
+marks every link between neighbouring squares as thread, crossed or open,
+and works the way a reader does, one sure step at a time:
+- local: a square takes two threads or none (a pearl, always two); a white
+  pearl runs straight, both ways or neither, and cannot run straight
+  where the loop already runs straight on both sides of it (and once
+  straight, a straight on one side forces a turn on the other); a black
+  pearl cannot head toward the edge, a crossed link, a turn or another
+  black pearl within two squares, and once it heads one way it runs two
+  squares straight and not back the other way; a finished loop crosses off
+  every link left.
+- loop (Classic and up): a link that would join a thread's two ends into a
+  loop while other thread or pearls lie outside it is crossed off.
+- probe (Challenging): at a pearl or a loose thread end, a link where
+  thread (or no thread) leads by the loop steps straight to a broken rule
+  is decided the other way.
+Every step is sound, so a board the solver finishes has exactly one
+necklace. Only boards the level's steps finish on exactly their own
+necklace are kept, and (at Classic and Challenging) only boards the easier
+steps cannot finish. Tests cross-check the solver against a plain search
+that counts necklaces on 5 × 5 and 6 × 6 boards, and check that boards
+with several necklaces are never called solved. A page builds in about a
+hundredth of a second at Gentle and Classic, and about a fifth of a second
+at Challenging (under half a second at worst).
+
+Layout: top to bottom, the name board, the board and the legend. The page
+is planned from the level and the trim alone, before a board is built, so
+every page of a run matches. Squares are as large as the trim allows, up to
+0.8 in, and never smaller than the level's floor (Gentle 0.55 in, Classic
+0.48 in, Challenging 0.4 in). Pearls are 0.6 of a square across in a 2–3 px
+ring; mid-gray soft rules run over the squares inside a 3 pt black frame.
+The board prints 16 pt (14 pt on a narrow trim, or broken between words
+when one line is still too wide), clear of the grid by about half a square
+(never under 26 px). The legend prints 14 pt, 24 px under the grid, on one
+row or, on a narrow trim, one entry over the other. On the answer page the
+cord is about a tenth of a square wide (never under 3 px), rounding each
+turn over 0.4 of a square, and the beads are a quarter of a square across.
+Typical results: 8.5 × 11 prints 0.80 / 0.80 / 0.71 in squares (Gentle /
+Classic / Challenging); 6 × 9 0.70 / 0.56 / 0.45 in; 5.5 × 8.5 0.58 / 0.50
+/ 0.41 in.
+
+Quality gate (`kdp-preflight.ts`) runs before a page is accepted:
+- The board is the level's size; every square is empty or a white or black
+  pearl; it has at least the level's fewest pearls, of both colours; the
+  necklace is one closed loop visiting enough of the board and keeping
+  every rule; the level's steps finish the board on exactly that necklace,
+  and the easier steps alone do not where the level asks for more.
+- Squares and the board's name are at their large-print floors or larger.
+- The necklace's name fits its board; the name board, grid and legend are
+  on the printable panel and clear of each other, with the board's full
+  air above the grid.
+- The necklace is not one the book already uses while others wait, and the
+  board is not one the book already prints.
+The drawn check then confirms every pearl in its square and colour and no
+other, each with its shine, the frame, one hidden cord threading exactly
+the answer's links, a hidden bead on exactly every square the necklace
+visits between the pearls, the board naming the necklace, and the legend
+showing both pearls.
+
+Uniqueness: each puzzle stamps `necklace|level|board`, where the board part
+is a digest of the pearls that is the same however the board is turned or
+mirrored (also used as the canonical key). Boards come from the seller's
+puzzle salt and the page seed, so two sellers never share a book and the
+same seed reprints the same page. A book works through every one of the 44
+necklaces before one returns, never the previous page's, and never prints
+the same board twice. A seller's next book opens at necklaces their last
+one used least recently.
+Pages: 1 · Answer key: yes (the necklace strung: cord and beads through every pearl) · AI content: no
 
 ---
 
@@ -3017,6 +3132,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | cruise-fleet | Cruise Fleet: Find the Ships | logic | 1 | yes | no |
 | patchwork-quilt | Patchwork Quilt: Piece the Patches | logic | 1 | yes | no |
 | lamplighter | Lamplighter: Light the House | logic | 1 | yes | no |
+| string-of-pearls | String of Pearls: Thread the Necklace | logic | 1 | yes | no |
 | word-search | Word Search | word | 1 | yes | yes |
 | hidden-message-word-search | Hidden Message Word Search | word | 1 | yes | yes |
 | trivia-clue-word-search | Trivia Clue Word Search | word | 1 | yes | yes |
@@ -3057,4 +3173,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 49 games** (10 logic · 32 word · 7 spatial).
+**Total: 50 games** (11 logic · 32 word · 7 spatial).

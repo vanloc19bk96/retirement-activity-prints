@@ -20,6 +20,7 @@ import { gardenPlotsTemplate } from '@/utils/studio/garden-plots/generate'
 import { cruiseFleetTemplate } from '@/utils/studio/cruise-fleet/generate'
 import { patchworkQuiltTemplate } from '@/utils/studio/patchwork-quilt/generate'
 import { lamplighterTemplate } from '@/utils/studio/lamplighter/generate'
+import { stringOfPearlsTemplate } from '@/utils/studio/string-of-pearls/generate'
 import { wordSearchTemplate } from '@/utils/studio/retirement-word-search/generate'
 import { crosswordTemplate } from '@/utils/studio/crossword/generate'
 import { retirementAnagramTemplate } from '@/utils/studio/retirement-anagram/generate'
@@ -82,6 +83,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   cruiseFleetTemplate,
   patchworkQuiltTemplate,
   lamplighterTemplate,
+  stringOfPearlsTemplate,
 
   // Word
   wordSearchTemplate,
