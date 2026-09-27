@@ -65,7 +65,7 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ---
 
-## Logic (12 games)
+## Logic (13 games)
 
 ### Sudoku (`sudoku`)
 Classic number Sudoku for a large-print retirement book. Fill every row, column
@@ -1114,6 +1114,125 @@ before one returns, never the previous page's, and never prints the same
 city twice. A seller's next book opens at skylines their last one used
 least recently.
 Pages: 1 · Answer key: yes (the skyline raised: a building of every height, windows, doors and spires) · AI content: no
+
+### Country Fence: Fence the Pasture (`country-fence`)
+The classic Slitherlink puzzle, moved out to a retiree's hobby farm. Each
+page is one square field drawn as a lattice of bold posts (dots), with a
+bold number from 0 to 3 in some of the squares between them. The reader
+joins neighboring posts, across or down, into one closed fence: a single
+loop that never crosses, branches or touches itself (every post takes two
+rails or none). A number is how many of the four sides of its square are
+fence; squares without a number may have any. Over the field hangs its
+name board, a double-ruled board naming a pasture worth fencing: Sunny
+Acres Pasture, Grandpa's Back Forty, Clover Hill Meadow, the Grandkids'
+Petting Zoo, Grandma's Kitchen Garden. Under it a legend shows a sample
+square, a 3 fenced on three sides between four posts ("= 3 sides fenced"),
+and a little closed fence with square posts ("= one loop"). The answer page
+turns the loop into the farm itself: the land inside washed a soft gray
+with a tuft of grass in every square free of a number, the fence a heavy
+black rail from post to post, and a square fence post on every post it
+passes. The numbers stay on top.
+
+Settings: the level only.
+- Gentle: 6 × 6. Finished by the numbers and the posts alone, one square at
+  a time, and the how-to line adds "Tip: a 0 has no fence round it, and a 3
+  in a corner is fenced on both corner sides."
+- Classic: 8 × 8. Always needs "don't close the fence early" at least once
+  (the Gentle steps alone never finish it).
+- Challenging: 10 × 10. Always needs "what if" at least once (the Classic
+  steps alone never finish it).
+Every pasture takes 40–60% of the field, and the fence is at least as many
+rails long as the field has squares. Which pasture, which fence, how many
+numbers and the square size are not settings. The help line reports what
+the trim in Settings prints (square size, the field's width and the
+numbers' size), or that the trim is too small.
+
+Every page is built in the browser (no AI). The pasture comes first: a
+patch of squares grows one square at a time from a random start, never
+leaving a hole and never touching itself corner to corner, to a random
+40–60% of the field, and its outline is the fence, so it is always one
+closed loop that never crosses or touches itself. Growth mostly takes
+squares that touch the patch on one side only, so the pasture reaches out
+in arms and bays and the fence wanders; fences shorter than one rail per
+square of the field are not kept. The numbers come next: every square gets
+the count of its fenced sides, and numbers are then taken away one by one,
+in random order, as long as the level's steps still finish the field on the
+same fence (at Challenging: first as long as the Classic steps do, then up
+to twelve more that only "what if" can spare). The solver (`solver.ts`)
+marks every rail between neighboring posts as fence, crossed or open, and
+works the way a reader does, one sure step at a time:
+- local: a number's sides are all crossed once its count is reached, and
+  all fenced once it can only just be reached; a post takes two rails or
+  none; a number read together with the posts at its four corners — every
+  way its sides can be fenced to its count, each corner post then taking
+  two rails or none — decides any rail that comes out the same every way (a
+  3 in a corner fences both corner sides, a 1 in a corner crosses them, a
+  rail arriving at a 3's corner fences its two far sides); a closed loop
+  that is all the fence crosses off every rail left.
+- loop (Classic and up): a rail that would join a run of fence's two ends
+  into a loop while other fence lies outside it, or while a number still
+  wants a different count, is crossed off.
+- probe (Challenging): beside a number or at a loose end of fence, a rail
+  where fence (or no fence) leads by the loop steps straight to a broken
+  rule is decided the other way.
+Every step is sound, so a field the solver finishes has exactly one fence.
+Only fields the level's steps finish on exactly their own fence are kept,
+and (at Classic and Challenging) only fields the easier steps cannot
+finish. Tests cross-check the solver against a plain search that counts
+fences on 4 × 4 to 6 × 6 fields, and check that fields with several fences
+are never called solved. A field builds in about a two-hundredth of a
+second at Gentle, a hundredth at Classic, and about a tenth of a second at
+Challenging (under a fifth at worst).
+
+Layout: top to bottom, the name board, the field and the legend. The page
+is planned from the level and the trim alone, before a field is built, so
+every page of a run matches. Squares are as large as the trim allows, up to
+0.8 in, and never smaller than the level's floor (Gentle 0.55 in, Classic
+0.48 in, Challenging 0.4 in). Numbers print bold at half a square, 16–22 pt
+(never under 16 pt); posts are solid black dots 7–10 px across; there are
+no rules or frame, so a pencilled fence is the only line on the field. The
+field keeps a margin round its outer posts wide enough for the answer
+page's posts. The board prints 16 pt (14 pt on a narrow trim, or broken
+between words when one line is still too wide), clear of the field by
+about half a square (never under 26 px). The legend prints 14 pt, 24 px
+under the field, on one row or, on a narrow trim, one entry over the
+other. On the answer page the rail is 0.08 of a square (never under 4 px),
+the posts are squares 0.17 of a square across (never under 9 px), and the
+pasture is washed #DDDDDD (about 13% gray, dark enough for KDP's printers,
+light enough for the black numbers over it). Typical results: 8.5 × 11
+prints 0.80 / 0.80 / 0.71 in squares (Gentle / Classic / Challenging); 6 ×
+9 0.72 / 0.57 / 0.46 in; 5.5 × 8.5 0.59 / 0.51 / 0.41 in.
+
+Quality gate (`kdp-preflight.ts`) runs before a page is accepted:
+- The field is the level's size; every square is blank or a number from 0
+  to 3, and there is at least one number; the fence is one closed loop, at
+  least one rail per square long, round a pasture of 40–60% of the field,
+  giving every number its count; the level's steps finish the field on
+  exactly that fence, and the easier steps alone do not where the level
+  asks for more.
+- Squares, numbers and the board are at their large-print floors or larger,
+  and the posts stay inside the field's margin.
+- The pasture's name fits its board; the name board, field and legend are
+  on the printable panel and clear of each other, with the board's full
+  air above the field.
+- The pasture is not one the book already uses while others wait, and the
+  field is not one the book already prints.
+The drawn check then confirms every post, row by row, every number in its
+square and no other, one hidden fence running exactly the answer's rails,
+a hidden post on every post it passes, the pasture washed in, a hidden
+tuft on exactly the pasture's squares free of a number, the board naming
+the pasture, and the legend showing the sample square and the closed
+fence.
+
+Uniqueness: each puzzle stamps `pasture|level|field`, where the field part
+is a digest of the numbers that is the same however the field is turned or
+mirrored (also used as the canonical key). Fields come from the seller's
+puzzle salt and the page seed, so two sellers never share a book and the
+same seed reprints the same page. A book works through every one of the 44
+pastures before one returns, never the previous page's, and never prints
+the same field twice. A seller's next book opens at pastures their last one
+used least recently.
+Pages: 1 · Answer key: yes (the pasture fenced: a gray meadow with grass tufts inside a heavy fence and square posts) · AI content: no
 
 ---
 
@@ -3253,6 +3372,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | lamplighter | Lamplighter: Light the House | logic | 1 | yes | no |
 | string-of-pearls | String of Pearls: Thread the Necklace | logic | 1 | yes | no |
 | skyline-tour | Skyline Tour: Raise the Towers | logic | 1 | yes | no |
+| country-fence | Country Fence: Fence the Pasture | logic | 1 | yes | no |
 | word-search | Word Search | word | 1 | yes | yes |
 | hidden-message-word-search | Hidden Message Word Search | word | 1 | yes | yes |
 | trivia-clue-word-search | Trivia Clue Word Search | word | 1 | yes | yes |
@@ -3293,4 +3413,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 51 games** (12 logic · 32 word · 7 spatial).
+**Total: 52 games** (13 logic · 32 word · 7 spatial).

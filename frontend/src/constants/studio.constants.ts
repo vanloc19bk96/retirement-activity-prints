@@ -29,6 +29,7 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'lamplighter',
   'string-of-pearls',
   'skyline-tour',
+  'country-fence',
   'word-search',
   'hidden-message-word-search',
   'trivia-clue-word-search',
