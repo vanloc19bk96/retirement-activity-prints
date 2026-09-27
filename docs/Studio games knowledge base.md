@@ -307,7 +307,7 @@ Pages: 1 · Answer key: yes · AI content: yes
 
 ---
 
-## Logic (18 games)
+## Logic (20 games)
 
 ### Sudoku (`sudoku`)
 Classic number Sudoku for a large-print retirement book. Fill every row, column
@@ -2081,6 +2081,124 @@ A book works through every one of the 46 sales before one returns, never
 the previous page's, and never prints the same grid twice. A seller's next
 book opens at sales their last one used least recently.
 Pages: 1 · Answer key: yes (every square to shade shaded gray, numbers showing) · AI content: no
+
+---
+
+### Game Night: Tally the Scores (`game-night`)
+The math-cage number grid puzzle fans can't put down (known in puzzle books
+as Calcudoku), set at a retiree's card table. Each page is one square grid
+split by bold walls into boxes of one to four squares, every box carrying a
+clue in its top-left corner: a target and a sign ("12+", "3−", "30×",
+"2÷"), or a lone number. The reader writes 1 to N once in every row and
+column so the numbers in every box make its target with its sign — added,
+multiplied, or in a box of two, the smaller taken from the larger or the
+larger divided by the smaller; a box of one holds its number. Over the grid
+stands its sign, a double-ruled board naming a game night worth looking
+forward to: Tuesday Canasta Club, Cribbage on the Porch, Mahjong by the
+Lake, Spades with the Grandkids. Under it a legend works one little box of
+two squares for every sign the level prints ("5+" holding 2 and 3, beside
+"2 + 3 = 5"), so the how-to line can stay short. The answer page writes
+every square's number in, plain and set low, clear of the bold clues.
+
+Settings: the level only.
+- Gentle: 5 × 5, + and − only, up to three lone numbers. Finished by the
+  first steps alone; the how-to spells both signs out, and adds, on a line
+  of its own, "Tip: with 1 to 5, a 4− box can only hold 1 and 5."
+- Classic: 6 × 6, all four signs, up to two lone numbers. Always needs
+  "must be here" at least twice (the first steps alone never finish it).
+- Challenging: 7 × 7, all four signs, at most one lone number. Always needs
+  "what if" at least twice (the Classic steps alone never finish it).
+Which night, which grid, which signs and the square size are not settings.
+The help line reports what the trim in Settings prints (square size, the
+grid's width and the clues' size), or that the trim is too small.
+
+Every page is built in the browser (no AI). The answer comes first: a Latin
+square drawn square by square in a random order. Boxes are grown on it from
+random squares, a neighbour at a time, up to a size drawn from the level's
+mix, never taking in a number the box already holds — so no answer ever
+asks a reader to repeat a number inside a box (the solver still allows it,
+as the rules do, so a reader who assumes either way reaches the same one
+answer). Each box takes a sign its numbers allow (÷ only where the larger
+divides by the smaller; products at most 999, so every clue fits its
+corner). The boxes are then tuned: the level's steps (short of "what if")
+solve as far as they can, a few changes near the squares left open — a box
+given another sign, or cut in two — are tried, and the one leaving the
+fewest pencil marks is kept. A grid those steps finish is kept when it is
+no easier than the level; one that is too easy climbs — two neighbouring
+boxes joined or a sign changed, a change at a time, each kept while the
+level's steps still finish the grid — until only the level's own steps do.
+The solver (`solver.ts`) keeps a pencil list on every square and works the
+way a reader does, one sure step at a time:
+- the first steps (Gentle): every fill a box's pencil lists allow trims its
+  squares ("boxes"); a known number leaves the rest of its row and column
+  ("taken"); a number with one place left in a line goes there ("only
+  place"). A square with nothing left, a box with no fill or a line with no
+  place for a number is a broken grid.
+- must be here (Classic and up): a number every fill of a box puts on one
+  line leaves the rest of that line; two squares of a line down to the same
+  two numbers (three to three) keep them from the rest ("pairs").
+- what if (Challenging): in a square down to two numbers, one whose
+  pencilling in leads by the earlier steps straight to a broken rule is
+  crossed off, and the square takes the other.
+Every step is sound, so a grid the solver finishes has exactly one answer.
+A box or a line is looked at again only once one of its squares has lost a
+number. Tests cross-check the solver against a plain search that counts
+answers on 4 × 4 to 7 × 7 grids, and check that grids with several answers,
+or none, are never called solved. A grid builds in a few thousandths of a
+second at Gentle, a few hundredths at Classic and about a tenth of a second
+at Challenging (under half a second at worst).
+
+Layout: top to bottom, the sign, the grid and the legend. The page is
+planned from the level and the trim alone, before a grid is built, so every
+page of a run matches. Squares are as large as the trim allows, up to
+0.8 in, and never smaller than the level's floor (Gentle 0.62 in, Classic
+0.56 in, Challenging 0.5 in). Lines between squares are 1.5 px mid gray;
+the walls round every box are 3 px black bars centred on their line, joined
+end to end into runs that meet square at the corners; the frame is a 3 px
+black rule flush inside the grid's edge. Clues print bold in the digit face
+at about a quarter of a square, 12–16 pt (never under 12 pt), sized so the
+widest clue the level can print ("999×", or "20+" at Gentle) fits inside its
+square. The answer's numbers print plain at a little over a third of a
+square, 16–24 pt, set low with at least 3 px of air under the clue. The
+sign prints 16 pt (14 pt on a narrow trim, or broken between words), clear
+of the grid by about four tenths of a square (never under 26 px). The
+legend prints 14 pt, 26 px under the grid, its sums set with unbreakable
+spaces so they never wrap: both entries on one row at Gentle, the four
+entries two to a row at Classic and Challenging (one to a row if a wide
+font needs it). Typical results (square size, Gentle / Classic /
+Challenging): 8.5 × 11 prints 0.80 / 0.80 / 0.80 in; 6 × 9 0.80 / 0.72 /
+0.61 in; 5.5 × 8.5 0.66 / 0.59 / 0.51 in.
+
+Quality gate (`kdp-preflight.ts`) runs before a page is accepted:
+- The grid is the level's size and well formed (boxes cover every square
+  once, joined, one to four squares; − and ÷ only on boxes of two); the
+  answer keeps every rule; every box is one the level prints (its signs
+  only, no number twice, a product that fits, few enough lone numbers); the
+  level's steps finish the grid on exactly that answer, and the easier
+  steps alone do not where the level asks for more (with the level's count
+  of its own steps).
+- Squares, clues, the answer's numbers and the sign are at their
+  large-print floors or larger; every clue fits its square and clears the
+  number under it.
+- The night's name fits its sign; the sign, grid and legend are on the
+  printable panel and clear of each other.
+- The night is not one the book already uses while others wait, and the
+  grid is not one the book already prints.
+The drawn check then confirms every box's clue in the corner of its first
+square, the answer's own number waiting hidden in every square, every wall
+run, line and the frame drawn, the sign naming the night, and the legend
+working one box for every sign the level prints.
+
+Uniqueness: each puzzle stamps `night|level|grid`, where the grid part is a
+digest of the boxes and their clues that is the same when the grid is
+turned or mirrored (also used as the canonical key; numbers are not renamed,
+since a box's target is arithmetic). Grids come from the seller's puzzle
+salt and the page seed, so two sellers never share a book and the same seed
+reprints the same page. A book works through every one of the 46 nights
+before one returns, never the previous page's, and never prints the same
+grid twice. A seller's next book opens at nights their last one used least
+recently.
+Pages: 1 · Answer key: yes (every square's number written in) · AI content: no
 
 ---
 
@@ -4022,6 +4140,7 @@ Pages: 1 · Answer key: no · AI content: no
 | scenic-drive | Scenic Drive: Add Up the Miles | logic | 1 | yes | no |
 | sun-and-moon | Sun & Moon: Balance the Days | logic | 1 | yes | no |
 | yard-sale | Yard Sale: Clear the Clutter | logic | 1 | yes | no |
+| game-night | Game Night: Tally the Scores | logic | 1 | yes | no |
 | maze | Maze | visual | 1 | yes | no |
 | shaped-maze | Shaped Maze: Retirement Edition | visual | 1 | yes | no |
 | dot-to-dot | Dot to Dot: Retirement Edition | visual | 1 | yes | no |
