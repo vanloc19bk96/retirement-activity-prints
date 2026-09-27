@@ -570,9 +570,13 @@ function drawKeyStrip(
     const slice = plan.items.slice(row * plan.columnCount, (row + 1) * plan.columnCount)
     if (slice.length === 0) continue
     const parts: StudioFabricObject[] = []
+    // A short last row is centred under the full one rather than left-hung, so
+    // the strip reads as one balanced block instead of a table that ran out.
+    const rowWidth = slice.length * cellWidth + (slice.length - 1) * plan.gutter
+    const rowLeft = left + Math.round((plan.blockWidth - rowWidth) / 2)
 
     slice.forEach((item, column) => {
-      const cellLeft = left + column * (cellWidth + plan.gutter)
+      const cellLeft = rowLeft + column * (cellWidth + plan.gutter)
       const boxLeft = cellLeft + Math.round((cellWidth - plan.boxSide) / 2)
 
       parts.push(

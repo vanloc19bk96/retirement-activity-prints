@@ -424,8 +424,11 @@ export function drawAtoZList(
     if (slice.length === 0) continue
 
     const parts: StudioFabricObject[] = []
+    // A short last row is centred under the full ones rather than left-hung.
+    const rowWidth = slice.length * plan.cellWidth + (slice.length - 1) * plan.gutter
+    const rowLeft = left + Math.round((plan.blockWidth - rowWidth) / 2)
     slice.forEach((item, column) => {
-      const cellLeft = left + column * (plan.cellWidth + plan.gutter)
+      const cellLeft = rowLeft + column * (plan.cellWidth + plan.gutter)
       parts.push(
         buildText(
           {

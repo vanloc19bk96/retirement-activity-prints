@@ -766,11 +766,14 @@ export function drawWordWheelList(options: {
   // one line of the key slide off the caption that still describes the list.
   for (let row = 0; row < plan.rowCount; row++) {
     const slice = plan.words.slice(row * plan.columnCount, (row + 1) * plan.columnCount)
+    // A short last row is centred under the full ones rather than left-hung.
+    const rowWidth = slice.length * plan.cellWidth + (slice.length - 1) * plan.gutter
+    const rowLeft = left + Math.round((plan.blockWidth - rowWidth) / 2)
     slice.forEach((word, column) => {
       parts.push(
         buildText(
           {
-            left: left + column * (plan.cellWidth + plan.gutter),
+            left: rowLeft + column * (plan.cellWidth + plan.gutter),
             top: top + row * (plan.rowHeight + LIST_ROW_GAP),
             text: word,
             fontFamily: font,
