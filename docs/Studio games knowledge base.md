@@ -65,7 +65,7 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ---
 
-## Logic (7 games)
+## Logic (8 games)
 
 ### Sudoku (`sudoku`)
 Classic number Sudoku for a large-print retirement book. Fill every row, column
@@ -568,6 +568,115 @@ every one of the 42 garden names before one returns, never the previous
 page's, and never prints the same garden twice. A seller's next book opens
 at gardens their last one used least recently.
 Pages: 1 · Answer key: yes (every flower planted) · AI content: no
+
+### Cruise Fleet: Find the Ships (`cruise-fleet`)
+The classic Battleships (Bimaru) puzzle, set sail for retirement. Each page
+is one square harbor hiding a cruise fleet: a cruise ship (4 squares),
+ferries (3), sailboats (2) and rowboats (1). The numbers above each column
+and left of each row tell how many ship squares lie there. Ships lie
+straight across or down and never touch, not even corner to corner. A few
+squares are shown to start from: a solid black ship piece (a round rowboat,
+a bow or stern rounded on its open end, a square middle) or a wave for open
+water. Over the harbor stands its sign, a double-ruled board naming a
+retiree's port of call: Sunset Harbor, Lighthouse Point, Calm Seas Marina,
+Grandkids' Beach Day. Under it the legend draws every ship of the fleet to
+scale with a white porthole on each square and says how many there are ("1
+cruise ship", "2 ferries"), then the wave ("Open water"). The answer page
+sails the whole fleet in: a light gray hull outlined in black with a
+porthole on every square, the pieces the reader was shown still black on
+top. No battles: the harbor names and words keep the fleet on vacation.
+
+Settings: the level only.
+- Gentle: 6 × 6, 6 ships (one ferry, two sailboats, three rowboats), at
+  least 3 squares shown. Finished by marking and counting alone, and the
+  how-to line adds "Tip: once a row or column has all its ship squares, the
+  rest of it is water."
+- Classic: 8 × 8, 8 ships (one cruise ship, two ferries, two sailboats,
+  three rowboats), at least 3 squares shown. Always needs "where can it go"
+  at least twice (marking and counting alone never finish it).
+- Challenging: the classic 10 × 10 fleet, 10 ships (one cruise ship, two
+  ferries, three sailboats, four rowboats), at least 2 squares shown. Needs
+  "where can it go" at least three times.
+No level needs trial and error. Which harbor, which fleet, how many squares
+are shown and the square size are not settings. The help line reports what
+the trim in Settings prints (square and number sizes), or that the trim is
+too small.
+
+Every page is built in the browser (no AI). The answer comes first: the
+fleet is dropped in longest ship first, each where it neither overlaps nor
+touches another, which fixes the numbers. Then the squares to show: the
+level's own solver works the harbor from the numbers alone, and wherever it
+gets stuck one of the squares it could not decide is shown (a ship piece
+seven times in ten) until it finishes. Every shown square is then taken
+back in turn and left out if the harbor still finishes without it, so
+nothing is shown that the reader does not need; finally squares are put
+back (ship pieces first) up to the level's minimum, but only ones that keep
+the level the level. The solver (`solver.ts`) keeps a pencil mark on every
+square (ship, water, not yet known) and works the harbor the way a reader
+does, one sure step at a time and never guessing:
+- basic: what a shown piece decides (a bow's ship runs on one way, water on
+  its other three sides; a middle runs on both ways across or both ways
+  down, whichever way is not closed); water on every corner of a ship
+  square; a row or column with all its ship squares is water elsewhere, and
+  one with only as many open squares as ship squares missing is ship in all
+  of them; ships already whole are ticked off the fleet, and a run as long
+  as the longest ship still missing has water at both ends (a lone square,
+  when only rowboats are missing, water all round).
+- fleet (Classic and up): "where can it go": a missing ship that fits in
+  just as many places as there are of it is in all of them; the squares
+  every place of the one ship of a length share are ship; a square where no
+  missing ship fits is water.
+Every step is sound, so a harbor the solver finishes has exactly one
+answer. Only harbors the level's steps finish on exactly their own answer
+are kept, and (at Classic and Challenging) only harbors the basic steps
+cannot finish. Tests cross-check the solver against a brute-force count of
+answers at every level, and check that harbors with several answers are
+never called solved.
+
+Layout: top to bottom, the sign, the column numbers, the harbor with the
+row numbers to its left, and the legend. The page is planned from the level
+and the trim alone, before a fleet is hidden, so every page of a run
+matches. Squares are as large as the trim allows, up to 0.8 in, and never
+smaller than the level's floor (Gentle 0.5 in, Classic 0.45 in,
+Challenging 0.36 in). The numbers print bold at 16–22 pt (never under
+16 pt), the squares are softly ruled in mid gray inside a 3 pt black frame,
+and the sign prints 16 pt (14 pt on a narrow trim, or broken between words
+when one line is still too wide) with at least 24 px of air above the
+column numbers. The legend prints 14 pt, 26 px under the harbor, its
+entries in order in as few rows as fit, cut so the rows come out as even as
+they can; on a trim too short for the named legend at the level's floor it
+counts the ships instead ("× 2", "Water"). Typical results: 8.5 × 11 prints
+0.80 / 0.79 / 0.65 in squares (Gentle / Classic / Challenging); 6 × 9
+0.65 / 0.48 / 0.40 in; 5.5 × 8.5 0.52 / 0.46 / 0.38 in (Classic and
+Challenging with the counted legend).
+
+Quality gate (`kdp-preflight.ts`) runs before a page is accepted:
+- The harbor is the level's size and fleet; the answer keeps every rule and
+  matches every number and shown square; the level's steps finish the
+  harbor on exactly that answer, and the basic steps alone do not where the
+  level asks for more; at least the level's minimum of squares is shown.
+- Squares, numbers and the sign are at their large-print floors or larger.
+- The harbor's name fits its sign; the sign, the harbor with its numbers
+  and the legend are on the printable panel and clear of each other.
+- The harbor's name is not one the book already uses while others wait,
+  and the fleet is not one the book already hides.
+The drawn check then confirms every row and column number, the frame,
+every shown square showing its piece and no other square shown, a hidden
+hull on exactly the squares of every ship (with portholes on every ship
+longer than a rowboat), the sign naming the harbor, and the legend listing
+and drawing the fleet and open water.
+
+Uniqueness: each puzzle stamps `harbor|level|fleet`, where the fleet part
+is a digest of the ship squares that is the same however the harbor is
+turned or mirrored (also used as the canonical key). Two pages with the
+same fleet share every number and one answer, so the book treats them as
+the same puzzle whatever squares each shows. Fleets come from the seller's
+puzzle salt and the page seed, so two sellers never share a book and the
+same seed reprints the same page. A book works through every one of the 44
+harbor names before one returns, never the previous page's, and never hides
+the same fleet twice. A seller's next book opens at harbors their last one
+used least recently.
+Pages: 1 · Answer key: yes (every ship sails in) · AI content: no
 
 ---
 
@@ -2702,6 +2811,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | island-hopping | Island Hopping: Bridges | logic | 1 | yes | no |
 | tangled-yarn | Tangled Yarn: Link the Pairs | logic | 1 | yes | no |
 | garden-plots | Garden Plots: Plant the Flowers | logic | 1 | yes | no |
+| cruise-fleet | Cruise Fleet: Find the Ships | logic | 1 | yes | no |
 | word-search | Word Search | word | 1 | yes | yes |
 | hidden-message-word-search | Hidden Message Word Search | word | 1 | yes | yes |
 | trivia-clue-word-search | Trivia Clue Word Search | word | 1 | yes | yes |
@@ -2742,4 +2852,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 46 games** (7 logic · 32 word · 7 spatial).
+**Total: 47 games** (8 logic · 32 word · 7 spatial).
