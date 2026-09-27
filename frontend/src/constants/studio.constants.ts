@@ -28,6 +28,7 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'patchwork-quilt',
   'lamplighter',
   'string-of-pearls',
+  'skyline-tour',
   'word-search',
   'hidden-message-word-search',
   'trivia-clue-word-search',

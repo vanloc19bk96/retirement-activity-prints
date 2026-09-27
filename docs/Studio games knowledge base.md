@@ -65,7 +65,7 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ---
 
-## Logic (11 games)
+## Logic (12 games)
 
 ### Sudoku (`sudoku`)
 Classic number Sudoku for a large-print retirement book. Fill every row, column
@@ -995,6 +995,125 @@ necklaces before one returns, never the previous page's, and never prints
 the same board twice. A seller's next book opens at necklaces their last
 one used least recently.
 Pages: 1 · Answer key: yes (the necklace strung: cord and beads through every pearl) · AI content: no
+
+### Skyline Tour: Raise the Towers (`skyline-tour`)
+The classic Skyscrapers puzzle, set in the skylines of a retiree's travels.
+Each page is one square city of softly ruled plots with a few given heights
+in bold, and clues standing in a band all round it. The reader fills every
+plot with a building 1 to N floors tall so every row and every column holds
+each height exactly once; a number outside a row or column is how many
+buildings a visitor standing there sees, looking in — a taller building
+hides every shorter one behind it. Over the city hangs its name board, a
+double-ruled board naming a skyline worth touring: Chicago Lakefront, Paris
+Left Bank, Sydney Harbour, Venice Grand Canal, the Hometown Main Street, the
+Grandkids' Block City. Under it a legend shows a little skyline of three
+climbing towers ("Heights 1 to 6") and a sample clue with an arrow looking
+in ("= 3 buildings seen from here"). The answer page raises the whole
+skyline: every plot gets its building, a pale gray tower standing on the
+plot's foot, as tall as its height, with windows up both sides, a door where
+there is room, a spire crowning the tallest in every row and column, and
+its height in bold on the facade under the roof — the given heights move up
+onto their facades with the rest.
+
+Settings: the level only.
+- Gentle: 5 × 5, at most 2 given plots. Finished by the edge count, singles
+  and "the last two plots, both ways round", and the how-to line adds "Tip:
+  next to a 1 stands the tallest building."
+- Classic: 6 × 6, at most 3 given plots. Always needs "try the orders" at
+  least once (the Gentle steps alone never finish it).
+- Challenging: 7 × 7, at most 4 given plots. Always needs "what if" at
+  least once (the Classic steps alone never finish it).
+Every side of the city keeps at least one clue, and the clues are never the
+full set. Which skyline, which heights, how many clues and given plots, and
+the plot size are not settings. The how-to line names the level's heights
+("buildings 1 to 6 floors tall"). The help line reports what the trim in
+Settings prints (plot size, the city's width with its clues and the numbers'
+size), or that the trim is too small.
+
+Every page is built in the browser (no AI). The answer comes first: a city
+laid plot by plot in reading order, each plot taking a height at random
+from those its row and column still allow and stepping back when a plot is
+left with none, so any Latin square can come up. Every clue round the city
+is counted from it. Where the level's steps get stuck with every clue up, a
+plot is handed over — of eight stuck plots, the one that leaves the fewest
+open — until they finish the city; a city that would need more plots than
+the level hands over is let go at once. Clues are then rubbed out one by
+one, in random order (never a side's last), as long as the level's steps
+still finish the city on the same answer, and every handed-over plot it can
+do without goes too. The solver (`solver.ts`) keeps each plot's pencil marks
+(the heights still possible there) and works the way a reader does, one sure
+step at a time:
+- basic: the edge count (a clue of k leaves the plot d steps from it no
+  taller than N − k + 1 + d, so a 1 puts the tallest beside it and a clue
+  of N sets the heights climbing); a plot with one height left takes it and
+  crosses it off its row and column; a height with one plot left in a row
+  or column goes there; a row or column with only two plots open is tried
+  both ways round against its clues.
+- line (Classic and up): "try the orders" — every order a row or column
+  could still take is tried against its clues (and, in a line with no clue,
+  against its pencil marks alone: the reader's pairs and triples), and a
+  height no order puts on a plot is crossed off there.
+- probe (Challenging): "what if" — on a plot with two heights left, or for
+  a height with two plots left in a row or column, one choice that leads by
+  the Classic steps straight to a broken rule is crossed off.
+Every step is sound, so a city the solver finishes has exactly one answer.
+Only cities the level's steps finish on exactly their own answer are kept,
+and (at Classic and Challenging) only cities the easier steps cannot
+finish. Tests cross-check the solver against a plain search that counts
+answers on 4 × 4 to 6 × 6 cities, and check that cities with several
+answers are never called solved. A page builds in about a hundredth of a
+second at Gentle and two hundredths at Classic, and about half a second at
+Challenging (about a second at worst).
+
+Layout: top to bottom, the name board, the city in its clue band and the
+legend. The page is planned from the level and the trim alone, before a
+city is built, so every page of a run matches. Plots are as large as the
+trim allows, up to 0.8 in, and never smaller than the level's floor
+(Gentle 0.5 in, Classic 0.45 in, Challenging 0.42 in). Clues and given
+heights print bold at half a plot, 16–22 pt (never under 16 pt); the clue
+band is 0.7 of a plot deep and always holds a clue with 14 px to spare.
+Mid-gray soft rules run between the plots inside a 3 pt black frame. The
+board prints 16 pt (14 pt on a narrow trim, or broken between words when
+one line is still too wide), clear of the top clues by at least 18 px (a
+quarter of a plot on large plots). The legend prints 14 pt, 20 px under
+the bottom clues, on one row or, on a narrow trim, one entry over the
+other. On the answer page the heights print a third of a plot, 12–18 pt,
+and every building stands clear of the frame, its height between roof and
+foot. Typical results: 8.5 × 11 prints 0.80 in plots at every level; 6 × 9
+0.67 / 0.60 / 0.53 in (Gentle / Classic / Challenging); 5.5 × 8.5 0.53 /
+0.50 / 0.44 in.
+
+Quality gate (`kdp-preflight.ts`) runs before a page is accepted:
+- The city is the level's size; every clue and given is in range; it hands
+  over no more plots than the level allows and keeps a clue on every side;
+  the answer holds every height once in every row and column and keeps
+  every clue and given; the level's steps finish the city on exactly that
+  answer, and the easier steps alone do not where the level asks for more.
+- Plots, clues, answer heights, the clue band and the board are at their
+  large-print floors or larger, and the shortest building still holds its
+  height under the roof.
+- The skyline's name fits its board; the name board, city and legend are
+  on the printable panel and clear of each other, with the board's full
+  air above the top clues.
+- The skyline is not one the book already uses while others wait, and the
+  city is not one the book already prints.
+The drawn check runs on the puzzle page and the answer page alike and
+confirms every clue beside its row or column and no other, every given
+plot, the frame, a hidden building of exactly the answer's height on every
+plot with a spire on exactly the tallest, a hidden height on every plot not
+given, the board naming the skyline, and the legend giving the heights and
+a sample clue.
+
+Uniqueness: each puzzle stamps `city|level|puzzle`, where the puzzle part
+is a digest of the clues and givens drawn as one square picture (clues on
+its border), the same however the city is turned or mirrored with its clues
+(also used as the canonical key). Cities come from the seller's puzzle salt
+and the page seed, so two sellers never share a book and the same seed
+reprints the same page. A book works through every one of the 44 skylines
+before one returns, never the previous page's, and never prints the same
+city twice. A seller's next book opens at skylines their last one used
+least recently.
+Pages: 1 · Answer key: yes (the skyline raised: a building of every height, windows, doors and spires) · AI content: no
 
 ---
 
@@ -3133,6 +3252,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | patchwork-quilt | Patchwork Quilt: Piece the Patches | logic | 1 | yes | no |
 | lamplighter | Lamplighter: Light the House | logic | 1 | yes | no |
 | string-of-pearls | String of Pearls: Thread the Necklace | logic | 1 | yes | no |
+| skyline-tour | Skyline Tour: Raise the Towers | logic | 1 | yes | no |
 | word-search | Word Search | word | 1 | yes | yes |
 | hidden-message-word-search | Hidden Message Word Search | word | 1 | yes | yes |
 | trivia-clue-word-search | Trivia Clue Word Search | word | 1 | yes | yes |
@@ -3173,4 +3293,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 50 games** (11 logic · 32 word · 7 spatial).
+**Total: 51 games** (12 logic · 32 word · 7 spatial).
