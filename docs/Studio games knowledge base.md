@@ -65,7 +65,7 @@ options it exposes* — not the implementation. Source of truth in code:
 
 ---
 
-## Logic (15 games)
+## Logic (16 games)
 
 ### Sudoku (`sudoku`)
 Classic number Sudoku for a large-print retirement book. Fill every row, column
@@ -1482,6 +1482,129 @@ same page. A book works through every one of the 46 streets before one
 returns, never the previous page's, and never prints the same town twice. A
 seller's next book opens at streets their last one used least recently.
 Pages: 1 · Answer key: yes (the town as a map: streets paved gray, every number written in) · AI content: no
+
+### Scenic Drive: Add Up the Miles (`scenic-drive`)
+The cross-sums puzzle (Kakuro) that fills whole books in the puzzle aisle,
+laid out as a retiree's road trip. Each page is one square grid, balanced
+like a crossword: the top row, the left column and a few squares inside
+are gray, the rest white. White squares stand in runs — unbroken stretches
+across or down — and every run is a leg of the drive, with its total (the
+miles) printed in the gray square before it, split corner to corner: the
+upper number for the run across, the lower one for the run down. The
+reader writes a digit from 1 to 9 in every white square so each run adds
+up to its total, with no digit twice in a run. Over the grid stands its
+road sign, a double-ruled board naming a drive worth taking: the Blue
+Ridge Parkway, the Cabot Trail, a Covered Bridge Byway, Lighthouse Coast
+Road, the Road Trip to the Grandkids. Under it a legend shows a gray square
+with a total of 4 and its run holding 1 and 3 ("= the run adds up to 4")
+and two squares both holding 2 crossed out ("= no digit twice in a run").
+The answer page writes every digit in, plain, in its white square.
+
+Settings: the level only.
+- Gentle: 7 × 7, runs of two to four squares. Finished by the sum table
+  alone, and the how-to adds, on a line of its own, "Tip: 3 in two squares
+  is always 1 + 2."
+- Classic: 8 × 8, runs up to six squares. Always needs "make it fit" at
+  least once (the sum table alone never finishes it).
+- Challenging: 9 × 9, runs up to six squares. Always needs "what if" at
+  least once (the Classic steps alone never finish it).
+Which route, which grid and the square size are not settings. The help
+line reports what the trim in Settings prints (square size, the grid's
+width, and the digits' and totals' sizes), or that the trim is too small.
+
+Every page is built in the browser (no AI). The road map comes first: gray
+squares go in pairs, each the mirror of the other through the grid's
+centre — first to break every run longer than the level allows, then at
+random up to the level's share of the inner squares (Gentle 25–40%,
+Classic 22–36%, Challenging 22–34%); a white square left alone in a run of
+one goes gray with them, and a pair that would cut the white squares in
+two is taken back. The digits come next: a search writes a digit in every
+white square, no digit twice in a run, in a random order, and every run's
+total is read off the digits. The digits are then tuned until the totals
+tell them: the level's steps (short of "what if") solve the grid as far as
+they can, six squares they could not reach are each tried with another
+digit — most often the one whose two totals can be made the fewest ways —
+and the change that leaves the fewest squares open is kept. A grid those
+steps finish is kept when it is no easier than the level; one that is too
+easy has single digits changed until one makes a grid only the level's own
+steps finish (at Challenging every grid comes this way). The solver
+(`solver.ts`) keeps a pencil list of the digits each empty square could
+still take — writing a digit crosses it off the rest of both its runs —
+and works the way a reader does, one sure step at a time:
+- one left: a square with one digit left takes it.
+- sums ("the sum table"): a run of so many squares adding to so much can
+  only be made of certain digits (3 in two is 1 + 2; 24 in three is
+  7 + 8 + 9), so its squares keep only those that still fit round the
+  digits the run already has; a digit every such way needs, with one
+  square left that can take it, goes there; a total no digits can make is
+  a broken puzzle.
+- fit (Classic and up, "make it fit"): the digits must also fit the
+  squares they go in, so a digit is crossed off a square when the rest of
+  its run could not then be filled from its own pencil lists ("this square
+  is 1 or 2, so the other one in 10 is 9 or 8").
+- probe (Challenging, "what if"): on a square with two or three digits
+  left, a digit that leads by the earlier steps straight to a broken rule
+  is crossed off.
+Every step is sound, so a grid the solver finishes has exactly one answer.
+Only grids the level's steps finish on exactly their own digits are kept,
+and (at Classic and Challenging) only grids the easier steps cannot finish.
+Tests cross-check the solver against a plain search that counts answers on
+5 × 5 and 6 × 6 grids, and check that grids with several answers are never
+called solved. A grid builds in a few thousandths of a second at Gentle,
+about a hundredth at Classic, and about a seventh of a second at
+Challenging (three quarters of a second at worst).
+
+Layout: top to bottom, the road sign, the grid and the legend. The page is
+planned from the level and the trim alone, before a grid is built, so every
+page of a run matches. Squares are as large as the trim allows, up to
+0.8 in, and never smaller than the level's floor (Gentle 0.5 in, Classic
+0.48 in, Challenging 0.44 in). Gray squares are #DDDDDD (about 13% gray,
+dark enough for KDP's printers, light enough under the black totals); the
+lines between squares are 1.25 px black, the diagonals of the gray squares
+that carry a total 1.25 px, and the frame a 2.5 px black rule flush inside
+the grid's edge. Totals print bold in the digit face at three tenths of a
+square, 12–18 pt (never under 12 pt), centred 0.72 along and 0.28 across
+their half of the square; the preflight measures every total on the page
+and keeps it clear of the diagonal and the square's sides. Digits written
+in print at half a square, 16–26 pt. The sign prints 16 pt (14 pt on a
+narrow trim, or broken between words when one line is still too wide),
+clear of the grid by about four tenths of a square (never under 26 px). The
+legend prints 14 pt, 24 px under the grid, on one row or, on a narrow
+trim, one entry over the other. Typical results (square size, Gentle /
+Classic / Challenging): 8.5 × 11 prints 0.80 / 0.80 / 0.80 in; 6 × 9
+0.61 / 0.57 / 0.50 in; 5.5 × 8.5 0.54 / 0.51 / 0.45 in.
+
+Quality gate (`kdp-preflight.ts`) runs before a page is accepted:
+- The grid is the level's size; its gray squares make a proper grid (a
+  gray top row and left column, every white square in a run across and a
+  run down of two squares or more, none longer than the level allows, the
+  white squares one piece), mirrored through the centre, with the level's
+  share of gray; a total stands before every run and nowhere else, each
+  one its run can make; the answer adds up to every total with no digit
+  twice in a run; the level's steps finish the grid on exactly that
+  answer, and the easier steps alone do not where the level asks for more.
+- Squares, digits, totals and the sign are at their large-print floors or
+  larger; every total on the page sits clear of its diagonal.
+- The route's name fits its sign; the sign, grid and legend are on the
+  printable panel and clear of each other, with the sign's full air above
+  the grid.
+- The route is not one the book already uses while others wait, and the
+  grid is not one the book already prints.
+The drawn check then confirms the gray squares as the grid has them, every
+line between squares, a diagonal in every gray square that carries a total
+and no other, every total bold in its own square and no other, every digit
+waiting hidden in its own white square, the frame whole, the sign naming
+the route, and the legend showing the sample run and the repeated digit.
+
+Uniqueness: each puzzle stamps `route|level|grid`, where the grid part is a
+digest of the gray squares and totals that is the same when the grid is
+flipped across its diagonal (runs across becoming runs down; also used as
+the canonical key). Grids come from the seller's puzzle salt and the page
+seed, so two sellers never share a book and the same seed reprints the
+same page. A book works through every one of the 46 routes before one
+returns, never the previous page's, and never prints the same grid twice.
+A seller's next book opens at routes their last one used least recently.
+Pages: 1 · Answer key: yes (every digit written in) · AI content: no
 
 ---
 
@@ -3624,6 +3747,7 @@ Pages: 1 · Answer key: yes · AI content: no
 | country-fence | Country Fence: Fence the Pasture | logic | 1 | yes | no |
 | stepping-stones | Stepping Stones: Walk the Path | logic | 1 | yes | no |
 | friendly-neighbors | Friendly Neighbors: Number the Houses | logic | 1 | yes | no |
+| scenic-drive | Scenic Drive: Add Up the Miles | logic | 1 | yes | no |
 | word-search | Word Search | word | 1 | yes | yes |
 | hidden-message-word-search | Hidden Message Word Search | word | 1 | yes | yes |
 | trivia-clue-word-search | Trivia Clue Word Search | word | 1 | yes | yes |
@@ -3664,4 +3788,4 @@ Pages: 1 · Answer key: yes · AI content: no
 | dot-to-dot | Dot to Dot: Retirement Edition | spatial | 1 | yes | no |
 | spot-the-difference | Spot the Differences: Retirement Edition | spatial | 1 | yes | no |
 
-**Total: 54 games** (15 logic · 32 word · 7 spatial).
+**Total: 55 games** (16 logic · 32 word · 7 spatial).

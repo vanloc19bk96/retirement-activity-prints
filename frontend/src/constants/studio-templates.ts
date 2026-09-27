@@ -25,6 +25,7 @@ import { skylineTourTemplate } from '@/utils/studio/skyline-tour/generate'
 import { countryFenceTemplate } from '@/utils/studio/country-fence/generate'
 import { steppingStonesTemplate } from '@/utils/studio/stepping-stones/generate'
 import { friendlyNeighborsTemplate } from '@/utils/studio/friendly-neighbors/generate'
+import { scenicDriveTemplate } from '@/utils/studio/scenic-drive/generate'
 import { wordSearchTemplate } from '@/utils/studio/retirement-word-search/generate'
 import { crosswordTemplate } from '@/utils/studio/crossword/generate'
 import { retirementAnagramTemplate } from '@/utils/studio/retirement-anagram/generate'
@@ -92,6 +93,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   countryFenceTemplate,
   steppingStonesTemplate,
   friendlyNeighborsTemplate,
+  scenicDriveTemplate,
 
   // Word
   wordSearchTemplate,
