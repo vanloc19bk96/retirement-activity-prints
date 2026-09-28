@@ -307,7 +307,7 @@ Pages: 1 · Answer key: yes · AI content: yes
 
 ---
 
-## Logic (20 games)
+## Logic (21 games)
 
 ### Sudoku (`sudoku`)
 Classic number Sudoku for a large-print retirement book. Fill every row, column
@@ -2200,6 +2200,123 @@ grid twice. A seller's next book opens at nights their last one used least
 recently.
 Pages: 1 · Answer key: yes (every square's number written in) · AI content: no
 
+### Photo Album: Develop the Snapshot (`photo-album`)
+The count-the-neighbours picture puzzle loved in puzzle books as Fill-a-Pix
+(or Mosaic), mounted like an instant photo in a retiree's album. Each page
+is one square grid with a number in some of its squares: how many squares
+of its block of nine are shaded, the square itself and the eight round it
+(fewer at the edge). The reader shades what the numbers ask for, leaves the
+rest blank, and a hand-drawn snapshot develops: reading glasses on a
+paperback, a teddy bear for the grandchildren, a ball of yarn, a steam
+train, a log cabin, the Eiffel Tower at last. The grid sits in a white
+border that is broad at the bottom, like an instant photo, held on the page
+by four black album corners; the broad edge asks "What's in the snapshot?"
+over a line to write on. Under it a legend works one little block of nine:
+a 4 in the middle square, four squares shaded round and under it, beside
+"This 4 counts its own square / and the eight around it: / four of the nine
+are shaded." The answer page develops the picture (one solid black bar per
+run of shaded squares, over the numbers; the blank squares' numbers still
+show round it) and writes its name on the caption line.
+
+Settings: the level only.
+- Gentle: 10 × 10, 19 pictures, about half the squares numbered. Mostly
+  the first steps; the how-to adds, on a line of its own, "Tip: a 0 leaves
+  its whole block blank, and a 9 shades all of it."
+- Classic: 15 × 15, 17 pictures, about a third numbered. Always needs
+  "overlap" at least three times (the first steps alone never finish it).
+- Challenging: 18 × 18, 13 pictures, only the numbers it cannot do without.
+  Always needs "what if" at least twice ("overlap" alone never finishes it).
+Which picture, which way round, which squares are numbered and the square
+size are not settings. The help line reports how many snapshots the level
+deals and what the trim in Settings prints (square size, the grid's width
+and the numbers' size), or that the trim is too small.
+
+Every page is built in the browser (no AI). Pictures (`pictures.ts`) are
+drawn square by square for their grid, each filling its level's square, 20
+to 75% shaded; pictures that read either way may also print mirrored. The
+picture fixes every square's number; the puzzle is which to print. The
+builder works like a setter: it solves with nothing printed and, each time
+"overlap" runs dry, prints one more number (a square dealt from the
+seller's stream whose block is still open) and carries on where it stopped.
+Once the grid is finished it goes back over the printed numbers in a random
+order and takes out every one "overlap" can still do without (down to the
+level's share at Gentle and Classic); at Challenging it then takes out a
+few more that only "what if" can do without, so every Challenging grid
+needs it. The solver (`solver.ts`) keeps every square open, shaded or blank
+and works the way a reader does, one sure step at a time:
+- the first steps: a number whose block already holds that many shaded
+  squares leaves the rest blank ("full"); a number with just as many open
+  squares left as it still needs shades them all ("room"). A number that
+  cannot be kept either way is a broken grid.
+- overlap (every level may use it; Classic must): two numbers whose blocks
+  share squares are read together. What the shared squares can hold is
+  pinned between what each number still needs and what its own squares can
+  take; when that leaves one number's own squares all shaded or all blank
+  (or the shared ones), they are marked.
+- what if (Challenging): an open square beside one already known, shaded
+  (then left blank) in pencil and followed by the first steps and overlap;
+  a way that breaks a number is crossed off and the square takes the other.
+Every step is sound, so a grid the solver finishes has exactly one answer.
+Tests cross-check the solver against a plain search that counts answers on
+random 3 × 3 to 5 × 5 grids, check that grids with several answers are
+never called solved, and build every picture of the library, both ways
+round, at its level. A grid builds in a few thousandths of a second at
+Gentle, a few hundredths at Classic (a fifth of a second for the busiest
+pictures) and about a tenth of a second at Challenging (under a second at
+worst); a picture whose stream will not make the level's grid is tried on
+up to ten streams, then the next picture.
+
+Layout: top to bottom, the snapshot and the legend. The page is planned
+from the level and the trim alone, before a grid is built, so every page of
+a run matches. Squares are as large as the trim allows, up to 0.5 in, and
+never smaller than the level's floor (Gentle 0.36 in, Classic 0.26 in,
+Challenging 0.235 in). Lines between squares are 1.5 px mid gray, 3 px
+every five squares; the grid's edge is a 3 px black rule. Numbers print in
+the digit face at a little over half a square, 12–20 pt, centred, with at
+least a sixth of a square (never under 3 px) of air above and below. The
+white border grows with the squares (14–24 px); the caption's question
+prints 14 pt, the written name 16 pt bold on a line long enough for any
+name the level prints (so the line never gives the answer's length away).
+The album corners are solid black triangles reaching 4 px past the
+snapshot's corners, their slant kept at least 6 px clear of the grid. The
+legend prints 14 pt (12 pt on a tight page), 24 px under the snapshot; on a
+page where even 12 pt would push the squares below the floor it is left
+off, since the how-to line says the same in words. Typical results (square
+size, Gentle / Classic / Challenging): 8.5 × 11 prints 0.50 / 0.41 /
+0.33 in; 7 × 10 0.44 / 0.34 / 0.29 in; 6 × 9 0.42 / 0.26 / 0.24 in;
+5.5 × 8.5 0.38 / 0.26 in, and Challenging needs a larger page.
+
+Quality gate (`kdp-preflight.ts`) runs before a page is accepted:
+- The picture is one of the level's, the right way round, and 20–75%
+  shaded; the grid is the level's size and well formed; every number counts
+  its block of the picture; the level's steps finish the grid on exactly
+  that picture, and the easier steps alone do not where the level asks for
+  more (with the level's count of its own steps).
+- Squares, numbers and the legend are at their large-print floors or
+  larger, the numbers with air round them; the caption and every name of
+  the level fit the snapshot's border; the album corners clear the grid.
+- The snapshot and the legend are on the printable panel, clear of each
+  other.
+- The picture is not one the book already shows while others wait, and the
+  grid is not one the book already prints.
+The drawn check then confirms every number in its square and no other, the
+picture waiting hidden as exactly its runs, the border, edge, lines and
+four corners drawn, the caption asking its question with the name waiting
+hidden on its line, and (where the page has room) the legend working its
+block of nine.
+
+Uniqueness: each puzzle stamps `picture|way|level|grid`, where the grid
+part is a digest of the printed numbers that is the same when the grid is
+turned or mirrored (also used as the canonical key). Which squares print
+their number comes from the seller's puzzle salt and the page seed, so two
+sellers dealt the same picture print different grids, and the same seed
+reprints the same page. A book shows every picture of its level before one
+returns, never the previous page's, a returning picture comes back the
+other way round when it can, and the book never prints the same grid twice.
+A seller's next book opens with pictures their last one showed least
+recently.
+Pages: 1 · Answer key: yes (the snapshot developed and its name written in) · AI content: no
+
 ---
 
 ## Visual (4 games)
@@ -4079,6 +4196,7 @@ Pages: 1 · Answer key: no · AI content: no
 | sun-and-moon | Sun & Moon: Balance the Days | logic | 1 | yes | no |
 | yard-sale | Yard Sale: Clear the Clutter | logic | 1 | yes | no |
 | game-night | Game Night: Tally the Scores | logic | 1 | yes | no |
+| photo-album | Photo Album: Develop the Snapshot | logic | 1 | yes | no |
 | maze | Maze | visual | 1 | yes | no |
 | shaped-maze | Shaped Maze: Retirement Edition | visual | 1 | yes | no |
 | dot-to-dot | Dot to Dot: Retirement Edition | visual | 1 | yes | no |

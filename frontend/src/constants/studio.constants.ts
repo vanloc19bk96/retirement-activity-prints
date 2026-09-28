@@ -36,6 +36,7 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'sun-and-moon',
   'yard-sale',
   'game-night',
+  'photo-album',
   'word-search',
   'hidden-message-word-search',
   'trivia-clue-word-search',
