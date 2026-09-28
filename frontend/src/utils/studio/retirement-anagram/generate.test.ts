@@ -191,6 +191,20 @@ describe('retirement-anagram page', () => {
     }
   })
 
+  it('moves every letter out of its seat on the Challenging level', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const rows = readRows(
+        generatePage({ ...base, level: 'challenging', seed }, CTX({ seed })).objects,
+      )
+      expect(rows.length).toBeGreaterThan(0)
+      for (const row of rows) {
+        for (let i = 0; i < row.answer.length; i++) {
+          expect(row.scramble[i]).not.toBe(row.answer[i])
+        }
+      }
+    }
+  })
+
   it('gives every row one clue that does not give its answer away', () => {
     const rows = readRows(generatePage().objects)
     for (const row of rows) {
@@ -679,6 +693,40 @@ describe('retirement-anagram content gate', () => {
     expect(picked).toHaveLength(0)
   })
 
+  it('drops a phrase or an accented word rather than welding it into one run', () => {
+    const picked = selectAiItems(
+      [
+        { word: 'GOLF CLUB', clue: 'What you swing on the fairway' },
+        { word: 'ICE-CREAM', clue: 'A cone on a hot afternoon' },
+        { word: 'CAFÉS', clue: 'Places for a pot of tea' },
+      ],
+      { count: 5, level },
+    )
+    expect(picked).toHaveLength(0)
+  })
+
+  it('drops a word whose letters spell exactly one other common word', () => {
+    // STOVE is in the common list and VOTES is not: two right answers either way.
+    const picked = selectAiItems([{ word: 'VOTES', clue: 'Ballots cast on polling day' }], {
+      count: 5,
+      level,
+    })
+    expect(picked).toHaveLength(0)
+  })
+
+  it('drops a word no shuffle can scramble, and on Challenging one no shuffle can derange', () => {
+    expect(
+      selectAiItems([{ word: 'OOOOO', clue: 'A long drawn-out sound' }], { count: 5, level }),
+    ).toHaveLength(0)
+    const challenging = parseAnagramLevel({ level: 'challenging' })
+    expect(
+      selectAiItems([{ word: 'AAABBA', clue: 'Not a real word at all' }], {
+        count: 5,
+        level: challenging,
+      }),
+    ).toHaveLength(0)
+  })
+
   it('keeps one word per letter set', () => {
     const picked = selectAiItems(
       [
@@ -743,6 +791,17 @@ describe('retirement-anagram preflight', () => {
     ])
     expect(result.ok).toBe(false)
     expect(result.errors.join(' ')).toMatch(/same letters/i)
+  })
+
+  it('refuses a letter left in its seat on the fully shuffled level', () => {
+    const challenging = parseAnagramLevel({ level: 'challenging' })
+    const result = runAnagramKdpPreflight({
+      items: [{ answer: 'TRAVEL', clue: 'Seeing places far from home', scrambled: 'TLEVAR' }],
+      level: challenging,
+      plan: { ...plan, itemCount: 1 },
+    })
+    expect(result.ok).toBe(false)
+    expect(result.errors.join(' ')).toMatch(/own seat/i)
   })
 
   it('refuses the same word twice', () => {

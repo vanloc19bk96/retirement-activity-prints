@@ -7,7 +7,12 @@ import {
 import type { AnagramPuzzleItem } from './draw'
 import type { AnagramLevel } from './levels'
 import { MAX_CLUE_LINES, SLOT_MIN_W, type AnagramPagePlan } from './layout'
-import { hasUniqueAnagram, loadAnagramIndex, sortedKey } from './scramble'
+import {
+  hasUniqueAnagram,
+  isDerangement,
+  loadAnagramIndex,
+  sortedKey,
+} from './scramble'
 
 export interface KdpPreflightResult {
   ok: boolean
@@ -76,6 +81,8 @@ export function runAnagramKdpPreflight(options: {
     }
     if (item.scrambled === item.answer) {
       errors.push('A word was printed unscrambled.')
+    } else if (level.deranged && !isDerangement(item.answer, item.scrambled)) {
+      errors.push('A scramble left a letter in its own seat on a fully shuffled level.')
     }
     if (!hasUniqueAnagram(item.answer, index)) {
       errors.push('An answer shares its letters with another common word.')

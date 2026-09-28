@@ -151,6 +151,12 @@ export function allocateWordReveals(
  * handed over, while G_RD_N asks the same solver for the same word and gets an
  * answer.
  *
+ * Farthest-point alone is not enough, though: on an eight-letter word it can
+ * take 1, 7 and 4 and then have nowhere left for the fourth letter that does
+ * not touch one of them. So a position is only a candidate while the gaps it
+ * leaves can still hold every letter owed without two of them touching, and
+ * the spread is chosen among those.
+ *
  * The first position avoids the opening and closing letters of a word long
  * enough to have an inside. A first letter is the single most valuable letter
  * in a word and the one a solver can most often infer from grammar; spending
@@ -166,14 +172,26 @@ export function revealPositionsInWord(
   const wanted = Math.max(0, Math.min(count, n))
   if (wanted === 0) return []
 
+  // Positions that leave room for the rest of the word's letters, none of them
+  // touching. Falls back to any free position only when no spread can hold
+  // `wanted` letters at all, which the per-word cap never asks for.
+  const keepsRoom = (taken: readonly number[], candidates: readonly number[]) => {
+    const owed = wanted - taken.length - 1
+    const roomy = candidates.filter(
+      (i) =>
+        !taken.some((t) => Math.abs(t - i) <= 1) &&
+        nonTouchingRoom([...taken, i], n) >= owed,
+    )
+    return roomy.length > 0 ? roomy : candidates.filter((i) => !taken.includes(i))
+  }
+
   const interior = n >= 4 ? rangeOf(1, n - 1) : rangeOf(0, n)
-  const chosen = [rng.pick(interior.length > 0 ? interior : rangeOf(0, n))!]
+  const chosen = [rng.pick(keepsRoom([], interior.length > 0 ? interior : rangeOf(0, n)))!]
 
   while (chosen.length < wanted) {
     let best: number[] = []
     let bestScore = -1
-    for (let i = 0; i < n; i++) {
-      if (chosen.includes(i)) continue
+    for (const i of keepsRoom(chosen, rangeOf(0, n))) {
       const spread = Math.min(...chosen.map((taken) => Math.abs(taken - i)))
       // A letter the word does not already show is worth a little more than one
       // it does: two printed E's in one word tell a solver less than an E and
@@ -194,6 +212,26 @@ export function revealPositionsInWord(
   }
 
   return chosen.sort((a, b) => a - b)
+}
+
+/**
+ * Most letters that could still be given in a word of `n` without any two
+ * touching each other or a letter already taken: each run of free positions
+ * of length L holds ceil(L / 2).
+ */
+function nonTouchingRoom(taken: readonly number[], n: number): number {
+  let room = 0
+  let run = 0
+  for (let i = 0; i <= n; i++) {
+    const free = i < n && !taken.some((t) => Math.abs(t - i) <= 1)
+    if (free) {
+      run += 1
+    } else {
+      room += Math.ceil(run / 2)
+      run = 0
+    }
+  }
+  return room
 }
 
 function rangeOf(from: number, to: number): number[] {

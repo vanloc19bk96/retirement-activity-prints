@@ -91,6 +91,30 @@ const FOLD: Record<string, string> = {
 const UNSUPPORTED_RE = /[^A-Z'\-,.?! ]+/g
 const MARK_CLASS = "[',.?!-]"
 
+function foldTypography(raw: unknown): string {
+  // Accents come off first, so CAFÉ prints as CAFE rather than as CAF.
+  const plain = String(raw ?? '')
+    .normalize('NFD')
+    .replace(/\p{M}+/gu, '')
+    .toUpperCase()
+  let folded = ''
+  for (const ch of plain) folded += FOLD[ch] ?? ch
+  return folded
+}
+
+/**
+ * Characters that carry a word the page cannot set.
+ *
+ * Most unsupported characters are noise — a quote mark, a bracket — and
+ * becoming a space costs the saying nothing. These are not: a digit, an
+ * ampersand or a letter outside A-Z *is* a word or part of one, so "RETIRED AT
+ * 65" or "SUN & SAND" would print with a word missing and the answer page
+ * would agree with it. Such a line is refused rather than repaired.
+ */
+export function hasUnprintableWords(raw: unknown): boolean {
+  return /[0-9&@#%+=/]|[^\P{L}A-Z]/u.test(foldTypography(raw))
+}
+
 /**
  * Uppercase, single-spaced, supported marks only.
  *
@@ -105,8 +129,7 @@ const MARK_CLASS = "[',.?!-]"
  * "WELL-" reads as a word the page cut in half.
  */
 export function normalizePhrase(raw: unknown): string {
-  let folded = ''
-  for (const ch of String(raw ?? '').toUpperCase()) folded += FOLD[ch] ?? ch
+  const folded = foldTypography(raw)
 
   const text = folded
     .replace(UNSUPPORTED_RE, ' ')

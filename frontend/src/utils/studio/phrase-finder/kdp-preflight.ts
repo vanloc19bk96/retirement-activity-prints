@@ -19,6 +19,17 @@ import {
   wordRevealCap,
 } from './reveal'
 
+function hasTouchingGivens(
+  first: number,
+  length: number,
+  revealed: ReadonlySet<number>,
+): boolean {
+  for (let i = first + 1; i < first + length; i++) {
+    if (revealed.has(i) && revealed.has(i - 1)) return true
+  }
+  return false
+}
+
 export interface KdpPreflightResult {
   ok: boolean
   warnings: string[]
@@ -136,6 +147,12 @@ export function runPhraseFinderKdpPreflight(options: {
       const inWord = revealedInWord(word, revealed)
       if (inWord > wordRevealCap(word.letters.length)) {
         errors.push('One word of a phrase has been given away.')
+        break
+      }
+      // Two given letters side by side turn a blank into a near-finished word:
+      // GA_DEN is read, not solved.
+      if (hasTouchingGivens(word.firstLetterIndex, word.letters.length, revealed)) {
+        errors.push('Two given letters sit side by side in one word.')
         break
       }
       // A long word with nothing in it is the failure mode this game is most

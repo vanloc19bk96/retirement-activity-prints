@@ -36,7 +36,12 @@ import {
 } from './layout'
 import { parseAnagramLevel, type AnagramLevel } from './levels'
 import { retirementAnagramPrefetch } from './prefetch'
-import { isDictionaryWord, loadAnagramIndex, scrambleWord } from './scramble'
+import {
+  isDerangement,
+  isDictionaryWord,
+  loadAnagramIndex,
+  scrambleWord,
+} from './scramble'
 import { ANAGRAM_THEME_SALT } from './theme'
 
 export { validateRetirementAnagramConfig }
@@ -116,6 +121,9 @@ function buildPuzzleItems(
         preferDerangement: level.deranged,
       })
       if (scrambled === item.answer || used.has(scrambled)) continue
+      // Challenging promises every letter out of its seat; `scrambleWord` only
+      // prefers it, so a shuffle that kept one is not usable here.
+      if (level.deranged && !isDerangement(item.answer, scrambled)) continue
       // Keep the first usable shuffle in case every remaining one also spells
       // a word — an unused permutation always beats printing the answer.
       if (!fallback) fallback = scrambled

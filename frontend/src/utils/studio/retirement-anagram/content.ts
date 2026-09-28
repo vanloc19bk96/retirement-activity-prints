@@ -3,7 +3,12 @@ import type {
   RetirementAnagramItem,
 } from '@/types/studio-retirement-anagram.types'
 import { isUnsafeCopy } from '../retirement-word-search/content-quality'
-import { hasUniqueAnagram, loadAnagramIndex, type AnagramIndex } from './scramble'
+import {
+  canScramble,
+  hasUniqueAnagram,
+  loadAnagramIndex,
+  type AnagramIndex,
+} from './scramble'
 import type { AnagramLevel } from './levels'
 
 export type { RetirementAnagramItem }
@@ -109,6 +114,7 @@ export function isValidAnagramItem(
 ): boolean {
   if (!isValidWordLength(item.answer, level)) return false
   if (!/^[A-Z]+$/.test(item.answer)) return false
+  if (!canScramble(item.answer, level.deranged)) return false
   if (isUnsafeCopy(item.answer)) return false
   if (!isValidClue(item.clue, item.answer)) return false
   return hasUniqueAnagram(item.answer, index)
@@ -131,6 +137,9 @@ export function selectAiItems(
   const seenLetters = new Set<string>()
 
   for (const raw of remote ?? []) {
+    // One word, as written. Stripping the gap out of "GOLF CLUB" or the accent
+    // out of "CAFÉ" prints an answer nobody would write in the slots.
+    if (!/^[A-Za-z]+$/.test(String(raw?.word ?? '').trim())) continue
     const item: RetirementAnagramItem = {
       answer: normalizeWord(raw?.word),
       clue: normalizeClue(raw?.clue),

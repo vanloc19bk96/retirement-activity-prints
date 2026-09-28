@@ -54,12 +54,28 @@ export function anagramsOf(
   return index.get(sortedKey(letters)) ?? []
 }
 
-function isDerangement(original: string, scrambled: string): boolean {
+export function isDerangement(original: string, scrambled: string): boolean {
   if (original.length !== scrambled.length) return false
   for (let i = 0; i < original.length; i++) {
     if (original[i] === scrambled[i]) return false
   }
   return true
+}
+
+/**
+ * True when some shuffle of `word` can differ from it, and, when `deranged`,
+ * move every letter out of its seat.
+ *
+ * A word of one repeated letter has no scramble at all, and a derangement
+ * exists exactly when no letter fills more than half the word. Anything else
+ * would reach the page as the answer printed in the clear.
+ */
+export function canScramble(word: string, deranged = false): boolean {
+  const counts = new Map<string, number>()
+  for (const ch of word) counts.set(ch, (counts.get(ch) ?? 0) + 1)
+  if (counts.size < 2) return false
+  if (!deranged) return true
+  return Math.max(...counts.values()) * 2 <= word.length
 }
 
 export interface ScrambleResult {
@@ -107,11 +123,16 @@ export function scrambleWord(
   return { scrambled, alternates }
 }
 
-/** True when the letter-set spells only this word in the dictionary. */
+/**
+ * True when the letter-set spells no dictionary word other than this one.
+ *
+ * The answer itself need not be in the list: LISTEN is not, but its letters
+ * spell SILENT, and a row whose key says LISTEN while a solver wrote SILENT has
+ * two right answers whether or not the page's own word made the list.
+ */
 export function hasUniqueAnagram(word: string, index: AnagramIndex): boolean {
   const answer = word.toUpperCase().replace(/[^A-Z]/g, '')
-  const peers = anagramsOf(answer, index)
-  return peers.length <= 1 || (peers.length === 1 && peers[0] === answer)
+  return anagramsOf(answer, index).every((peer) => peer === answer)
 }
 
 /**

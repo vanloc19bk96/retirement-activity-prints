@@ -268,6 +268,39 @@ describe('content gates', () => {
     expect(picked).toHaveLength(1)
   })
 
+  it('refuses a saying that would print with a word missing', () => {
+    // Turned into a space, the & and the ø would leave "SUN SAND" and "CAF".
+    const picked = selectAiItems(
+      [
+        {
+          text: 'SUN & SAND ARE ALL THE PLANNING THIS WEEK NEEDS',
+          clue: 'A beach holiday with nothing booked',
+        },
+        {
+          text: 'A SLOW CAFØ BREAKFAST IS THE BEST PART OF MONDAY',
+          clue: 'Lingering over eggs and toast in town',
+        },
+      ],
+      { count: 3, length: 'medium' },
+    )
+    expect(picked).toEqual([])
+  })
+
+  it('folds an accent rather than cutting the letter off', () => {
+    const picked = selectAiItems(
+      [
+        {
+          text: 'A SLOW CAFÉ BREAKFAST IS THE BEST PART OF MONDAY',
+          clue: 'Lingering over eggs and toast in town',
+        },
+      ],
+      { count: 3, length: 'medium' },
+    )
+    expect(picked.map((item) => item.text)).toEqual([
+      'A SLOW CAFE BREAKFAST IS THE BEST PART OF MONDAY',
+    ])
+  })
+
   it('drops copy that has no business in a book sold on KDP', () => {
     const picked = selectAiItems(
       [
@@ -400,11 +433,17 @@ describe('the letter reveal', () => {
   })
 
   it('never puts two given letters side by side in one word', () => {
-    for (let n = 4; n <= 12; n++) {
-      const word = toPhraseModel('A'.repeat(n)).words[0]!
-      const positions = revealPositionsInWord(word, wordRevealCap(n), rng())
-      for (let i = 1; i < positions.length; i++) {
-        expect(positions[i]! - positions[i - 1]!).toBeGreaterThan(1)
+    // Every seed, not one: farthest-point choice on its own boxed an eight-letter
+    // word into 1, 7, 4 about one time in three, leaving only a touching seat
+    // for the fourth letter.
+    for (let n = 4; n <= MAX_WORD_LETTERS; n++) {
+      const word = toPhraseModel('ABCDEFGHIJKL'.slice(0, n)).words[0]!
+      for (let seed = 1; seed <= 200; seed++) {
+        const positions = revealPositionsInWord(word, wordRevealCap(n), createRng(seed))
+        expect(positions).toHaveLength(wordRevealCap(n))
+        for (let i = 1; i < positions.length; i++) {
+          expect(positions[i]! - positions[i - 1]!).toBeGreaterThan(1)
+        }
       }
     }
   })
@@ -799,7 +838,7 @@ describe('the preflight gate', () => {
     )
     // Every given letter poured into the front of the phrase: legal per word,
     // and it leaves the words that carry the sense as unbroken runs of blanks.
-    const clumped = new Set([1, 5, 6, 10])
+    const clumped = new Set([1, 5, 7, 10])
     const result = runPhraseFinderKdpPreflight({
       puzzles: [{ model, clue: 'Where the budget went wrong', revealed: clumped }],
       length: 'medium',
@@ -807,6 +846,21 @@ describe('the preflight gate', () => {
     })
     expect(result.ok).toBe(false)
     expect(result.errors.join(' ')).toMatch(/long word/i)
+  })
+
+  it('refuses two given letters side by side in one word', () => {
+    // AFTERNOON starts at letter 3; 4 and 5 are its F and T.
+    const result = runPhraseFinderKdpPreflight({
+      puzzles: [
+        puzzleOf('THE AFTERNOON BELONGS TO THE GARDEN AND TO NOBODY ELSE', [
+          4, 5, 14, 23, 29,
+        ]),
+      ],
+      length: 'medium',
+      metrics,
+    })
+    expect(result.ok).toBe(false)
+    expect(result.errors.join(' ')).toMatch(/side by side/i)
   })
 
   it('refuses the same phrase, or a rewording of it, twice on one page', () => {

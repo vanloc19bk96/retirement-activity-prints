@@ -2,6 +2,7 @@ import type { PhraseFinderItem } from '@/types/studio-phrase-finder.types'
 import { isNearDuplicateSaying, isUnsafeCopy } from '../cryptogram/content-quality'
 import {
   hasOnlySupportedCharacters,
+  hasUnprintableWords,
   letterCount,
   letterToken,
   normalizePhrase,
@@ -360,6 +361,7 @@ export function selectAiItems(
   const limit = Math.max(count, candidateCountFor(count))
 
   for (const raw of remote ?? []) {
+    if (hasUnprintableWords(raw?.text)) continue
     const text = normalizePhrase(raw?.text)
     const clue = normalizeClue(raw?.clue)
     if (!text) continue
