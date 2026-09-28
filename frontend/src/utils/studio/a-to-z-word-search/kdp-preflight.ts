@@ -1,6 +1,6 @@
 import { countTokenReadings, placementsIntact } from '@/utils/puzzles/word-search-core'
 import { isPalindrome, isUnsafeCopy } from '../retirement-word-search/content-quality'
-import { ALPHABET, ATOZ_WORD_COUNT } from './content'
+import { ALPHABET, ATOZ_WORD_COUNT, strayLexiconWord } from './content'
 import type { AtoZListPlan } from './draw'
 import { ATOZ_CELL_MIN, LETTER_MIN, atoZBandBudget, type AtoZPagePlan } from './layout'
 import type { AtoZLevel } from './levels'
@@ -128,6 +128,10 @@ export function runAtoZKdpPreflight(options: {
       errors.push('A hidden word reads in more than one place in the grid.')
       break
     }
+  }
+  if (strayLexiconWord(puzzle.grid, puzzle.words)) {
+    // The page prints no words, so this one answers its letter a second time.
+    errors.push('A word that was not hidden also reads in the grid, so a letter has two answers.')
   }
 
   /* --- the page it was laid out for is the page it prints on -------------- */

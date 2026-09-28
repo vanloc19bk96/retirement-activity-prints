@@ -177,12 +177,47 @@ def _normalize_answer(raw: Any, *, low: int, high: int) -> str | None:
     return token
 
 
+_ANSWER_ENDINGS = ("ING", "ERS", "ER", "ED", "ES")
+
+
+def _answer_roots(answer: str) -> list[str]:
+    """FISHING -> FISH, KNITTING -> KNIT, BAKING -> BAKE, GARDENERS -> GARDEN.
+
+    Mirrors ``answerRoots`` in
+    frontend/src/utils/studio/trivia-clue-word-search/content.ts.
+    """
+    roots: list[str] = []
+    for ending in _ANSWER_ENDINGS:
+        if not answer.endswith(ending):
+            continue
+        root = answer[: -len(ending)]
+        # A doubled final consonant is spelling, not meaning: KNITTING, SWIMMER.
+        if len(root) >= 5 and root[-1] == root[-2] and root[-1] not in "AEIOU":
+            root = root[:-1]
+        if len(root) >= 4:
+            roots.append(root)
+        elif len(root) == 3:
+            # A silent E dropped before the ending: BAKING, HIKED.
+            roots.append(root + "E")
+    return roots
+
+
 def _clue_echoes_answer(answer: str, clue: str) -> bool:
-    """A clue that prints its own answer, or an obvious stem of it."""
+    """A clue that prints its own answer, or an obvious stem of it.
+
+    "Catching fish at the lake" for FISHING hands the answer over as plainly as
+    printing it, so the root word counts too -- at the start of a clue word
+    only, so HIKE is caught in HIKERS and not inside an unrelated word.
+    """
     upper = clue.upper()
     if answer in upper:
         return True
-    return len(answer) >= 5 and answer[:-1] in upper
+    if len(answer) >= 5 and answer[:-1] in upper:
+        return True
+    words = [word for word in re.split(r"[^A-Z]+", upper) if word]
+    return any(
+        word.startswith(root) for root in _answer_roots(answer) for word in words
+    )
 
 
 def _normalize_clue(raw: Any, answer: str, *, budget: int) -> str | None:
@@ -326,12 +361,19 @@ async def generate_trivia_clues(
     attempts = int_value(_limits(), "maxAttempts")
     last_error = FINAL_ERROR
     started = time.perf_counter()
+    # Every attempt's raw pairs, kept. A short pool is still good copy, and the
+    # next attempt runs on a new angle, so two short pools are usually one full
+    # page -- throwing the first away made the retry fill the page on its own.
+    collected: list[Any] = []
+    kept: list[str] = []
 
     for attempt in range(attempts):
         seed = req.seed + attempt * 97
         scope = _scope(req, user_id, seed)
+        # What this request already holds goes first, so the retry is spent on
+        # new answers rather than on the ones the dedupe would drop.
         prompt = with_variety(
-            _build_prompt(req, seed=seed), scope, client_avoid=req.avoid
+            _build_prompt(req, seed=seed), scope, client_avoid=[*kept, *req.avoid]
         )
         try:
             raw = await _call_gemini(prompt)
@@ -345,7 +387,9 @@ async def generate_trivia_clues(
             last_error = "The AI did not return valid trivia clues. Please try again."
             continue
 
-        items = filter_pairs(items_raw, low=low, high=high, budget=budget, cap=req.count)
+        collected.extend(items_raw)
+        items = filter_pairs(collected, low=low, high=high, budget=budget, cap=req.count)
+        kept = [item.answer for item in items]
         if len(items) < need:
             last_error = (
                 "Could not get enough clear trivia clues. "

@@ -82,7 +82,34 @@ function normalizeClue(raw: unknown): string {
 export function clueEchoesAnswer(token: string, clue: string): boolean {
   const upper = clue.toUpperCase()
   if (upper.includes(token)) return true
-  return token.length >= 5 && upper.includes(token.slice(0, -1))
+  if (token.length >= 5 && upper.includes(token.slice(0, -1))) return true
+  // "Catching fish at the lake" for FISHING hands the answer over just as
+  // plainly, and a writer asked for a definition reaches for the root word
+  // first. Only word starts count, so HIKE is caught in HIKERS and not in
+  // some unrelated word that happens to contain it.
+  const words = upper.split(/[^A-Z]+/).filter(Boolean)
+  return answerRoots(token).some((root) => words.some((word) => word.startsWith(root)))
+}
+
+/** Endings a clue writer strips to get back to the word it was built from. */
+const ANSWER_ENDINGS = ['ING', 'ERS', 'ER', 'ED', 'ES'] as const
+
+/** FISHING -> FISH, KNITTING -> KNIT, BAKING -> BAKE, GARDENERS -> GARDEN. */
+function answerRoots(token: string): string[] {
+  const roots: string[] = []
+  for (const ending of ANSWER_ENDINGS) {
+    if (!token.endsWith(ending)) continue
+    let root = token.slice(0, -ending.length)
+    // A doubled final consonant is spelling, not meaning: KNITTING, SWIMMER.
+    const last = root.at(-1) ?? ''
+    if (root.length >= 5 && last === root.at(-2) && !'AEIOU'.includes(last)) {
+      root = root.slice(0, -1)
+    }
+    if (root.length >= 4) roots.push(root)
+    // A silent E dropped before the ending: BAKING, HIKED.
+    else if (root.length === 3) roots.push(`${root}E`)
+  }
+  return roots
 }
 
 /**

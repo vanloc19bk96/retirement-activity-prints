@@ -44,6 +44,7 @@ import {
 import { ATOZ_LEVELS, atoZInstruction, parseAtoZLevel } from './levels'
 import { planAnswersBand, planLettersBand } from './page'
 import { tryBuildAtoZPuzzle } from './place'
+import lexicon from '@/data/studio/a-to-z-word-search/lexicon.json'
 
 /**
  * The draft a seller really has in front of them.
@@ -321,6 +322,26 @@ describe('a to z word search — the alphabet is complete', () => {
     }
   })
 
+  it('hides no other word from its list, so no letter has a second answer', () => {
+    // The page prints only letters. IRIS reading somewhere in a grid whose I
+    // word is INSECT is a find the key then calls wrong, and it used to happen
+    // on about one page in ten.
+    const tokens = Object.values(lexicon as Record<string, readonly string[]>)
+      .flat()
+      .map((word) => word.toUpperCase().replace(/[^A-Z]/g, ''))
+    for (const level of ATOZ_LEVELS) {
+      for (let i = 0; i < 30; i++) {
+        const ctx = kdpCtx(8.5, 11, 1_000 + i * 7_919)
+        const { puzzle } = buildPuzzle(headed({ ...base, level: level.id }), ctx)
+        const own = new Set(puzzle!.words)
+        const strays = tokens.filter(
+          (token) => !own.has(token) && countTokenReadings(puzzle!.grid, token) > 0,
+        )
+        expect(strays, `${level.id} seed ${ctx.seed}`).toEqual([])
+      }
+    }
+  })
+
   it('keeps every word inside the grid and inside the level', () => {
     for (const level of ATOZ_LEVELS) {
       const config = headed({ ...base, level: level.id })
@@ -559,6 +580,39 @@ describe('a to z word search — preflight', () => {
     })
     expect(result.ok).toBe(false)
     expect(result.errors[0]).toContain('twenty-six')
+  })
+
+  it('refuses a grid where a word nobody hid can still be found', () => {
+    const config = headed(base)
+    const { level, plan, puzzle, lettersBand, answersBand } = bands(config, CONTRACT_CTX)
+    const owned = new Set<string>()
+    for (const p of puzzle!.placements) {
+      for (let i = 0; i < p.word.length; i++) {
+        owned.add(`${p.r + p.dir.dr * i},${p.c + p.dir.dc * i}`)
+      }
+    }
+    // Spell a list word the page did not draw into four filler cells in a row.
+    const stray = ['IRIS', 'OVEN', 'YARN', 'ZONE'].find((word) => !puzzle!.words.includes(word))!
+    const grid = puzzle!.grid.map((row) => [...row])
+    let written = false
+    for (let r = 0; r < grid.length && !written; r++) {
+      for (let c = 0; c + stray.length <= grid.length && !written; c++) {
+        if ([...stray].every((_, i) => !owned.has(`${r},${c + i}`))) {
+          ;[...stray].forEach((letter, i) => (grid[r]![c + i] = letter))
+          written = true
+        }
+      }
+    }
+    expect(written).toBe(true)
+    const result = runAtoZKdpPreflight({
+      puzzle: { ...puzzle!, grid },
+      plan,
+      level,
+      lettersBand: lettersBand!,
+      answersBand: answersBand!,
+    })
+    expect(result.ok).toBe(false)
+    expect(result.errors.join(' ')).toContain('a letter has two answers')
   })
 
   it('refuses a word printed against the wrong letter', () => {

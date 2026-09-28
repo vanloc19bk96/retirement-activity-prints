@@ -277,6 +277,24 @@ describe('trivia clue word search — clues and grid agree', () => {
     }
   })
 
+  it('drops a clue built from the root of its own answer', () => {
+    const giveaways = [
+      { answer: 'FISHING', clue: 'Catching fish at the lake' },
+      { answer: 'KNITTING', clue: 'Making a scarf: knit one, purl one' },
+      { answer: 'BAKING', clue: 'Making bread you bake in the oven' },
+      { answer: 'GARDENING', clue: 'Weeding and watering the garden' },
+      { answer: 'HIKERS', clue: 'People who hike up hills' },
+    ]
+    const kept = selectTriviaEntries([...giveaways, ...TRIVIA_FIXTURE_ITEMS], {
+      minLetters: 4,
+      maxLetters: 9,
+      maxClueChars: 60,
+    }).map((entry) => entry.token)
+    for (const { answer } of giveaways) expect(kept, answer).not.toContain(answer)
+    // The fixture's fair clues all survive the stricter test.
+    for (const { answer } of TRIVIA_FIXTURE_ITEMS) expect(kept, answer).toContain(answer)
+  })
+
   it('does not order the clues by their answers, which would leak them', () => {
     const { puzzle } = buildPuzzle(headed(base), CTX())
     const tokens = puzzle!.entries.map((entry) => entry.token)
@@ -410,6 +428,42 @@ describe('trivia clue word search — the printed page', () => {
         )
       }
     }
+  })
+
+  it('sets wordy clues a size smaller rather than refusing a 6 x 9 page', () => {
+    // Every clue here is inside the gentle level's character budget, and none
+    // fits two lines at the size a 6 x 9 page plans its clues at.
+    const wordy = TRIVIA_FIXTURE_ITEMS.map((item) => ({
+      answer: item.answer,
+      clue: `${item.clue}, on a quiet day`,
+    })).filter((item) => item.clue.length > 34 && item.clue.length <= 44)
+    const config = headed({ ...base, level: 'gentle' })
+    const ctx = { ...kdpCtx(6, 9), remoteData: { items: wordy } }
+    const level = parseTriviaLevel(config)
+    const plan = planFor(config, ctx)!
+    const spec = listFontSpec('PT Serif')
+    const atPlannedSize = selectTriviaEntries(wordy, {
+      minLetters: level.minLetters,
+      maxLetters: plan.maxAnswerLetters,
+      maxClueChars: level.clueMaxChars,
+      maxClueLines: MAX_CLUE_LINES,
+      clueLines: (clue) =>
+        measureClueLines(`88. ${clue} (99)`, plan.clueFontSize, plan.clueWrapWidth, spec),
+    })
+    expect(atPlannedSize.length).toBeLessThan(level.minClues)
+
+    const [page] = generateAt(config, ctx)
+    expect(page!.answerSourceObjects, 'an error page was drawn').toBeDefined()
+    const clues = flatten(page!.objects).filter(
+      (obj) => obj.studioRole === 'prompt' && /^\d+\./.test(String(obj.text ?? '')),
+    )
+    expect(clues.length).toBeGreaterThanOrEqual(level.minClues)
+    for (const clue of clues) {
+      expect(clue.fontSize!).toBeGreaterThanOrEqual(CLUE_MIN_SIZE)
+      expect(String(clue.text).split('\n').length).toBeLessThanOrEqual(MAX_CLUE_LINES)
+    }
+    assertObjectsInSafeMargin(page!.objects, ctx)
+    assertObjectsInSafeMargin(page!.answerSourceObjects!, ctx)
   })
 
   it('says so, rather than printing a squint, when the trim is too small', () => {

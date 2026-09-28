@@ -1,4 +1,5 @@
 import {
+  countTokenReadings,
   sanitizeWordEntry,
   type WordEntry,
 } from '@/utils/puzzles/word-search-core'
@@ -97,6 +98,44 @@ export function lettersWithoutWords(options: {
   gridSide: number
 }): string[] {
   return ALPHABET.filter((letter) => candidatesForLetter(letter, options).length === 0)
+}
+
+let lexiconTokenCache: readonly string[] | null = null
+
+/** Every word in the bundled lexicon, as it would read in a grid. */
+function lexiconTokens(): readonly string[] {
+  if (lexiconTokenCache) return lexiconTokenCache
+  const tokens = new Set<string>()
+  for (const words of Object.values(lexicon as Record<string, readonly string[]>)) {
+    for (const word of words) {
+      const entry = sanitizeWordEntry(word, { gridSize: 99, minLetters: 1, maxLetters: 99 })
+      if (entry) tokens.add(entry.token)
+    }
+  }
+  lexiconTokenCache = [...tokens]
+  return lexiconTokenCache
+}
+
+/**
+ * A lexicon word this page did not hide that still reads in its grid, or null.
+ *
+ * The puzzle page prints letters, never words, so the solver's only test of a
+ * find is "does it begin with I". IRIS turning up by accident in a grid whose I
+ * word is INSECT is then a second answer, and the key tells the reader who found
+ * it that they were wrong. Every English word cannot be kept out of a grid, but
+ * the few hundred this puzzle is drawn from can, and they are the ones a solver
+ * who has worked a few of these pages is primed to see.
+ */
+export function strayLexiconWord(
+  grid: readonly (readonly string[])[],
+  words: readonly string[],
+): string | null {
+  const own = new Set(words)
+  return (
+    lexiconTokens().find(
+      (token) => !own.has(token) && countTokenReadings(grid as string[][], token) > 0,
+    ) ?? null
+  )
 }
 
 /**

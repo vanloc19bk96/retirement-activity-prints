@@ -7,6 +7,7 @@ import {
   ANSWERS_CAPTION,
   CLUES_CAPTION,
   CLUE_MIN_SIZE,
+  MAX_CLUE_LINES,
   drawTriviaList,
   planTriviaList,
   type TriviaListPlan,
@@ -40,6 +41,7 @@ export function planClueBlock(options: {
     preferredFontSize: plan.clueFontSize,
     minFontSize: CLUE_MIN_SIZE,
     caption: CLUES_CAPTION,
+    maxLinesPerItem: MAX_CLUE_LINES,
   })
 }
 

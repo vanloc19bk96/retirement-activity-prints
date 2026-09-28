@@ -6,6 +6,7 @@ import {
   ATOZ_WORD_COUNT,
   selectAlphabetSet,
   sortByLetter,
+  strayLexiconWord,
   type AtoZEntry,
 } from './content'
 import type { AtoZLevel } from './levels'
@@ -69,6 +70,9 @@ export function tryBuildAtoZPuzzle(options: {
       seed: deriveSeed(seed, `a-to-z-place-${draw}`),
     })
     if (!built) continue
+    // A list word nobody hid is a second answer for its letter. Re-drawing is
+    // cheaper than repairing, and about nine draws in ten come out clean.
+    if (strayLexiconWord(built.grid, built.words)) continue
 
     const byToken = new Map(entries.map((entry) => [entry.token, entry]))
     const placed = built.words.map((token) => byToken.get(token))

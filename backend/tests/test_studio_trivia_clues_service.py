@@ -144,6 +144,25 @@ def test_filter_drops_a_clue_that_gives_its_answer_away() -> None:
     assert _answers(items) == ["PICNIC"]
 
 
+def test_filter_drops_a_clue_built_from_the_answers_root() -> None:
+    items = filter_pairs_for_tests(
+        [
+            {"answer": "FISHING", "clue": "Catching fish at the lake"},
+            {"answer": "KNITTING", "clue": "Making a scarf: knit one, purl one"},
+            {"answer": "BAKING", "clue": "Making bread you bake in the oven"},
+            {"answer": "HIKERS", "clue": "People who hike up hills"},
+            {"answer": "READING", "clue": "What you do with a good book"},
+        ],
+        high=9,
+    )
+    assert _answers(items) == ["READING"]
+
+
+def test_fair_clues_all_survive_the_root_check() -> None:
+    items = filter_pairs_for_tests(VALID_ITEMS)
+    assert sorted(_answers(items)) == sorted(item["answer"] for item in VALID_ITEMS)
+
+
 def test_filter_drops_recall_trivia_and_duplicate_clues() -> None:
     items = filter_pairs_for_tests(
         [
@@ -226,6 +245,34 @@ def test_generate_retries_invalid_then_succeeds(monkeypatch: pytest.MonkeyPatch)
     assert len(result.items) >= 14
     assert all(item.answer.isalpha() and item.answer.isupper() for item in result.items)
     assert calls["n"] == 3
+
+
+def test_generate_keeps_a_short_pool_and_tops_it_up(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    prompts: list[str] = []
+
+    async def fake_gemini(prompt: str) -> str:
+        prompts.append(prompt)
+        # Each call alone is short of the page; together they fill it.
+        half = VALID_ITEMS[:10] if len(prompts) == 1 else VALID_ITEMS[10:]
+        return json.dumps({"items": half})
+
+    monkeypatch.setattr(
+        "app.services.studio_trivia_clues_service._call_gemini", fake_gemini
+    )
+    monkeypatch.setattr(
+        "app.services.studio_trivia_clues_service._check_rate_limit", lambda _uid: None
+    )
+
+    result = asyncio.run(generate_trivia_clues(_req(seed=3), user_id="user-2"))
+    assert len(prompts) == 2
+    # The retry is told what the first call already supplied.
+    assert VALID_ITEMS[0]["answer"] in prompts[1]
+    answers = _answers(result.items)
+    assert VALID_ITEMS[0]["answer"] in answers
+    assert VALID_ITEMS[10]["answer"] in answers
+    assert len(answers) == len(set(answers))
 
 
 def test_generate_gives_up_after_three_failures(monkeypatch: pytest.MonkeyPatch) -> None:

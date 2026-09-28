@@ -1,6 +1,9 @@
 import { generateTriviaClues } from '@/api/studio-trivia-clues.api'
 import type { StudioConfig } from '@/types/studio-template.types'
-import type { TriviaCluesResponse } from '@/types/studio-trivia-clues.types'
+import type {
+  TriviaClueItem,
+  TriviaCluesResponse,
+} from '@/types/studio-trivia-clues.types'
 import {
   rememberStudioContent,
   studioAvoidList,
@@ -16,6 +19,7 @@ import {
   candidateCountFor,
   parseRemotePayload,
   selectTriviaEntries,
+  type TriviaEntry,
 } from './content'
 import { parseTriviaLevel, type TriviaLevel } from './levels'
 import { TRIVIA_THEME_SALT } from './theme'
@@ -62,8 +66,20 @@ export async function triviaCluesPrefetch(
     level.id,
   )
 
-  const rejected: string[] = []
+  // Every attempt's pairs, kept. A short pool is still usable copy and the
+  // retry is told to avoid it, so the two together are usually a full page;
+  // throwing the first away asked the retry to fill the page on its own.
+  const collected: TriviaClueItem[] = []
+  let entries: TriviaEntry[] = []
   let lastError: unknown
+
+  const accept = (pool: readonly TriviaEntry[]): TriviaCluesResponse => {
+    rememberStudioContent(
+      varietyKey,
+      pool.map((entry) => entry.token),
+    )
+    return { items: pool.map((entry) => ({ answer: entry.token, clue: entry.clue })) }
+  }
 
   for (let attempt = 0; attempt < MAX_AI_ATTEMPTS; attempt++) {
     try {
@@ -76,36 +92,23 @@ export async function triviaCluesPrefetch(
           maxLetters: level.maxLetters,
           maxClueChars: level.clueMaxChars,
           seed: seed + attempt * 97,
-          avoid: [...studioAvoidList(varietyKey), ...rejected],
+          avoid: [...entries.map((entry) => entry.token), ...studioAvoidList(varietyKey)],
           locale: String(config.locale ?? 'en'),
         },
         signal,
       )
 
       const payload = parseRemotePayload(remote)
+      if (payload) collected.push(...payload.items)
       // Measured against the level's bands only: the page's own clue column is
       // not known here, so the width gate runs again at generate time.
-      const entries = payload
-        ? selectTriviaEntries(payload.items, {
-            minLetters: level.minLetters,
-            maxLetters: level.maxLetters,
-            maxClueChars: level.clueMaxChars,
-          })
-        : []
+      entries = selectTriviaEntries(collected, {
+        minLetters: level.minLetters,
+        maxLetters: level.maxLetters,
+        maxClueChars: level.clueMaxChars,
+      })
 
-      if (entries.length >= need) {
-        rememberStudioContent(
-          varietyKey,
-          entries.map((entry) => entry.token),
-        )
-        return {
-          items: entries.map((entry) => ({ answer: entry.token, clue: entry.clue })),
-        }
-      }
-
-      // A short pool is still usable copy — tell the next attempt not to repeat
-      // it, so the retry spends its tokens on new clues.
-      rejected.push(...entries.map((entry) => entry.token))
+      if (entries.length >= need) return accept(entries)
       lastError = new Error(TRIVIA_AI_EMPTY_MESSAGE)
     } catch (error) {
       if (signal.aborted) throw error
@@ -113,6 +116,10 @@ export async function triviaCluesPrefetch(
       console.warn(`[trivia-clue-word-search] AI attempt ${attempt + 1} failed`, error)
     }
   }
+
+  // Short of the spare the page likes to have, but still a full page at the
+  // level's aim: print it rather than fail a pool the seller has paid for.
+  if (entries.length >= level.targetClues) return accept(entries)
 
   if (lastError instanceof Error && lastError.message.trim()) {
     throw new Error(lastError.message.trim())

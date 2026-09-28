@@ -360,8 +360,14 @@ export function planTriviaList(options: {
   preferredFontSize?: number
   minFontSize?: number
   caption?: string
+  /**
+   * Lines one item may wrap to. A size that breaks any item past it is skipped
+   * even if the block as a whole still fits, because the page promised every
+   * clue this many lines and preflight holds it to that.
+   */
+  maxLinesPerItem?: number
 }): TriviaListPlan | null {
-  const { lines, width, maxHeight, font } = options
+  const { lines, width, maxHeight, font, maxLinesPerItem } = options
   if (lines.length === 0) return null
   const spec = listFontSpec(font)
   const caption = options.caption ?? ''
@@ -373,6 +379,9 @@ export function planTriviaList(options: {
     // every size is tried with it before any size is tried without.
     for (const captioned of caption ? [true, false] : [false]) {
       const plan = planAtSize({ lines, width, fontSize, spec, caption, captioned })
+      if (maxLinesPerItem != null && plan.items.some((item) => item.lines > maxLinesPerItem)) {
+        break
+      }
       if (plan.height <= maxHeight) return plan
     }
   }

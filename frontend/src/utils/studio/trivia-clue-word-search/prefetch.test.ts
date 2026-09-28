@@ -79,6 +79,32 @@ describe('triviaCluesPrefetch', () => {
     expect(remote.items.length).toBeGreaterThan(3)
   })
 
+  it('keeps a short pool and tops it up, rather than throwing it away', async () => {
+    generateMock
+      .mockResolvedValueOnce({ items: TRIVIA_FIXTURE_ITEMS.slice(0, 10) })
+      .mockResolvedValueOnce({ items: TRIVIA_FIXTURE_ITEMS.slice(10) })
+    const remote = await triviaCluesPrefetch(config(), new AbortController().signal)
+
+    expect(generateMock).toHaveBeenCalledTimes(2)
+    const answers = remote.items.map((item) => item.answer)
+    expect(answers).toContain(TRIVIA_FIXTURE_ITEMS[0]!.answer)
+    expect(answers).toContain(TRIVIA_FIXTURE_ITEMS[10]!.answer)
+    expect(new Set(answers).size).toBe(answers.length)
+  })
+
+  it('prints a full page from a pool that never reached its spare', async () => {
+    const level = TRIVIA_LEVELS.find((l) => l.id === 'classic')!
+    generateMock.mockResolvedValue({
+      items: TRIVIA_FIXTURE_ITEMS.slice(0, level.targetClues + 1),
+    })
+    const remote = await triviaCluesPrefetch(
+      config({ level: 'classic' }),
+      new AbortController().signal,
+    )
+    expect(generateMock).toHaveBeenCalledTimes(3)
+    expect(remote.items.length).toBeGreaterThanOrEqual(level.targetClues)
+  })
+
   it('fails visibly rather than printing a thin page', async () => {
     generateMock.mockResolvedValue({ items: TRIVIA_FIXTURE_ITEMS.slice(0, 2) })
     await expect(

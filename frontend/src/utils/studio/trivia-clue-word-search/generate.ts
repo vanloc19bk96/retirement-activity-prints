@@ -19,7 +19,15 @@ import {
   selectTriviaEntries,
   type TriviaEntry,
 } from './content'
-import { listFontSpec, measureClueLines, type TriviaListPlan } from './draw'
+import { wrapSafeWidth } from '../studio-text-metrics'
+import {
+  CLUE_MIN_SIZE,
+  clueColumnWidth,
+  listColumnsFor,
+  listFontSpec,
+  measureClueLines,
+  type TriviaListPlan,
+} from './draw'
 import { runTriviaKdpPreflight } from './kdp-preflight'
 import {
   planTriviaPage,
@@ -183,15 +191,32 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
   // The page's own ceilings, not the level's: an answer cannot be longer than
   // the grid is wide, and a clue cannot run more lines than the band reserved.
   const spec = listFontSpec(font)
-  const entries = selectTriviaEntries(payload.items, {
-    minLetters: level.minLetters,
-    maxLetters: plan.maxAnswerLetters,
-    maxClueChars: level.clueMaxChars,
-    maxClueLines: triviaMaxClueLines,
-    clueLines: (clue) =>
-      // Numbered and length-hinted, because that is what has to fit the column.
-      measureClueLines(`88. ${clue} (99)`, plan.clueFontSize, plan.clueWrapWidth, spec),
-  })
+  const selectAt = (fontSize: number, wrapWidth: number) =>
+    selectTriviaEntries(payload.items, {
+      minLetters: level.minLetters,
+      maxLetters: plan.maxAnswerLetters,
+      maxClueChars: level.clueMaxChars,
+      maxClueLines: triviaMaxClueLines,
+      clueLines: (clue) =>
+        // Numbered and length-hinted, because that is what has to fit the column.
+        measureClueLines(`88. ${clue} (99)`, fontSize, wrapWidth, spec),
+    })
+  let entries = selectAt(plan.clueFontSize, plan.clueWrapWidth)
+  if (entries.length < plan.clueCount) {
+    // The writer is given the level's character budget, and on a narrow trim
+    // at the planned size a clue well inside it can still wrap to a third
+    // line. Rather than refuse the page, measure at the large-print floor the
+    // list is allowed to step down to: the clue block then sets a size or two
+    // smaller, and `planClueBlock` will not pick a size that breaks any clue
+    // past its lines.
+    const bandWidth = triviaBodyField(ctx, pageConfig, instruction).width
+    const columns = listColumnsFor(bandWidth, CLUE_MIN_SIZE, spec, plan.clueCount)
+    const relaxed = selectAt(
+      CLUE_MIN_SIZE,
+      wrapSafeWidth(clueColumnWidth(bandWidth, columns), spec),
+    )
+    if (relaxed.length > entries.length) entries = relaxed
+  }
   if (entries.length < level.minClues) return fail(TRIVIA_AI_EMPTY_MESSAGE)
 
   const header = drawHeader(triviaContentBox(ctx), pageConfig, tag, instruction)
