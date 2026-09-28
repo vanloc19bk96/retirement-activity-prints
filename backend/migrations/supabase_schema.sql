@@ -37,9 +37,45 @@ create table if not exists retirement_activity_prints.users (
   monthly_downloads_used integer not null default 0
     constraint users_monthly_downloads_used_non_negative_check check (monthly_downloads_used >= 0),
   last_download_reset_at timestamptz not null default now(),
+  -- 128-bit salt for HMAC puzzle seeds so two accounts with the same
+  -- settings never emit the same puzzle.
+  puzzle_salt bytea not null default gen_random_bytes(16)
+    constraint users_puzzle_salt_length_check check (octet_length(puzzle_salt) = 16),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Existing databases created before puzzle_salt: add, backfill, then lock down.
+alter table retirement_activity_prints.users
+  add column if not exists puzzle_salt bytea;
+
+update retirement_activity_prints.users
+set puzzle_salt = gen_random_bytes(16)
+where puzzle_salt is null;
+
+alter table retirement_activity_prints.users
+  alter column puzzle_salt set default gen_random_bytes(16);
+
+alter table retirement_activity_prints.users
+  alter column puzzle_salt set not null;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'users_puzzle_salt_length_check'
+      and conrelid = 'retirement_activity_prints.users'::regclass
+  ) then
+    alter table retirement_activity_prints.users
+      add constraint users_puzzle_salt_length_check
+      check (octet_length(puzzle_salt) = 16)
+      not valid;
+    alter table retirement_activity_prints.users
+      validate constraint users_puzzle_salt_length_check;
+  end if;
+end;
+$$;
 
 drop trigger if exists users_set_updated_at on retirement_activity_prints.users;
 create trigger users_set_updated_at
@@ -69,6 +105,9 @@ comment on column retirement_activity_prints.users.monthly_downloads_used is
 comment on column retirement_activity_prints.users.last_download_reset_at is
   'UTC timestamp when monthly_downloads_used was last reset (start of month rollover).';
 
+comment on column retirement_activity_prints.users.puzzle_salt is
+  '128-bit per-account salt keying puzzle seed derivation, so two sellers never generate the same puzzle from the same settings.';
+
 -- -----------------------------------------------------------------------------
 -- 4) projects
 -- -----------------------------------------------------------------------------
@@ -86,6 +125,30 @@ create trigger projects_set_updated_at
 before update on retirement_activity_prints.projects
 for each row
 execute function retirement_activity_prints.set_updated_at();
+
+-- Existing rows only. Keep the oldest account when emails collide after
+-- lower(trim()); skip a duplicate that already owns a project (cascade
+-- would delete that book). Fresh databases have no rows, so this is a no-op.
+delete from retirement_activity_prints.users as duplicate
+where exists (
+  select 1
+  from retirement_activity_prints.users as keeper
+  where lower(trim(keeper.email)) = lower(trim(duplicate.email))
+    and keeper.id <> duplicate.id
+    and (
+      keeper.created_at < duplicate.created_at
+      or (keeper.created_at = duplicate.created_at and keeper.id < duplicate.id)
+    )
+)
+and not exists (
+  select 1
+  from retirement_activity_prints.projects as project
+  where project.user_id = duplicate.id
+);
+
+update retirement_activity_prints.users
+set email = lower(trim(email))
+where email <> lower(trim(email));
 
 -- -----------------------------------------------------------------------------
 -- 5) canvases
