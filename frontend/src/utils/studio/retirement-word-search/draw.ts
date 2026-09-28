@@ -437,16 +437,13 @@ export function drawWordList(
   )({ words: displayWords, listBox, minFontSize, maxFontSize, textHeightRatio, spec })
 
   const wordParts: StudioFabricObject[] = []
-  const colPitch = colCount > 1 ? colBoxes[1]!.left - colBoxes[0]!.left : 0
-  const lastRow = Math.floor((displayWords.length - 1) / colCount)
-  const lastRowCount = displayWords.length - lastRow * colCount
   for (let i = 0; i < displayWords.length; i++) {
     const col = i % colCount
     const row = Math.floor(i / colCount)
-    // A short last row is centred under the full ones rather than left-hung.
-    const rowShift = row === lastRow ? ((colCount - lastRowCount) * colPitch) / 2 : 0
+    // A short last row stays on the column grid, so every word lines up with
+    // the ones above it.
     const cell = {
-      left: colBoxes[col]!.left + rowShift + LIST_CELL_PAD_X,
+      left: colBoxes[col]!.left + LIST_CELL_PAD_X,
       top: rowBoxes[row]!.top,
       width: colInnerW,
       height: rowBoxes[row]!.height,
