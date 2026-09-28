@@ -1,16 +1,23 @@
 import { subject, type SgSubject } from '../stained-glass/catalog'
-import { arcBand, band, blob, circle, curve, ellipse, path, poly, rect, rod, sketch } from '../stained-glass/subject-kit'
+import { arcBand, band, blob, circle, curve, ellipse, path, poly, rect, rod, sketch, wedge } from '../stained-glass/subject-kit'
+import { pt } from '../stained-glass/geometry'
 
 /**
  * Subjects drawn for Dot to Dot, on top of the shared retirement library.
  *
  * A dot-to-dot lives or dies by its silhouette, so these are things whose
  * outline alone says what they are — a golf flag, a sun hat, a hammock
- * between two posts — drawn from plain geometry for this game with the same
+ * between two trees — drawn from plain geometry for this game with the same
  * kit and rules as the shared library (`stained-glass/subject-kit.ts`):
  * generic objects, no text, logos or brands, nothing traced from a photo,
  * a product or another activity book, and parts chunky enough that the dots
  * on either side of a pole or a strap keep their distance.
+ *
+ * The outline is traced round everything at once and any paper it closes in
+ * is filled, so a frame of rails and posts comes out as one solid slab (a
+ * swing hanging from its beam reads as a screen). Parts either reach the
+ * edge on their own, or close in one gap big enough to print as a clear
+ * hole (the space under a kettle's handle, between a bench's back and seat).
  *
  * Every knob changes the outline itself (a swallowtail flag or a pennant, a
  * drooping brim or a flat one), never only the surface, so two versions of a
@@ -70,25 +77,29 @@ const deckChair = subject('deck-chair', 'Beach Chair', 'travel', 'outdoor', 'san
 
 const hammock = subject('hammock', 'Hammock', 'garden', 'outdoor', 'grass', { stand: 2, sling: 2, pillow: 2 }, (k) =>
   sketch((s) => {
+    // Two posts planted in the ground. Nothing joins them along the ground:
+    // a base would close the space under the sling, and the whole picture
+    // would fill in as a slab.
     if (k.stand === 1) {
-      // A freestanding frame: an arched base with two uprights.
-      s.add(band(curve([4, 96], [50, 88], [96, 96]), 9, true))
-      s.add(rod(8, 94, 14, 22, 9))
-      s.add(rod(92, 94, 86, 22, 9))
+      // Posts leaning out, each on a foot.
+      s.add(rod(18, 12, 8, 68, 10))
+      s.add(rod(82, 12, 92, 68, 10))
+      s.add(rect(0, 66, 18, 7, 3))
+      s.add(rect(82, 66, 18, 7, 3))
     } else {
-      // Two posts on a flat base.
-      s.add(rect(0, 88, 100, 10, 4))
-      s.add(rect(6, 26, 11, 64))
-      s.add(rect(83, 26, 11, 64))
-      s.add(circle(11.5, 26, 8))
-      s.add(circle(88.5, 26, 8))
+      // Upright posts, round-topped.
+      s.add(rect(4, 10, 11, 62))
+      s.add(rect(85, 10, 11, 62))
+      s.add(circle(9.5, 10, 7.5))
+      s.add(circle(90.5, 10, 7.5))
     }
-    const top = k.stand === 1 ? 28 : 36
-    const dip = k.sling === 1 ? 74 : 66
-    s.add(rod(14, top, 28, 56, 7))
-    s.add(rod(86, top, 72, 56, 7))
-    s.add(band(curve([24, 54], [50, dip], [76, 54]), 14, true))
-    if (k.pillow === 1) s.add(blob([24, 48], [34, 42], [40, 50], [30, 58]))
+    // A deep bed of cloth hung straight from the posts, stripes drawn across
+    // it, the whole picture wider than tall. Ropes slanting down from tall
+    // posts to a thin sagging band read as the letter M.
+    const dip = k.sling === 1 ? 6 : 0
+    s.add(blob([12, 18], [30, 30 + dip / 2], [50, 34 + dip], [70, 30 + dip / 2], [88, 18], [84, 32], [68, 50 + dip], [50, 56 + dip], [32, 50 + dip], [16, 32]))
+    s.part(band(curve([30, 40 + dip / 2], [50, 45 + dip], [70, 40 + dip / 2]), 4.5, true))
+    if (k.pillow === 1) s.add(blob([14, 16], [26, 10], [34, 20], [24, 28]))
   }),
 )
 
@@ -118,6 +129,36 @@ const fishingBoat = subject('fishing-boat', 'Fishing Boat', 'travel', 'outdoor',
     s.part(rect(cx + 6, 42, 20, 12, 3))
     s.add(k.hull === 1 ? poly([0, 60], [100, 56], [88, 90], [14, 90]) : blob([0, 58], [50, 64], [102, 54], [86, 90], [20, 92]))
     s.part(rect(12, 70, 72, 6, 3))
+  }),
+)
+
+const tennisRacket = subject('tennis-racket', 'Tennis Racket', 'hobbies', 'outdoor', 'grass', { head: 2, throat: 2, ball: 2 }, (k) =>
+  sketch((s) => {
+    // The frame in two halves meeting top and bottom, so the strung face is
+    // paper the outline closes in: it prints as the racket's big oval hole.
+    const rx = k.head === 1 ? 32 : 27
+    const ry = k.head === 1 ? 30 : 34
+    const cy = 36
+    const arc = (from: number, to: number) =>
+      Array.from({ length: 25 }, (_, i) => {
+        const a = ((from + ((to - from) * i) / 24) * Math.PI) / 180
+        return pt(50 + rx * Math.cos(a), cy + ry * Math.sin(a))
+      })
+    s.add(band(arc(80, 280), 8))
+    s.add(band(arc(-100, 100), 8))
+    // The throat: two arms from the frame to the handle, or one solid wedge.
+    const base = cy + ry - 2
+    if (k.throat === 1) s.add(poly([36, base - 4], [64, base - 4], [54, base + 16], [46, base + 16]))
+    else {
+      s.add(rod(38, base + 1, 47, base + 16, 7))
+      s.add(rod(62, base + 1, 53, base + 16, 7))
+    }
+    s.add(rect(44, base + 12, 12, 100 - base - 12, 3))
+    s.add(rect(42, 94, 16, 7, 3))
+    if (k.ball === 1) {
+      s.add(circle(68, 90, 10))
+      s.part(band(curve([61, 84], [66, 90], [61, 96]), 3, true))
+    }
   }),
 )
 
@@ -163,52 +204,60 @@ const readingGlasses = subject('reading-glasses', 'Reading Glasses', 'home', 'in
 
 const kettle = subject('kettle', 'Tea Kettle', 'home', 'indoor', 'none', { body: 2, spout: 2, handle: 2 }, (k) =>
   sketch((s) => {
-    const w = k.body === 1 ? 30 : 36
-    s.add(k.spout === 1 ? band(curve([60, 70], [80, 60], [92, 42]), 11, true) : rod(60, 72, 96, 52, 11))
-    s.add(k.handle === 1 ? band(curve([50 - w + 8, 44], [50, 12], [50 + w - 8, 44]), 9, true) : rect(26, 18, 48, 10, 5))
-    if (k.handle === 0) {
-      s.add(rod(30, 22, 30, 42, 8))
-      s.add(rod(70, 22, 70, 42, 8))
-    }
-    s.add(k.body === 1 ? rect(50 - w, 40, w * 2, 52, [16, 6]) : blob([50 - w, 90], [50 - w - 2, 62], [50, 38], [50 + w + 2, 62], [50 + w, 90]))
-    s.add(rect(50 - w - 2, 86, w * 2 + 4, 8, 4))
-    s.add(ellipse(50, 40, 14, 5))
-    s.part(circle(50, 34, 5))
+    // Spout first, rising from low on the body; the body covers its root.
+    s.add(k.spout === 1 ? band(curve([64, 80], [84, 68], [96, 46]), 11, true) : rod(64, 82, 100, 56, 11))
+    // The handle arches well clear of the lid, so the paper under it prints
+    // as a hole — the kettle's cue. A low arch leaves only a sliver, and
+    // the outline fills in as an onion.
+    const peak = k.handle === 1 ? 0 : 8
+    const foot = k.handle === 1 ? 24 : 28
+    s.add(band(curve([foot, 58], [foot - 2, peak + 18], [50, peak], [102 - foot, peak + 18], [100 - foot, 58]), 8, true))
+    // A dome on a wide base, or an upright pot with rounded shoulders; both with a flat lid.
+    s.add(k.body === 1 ? rect(16, 44, 68, 48, [18, 6]) : blob([10, 92], [8, 72], [18, 54], [36, 46], [64, 46], [82, 54], [92, 72], [90, 92]))
+    s.add(rect(8, 88, 84, 8, 4))
+    s.add(ellipse(50, 46, 16, 5))
+    s.add(circle(50, 40, 5))
   }),
 )
 
 const lantern = subject('lantern', 'Camping Lantern', 'travel', 'outdoor', 'none', { handle: 2, glass: 2, base: 2 }, (k) =>
   sketch((s) => {
-    // The handle overlaps the cap, so the lantern stays one shape.
+    // A carry loop over the cap: a tall bail, or a ring on a short neck. The
+    // paper inside either prints as a hole.
     if (k.handle === 1) {
-      s.add(rect(40, 8, 20, 18, 6))
-      s.add(circle(50, 8, 7))
-    } else s.add(arcBand(50, 25, 15, 8, 180, 360))
-    s.add(poly([28, 22], [72, 22], [80, 32], [20, 32]))
-    s.add(k.glass === 1 ? blob([26, 32], [18, 56], [26, 80], [74, 80], [82, 56], [74, 32]) : rect(24, 32, 52, 48))
-    s.part(ellipse(50, 56, 7, 12))
-    s.add(k.base === 1 ? poly([22, 80], [78, 80], [86, 96], [14, 96]) : rect(20, 80, 60, 14, 4))
+      s.add(rect(44, 14, 12, 12))
+      s.add(arcBand(50, 10, 11, 5, 0, 360))
+    } else s.add(arcBand(50, 20, 19, 12, 180, 360))
+    // A roof wider than the glass and a foot wider still: the lantern's waist.
+    s.add(poly([30, 18], [70, 18], [88, 32], [12, 32]))
+    s.add(k.glass === 1 ? blob([28, 32], [22, 54], [28, 76], [72, 76], [78, 54], [72, 32]) : rect(28, 32, 44, 44))
+    // The flame, and the two guard wires either side of it.
+    s.part(ellipse(50, 54, 6, 11))
+    s.part(rect(34, 40, 5, 28, 2.5))
+    s.part(rect(61, 40, 5, 28, 2.5))
+    s.add(k.base === 1 ? poly([24, 74], [76, 74], [90, 96], [10, 96]) : rect(14, 74, 72, 14, 5))
   }),
 )
 
 const parkBench = subject('park-bench', 'Park Bench', 'garden', 'outdoor', 'grass', { back: 2, arms: 2, legs: 2 }, (k) =>
   sketch((s) => {
-    // Legs and back posts first; the slats cover them.
+    // Long and low, so it never reads as a cabinet. Legs and back posts
+    // first; the rails cover them. The gap between the back and the seat is
+    // the one hole, a long slot that says "bench".
     if (k.legs === 1) {
-      s.add(band(curve([10, 96], [14, 80], [12, 64]), 9, true))
-      s.add(band(curve([90, 96], [86, 80], [88, 64]), 9, true))
+      s.add(band(curve([14, 48], [10, 64], [4, 80]), 9, true))
+      s.add(band(curve([86, 48], [90, 64], [96, 80]), 9, true))
     } else {
-      s.add(rect(8, 62, 10, 34))
-      s.add(rect(82, 62, 10, 34))
+      s.add(rect(10, 44, 10, 36))
+      s.add(rect(80, 44, 10, 36))
     }
-    s.add(rect(10, 12, 9, 52))
-    s.add(rect(81, 12, 9, 52))
-    const slats = k.back === 1 ? [10, 26, 42] : [14, 34]
-    for (const y of slats) s.add(rect(4, y, 92, 10, 4))
-    s.add(rect(0, 58, 100, 10, 4))
+    s.add(rect(14, 4, 9, 46))
+    s.add(rect(77, 4, 9, 46))
+    s.add(k.back === 1 ? blob([6, 30], [8, 10], [30, 2], [50, 0], [70, 2], [92, 10], [94, 30]) : rect(6, 6, 88, 24, 5))
+    s.add(rect(0, 42, 100, 11, 4))
     if (k.arms === 1) {
-      s.add(band(curve([4, 60], [0, 48], [10, 42], [18, 46]), 8, true))
-      s.add(band(curve([96, 60], [100, 48], [90, 42], [82, 46]), 8, true))
+      s.add(band(curve([3, 44], [0, 34], [8, 28], [18, 32]), 8, true))
+      s.add(band(curve([97, 44], [100, 34], [92, 28], [82, 32]), 8, true))
     }
   }),
 )
@@ -295,6 +344,32 @@ const birdbath = subject('birdbath', 'Birdbath', 'garden', 'outdoor', 'grass', {
   }),
 )
 
+/**
+ * The shared library's lighthouse, redrawn for a silhouette: its rocky islet
+ * flared the foot into a vase and its light beams stuck out like arms. Here
+ * the tower stands on a low plinth or a flat reef, and the cue is the top —
+ * a gallery wider than the tower, the lantern room, the roof — with the door
+ * and windows drawn in.
+ */
+const lighthouse = subject('lighthouse', 'Lighthouse', 'travel', 'outdoor', 'water', { roof: 2, tower: 2, base: 2 }, (k) =>
+  sketch((s) => {
+    const half = k.tower === 1 ? 20 : 16
+    s.add(poly([50 - half + 6, 40], [50 + half - 6, 40], [50 + half, 90], [50 - half, 90]))
+    s.add(k.base === 1 ? blob([6, 100], [12, 92], [36, 88], [64, 88], [88, 92], [94, 100], [50, 102]) : rect(24, 88, 52, 12, 3))
+    s.add(rect(38, 16, 24, 22))
+    s.add(k.roof === 1 ? poly([34, 18], [66, 18], [50, 0]) : wedge(50, 18, 16, 180, 360))
+    s.add(circle(50, k.roof === 1 ? 2 : 3, 4))
+    s.add(rect(28, 34, 44, 8, 3))
+    // Lantern glass, a window, the door.
+    s.part(rect(43, 21, 14, 11, 2))
+    s.part(rect(45, 52, 10, 10, 3))
+    s.part(rect(43, 70, 14, 16, [7, 0]))
+  }),
+)
+
+/** The shared library's subjects this game draws its own way, under the same ids. */
+export const DTD_REDRAWN_SUBJECTS: readonly SgSubject[] = [lighthouse]
+
 /** Dot to Dot's own subjects, grouped by theme like the shared library. */
 export const DTD_EXTRA_SUBJECTS: readonly SgSubject[] = [
   porchSwing,
@@ -313,6 +388,7 @@ export const DTD_EXTRA_SUBJECTS: readonly SgSubject[] = [
   birdbath,
   golfFlag,
   golfCart,
+  tennisRacket,
 ]
 
 

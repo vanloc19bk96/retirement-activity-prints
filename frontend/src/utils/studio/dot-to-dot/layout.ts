@@ -1,13 +1,15 @@
 import type { StudioConfig, StudioConfigLayoutContext } from '@/types/studio-template.types'
 import { DPI } from '@/types/canvas-settings.types'
+import { STUDIO_INSTRUCTION_SIZE } from '@/constants/studio.constants'
 import { contentBox, measureHeaderHeightOverFullWidth, type Box } from '../studio-layout'
 import { dtdInstructionOptions, dtdLevelSpec, type DtdLevel } from './content'
 import { labelRoom } from './puzzle'
 
 /**
- * Where the picture goes: everything under the heading and the one-line
- * instruction. No frame, no border, no decoration — the dots and their
- * numbers are the page, and the paper round them is where they breathe.
+ * Where the picture goes: everything under the heading, the one-line
+ * instruction and the line naming the picture. No frame, no border, no
+ * decoration — the dots and their numbers are the page, and the paper round
+ * them is where they breathe.
  */
 
 /** Air between the safe area (or the heading) and the picture's panel, canvas px. */
@@ -15,13 +17,31 @@ export const DTD_EDGE_AIR = 4
 /** Extra air under the instruction. */
 export const DTD_HEADER_AIR = 12
 
+/** The line naming the picture ("Picture: Teapot"), so a reader knows what they are drawing. */
+export const DTD_NAME_SIZE = STUDIO_INSTRUCTION_SIZE
+/** Its strip: one line. */
+export const DTD_NAME_STRIP = Math.ceil(DTD_NAME_SIZE * 1.35)
+
+export const dtdNameText = (name: string) => `Picture: ${name}`
+
 /** The smallest panel worth printing a picture in. */
 export const DTD_MIN_PANEL_WIDTH = Math.round(3.2 * DPI)
 export const DTD_MIN_PANEL_HEIGHT = Math.round(3.6 * DPI)
 
-/** The picture's panel inside what a heading left of the page (`body`, from `drawHeader`). */
+/** The strip for the picture's name, at the top of what a heading left of the page. */
+export function dtdNameStrip(body: Box, headed: boolean): Box {
+  return {
+    left: body.left,
+    top: body.top + (headed ? 0 : DTD_EDGE_AIR),
+    width: body.width,
+    height: DTD_NAME_STRIP,
+  }
+}
+
+/** The picture's panel inside what a heading left of the page (`body`, from `drawHeader`), under the name. */
 export function dtdPanelInBody(body: Box, headed: boolean): Box {
-  const top = body.top + (headed ? DTD_HEADER_AIR : DTD_EDGE_AIR)
+  const name = dtdNameStrip(body, headed)
+  const top = name.top + name.height + DTD_HEADER_AIR
   return {
     left: body.left + DTD_EDGE_AIR,
     top,

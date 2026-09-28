@@ -3,10 +3,10 @@ import { DPI } from '@/types/canvas-settings.types'
 import { createRngFromSeedInput, sha256Hex } from '../_shared/uniqueness'
 import { isValidSgVariant, sgVariantDrawing, sgVariantKey, sgVariants, type SgVariant } from '../stained-glass/content'
 import { pointInRing, ringBounds } from '../stained-glass/geometry'
-import { SG_SUBJECTS, type SgSubject, type SgTheme } from '../stained-glass/subjects'
+import { SG_SUBJECTS, type SgKnobValues, type SgSubject, type SgTheme } from '../stained-glass/subjects'
 import { traceOutline, type DtdOutline } from './outline'
 import type { DtdRules } from './puzzle'
-import { DTD_EXTRA_SUBJECTS } from './subjects'
+import { DTD_EXTRA_SUBJECTS, DTD_REDRAWN_SUBJECTS } from './subjects'
 
 /**
  * What a Dot to Dot page shows, and how each page's picture is chosen.
@@ -36,16 +36,53 @@ export const DTD_BUILD_FAILED_MESSAGE = 'Could not build a clean dot-to-dot pict
  * ------------------------------------------------------------------ */
 
 /**
- * Library subjects left out of Dot to Dot, and why: their outline alone does
- * not say what they are. A bicycle's silhouette is two discs and a blob; the
- * garden tools, a tangle; the yarn basket, a cloud. The fishing scene and the
- * beach chair are two objects side by side, so no one outline is the picture
- * (the outline check refuses them anyway; listing them keeps the count true).
+ * Subjects left out of Dot to Dot, and why: their outline alone does not say
+ * what they are. A bicycle's silhouette is two discs and a blob; the garden
+ * tools, a tangle; the yarn basket, a cloud; the binoculars, a robot on two
+ * wheels. A porch swing's beam, chains and seat close in one big gap, so it
+ * fills in as a screen; a mailbox seen side on is a box on a stick. (Spot the
+ * Difference still draws those two in its scenes, where every line shows.)
+ * The fishing scene and the beach chair are two objects side by side, so no
+ * one outline is the picture (the outline check refuses them anyway; listing
+ * them keeps the count true).
  */
-const LEFT_OUT = new Set(['bicycle', 'garden-tools', 'yarn-basket', 'fishing', 'beach-chair'])
+const LEFT_OUT = new Set(['bicycle', 'garden-tools', 'yarn-basket', 'fishing', 'beach-chair', 'binoculars', 'porch-swing', 'mailbox'])
 
-/** Every Dot to Dot subject: the shared library's that trace well, and this game's own. */
-export const DTD_SUBJECTS: readonly SgSubject[] = [...SG_SUBJECTS.filter((s) => !LEFT_OUT.has(s.id)), ...DTD_EXTRA_SUBJECTS]
+/**
+ * Library subjects kept to the versions whose outline still reads as the
+ * thing, per knob, by option. Two or three wisps of steam over a mug, a cup
+ * or a pie stand up like antennae; a load of soil or flowers turns a
+ * wheelbarrow into a creature; a fan of clubs, a hand; a cat on a footstool,
+ * a pig.
+ */
+const KEPT_OPTIONS: Readonly<Record<string, Readonly<Record<string, readonly number[]>>>> = {
+  'coffee-mug': { steam: [0] },
+  teacup: { steam: [0, 1] },
+  'fresh-pie': { steam: [0] },
+  wheelbarrow: { load: [0] },
+  'golf-bag': { clubs: [0] },
+  'sleeping-cat': { cushion: [0, 2] },
+}
+
+/** A subject with only the kept options of each knob; option `i` of a knob draws its `i`-th kept one. */
+function keepOptions(subject: SgSubject, kept: Readonly<Record<string, readonly number[]>>): SgSubject {
+  const knobs = Object.fromEntries(Object.entries(subject.knobs).map(([name, count]) => [name, kept[name]?.length ?? count]))
+  const draw = (k: SgKnobValues) => subject.draw(Object.fromEntries(Object.entries(k).map(([name, i]) => [name, kept[name]?.[i] ?? i])))
+  return { ...subject, knobs, draw }
+}
+
+const REDRAWN = new Map(DTD_REDRAWN_SUBJECTS.map((s) => [s.id, s]))
+
+/** Every Dot to Dot subject: the shared library's that trace well (some redrawn or trimmed), and this game's own. */
+export const DTD_SUBJECTS: readonly SgSubject[] = [
+  ...SG_SUBJECTS.filter((s) => !LEFT_OUT.has(s.id)).map((s) => {
+    const redrawn = REDRAWN.get(s.id)
+    if (redrawn) return redrawn
+    const kept = KEPT_OPTIONS[s.id]
+    return kept ? keepOptions(s, kept) : s
+  }),
+  ...DTD_EXTRA_SUBJECTS.filter((s) => !LEFT_OUT.has(s.id)),
+]
 
 const SUBJECT_INDEX = new Map(DTD_SUBJECTS.map((s) => [s.id, s]))
 export const dtdSubjectById = (id: string) => SUBJECT_INDEX.get(id)
@@ -58,7 +95,7 @@ export type DtdThemeChoice = 'mix' | SgTheme
 
 export const DTD_THEMES: readonly { value: DtdThemeChoice; label: string; examples: string }[] = [
   { value: 'mix', label: 'A mix of everything', examples: 'teapots, sailboats, golf flags, hammocks and more' },
-  { value: 'home', label: 'Home comforts', examples: 'a rocking chair, a teapot, reading glasses, a porch swing' },
+  { value: 'home', label: 'Home comforts', examples: 'a rocking chair, a teapot, reading glasses, a table lamp' },
   { value: 'travel', label: 'Travel & getaways', examples: 'a motorhome, a cruise ship, a sun hat, a fishing boat' },
   { value: 'garden', label: 'Garden & outdoors', examples: 'a watering can, a birdhouse, a hammock, a park bench' },
   { value: 'hobbies', label: 'Hobbies & pastimes', examples: 'a golf flag, a golf cart, a guitar, a camera' },

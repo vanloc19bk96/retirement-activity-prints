@@ -4,10 +4,16 @@ import type {
   StudioPageOutput,
   StudioTemplateDefinition,
 } from '@/types/studio-template.types'
-import { STUDIO_BODY_SIZE, STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
+import {
+  STUDIO_BODY_SIZE,
+  STUDIO_CONTENT_SAFE_INSET_X,
+  STUDIO_DEFAULT_FONT,
+  STUDIO_INK,
+} from '@/constants/studio.constants'
 import { createRngFromSeedInput, resolveOwnerSalt } from '../_shared/uniqueness'
 import { sgVariantKey } from '../stained-glass/content'
-import { boxCenterX, contentBox, drawHeaderOverFullWidth } from '../studio-layout'
+import { boxCenterX, contentBox, drawHeaderOverFullWidth, toNonBreakingSpaces, type Box } from '../studio-layout'
+import { hugTextBoxWidth, type FontSpec } from '../studio-text-metrics'
 import { buildText, type StudioTag } from '../studio-fabric-builders'
 import { rememberStudioContent, studioAvoidList, studioVarietyKey } from '../studio-variety'
 import { DTD_CONFIG_SCHEMA } from './config'
@@ -27,7 +33,7 @@ import {
 } from './content'
 import { buildDtdPicture } from './draw'
 import { checkDtdDrawnPage, runDtdKdpPreflight } from './kdp-preflight'
-import { dtdPanelFits, dtdPanelInBody } from './layout'
+import { DTD_NAME_SIZE, dtdNameStrip, dtdNameText, dtdPanelFits, dtdPanelInBody } from './layout'
 import { dotToDotPrefetch, parseDtdRemoteData } from './prefetch'
 import { buildPuzzle } from './puzzle'
 
@@ -65,6 +71,41 @@ function errorPage(ctx: StudioGenerateContext, config: StudioConfig, tag: Studio
   }
 }
 
+/** The smallest the name line shrinks to on a narrow trim. */
+const NAME_MIN_SIZE = 14
+
+/**
+ * The line under the instruction saying what the picture is. Always one line:
+ * measured, not estimated (bold serif runs wider than the estimate, and the
+ * textbox wrapped "Picture: Motorhome" in two), NBSP-joined, and set smaller
+ * only when the column leaves no other way to fit.
+ */
+function nameLine(strip: Box, name: string, config: StudioConfig, tag: StudioTag) {
+  const text = toNonBreakingSpaces(dtdNameText(name))
+  const spec: FontSpec = { fontFamily: String(config.fontFamily ?? STUDIO_DEFAULT_FONT), fontWeight: 700 }
+  const column = Math.max(1, strip.width - STUDIO_CONTENT_SAFE_INSET_X * 2)
+  const natural = (size: number) => hugTextBoxWidth(text, size, Number.POSITIVE_INFINITY, spec)
+  let fontSize = DTD_NAME_SIZE
+  while (fontSize > NAME_MIN_SIZE && natural(fontSize) > column) fontSize -= 1
+  return buildText(
+    {
+      left: boxCenterX(strip),
+      // Centred in the strip when set smaller.
+      top: strip.top + (DTD_NAME_SIZE - fontSize) / 2,
+      text,
+      fontFamily: spec.fontFamily,
+      fontSize,
+      fontWeight: 700,
+      fill: STUDIO_INK,
+      width: Math.min(column, natural(fontSize)),
+      textAlign: 'center',
+      originX: 'center',
+    },
+    tag,
+    'prompt',
+  )
+}
+
 /**
  * One Dot to Dot page.
  *
@@ -89,7 +130,8 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
   const fail = (message: string) => [errorPage(ctx, config, tag, message, instruction)]
 
   const header = drawHeaderOverFullWidth(contentBox(ctx), config, tag, instruction)
-  const panel = dtdPanelInBody(header.body, header.objects.length > 0)
+  const headed = header.objects.length > 0
+  const panel = dtdPanelInBody(header.body, headed)
   if (!dtdPanelFits(panel)) return fail(DTD_PAGE_TOO_SMALL_MESSAGE)
 
   const book = parseDtdBook(parseDtdRemoteData(ctx.remoteData).bookLabels)
@@ -147,7 +189,8 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
 
     rememberStudioContent(VARIETY_KEY, [design.subject.id])
     rememberStudioContent(SHAPE_VARIETY_KEY, [`${entry.subject}:${entry.shape}`])
-    return [{ pageRole: 'single', objects: [...header.objects, picture] }]
+    const name = nameLine(dtdNameStrip(header.body, headed), design.subject.name, config, tag)
+    return [{ pageRole: 'single', objects: [...header.objects, name, picture] }]
   }
   return fail(DTD_BUILD_FAILED_MESSAGE)
 }
