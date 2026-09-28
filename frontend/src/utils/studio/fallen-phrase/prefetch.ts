@@ -19,7 +19,12 @@ import {
   selectAiPhrases,
 } from './content'
 import { buildFallenPhraseGrid } from './grid'
-import { COLUMN_FLEX, parseFallenPhraseLevel, rowCandidatesFor } from './levels'
+import {
+  COLUMN_FLEX,
+  fallbackRowCandidatesFor,
+  parseFallenPhraseLevel,
+  rowCandidatesFor,
+} from './levels'
 import { FALLEN_PHRASE_TEMPLATE_KEY, FALLEN_PHRASE_THEME_SALT } from './theme'
 
 const MAX_AI_ATTEMPTS = 3
@@ -85,7 +90,25 @@ export async function fallenPhrasePrefetch(
     level.preferredCols + COLUMN_FLEX,
   ]
 
+  const fallbackRows = fallbackRowCandidatesFor(level)
+  const grids = (phrase: string, rows: readonly number[]) =>
+    rows.length > 0 &&
+    Boolean(
+      buildFallenPhraseGrid({
+        phrase,
+        colCandidates: widths,
+        rowCandidates: rows,
+        targetRows: level.rows,
+        preferredCols: level.preferredCols,
+        seed,
+      }),
+    )
+
   const rejected: string[] = []
+  // Sayings that only settle a row off the level's count. Worth a retry to do
+  // better, since the form promised that count; not worth an error card if
+  // every retry comes back the same.
+  let offShape: string[] | null = null
   let lastError: unknown
 
   for (let attempt = 0; attempt < MAX_AI_ATTEMPTS; attempt++) {
@@ -110,16 +133,7 @@ export async function fallenPhrasePrefetch(
       })
       const phrases = withoutBookRepeats(valid, book)
       rejected.push(...valid.filter((phrase) => !phrases.includes(phrase)))
-      const gridable = phrases.filter((phrase) =>
-        buildFallenPhraseGrid({
-          phrase,
-          colCandidates: widths,
-          rowCandidates,
-          targetRows: level.rows,
-          preferredCols: level.preferredCols,
-          seed,
-        }),
-      )
+      const gridable = phrases.filter((phrase) => grids(phrase, rowCandidates))
 
       if (gridable.length >= NEED) {
         rememberStudioContent(varietyKey, phrases)
@@ -130,12 +144,20 @@ export async function fallenPhrasePrefetch(
         // this width would throw that saying away before the page ever saw it.
         return { items: phrases.slice(0, candidateCountFor(NEED)) }
       }
+      if (!offShape && phrases.some((phrase) => grids(phrase, fallbackRows))) {
+        offShape = phrases
+      }
       rejected.push(...phrases)
     } catch (error) {
       if (signal.aborted) throw error
       lastError = error
       console.warn(`[fallen-phrase] AI attempt ${attempt + 1} failed`, error)
     }
+  }
+
+  if (offShape) {
+    rememberStudioContent(varietyKey, offShape)
+    return { items: offShape.slice(0, candidateCountFor(NEED)) }
   }
 
   if (lastError instanceof Error && lastError.message.trim()) {

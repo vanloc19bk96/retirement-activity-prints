@@ -34,6 +34,7 @@ import {
   type FallenPhrasePagePlan,
 } from './layout'
 import {
+  fallbackRowCandidatesFor,
   parseFallenPhraseLevel,
   rowCandidatesFor,
   type FallenPhraseLevel,
@@ -132,6 +133,34 @@ interface BuiltPuzzle {
 function buildFirstPrintable(options: {
   phrases: readonly string[]
   colCandidates: readonly number[]
+  field: { left: number; top: number; width: number; height: number }
+  level: FallenPhraseLevel
+  seed: number
+}): { puzzle: BuiltPuzzle | null; firstError: string | null } {
+  const { phrases, colCandidates, field, level, seed } = options
+  let firstError: string | null = null
+
+  // Every saying gets a go at the rows the form promised before any saying is
+  // allowed a row more or less — otherwise the first phrase in the shuffle
+  // decides the shape, and "4 rows" prints five.
+  for (const rowCandidates of [rowCandidatesFor(level), fallbackRowCandidatesFor(level)]) {
+    const found = buildFirstPrintableAt({
+      phrases,
+      colCandidates,
+      rowCandidates,
+      field,
+      level,
+      seed,
+    })
+    firstError ??= found.firstError
+    if (found.puzzle) return { puzzle: found.puzzle, firstError }
+  }
+  return { puzzle: null, firstError }
+}
+
+function buildFirstPrintableAt(options: {
+  phrases: readonly string[]
+  colCandidates: readonly number[]
   rowCandidates: readonly number[]
   field: { left: number; top: number; width: number; height: number }
   level: FallenPhraseLevel
@@ -139,6 +168,7 @@ function buildFirstPrintable(options: {
 }): { puzzle: BuiltPuzzle | null; firstError: string | null } {
   const { phrases, colCandidates, rowCandidates, field, level, seed } = options
   let firstError: string | null = null
+  if (rowCandidates.length === 0) return { puzzle: null, firstError }
 
   for (const phrase of phrases) {
     const grid = buildFallenPhraseGrid({
@@ -207,7 +237,6 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
   const { puzzle, firstError } = buildFirstPrintable({
     phrases: order,
     colCandidates,
-    rowCandidates: rowCandidatesFor(level),
     field,
     level,
     seed: ctx.seed,

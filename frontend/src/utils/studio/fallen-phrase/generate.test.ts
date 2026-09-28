@@ -777,6 +777,17 @@ describe('fallen-phrase levels', () => {
     }
     expect(rowsFor('gentle')).toBeLessThan(rowsFor('challenging'))
   })
+
+  it('prints the row count its label promises', () => {
+    for (const level of FALLEN_PHRASE_LEVELS) {
+      for (let seed = 1; seed <= 12; seed++) {
+        const printed = readPrintedPuzzle(
+          generatePage({ ...base, level: level.id, seed }, CTX({ seed }))[0]!.objects,
+        )
+        expect(printed.rows.length, `${level.id} seed ${seed}`).toBe(level.rows)
+      }
+    }
+  })
 })
 
 /* -------------------------------------------------------------------------- *

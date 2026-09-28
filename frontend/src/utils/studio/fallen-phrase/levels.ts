@@ -85,15 +85,28 @@ export const FALLEN_PHRASE_MIN_ROWS = 3
 export const FALLEN_PHRASE_MAX_ROWS = 6
 
 /**
- * Row counts to try, best first.
+ * Row counts a page tries first: exactly the one the level's label promises.
  *
- * The level's own count leads. One more is the graceful fallback when a narrow
- * trim clamped the grid to fewer columns than the level wanted — a page a row
- * taller is still a page, where an error card is a refund. One fewer catches
- * the saying that came back at the short end of its band.
+ * Offering the builder a row either side in the same pass let it trade the
+ * promised shape for a grid with fewer holes — a "4 rows" page printed five
+ * whenever the saying packed a little tighter that way. The level's count is
+ * the difficulty the seller picked, so every saying gets a chance at it before
+ * any shape the form did not name.
  */
 export function rowCandidatesFor(level: FallenPhraseLevel): number[] {
-  return [level.rows, level.rows + 1, level.rows - 1].filter(
+  return [level.rows]
+}
+
+/**
+ * Row counts to fall back on once no saying fits the level's own.
+ *
+ * One more is for a narrow trim that clamped the grid to fewer columns than
+ * the level wanted — a page a row taller is still a page, where an error card
+ * is a refund. One fewer catches the saying that came back at the short end
+ * of its band.
+ */
+export function fallbackRowCandidatesFor(level: FallenPhraseLevel): number[] {
+  return [level.rows + 1, level.rows - 1].filter(
     (rows) => rows >= FALLEN_PHRASE_MIN_ROWS && rows <= FALLEN_PHRASE_MAX_ROWS,
   )
 }
