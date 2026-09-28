@@ -170,8 +170,7 @@ export const wordWheelTemplate: StudioTemplateDefinition = {
   thumbnail: `<svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg">
     <g fill="none" stroke="currentColor" stroke-width="1.1">
       <circle cx="32" cy="18" r="15"/>
-      <circle cx="32" cy="18" r="5.4" stroke-width="2.2"/>
-      <circle cx="32" cy="18" r="4"/>
+      <circle cx="32" cy="18" r="5.4"/>
       <path d="M34 13.3 36.8 8.2M37.9 16 43.3 14.6M37.9 20 43.3 21.4M34 22.7 36.8 27.8M30 22.7 27.2 27.8M26.1 20 20.7 21.4M26.1 16 20.7 14.6M30 13.3 27.2 8.2"/>
     </g>
     <g font-size="5" fill="currentColor" font-family="serif" text-anchor="middle">

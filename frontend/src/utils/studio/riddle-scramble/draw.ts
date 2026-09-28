@@ -63,6 +63,13 @@ function drawWordSlots(
   const boxW = Math.round(slotW * MARK_BOX_SHARE)
   const letterSize = Math.max(1, Math.round(slotW * ANSWER_LETTER_RATIO))
   const lift = Math.round(slotW * ANSWER_LIFT_RATIO)
+  const letterH = fabricTextHeight(1, letterSize)
+  const boxTop = ruleY + RULE_HEIGHT - writeRoom
+  // Fabric paints a stroke outside the width and height, so the box's visual
+  // centre is half a stroke past its geometric one — both axes are placed on
+  // that. The boxed letter is centred on it (Fabric centres ink in the line box)
+  // instead of sharing the rules' baseline, which left it riding high.
+  const boxedLetterBottom = boxTop + (writeRoom + STUDIO_STROKE_HAIRLINE) / 2 + letterH / 2
 
   for (let i = 0; i < row.word.length; i++) {
     const slotLeft = bandLeft + i * slotW
@@ -73,8 +80,8 @@ function drawWordSlots(
       objects.push(
         buildRect(
           {
-            left: Math.round(centerX - boxW / 2),
-            top: ruleY + RULE_HEIGHT - writeRoom,
+            left: centerX - (boxW + STUDIO_STROKE_HAIRLINE) / 2,
+            top: boxTop,
             width: boxW,
             height: writeRoom,
             rx: Math.round(slotW * MARK_BOX_RADIUS_RATIO),
@@ -110,7 +117,7 @@ function drawWordSlots(
       buildText(
         {
           left: centerX,
-          top: ruleY - lift,
+          top: marked ? boxedLetterBottom : ruleY - lift,
           text: letter,
           width: hugTextBoxWidth(letter, letterSize, slotW, { fontFamily: font }),
           fontFamily: font,

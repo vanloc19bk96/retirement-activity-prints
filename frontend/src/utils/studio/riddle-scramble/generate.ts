@@ -234,24 +234,24 @@ export const riddleScrambleTemplate: StudioTemplateDefinition = {
   validateConfig: validateRiddleScrambleConfig,
   prefetch: riddleScramblePrefetch,
   thumbnail: `<svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg">
-    <g fill="currentColor" font-family="serif" font-size="6.5" text-anchor="middle">
-      <text x="14" y="6">K</text><text x="26" y="6">L</text><text x="38" y="6">A</text><text x="50" y="6">W</text>
-      <text x="14" y="16.2">D</text><text x="26" y="16.2">A</text><text x="38" y="16.2">E</text><text x="50" y="16.2">R</text>
+    <g fill="currentColor" font-family="serif" font-size="6" text-anchor="middle">
+      <text x="14" y="5.6">K</text><text x="26" y="5.6">L</text><text x="38" y="5.6">A</text><text x="50" y="5.6">W</text>
+      <text x="14" y="16.4">D</text><text x="26" y="16.4">A</text><text x="38" y="16.4">E</text><text x="50" y="16.4">R</text>
     </g>
     <g fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round">
-      <path d="M11 11.6h6M35 11.6h6M47 11.6h6"/>
-      <rect x="23" y="8.4" width="6" height="3.2" rx="0.7"/>
-      <path d="M11 21.8h6M23 21.8h6M47 21.8h6"/>
-      <rect x="35" y="18.6" width="6" height="3.2" rx="0.7"/>
+      <path d="M11 10h6M35 10h6M47 10h6"/>
+      <rect x="23" y="7" width="6" height="3" rx="0.7"/>
+      <path d="M11 20.8h6M23 20.8h6M47 20.8h6"/>
+      <rect x="35" y="17.8" width="6" height="3" rx="0.7"/>
     </g>
     <g fill="none" stroke="currentColor" stroke-width="1.15">
-      <rect x="10.7" y="25.4" width="6.6" height="6.6" rx="1"/>
-      <rect x="22.7" y="25.4" width="6.6" height="6.6" rx="1"/>
-      <rect x="34.7" y="25.4" width="6.6" height="6.6" rx="1"/>
-      <rect x="46.7" y="25.4" width="6.6" height="6.6" rx="1"/>
+      <rect x="10.8" y="24.4" width="6.4" height="6.4" rx="1"/>
+      <rect x="22.8" y="24.4" width="6.4" height="6.4" rx="1"/>
+      <rect x="34.8" y="24.4" width="6.4" height="6.4" rx="1"/>
+      <rect x="46.8" y="24.4" width="6.4" height="6.4" rx="1"/>
     </g>
     <g fill="currentColor" font-family="sans-serif" font-size="4.4" text-anchor="middle" opacity="0.72">
-      <text x="14" y="36.4">1</text><text x="26" y="36.4">2</text><text x="38" y="36.4">3</text><text x="50" y="36.4">4</text>
+      <text x="14" y="35.8">1</text><text x="26" y="35.8">2</text><text x="38" y="35.8">3</text><text x="50" y="35.8">4</text>
     </g>
   </svg>`,
   configSchema: RIDDLE_SCRAMBLE_CONFIG_SCHEMA,
