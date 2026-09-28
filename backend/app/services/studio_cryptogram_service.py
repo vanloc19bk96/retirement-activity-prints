@@ -11,6 +11,7 @@ import logging
 import math
 import re
 import time
+import unicodedata
 from functools import lru_cache
 from typing import Any, Mapping
 
@@ -72,6 +73,52 @@ def _angles() -> tuple[str, ...]:
 
 
 _ALLOWED_RE = re.compile(r"^[A-Z]+(?: [A-Z]+)*$")
+# An apostrophe inside a word: "DON'T", "IT’S", "GRANDMA'S".
+_INNER_APOSTROPHE_RE = re.compile(r"[^\W\d_]['’‘`ʼ][^\W\d_]")
+
+# Contractions written without their apostrophe: never a word of their own.
+# Mirrors APOSTROPHE_STUMPS in frontend/src/utils/studio/cryptogram/content.ts.
+_APOSTROPHE_STUMPS = frozenset(
+    {
+        "AINT", "ARENT", "CANT", "COULDNT", "COULDVE", "DIDNT", "DOESNT", "DONT",
+        "HADNT", "HASNT", "HAVENT", "HERES", "IM", "ISNT", "ITLL", "IVE", "MIGHTNT",
+        "MUSTNT", "NEEDNT", "SHANT", "SHOULDNT", "SHOULDVE", "THATS", "THERES",
+        "THEYLL", "THEYRE", "THEYVE", "WASNT", "WERENT", "WEVE", "WHATS", "WHERES",
+        "WOULDNT", "WOULDVE", "YOUD", "YOULL", "YOURE", "YOUVE",
+    }
+)
+
+
+def prompt_theme(theme: str) -> str:
+    """The seller's theme on one line, so it reads as a topic, not as more rules.
+
+    A theme is free text from the form. Left with its line breaks, it can open
+    a new bullet under the prompt's own "Rules:" heading.
+    """
+    return " ".join(theme.split())
+
+
+def plain_saying_text(entry: Any) -> str:
+    """Uppercase A-Z words with single spaces, or "" if it would print broken.
+
+    Punctuation between words becomes a space. An apostrophe inside a word, a
+    digit, or a letter outside A-Z once accents are folded off does not: split
+    there, "DON'T" prints as "DON T" and "AT 65" loses its number, in the
+    puzzle and in the answer key. Those lines are refused instead.
+    Mirrors ``normalizeSaying`` in the cryptogram's ``content.ts``.
+    """
+    raw = str(entry).strip()
+    if _INNER_APOSTROPHE_RE.search(raw) or any(ch.isdigit() for ch in raw):
+        return ""
+    folded = "".join(
+        ch for ch in unicodedata.normalize("NFKD", raw) if not unicodedata.combining(ch)
+    ).upper()
+    if any(ch.isalpha() and not ("A" <= ch <= "Z") for ch in folded):
+        return ""
+    text = re.sub(r"\s+", " ", re.sub(r"[^A-Z]", " ", folded)).strip()
+    if any(word in _APOSTROPHE_STUMPS for word in text.split(" ")):
+        return ""
+    return text
 
 _rate_limiter = RateLimiter(
     label="cryptogram",
@@ -133,7 +180,7 @@ def _build_prompt(req: CryptogramRequest) -> str:
         max(min_words + 1, round(max_letters / int_value(limits, "maxWordsLettersPerWord"))),
     )
 
-    return f"""Write {want} original retirement sayings about: {req.theme.strip()}.
+    return f"""Write {want} original retirement sayings about: {prompt_theme(req.theme)}.
 Each one is enciphered letter-by-letter on a puzzle page, so its length matters.
 Seed for variety: {req.seed}. Lean towards {angle} where it suits the theme.
 
@@ -147,6 +194,7 @@ Rules:
 - Never quote a book, film, song, speech, slogan, or a named person. No attributions.
 - No famous quotes, lyrics, brands, franchises, politics, medical claims, or adult content.
 - Letters A-Z and single spaces only: no digits, punctuation, apostrophes, or quotes.
+  Write "IT IS" rather than "ITS", and "DO NOT" rather than "DONT".
 - Each saying must make sense on its own and must not repeat another one.
 {language_line}
 
@@ -176,8 +224,7 @@ def _normalize_sayings(
     seen: set[str] = set()
     out: list[str] = []
     for entry in raw_items:
-        text = re.sub(r"[^A-Z ]", " ", str(entry).strip().upper())
-        text = re.sub(r"\s+", " ", text).strip()
+        text = plain_saying_text(entry)
         if not text or text in seen or not _ALLOWED_RE.match(text):
             continue
         words = text.split(" ")

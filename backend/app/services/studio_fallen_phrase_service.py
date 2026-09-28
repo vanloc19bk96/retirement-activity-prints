@@ -33,6 +33,7 @@ from app.schemas.studio_fallen_phrase import (
     FallenPhraseRequest,
     FallenPhraseResponse,
 )
+from app.services.studio_cryptogram_service import plain_saying_text, prompt_theme
 from app.services.studio_gemini import (
     RateLimiter,
     StudioGenerationError,
@@ -131,7 +132,7 @@ def _build_prompt(req: FallenPhraseRequest) -> str:
     rows = int_value(band, "rows")
     max_word = int_value(_limits(), "maxWordLetters")
 
-    return f"""Write {want} original retirement sayings about: {req.theme.strip()}.
+    return f"""Write {want} original retirement sayings about: {prompt_theme(req.theme)}.
 Each one is printed into a grid of {rows} rows of letter boxes, so its shape
 matters as much as its sense. Seed for variety: {req.seed}. Lean towards
 {angle} where it suits the theme.
@@ -169,8 +170,8 @@ def _normalize_sayings(raw_items: list[Any], *, length: str, want: int) -> list[
     seen: set[str] = set()
     out: list[str] = []
     for entry in raw_items:
-        text = re.sub(r"[^A-Z ]", " ", str(entry).strip().upper())
-        text = re.sub(r"\s+", " ", text).strip()
+        # Same letters-only gate as the cryptogram: "IT'S" would set as "IT S".
+        text = plain_saying_text(entry)
         if not text or text in seen or not _ALLOWED_RE.match(text):
             continue
         words = text.split(" ")

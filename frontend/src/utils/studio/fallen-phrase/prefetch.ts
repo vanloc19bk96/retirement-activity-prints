@@ -1,7 +1,8 @@
 import { generateFallenPhrase } from '@/api/studio-fallen-phrase.api'
-import type { StudioConfig } from '@/types/studio-template.types'
+import type { StudioConfig, StudioPrefetchContext } from '@/types/studio-template.types'
 import type { FallenPhraseResponse } from '@/types/studio-fallen-phrase.types'
 import {
+  STUDIO_AVOID_LIMIT,
   rememberStudioContent,
   studioAvoidList,
   studioVarietyKey,
@@ -10,17 +11,21 @@ import {
   AI_THEME_MAX_LENGTH,
   resolveRetirementTheme,
 } from '../_shared/retirement-theme-config'
-import { filterUnsafeThemeCopy } from '../cryptogram/content-quality'
+import { filterUnsafeThemeCopy, withoutBookRepeats } from '../cryptogram/content-quality'
 import {
   FALLEN_PHRASE_AI_EMPTY_MESSAGE,
   candidateCountFor,
+  normalizePhrase,
   selectAiPhrases,
 } from './content'
 import { buildFallenPhraseGrid } from './grid'
 import { COLUMN_FLEX, parseFallenPhraseLevel, rowCandidatesFor } from './levels'
-import { FALLEN_PHRASE_THEME_SALT } from './theme'
+import { FALLEN_PHRASE_TEMPLATE_KEY, FALLEN_PHRASE_THEME_SALT } from './theme'
 
 const MAX_AI_ATTEMPTS = 3
+
+/** Book sayings sent to the writer as avoid hints, newest first. */
+const BOOK_AVOID_HINTS = 40
 
 /** Phrases a page needs before it starts discarding them. */
 const NEED = 1
@@ -44,10 +49,15 @@ const NEED = 1
  * It over-requests for the same reason: the page keeps the first candidate it
  * can both grid at the trim's own column count and validate, and the trim is
  * not known here.
+ *
+ * A saying this book already prints is dropped, not just discouraged. The page
+ * fingerprint cannot see that repeat (a new shuffle is a new-looking sheet),
+ * so the saying is stamped on the page and read back through the context.
  */
 export async function fallenPhrasePrefetch(
   config: StudioConfig,
   signal: AbortSignal,
+  context?: StudioPrefetchContext,
 ): Promise<FallenPhraseResponse> {
   const seed = Number(config.seed ?? 1)
   const level = parseFallenPhraseLevel(config)
@@ -58,10 +68,14 @@ export async function fallenPhrasePrefetch(
     AI_THEME_MAX_LENGTH,
   )
   const varietyKey = studioVarietyKey(
-    'fallen-phrase',
+    FALLEN_PHRASE_TEMPLATE_KEY,
     theme.label || promptTheme,
     level.id,
   )
+  const book = (context?.bookContentLabels(FALLEN_PHRASE_TEMPLATE_KEY) ?? [])
+    .map(normalizePhrase)
+    .filter(Boolean)
+  const bookHints = book.slice(-BOOK_AVOID_HINTS).reverse()
   const rowCandidates = rowCandidatesFor(level)
   // The same spread of widths `layout.ts` would offer a mid-sized trim. A
   // stricter probe here would reject sayings the page could have printed.
@@ -82,15 +96,20 @@ export async function fallenPhrasePrefetch(
           itemCount: NEED,
           length: level.length,
           seed: seed + attempt * 97,
-          avoid: [...studioAvoidList(varietyKey), ...rejected],
+          avoid: [...rejected, ...bookHints, ...studioAvoidList(varietyKey)].slice(
+            0,
+            STUDIO_AVOID_LIMIT,
+          ),
         },
         signal,
       )
 
-      const phrases = selectAiPhrases(remote.items, {
+      const valid = selectAiPhrases(remote.items, {
         count: NEED,
         length: level.length,
       })
+      const phrases = withoutBookRepeats(valid, book)
+      rejected.push(...valid.filter((phrase) => !phrases.includes(phrase)))
       const gridable = phrases.filter((phrase) =>
         buildFallenPhraseGrid({
           phrase,

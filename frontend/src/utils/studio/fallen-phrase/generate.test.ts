@@ -682,9 +682,23 @@ describe('fallen-phrase column shuffle', () => {
 
 describe('fallen-phrase content', () => {
   it('strips punctuation and uppercases', () => {
-    expect(normalizePhrase("A kind word, costs nothing — and it's kept!")).toBe(
-      'A KIND WORD COSTS NOTHING AND IT S KEPT',
+    expect(normalizePhrase('A kind word, costs nothing, and is kept!')).toBe(
+      'A KIND WORD COSTS NOTHING AND IS KEPT',
     )
+  })
+
+  it('refuses a saying whose apostrophe would split a word', () => {
+    // "IT S" would print a one-letter word in the grid and in the answer key.
+    expect(normalizePhrase("A kind word costs nothing and it's kept")).toBe('')
+    expect(
+      selectAiPhrases(
+        [
+          'THE BEST PART OF THE DAY ISN’T THE ONE YOU PLANNED AT ALL',
+          'THE BEST PART OF THE DAY IS THE ONE YOU DID NOT PLAN',
+        ],
+        { count: 1, length: 'medium' },
+      ),
+    ).toEqual(['THE BEST PART OF THE DAY IS THE ONE YOU DID NOT PLAN'])
   })
 
   it('accepts the fixture sayings for their own band', () => {

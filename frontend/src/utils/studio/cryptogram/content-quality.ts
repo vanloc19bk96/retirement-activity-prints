@@ -119,3 +119,20 @@ export function isNearDuplicateSaying(a: string, b: string): boolean {
   }
   return shared / smaller >= NEAR_DUPLICATE_OVERLAP
 }
+
+/**
+ * Drop sayings this book already prints, whichever page and theme they sit under.
+ *
+ * The page fingerprint cannot catch that repeat: the same saying under a new
+ * cipher or a new column shuffle is a different-looking sheet and the same
+ * puzzle to a reader, who meets an answer they already know. So each page
+ * stamps its saying (`draw.ts`) and the next prefetch reads it back.
+ */
+export function withoutBookRepeats(
+  sayings: readonly string[],
+  book: readonly string[],
+): string[] {
+  return sayings.filter(
+    (saying) => !book.some((printed) => isNearDuplicateSaying(printed, saying)),
+  )
+}

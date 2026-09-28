@@ -5,6 +5,7 @@ import {
   buildText,
   type StudioTag,
 } from '../studio-fabric-builders'
+import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import { unionObjectBounds, type Box } from '../studio-layout'
 import { hugTextBoxWidth, wrapTextToWidth } from '../studio-text-metrics'
 import {
@@ -261,5 +262,10 @@ export function drawFallenPhrase(
 
   const groupBounds = unionObjectBounds(parts)
   if (!groupBounds) return
-  objects.push(buildGroup(parts, groupBounds, tag, 'structure'))
+  // The saying, stamped where the next page's prefetch can read it back: a
+  // repeat under a new shuffle looks new to the page fingerprint, not to a reader.
+  objects.push({
+    ...buildGroup(parts, groupBounds, tag, 'structure'),
+    data: { [STUDIO_CONTENT_LABEL_KEY]: grid.phrase },
+  })
 }

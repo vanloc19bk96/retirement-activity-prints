@@ -76,12 +76,45 @@ export function candidateCountFor(need: number): number {
   return Math.max(need + 4, Math.ceil(need * 2.5))
 }
 
+/** An apostrophe inside a word: "DON'T", "IT’S", "GRANDMA'S". */
+const INNER_APOSTROPHE_RE = /\p{L}['’‘`ʼ]\p{L}/u
+
+/**
+ * Contractions written without their apostrophe. The writer is told to use
+ * letters only, and the obvious way to obey that is to drop the mark, which
+ * leaves a misspelled word in the solution. Only forms that are never a word
+ * of their own ("ITS", "LETS" and "WELL" are, so they stay).
+ */
+const APOSTROPHE_STUMPS = new Set([
+  'AINT', 'ARENT', 'CANT', 'COULDNT', 'COULDVE', 'DIDNT', 'DOESNT', 'DONT',
+  'HADNT', 'HASNT', 'HAVENT', 'HERES', 'IM', 'ISNT', 'ITLL', 'IVE', 'MIGHTNT',
+  'MUSTNT', 'NEEDNT', 'SHANT', 'SHOULDNT', 'SHOULDVE', 'THATS', 'THERES',
+  'THEYLL', 'THEYRE', 'THEYVE', 'WASNT', 'WERENT', 'WEVE', 'WHATS', 'WHERES',
+  'WOULDNT', 'WOULDVE', 'YOUD', 'YOULL', 'YOURE', 'YOUVE',
+])
+
+/**
+ * Uppercase A-Z words with single spaces, or '' when the line cannot be set
+ * without changing what it says.
+ *
+ * Punctuation between words is only punctuation and becomes a space. Three
+ * things are not, and splitting on them would print a broken saying whose
+ * answer key reads back the break: an apostrophe inside a word ("DON'T" would
+ * become "DON T", a one-letter word the solver takes for a misprint), a digit
+ * ("AT 65" would lose its number), and a letter outside A-Z once accents are
+ * folded off ("CAFÉ" is "CAFE"; a Greek or Cyrillic letter has no box to go
+ * in). Those lines are refused so the writer's next saying takes the slot.
+ */
 export function normalizeSaying(raw: string): string {
-  return raw
-    .toUpperCase()
+  if (INNER_APOSTROPHE_RE.test(raw) || /\d/.test(raw)) return ''
+  const folded = raw.normalize('NFKD').replace(/\p{M}+/gu, '').toUpperCase()
+  if (/[^\P{L}A-Z]/u.test(folded)) return ''
+  const text = folded
     .replace(/[^A-Z]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
+  if (text.split(' ').some((word) => APOSTROPHE_STUMPS.has(word))) return ''
+  return text
 }
 
 export function letterCount(text: string): number {

@@ -6,3 +6,6 @@
  * the cryptogram on facing pages would both come out as "Gardening".
  */
 export const CRYPTOGRAM_THEME_SALT = 0x63727970
+
+/** Registry key, and the tag its stamped content labels are read back under. */
+export const CRYPTOGRAM_TEMPLATE_KEY = 'cryptogram'

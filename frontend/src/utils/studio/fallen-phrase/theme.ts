@@ -7,3 +7,6 @@
  * and, worse, would be written around the same corner of the same vocabulary.
  */
 export const FALLEN_PHRASE_THEME_SALT = 0x66616c6c
+
+/** Registry key, and the tag its stamped content labels are read back under. */
+export const FALLEN_PHRASE_TEMPLATE_KEY = 'fallen-phrase'

@@ -154,9 +154,30 @@ describe('cryptogram cipher', () => {
 
 describe('cryptogram content', () => {
   it('normalizes to uppercase A–Z with single spaces', () => {
-    expect(normalizeSaying("  Don't  count your chickens, yet! ")).toBe(
-      'DON T COUNT YOUR CHICKENS YET',
+    expect(normalizeSaying('  Count  your chickens, then rest; yet! ')).toBe(
+      'COUNT YOUR CHICKENS THEN REST YET',
     )
+    expect(normalizeSaying('"A slow walk to the café"')).toBe('A SLOW WALK TO THE CAFE')
+  })
+
+  it('refuses a line it could only print broken', () => {
+    // Splitting at the apostrophe would print "DON T": a stray one-letter word
+    // in the puzzle and in the answer key.
+    expect(normalizeSaying("Don't count your chickens yet")).toBe('')
+    expect(normalizeSaying('It’s never too late to rest')).toBe('')
+    // Dropping the mark instead leaves a misspelling in the solution.
+    expect(normalizeSaying('Dont count the days now')).toBe('')
+    // A digit would vanish from the saying; a non-Latin letter has no slot.
+    expect(normalizeSaying('Life begins at 65 they say')).toBe('')
+    expect(normalizeSaying('Every day is a gift Ω friend')).toBe('')
+    // Real words that only look like contractions stay.
+    expect(normalizeSaying('Lets see its garden well')).toBe('LETS SEE ITS GARDEN WELL')
+    expect(
+      selectAiSayings(["Don't count the days, make the days count", MEDIUM_SAYINGS[0]!], {
+        count: 1,
+        length: 'medium',
+      }),
+    ).toEqual([MEDIUM_SAYINGS[0]])
   })
 
   it('accepts only sayings inside the level letter bands', () => {

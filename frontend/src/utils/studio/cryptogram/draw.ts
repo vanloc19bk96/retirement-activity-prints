@@ -6,6 +6,7 @@ import {
   buildText,
   type StudioTag,
 } from '../studio-fabric-builders'
+import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import { unionObjectBounds, type Box } from '../studio-layout'
 import { hugTextBoxWidth } from '../studio-text-metrics'
 import { encodeLetter } from './cipher'
@@ -233,7 +234,12 @@ function buildPuzzleGroup(options: {
 
   const bounds = unionObjectBounds(parts)
   if (!bounds) return null
-  return buildGroup(parts, bounds, tag, 'structure')
+  // The saying, stamped where the next page's prefetch can read it back: a
+  // repeat under a new cipher looks new to the page fingerprint, not to a reader.
+  return {
+    ...buildGroup(parts, bounds, tag, 'structure'),
+    data: { [STUDIO_CONTENT_LABEL_KEY]: puzzle.plain },
+  }
 }
 
 export interface CryptogramDrawOptions {

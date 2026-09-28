@@ -1,3 +1,4 @@
+import { normalizeSaying } from '../cryptogram/content'
 import { isNearDuplicateSaying, isUnsafeCopy } from '../cryptogram/content-quality'
 import { FALLEN_PHRASE_MIN_COLS } from './layout'
 import type { FallenPhraseLength } from './levels'
@@ -97,12 +98,13 @@ export function candidateCountFor(need: number): number {
   return Math.max(need + 5, need * 6)
 }
 
+/**
+ * Same letters-only rule as the cryptogram: punctuation becomes a space, and a
+ * line whose apostrophes, digits or foreign letters cannot be dropped without
+ * breaking a word comes back empty rather than as "IT S KEPT".
+ */
 export function normalizePhrase(raw: string): string {
-  return raw
-    .toUpperCase()
-    .replace(/[^A-Z]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
+  return normalizeSaying(raw)
 }
 
 export function letterCount(text: string): number {
