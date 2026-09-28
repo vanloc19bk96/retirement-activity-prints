@@ -1,0 +1,155 @@
+version: '3.8'
+
+services:
+  # Redis for job queue (reachable at retirement-activity-prints-redis via network alias)
+  redis:
+    image: redis:7-alpine
+    container_name: retirement-activity-prints-redis
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      appnet:
+        aliases:
+          - retirement-activity-prints-redis
+    restart: unless-stopped
+
+  # FastAPI Backend
+  backend:
+    image: retirement-activity-prints:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: retirement-activity-prints-backend
+    ports:
+      # Unique host port — must not collide with logic-grid-prints (8010)
+      - "8011:8000"
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/.env
+    environment:
+      - REDIS_URL=redis://retirement-activity-prints-redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - appnet
+      - supabase_default
+
+  worker:
+    image: retirement-activity-prints:latest
+    container_name: retirement-activity-prints-worker
+    command: ["python", "worker.py"]
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/.env
+    environment:
+      - REDIS_URL=redis://retirement-activity-prints-redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    networks:
+      - appnet
+      - supabase_default
+    restart: unless-stopped
+
+  worker-2:
+    image: retirement-activity-prints:latest
+    container_name: retirement-activity-prints-worker-2
+    command: ["python", "worker.py"]
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/.env
+    environment:
+      - REDIS_URL=redis://retirement-activity-prints-redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    networks:
+      - appnet
+      - supabase_default
+    restart: unless-stopped
+
+  worker-3:
+    image: retirement-activity-prints:latest
+    container_name: retirement-activity-prints-worker-3
+    command: ["python", "worker.py"]
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/.env
+    environment:
+      - REDIS_URL=redis://retirement-activity-prints-redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    networks:
+      - appnet
+      - supabase_default
+    restart: unless-stopped
+
+  # # RQ Worker 4 - Process image generation jobs
+  # worker-4:
+  #   image: retirement-activity-prints:latest
+  #   container_name: retirement-activity-prints-worker-4
+  #   command: ["python", "worker.py"]
+  #   volumes:
+  #     - ./backend:/app
+  #   env_file:
+  #     - ./backend/.env
+  #   environment:
+  #     - REDIS_URL=redis://retirement-activity-prints-redis:6379/0
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #     backend:
+  #       condition: service_started
+  #   networks:
+  #     - appnet
+  #     - supabase_default
+  #   restart: unless-stopped
+
+  # # RQ Worker 5 - Process image generation jobs
+  # worker-5:
+  #   image: retirement-activity-prints:latest
+  #   container_name: retirement-activity-prints-worker-5
+  #   command: ["python", "worker.py"]
+  #   volumes:
+  #     - ./backend:/app
+  #   env_file:
+  #     - ./backend/.env
+  #   environment:
+  #     - REDIS_URL=redis://retirement-activity-prints-redis:6379/0
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #     backend:
+  #       condition: service_started
+  #   networks:
+  #     - appnet
+  #     - supabase_default
+  #   restart: unless-stopped
+
+volumes:
+  redis_data:
+
+networks:
+  appnet:
+    driver: bridge
+  supabase_default:
+    external: true
