@@ -7,9 +7,11 @@ import {
   AI_THEME_MAX_LENGTH,
   RETIREMENT_THEME_MIXED,
   isCustomRetirementTheme,
+  isPresetRetirementTheme,
   parseRetirementThemeChoice,
   retirementThemeSelectOptions,
   validateRetirementThemeChoice,
+  writeOwnThemeField,
 } from '../_shared/retirement-theme-config'
 import { themeIpWarning } from '../retirement-word-search/content-quality'
 import {
@@ -44,12 +46,14 @@ import { qcPrintNote } from './layout'
  * heavy enough for print and inside the safe area.
  */
 export const QC_CONFIG_SCHEMA: StudioConfigField[] = [
+  writeOwnThemeField(),
   {
     key: 'theme',
     label: 'Theme',
     type: 'select',
     default: RETIREMENT_THEME_MIXED,
     options: retirementThemeSelectOptions('Mixed retirement topics'),
+    visibleWhen: isPresetRetirementTheme,
     helpWhen: (config) =>
       parseRetirementThemeChoice(config) === RETIREMENT_THEME_MIXED
         ? 'Slow mornings, gardens, travel, hobbies, friends and more, with a different topic for every saying.'

@@ -915,7 +915,7 @@ describe('when the page cannot be built', () => {
 describe('the form', () => {
   it('asks two questions and nothing about the page', () => {
     const keys = phraseFinderTemplate.configSchema.map((field) => field.key)
-    expect(keys).toEqual(['theme', 'customTheme', 'level'])
+    expect(keys).toEqual(['writeOwnTheme', 'theme', 'customTheme', 'level'])
   })
 
   it('reports what the chosen level prints on the trim in Settings', () => {
@@ -928,7 +928,7 @@ describe('the form', () => {
 
   it('blocks generate when a custom theme is left blank', () => {
     expect(
-      phraseFinderTemplate.validateConfig!(config({ theme: 'custom', customTheme: '' })),
+      phraseFinderTemplate.validateConfig!(config({ writeOwnTheme: true, customTheme: '' })),
     ).not.toBeNull()
   })
 })

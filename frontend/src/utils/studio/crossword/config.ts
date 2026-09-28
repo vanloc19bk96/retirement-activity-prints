@@ -16,8 +16,10 @@ import {
   CROSSWORD_THEME_CUSTOM,
   crosswordThemeSelectOptions,
   isCustomCrosswordTheme,
+  isPresetCrosswordTheme,
   parseCrosswordThemeChoice,
 } from './theme'
+import { writeOwnThemeField } from '../_shared/retirement-theme-config'
 
 export const CROSSWORD_INSTRUCTION =
   'Solve each clue and write the answers into the grid.'
@@ -36,12 +38,14 @@ export function instructionFor(config: StudioConfig): string {
  * produced on the trim currently set in Settings.
  */
 export const CROSSWORD_CONFIG_SCHEMA: StudioConfigField[] = [
+  writeOwnThemeField(),
   {
     key: 'theme',
     label: 'Theme',
     type: 'select',
     default: CROSSWORD_DEFAULT_THEME,
     options: crosswordThemeSelectOptions(),
+    visibleWhen: isPresetCrosswordTheme,
     helpWhen: (config) =>
       parseCrosswordThemeChoice(config) === CROSSWORD_DEFAULT_THEME
         ? 'A different retirement theme each puzzle, the right pick for a whole book.'

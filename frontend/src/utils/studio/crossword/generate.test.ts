@@ -16,7 +16,6 @@ import {
   crosswordPrintNote,
 } from './layout'
 import {
-  CROSSWORD_THEME_CUSTOM,
   CROSSWORD_THEME_MIXED,
   parseCrosswordThemeChoice,
   resolveCrosswordTheme,
@@ -245,7 +244,7 @@ assertGeneratorEntropy(crosswordTemplate, {
 describe('retirement crossword form', () => {
   it('asks two questions: a theme and a level', () => {
     const keys = crosswordTemplate.configSchema.map((f) => f.key)
-    expect(keys).toEqual(['theme', 'customTheme', 'level'])
+    expect(keys).toEqual(['writeOwnTheme', 'theme', 'customTheme', 'level'])
   })
 
   it('drops the knobs the page size now decides', () => {
@@ -257,7 +256,6 @@ describe('retirement crossword form', () => {
       'difficulty',
       'retirementCategory',
       'presetThemeId',
-      'writeOwnTheme',
       'includeAnswerKey',
       'answerKeyForAll',
     ]) {
@@ -272,18 +270,21 @@ describe('retirement crossword form', () => {
     expect(defaults.customTheme).toBe('')
   })
 
-  it('shows the custom theme field only when it is chosen', () => {
+  it('swaps the theme picker for the custom theme box when the switch is on', () => {
     const field = crosswordTemplate.configSchema.find((f) => f.key === 'customTheme')!
+    const picker = crosswordTemplate.configSchema.find((f) => f.key === 'theme')!
     expect(field.visibleWhen?.({ theme: CROSSWORD_THEME_MIXED })).toBe(false)
-    expect(field.visibleWhen?.({ theme: CROSSWORD_THEME_CUSTOM })).toBe(true)
+    expect(field.visibleWhen?.({ writeOwnTheme: true })).toBe(true)
+    expect(picker.visibleWhen?.({ writeOwnTheme: false })).toBe(true)
+    expect(picker.visibleWhen?.({ writeOwnTheme: true })).toBe(false)
   })
 
   it('requires theme text once the seller opts into writing one', () => {
     expect(
-      validateCrosswordConfig({ theme: CROSSWORD_THEME_CUSTOM, customTheme: '  ' }),
+      validateCrosswordConfig({ writeOwnTheme: true, customTheme: '  ' }),
     ).toMatchObject({ field: 'customTheme' })
     expect(
-      validateCrosswordConfig({ theme: CROSSWORD_THEME_CUSTOM, customTheme: 'Garden days' }),
+      validateCrosswordConfig({ writeOwnTheme: true, customTheme: 'Garden days' }),
     ).toBeNull()
     expect(validateCrosswordConfig({ theme: CROSSWORD_THEME_MIXED })).toBeNull()
   })

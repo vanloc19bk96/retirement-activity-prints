@@ -57,7 +57,7 @@ describe('fillInFunniesPrefetch', () => {
     expect(lastRequest().mixedTopics).toBe(false)
 
     clearStudioRecentContent()
-    await fillInFunniesPrefetch(config({ theme: 'custom', customTheme: 'our first caravan trip' }), signal())
+    await fillInFunniesPrefetch(config({ writeOwnTheme: true, customTheme: 'our first caravan trip' }), signal())
     expect(lastRequest().theme).toBe('our first caravan trip')
   })
 

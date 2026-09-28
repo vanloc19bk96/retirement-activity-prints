@@ -8,9 +8,11 @@ import {
   AI_THEME_MAX_LENGTH,
   RETIREMENT_THEME_MIXED,
   isCustomRetirementTheme,
+  isPresetRetirementTheme,
   parseRetirementThemeChoice,
   retirementThemeSelectOptions,
   validateRetirementThemeChoice,
+  writeOwnThemeField,
 } from '../_shared/retirement-theme-config'
 import { themeIpWarning } from '../retirement-word-search/content-quality'
 import { missingVowelsInstruction } from './content'
@@ -50,12 +52,14 @@ export function instructionFor(config: StudioConfig): string {
  * currently set in Settings, so the form never promises a page it cannot print.
  */
 export const MISSING_VOWELS_CONFIG_SCHEMA: StudioConfigField[] = [
+  writeOwnThemeField(),
   {
     key: 'theme',
     label: 'Theme',
     type: 'select',
     default: RETIREMENT_THEME_MIXED,
     options: retirementThemeSelectOptions(),
+    visibleWhen: isPresetRetirementTheme,
     helpWhen: (config) =>
       parseRetirementThemeChoice(config) === RETIREMENT_THEME_MIXED
         ? 'A different retirement theme each page, the right pick for a whole book.'

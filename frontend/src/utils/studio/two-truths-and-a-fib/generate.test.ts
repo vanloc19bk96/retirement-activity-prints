@@ -112,18 +112,19 @@ describe('two-truths-and-a-fib registry', () => {
 
   it('asks only for a subject and a level (plus a typed subject when chosen)', () => {
     expect(twoTruthsFibTemplate.configSchema.map((field) => field.key)).toEqual([
+      'writeOwnSubject',
       'subject',
       'customSubject',
       'level',
     ])
     const custom = twoTruthsFibTemplate.configSchema.find((f) => f.key === 'customSubject')!
     expect(custom.visibleWhen?.({ subject: 'mixed' })).toBe(false)
-    expect(custom.visibleWhen?.({ subject: 'custom' })).toBe(true)
+    expect(custom.visibleWhen?.({ writeOwnSubject: true })).toBe(true)
   })
 
   it('refuses an empty custom subject', () => {
-    expect(validateTtfConfig({ subject: 'custom', customSubject: '' })?.field).toBe('customSubject')
-    expect(validateTtfConfig({ subject: 'custom', customSubject: 'Canals' })).toBeNull()
+    expect(validateTtfConfig({ writeOwnSubject: true, customSubject: '' })?.field).toBe('customSubject')
+    expect(validateTtfConfig({ writeOwnSubject: true, customSubject: 'Canals' })).toBeNull()
     expect(validateTtfConfig({ subject: 'mixed' })).toBeNull()
   })
 })

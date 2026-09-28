@@ -7,8 +7,10 @@ import {
   AI_THEME_MAX_LENGTH,
   RETIREMENT_THEME_MIXED,
   isCustomRetirementTheme,
+  isPresetRetirementTheme,
   parseRetirementThemeChoice,
   retirementThemeSelectOptions,
+  writeOwnThemeField,
 } from '../_shared/retirement-theme-config'
 import { themeIpWarning } from './content-quality'
 import { wordSearchPrintNote } from './layout'
@@ -35,12 +37,14 @@ export { wordSearchInstruction as instructionFor }
  * currently set in Settings, so nothing the form decided stays hidden.
  */
 export const WORD_SEARCH_CONFIG_SCHEMA: StudioConfigField[] = [
+  writeOwnThemeField(),
   {
     key: 'theme',
     label: 'Theme',
     type: 'select',
     default: RETIREMENT_THEME_MIXED,
     options: retirementThemeSelectOptions(),
+    visibleWhen: isPresetRetirementTheme,
     helpWhen: (config) =>
       parseRetirementThemeChoice(config) === RETIREMENT_THEME_MIXED
         ? 'A different retirement theme each page, the right pick for a whole book.'

@@ -113,15 +113,15 @@ describe('what-kind-of-retiree registry', () => {
   })
 
   it('asks only for a theme (plus a typed theme when chosen)', () => {
-    expect(retireeQuizTemplate.configSchema.map((field) => field.key)).toEqual(['theme', 'customTheme'])
+    expect(retireeQuizTemplate.configSchema.map((field) => field.key)).toEqual(['writeOwnTheme', 'theme', 'customTheme'])
     const custom = retireeQuizTemplate.configSchema.find((f) => f.key === 'customTheme')!
     expect(custom.visibleWhen?.({ theme: 'mixed' })).toBe(false)
-    expect(custom.visibleWhen?.({ theme: 'custom' })).toBe(true)
+    expect(custom.visibleWhen?.({ writeOwnTheme: true })).toBe(true)
   })
 
   it('refuses an empty custom theme', () => {
-    expect(validateRqConfig({ theme: 'custom', customTheme: '' })?.field).toBe('customTheme')
-    expect(validateRqConfig({ theme: 'custom', customTheme: 'Life by the sea' })).toBeNull()
+    expect(validateRqConfig({ writeOwnTheme: true, customTheme: '' })?.field).toBe('customTheme')
+    expect(validateRqConfig({ writeOwnTheme: true, customTheme: 'Life by the sea' })).toBeNull()
     expect(validateRqConfig({ theme: 'mixed' })).toBeNull()
   })
 })

@@ -1,6 +1,7 @@
 import type {
   StudioConfig,
   StudioConfigField,
+  StudioConfigLayoutContext,
   StudioConfigValidationError,
 } from '@/types/studio-template.types'
 import { STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
@@ -8,9 +9,11 @@ import {
   AI_THEME_MAX_LENGTH,
   RETIREMENT_THEME_MIXED,
   isCustomRetirementTheme,
+  isPresetRetirementTheme,
   parseRetirementThemeChoice,
   retirementThemeSelectOptions,
   validateRetirementThemeChoice,
+  writeOwnThemeField,
 } from '../_shared/retirement-theme-config'
 import { themeIpWarning } from '../retirement-word-search/content-quality'
 import { rqInstruction } from './content'
@@ -19,6 +22,16 @@ import { rqPrintNote } from './layout'
 /** Instruction text the first quiz page will actually carry, for layout measurement. */
 export function instructionFor(config: StudioConfig): string {
   return config.showInstructions === false ? '' : rqInstruction()
+}
+
+/** The theme help line's page report, shown under whichever theme field is visible. */
+function printNoteFor(config: StudioConfig, layout?: StudioConfigLayoutContext): string {
+  return rqPrintNote({
+    page: layout,
+    config,
+    instruction: instructionFor(config),
+    font: String(config.fontFamily ?? STUDIO_DEFAULT_FONT),
+  })
 }
 
 /**
@@ -47,23 +60,20 @@ export function instructionFor(config: StudioConfig): string {
  * one subject start to ask the same thing twice.
  */
 export const RQ_CONFIG_SCHEMA: StudioConfigField[] = [
+  writeOwnThemeField(),
   {
     key: 'theme',
     label: 'Theme',
     type: 'select',
     default: RETIREMENT_THEME_MIXED,
     options: retirementThemeSelectOptions('Mixed retirement topics'),
+    visibleWhen: isPresetRetirementTheme,
     helpWhen: (config, layout) => {
       const theme =
         parseRetirementThemeChoice(config) === RETIREMENT_THEME_MIXED
           ? 'Free days, hobbies, travel, friends, quiet time and more, a different topic for every question.'
           : 'Every question explores a different corner of this theme.'
-      const note = rqPrintNote({
-        page: layout,
-        config,
-        instruction: instructionFor(config),
-        font: String(config.fontFamily ?? STUDIO_DEFAULT_FONT),
-      })
+      const note = printNoteFor(config, layout)
       return `${theme} ${note}`
     },
   },
@@ -74,7 +84,8 @@ export const RQ_CONFIG_SCHEMA: StudioConfigField[] = [
     default: '',
     max: AI_THEME_MAX_LENGTH,
     visibleWhen: isCustomRetirementTheme,
-    help: `What the questions should be about (for example, life by the sea). Max ${AI_THEME_MAX_LENGTH} characters.`,
+    helpWhen: (config, layout) =>
+      `What the questions should be about (for example, life by the sea). Max ${AI_THEME_MAX_LENGTH} characters. ${printNoteFor(config, layout)}`,
     warningWhen: (config) => themeIpWarning(String(config.customTheme ?? '')),
   },
 ]

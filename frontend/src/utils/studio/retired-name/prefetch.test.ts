@@ -58,7 +58,7 @@ describe('retiredNamePrefetch', () => {
     expect(lastRequest().mixedTopics).toBe(false)
 
     clearStudioRecentContent()
-    await retiredNamePrefetch(config({ theme: 'custom', customTheme: 'golf and the fairway' }), signal())
+    await retiredNamePrefetch(config({ writeOwnTheme: true, customTheme: 'golf and the fairway' }), signal())
     expect(lastRequest().theme).toBe('golf and the fairway')
   })
 

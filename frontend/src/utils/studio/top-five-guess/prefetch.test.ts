@@ -43,7 +43,7 @@ describe('topFiveGuessPrefetch', () => {
     expect(lastRequest().theme.toLowerCase()).toContain('garden')
 
     await topFiveGuessPrefetch(
-      config({ theme: 'custom', customTheme: 'weekends at the lake' }),
+      config({ writeOwnTheme: true, customTheme: 'weekends at the lake' }),
       signal(),
     )
     expect(lastRequest().theme).toBe('weekends at the lake')

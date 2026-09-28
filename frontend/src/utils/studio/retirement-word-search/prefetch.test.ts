@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { buildDefaultConfig } from '@/constants/studio-templates'
 import { clearStudioRecentContent } from '../studio-variety'
-import { RETIREMENT_THEME_CUSTOM } from '../_shared/retirement-theme-config'
 import { WORD_SEARCH_AI_EMPTY_MESSAGE } from './content'
 import { WORD_SEARCH_FIXTURE_POOL } from './fixture'
 
@@ -31,7 +30,7 @@ describe('wordSearchPrefetch', () => {
     const result = await wordSearchPrefetch(
       {
         ...buildDefaultConfig(wordSearchTemplate),
-        theme: RETIREMENT_THEME_CUSTOM,
+        writeOwnTheme: true,
         customTheme: 'Retiring nurse',
         level: 'gentle',
         seed: 11,

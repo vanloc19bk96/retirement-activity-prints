@@ -53,7 +53,7 @@ describe('quoteColoringPrefetch', () => {
 
   it('sends the theme the seller typed', async () => {
     generateMock.mockResolvedValue({ items: [...QC_FIXTURE_ITEMS] })
-    await quoteColoringPrefetch(config({ theme: 'custom', customTheme: 'life by the sea' }), signal())
+    await quoteColoringPrefetch(config({ writeOwnTheme: true, customTheme: 'life by the sea' }), signal())
     expect(lastRequest()).toMatchObject({ mixedTopics: false, theme: 'life by the sea' })
   })
 

@@ -1,6 +1,7 @@
 import type {
   StudioConfig,
   StudioConfigField,
+  StudioConfigLayoutContext,
   StudioConfigValidationError,
 } from '@/types/studio-template.types'
 import { STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
@@ -8,9 +9,11 @@ import {
   AI_THEME_MAX_LENGTH,
   RETIREMENT_THEME_MIXED,
   isCustomRetirementTheme,
+  isPresetRetirementTheme,
   parseRetirementThemeChoice,
   retirementThemeSelectOptions,
   validateRetirementThemeChoice,
+  writeOwnThemeField,
 } from '../_shared/retirement-theme-config'
 import { themeIpWarning } from '../retirement-word-search/content-quality'
 import { WYR_STYLES, wyrInstruction } from './content'
@@ -22,6 +25,17 @@ export const wantsReasonLine = (config: StudioConfig) => config.reasonLine === t
 /** Instruction text the page will actually carry, for layout measurement. */
 export function instructionFor(config: StudioConfig): string {
   return config.showInstructions === false ? '' : wyrInstruction(wantsReasonLine(config))
+}
+
+/** The theme help line's page report, shown under whichever theme field is visible. */
+function printNoteFor(config: StudioConfig, layout?: StudioConfigLayoutContext): string {
+  return wyrPrintNote({
+    page: layout,
+    config,
+    instruction: instructionFor(config),
+    font: String(config.fontFamily ?? STUDIO_DEFAULT_FONT),
+    reasonLine: wantsReasonLine(config),
+  })
 }
 
 /**
@@ -44,24 +58,20 @@ export function instructionFor(config: StudioConfig): string {
  * row is a quiz, not a conversation.
  */
 export const WYR_CONFIG_SCHEMA: StudioConfigField[] = [
+  writeOwnThemeField(),
   {
     key: 'theme',
     label: 'Theme',
     type: 'select',
     default: RETIREMENT_THEME_MIXED,
     options: retirementThemeSelectOptions('Mixed retirement topics'),
+    visibleWhen: isPresetRetirementTheme,
     helpWhen: (config, layout) => {
       const theme =
         parseRetirementThemeChoice(config) === RETIREMENT_THEME_MIXED
           ? 'Travel, hobbies, family, free time and more, mixed on every page.'
           : 'Every question on the page explores this theme.'
-      const note = wyrPrintNote({
-        page: layout,
-        config,
-        instruction: instructionFor(config),
-        font: String(config.fontFamily ?? STUDIO_DEFAULT_FONT),
-        reasonLine: wantsReasonLine(config),
-      })
+      const note = printNoteFor(config, layout)
       return `${theme} ${note}`
     },
   },
@@ -72,7 +82,8 @@ export const WYR_CONFIG_SCHEMA: StudioConfigField[] = [
     default: '',
     max: AI_THEME_MAX_LENGTH,
     visibleWhen: isCustomRetirementTheme,
-    help: `What the questions should be about, for example: summers at the lake. Max ${AI_THEME_MAX_LENGTH} characters.`,
+    helpWhen: (config, layout) =>
+      `What the questions should be about, for example: summers at the lake. Max ${AI_THEME_MAX_LENGTH} characters. ${printNoteFor(config, layout)}`,
     warningWhen: (config) => themeIpWarning(String(config.customTheme ?? '')),
   },
   {

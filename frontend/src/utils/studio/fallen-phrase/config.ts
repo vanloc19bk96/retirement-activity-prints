@@ -7,9 +7,11 @@ import {
   AI_THEME_MAX_LENGTH,
   RETIREMENT_THEME_MIXED,
   isCustomRetirementTheme,
+  isPresetRetirementTheme,
   parseRetirementThemeChoice,
   retirementThemeSelectOptions,
   validateRetirementThemeChoice,
+  writeOwnThemeField,
 } from '../_shared/retirement-theme-config'
 import { themeIpWarning } from '../cryptogram/content-quality'
 import { FALLEN_PHRASE_INSTRUCTION } from './content'
@@ -43,12 +45,14 @@ export function instructionFor(config: StudioConfig): string {
  * twelve pages of the same vocabulary.
  */
 export const FALLEN_PHRASE_CONFIG_SCHEMA: StudioConfigField[] = [
+  writeOwnThemeField(),
   {
     key: 'theme',
     label: 'Theme',
     type: 'select',
     default: RETIREMENT_THEME_MIXED,
     options: retirementThemeSelectOptions(),
+    visibleWhen: isPresetRetirementTheme,
     helpWhen: (config) =>
       parseRetirementThemeChoice(config) === RETIREMENT_THEME_MIXED
         ? 'A different retirement theme each page, the right pick for a whole book.'

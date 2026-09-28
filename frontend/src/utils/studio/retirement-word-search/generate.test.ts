@@ -22,10 +22,7 @@ import {
   STUDIO_TEST_CTX,
 } from '../studio-generator-test'
 import { resetObjectCounter } from '../studio-fabric-builders'
-import {
-  RETIREMENT_THEME_CUSTOM,
-  resolveRetirementTheme,
-} from '../_shared/retirement-theme-config'
+import { resolveRetirementTheme } from '../_shared/retirement-theme-config'
 import { CRYPTOGRAM_THEME_SALT } from '../cryptogram/theme'
 import { selectWordEntries, worstBankEntry } from './content'
 import { isPalindrome, isUnsafeCopy } from './content-quality'
@@ -125,7 +122,7 @@ runGeneratorContractTests(wordSearchTemplate, {
 describe('word-search form', () => {
   it('asks two questions about the puzzle and nothing about the page', () => {
     const keys = wordSearchTemplate.configSchema.map((field) => field.key)
-    expect(keys).toEqual(['theme', 'customTheme', 'level'])
+    expect(keys).toEqual(['writeOwnTheme', 'theme', 'customTheme', 'level'])
 
     const registered = getStudioTemplate('word-search')!
     const registeredKeys = new Set(registered.configSchema.map((field) => field.key))
@@ -134,6 +131,7 @@ describe('word-search form', () => {
       'showTitle',
       'title',
       'showInstructions',
+      'writeOwnTheme',
       'theme',
       'customTheme',
       'level',
@@ -143,7 +141,6 @@ describe('word-search form', () => {
       'wordsFrom',
       'presetThemeId',
       'retirementCategory',
-      'writeOwnTheme',
       'difficulty',
       'printStyle',
       'customWords',
@@ -168,12 +165,12 @@ describe('word-search form', () => {
   it('only blocks generate on an empty custom theme', () => {
     expect(wordSearchTemplate.validateConfig?.(base)).toBeNull()
     expect(
-      wordSearchTemplate.validateConfig?.({ ...base, theme: RETIREMENT_THEME_CUSTOM }),
+      wordSearchTemplate.validateConfig?.({ ...base, writeOwnTheme: true }),
     ).toMatchObject({ field: 'customTheme' })
     expect(
       wordSearchTemplate.validateConfig?.({
         ...base,
-        theme: RETIREMENT_THEME_CUSTOM,
+        writeOwnTheme: true,
         customTheme: 'Weekends in the garden',
       }),
     ).toBeNull()

@@ -757,17 +757,18 @@ describe('retirement-anagram form', () => {
     // The template owns two questions; the registry prepends the shared page
     // header fields to every game's form.
     expect(retirementAnagramTemplate.configSchema.map((field) => field.key)).toEqual([
+      'writeOwnTheme',
       'theme',
       'customTheme',
       'level',
     ])
     expect(getStudioTemplate('retirement-anagram')!.configSchema.map((f) => f.key)).toEqual(
-      ['showTitle', 'title', 'showInstructions', 'theme', 'customTheme', 'level'],
+      ['showTitle', 'title', 'showInstructions', 'writeOwnTheme', 'theme', 'customTheme', 'level'],
     )
     const custom = retirementAnagramTemplate.configSchema.find(
       (field) => field.key === 'customTheme',
     )!
-    expect(custom.visibleWhen?.({ theme: 'custom' })).toBe(true)
+    expect(custom.visibleWhen?.({ writeOwnTheme: true })).toBe(true)
     expect(custom.visibleWhen?.({ theme: 'mixed' })).toBe(false)
   })
 
@@ -782,7 +783,7 @@ describe('retirement-anagram form', () => {
   it('asks for a theme only when the seller chose to write one', () => {
     expect(validateRetirementAnagramConfig({ theme: 'mixed' })).toBeNull()
     expect(validateRetirementAnagramConfig({ theme: 'gardening' })).toBeNull()
-    const error = validateRetirementAnagramConfig({ theme: 'custom', customTheme: '  ' })
+    const error = validateRetirementAnagramConfig({ writeOwnTheme: true, customTheme: '  ' })
     expect(error?.field).toBe('customTheme')
     expect(error?.message).toMatch(/words/)
   })

@@ -68,7 +68,7 @@ describe('retirementAnagramPrefetch', () => {
     generateMock.mockReset()
     generateMock.mockResolvedValue(ok)
     await retirementAnagramPrefetch(
-      config({ theme: 'custom', customTheme: 'weekends by the canal' }),
+      config({ writeOwnTheme: true, customTheme: 'weekends by the canal' }),
       new AbortController().signal,
     )
     expect(lastRequest().theme).toBe('weekends by the canal')

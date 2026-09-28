@@ -1,6 +1,7 @@
 import type {
   StudioConfig,
   StudioConfigField,
+  StudioConfigLayoutContext,
   StudioConfigValidationError,
 } from '@/types/studio-template.types'
 import { STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
@@ -8,12 +9,23 @@ import {
   AI_THEME_MAX_LENGTH,
   RETIREMENT_THEME_MIXED,
   isCustomRetirementTheme,
+  isPresetRetirementTheme,
   parseRetirementThemeChoice,
   retirementThemeSelectOptions,
   validateRetirementThemeChoice,
+  writeOwnThemeField,
 } from '../_shared/retirement-theme-config'
 import { themeIpWarning } from '../retirement-word-search/content-quality'
 import { fifPrintNote } from './layout'
+
+/** The theme help line's page report, shown under whichever theme field is visible. */
+function printNoteFor(config: StudioConfig, layout?: StudioConfigLayoutContext): string {
+  return fifPrintNote({
+    page: layout,
+    config,
+    font: String(config.fontFamily ?? STUDIO_DEFAULT_FONT),
+  })
+}
 
 /**
  * One question: what should the story be about?
@@ -39,22 +51,20 @@ import { fifPrintNote } from './layout'
  * what a book of several stories wants.
  */
 export const FIF_CONFIG_SCHEMA: StudioConfigField[] = [
+  writeOwnThemeField(),
   {
     key: 'theme',
     label: 'Story theme',
     type: 'select',
     default: RETIREMENT_THEME_MIXED,
     options: retirementThemeSelectOptions('Surprise me (mixed retirement stories)'),
+    visibleWhen: isPresetRetirementTheme,
     helpWhen: (config, layout) => {
       const theme =
         parseRetirementThemeChoice(config) === RETIREMENT_THEME_MIXED
           ? 'Speeches, parties, holidays, hobbies and more, with a fresh situation every story.'
           : 'The story is set in this theme.'
-      const note = fifPrintNote({
-        page: layout,
-        config,
-        font: String(config.fontFamily ?? STUDIO_DEFAULT_FONT),
-      })
+      const note = printNoteFor(config, layout)
       return `${theme} ${note}`
     },
   },
@@ -65,7 +75,8 @@ export const FIF_CONFIG_SCHEMA: StudioConfigField[] = [
     default: '',
     max: AI_THEME_MAX_LENGTH,
     visibleWhen: isCustomRetirementTheme,
-    help: `What the story should be about, for example: our first caravan trip. Max ${AI_THEME_MAX_LENGTH} characters.`,
+    helpWhen: (config, layout) =>
+      `What the story should be about, for example: our first caravan trip. Max ${AI_THEME_MAX_LENGTH} characters. ${printNoteFor(config, layout)}`,
     warningWhen: (config) => themeIpWarning(String(config.customTheme ?? '')),
   },
 ]

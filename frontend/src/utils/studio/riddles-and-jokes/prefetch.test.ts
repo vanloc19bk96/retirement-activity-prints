@@ -41,7 +41,7 @@ describe('riddlesJokesPrefetch', () => {
 
   it('sends the chosen mix and theme, or the theme the seller typed', async () => {
     generateMock.mockResolvedValue(RJ_FIXTURE)
-    await riddlesJokesPrefetch(config({ mix: 'riddles', theme: 'custom', customTheme: 'life on the allotment' }), signal())
+    await riddlesJokesPrefetch(config({ mix: 'riddles', writeOwnTheme: true, customTheme: 'life on the allotment' }), signal())
     expect(lastRequest()).toMatchObject({ mix: 'riddles', mixedTopics: false, theme: 'life on the allotment' })
   })
 

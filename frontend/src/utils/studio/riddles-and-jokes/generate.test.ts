@@ -123,16 +123,16 @@ describe('riddles-and-jokes registry', () => {
   })
 
   it('asks only for a theme and the mix (plus a typed theme when chosen)', () => {
-    expect(riddlesJokesTemplate.configSchema.map((field) => field.key)).toEqual(['theme', 'customTheme', 'mix'])
+    expect(riddlesJokesTemplate.configSchema.map((field) => field.key)).toEqual(['writeOwnTheme', 'theme', 'customTheme', 'mix'])
     const custom = riddlesJokesTemplate.configSchema.find((f) => f.key === 'customTheme')!
     expect(custom.visibleWhen?.({ theme: 'mixed' })).toBe(false)
-    expect(custom.visibleWhen?.({ theme: 'custom' })).toBe(true)
+    expect(custom.visibleWhen?.({ writeOwnTheme: true })).toBe(true)
     expect(buildDefaultConfig(riddlesJokesTemplate)).toMatchObject({ theme: 'mixed', mix: 'both' })
   })
 
   it('refuses an empty custom theme', () => {
-    expect(validateRjConfig({ theme: 'custom', customTheme: '' })?.field).toBe('customTheme')
-    expect(validateRjConfig({ theme: 'custom', customTheme: 'Allotments' })).toBeNull()
+    expect(validateRjConfig({ writeOwnTheme: true, customTheme: '' })?.field).toBe('customTheme')
+    expect(validateRjConfig({ writeOwnTheme: true, customTheme: 'Allotments' })).toBeNull()
     expect(validateRjConfig({ theme: 'mixed' })).toBeNull()
   })
 

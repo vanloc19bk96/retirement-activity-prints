@@ -72,7 +72,6 @@ export const TTF_SUBJECTS: readonly { value: TwoTruthsFibSubject; label: string 
   { value: 'customs', label: 'Retirement traditions & customs' },
   { value: 'food', label: 'Food & the kitchen' },
   { value: 'nature', label: 'Nature & the outdoors' },
-  { value: 'custom', label: 'Write my own subject…' },
 ]
 
 export const TTF_LEVELS: readonly { value: TwoTruthsFibLevel; label: string }[] = [
@@ -81,8 +80,13 @@ export const TTF_LEVELS: readonly { value: TwoTruthsFibLevel; label: string }[] 
   { value: 'challenging', label: 'Challenging: surprising facts' },
 ]
 
+/**
+ * The `subject` field as saved. `custom` is no longer a picker option (the
+ * `writeOwnSubject` switch is), but configs saved while it was still carry it.
+ */
 export function parseTtfSubject(raw: unknown): TwoTruthsFibSubject {
   const value = String(raw ?? '')
+  if (value === 'custom') return 'custom'
   return TTF_SUBJECTS.some((s) => s.value === value) ? (value as TwoTruthsFibSubject) : 'mixed'
 }
 

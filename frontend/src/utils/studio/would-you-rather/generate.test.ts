@@ -121,6 +121,7 @@ describe('would-you-rather registry', () => {
 
   it('asks only for theme, tone and a writing line', () => {
     expect(wouldYouRatherTemplate.configSchema.map((field) => field.key)).toEqual([
+      'writeOwnTheme',
       'theme',
       'customTheme',
       'tone',
@@ -128,17 +129,17 @@ describe('would-you-rather registry', () => {
     ])
     const custom = wouldYouRatherTemplate.configSchema.find((f) => f.key === 'customTheme')!
     expect(custom.visibleWhen?.({ theme: 'mixed' })).toBe(false)
-    expect(custom.visibleWhen?.({ theme: 'custom' })).toBe(true)
+    expect(custom.visibleWhen?.({ writeOwnTheme: true })).toBe(true)
   })
 
   it('refuses an empty custom theme', () => {
-    expect(validateWyrConfig({ theme: 'custom', customTheme: '' })?.field).toBe('customTheme')
-    expect(validateWyrConfig({ theme: 'custom', customTheme: 'Lake days' })).toBeNull()
+    expect(validateWyrConfig({ writeOwnTheme: true, customTheme: '' })?.field).toBe('customTheme')
+    expect(validateWyrConfig({ writeOwnTheme: true, customTheme: 'Lake days' })).toBeNull()
     expect(validateWyrConfig({ theme: 'mixed' })).toBeNull()
   })
 
   it('reports what the trim prints in the theme help', () => {
-    const theme = wouldYouRatherTemplate.configSchema[0]!
+    const theme = wouldYouRatherTemplate.configSchema.find((f) => f.key === 'theme')!
     const ctx = kdpCtx(6, 9)
     const help = theme.helpWhen!(base, ctx)
     expect(help).toMatch(/\d question/)

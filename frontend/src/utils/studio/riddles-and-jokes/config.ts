@@ -1,6 +1,7 @@
 import type {
   StudioConfig,
   StudioConfigField,
+  StudioConfigLayoutContext,
   StudioConfigValidationError,
 } from '@/types/studio-template.types'
 import { STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
@@ -8,9 +9,11 @@ import {
   AI_THEME_MAX_LENGTH,
   RETIREMENT_THEME_MIXED,
   isCustomRetirementTheme,
+  isPresetRetirementTheme,
   parseRetirementThemeChoice,
   retirementThemeSelectOptions,
   validateRetirementThemeChoice,
+  writeOwnThemeField,
 } from '../_shared/retirement-theme-config'
 import { themeIpWarning } from '../retirement-word-search/content-quality'
 import { RJ_MIXES, parseRjMix, rjInstruction } from './content'
@@ -19,6 +22,17 @@ import { rjPrintNote } from './layout'
 /** Instruction text the page will actually carry, for layout measurement. */
 export function instructionFor(config: StudioConfig): string {
   return config.showInstructions === false ? '' : rjInstruction(parseRjMix(config.mix))
+}
+
+/** The theme help line's page report, shown under whichever theme field is visible. */
+function printNoteFor(config: StudioConfig, layout?: StudioConfigLayoutContext): string {
+  return rjPrintNote({
+    page: layout,
+    config,
+    instruction: instructionFor(config),
+    font: String(config.fontFamily ?? STUDIO_DEFAULT_FONT),
+    mix: parseRjMix(config.mix),
+  })
 }
 
 /**
@@ -46,24 +60,20 @@ export function instructionFor(config: StudioConfig): string {
  * one joke told eight times.
  */
 export const RJ_CONFIG_SCHEMA: StudioConfigField[] = [
+  writeOwnThemeField(),
   {
     key: 'theme',
     label: 'Theme',
     type: 'select',
     default: RETIREMENT_THEME_MIXED,
     options: retirementThemeSelectOptions('Mixed retirement topics'),
+    visibleWhen: isPresetRetirementTheme,
     helpWhen: (config, layout) => {
       const theme =
         parseRetirementThemeChoice(config) === RETIREMENT_THEME_MIXED
           ? 'Naps, golf, gardening, coffee, travel, retirement parties and more, a different topic for every item.'
           : 'Every item on the page explores this theme.'
-      const note = rjPrintNote({
-        page: layout,
-        config,
-        instruction: instructionFor(config),
-        font: String(config.fontFamily ?? STUDIO_DEFAULT_FONT),
-        mix: parseRjMix(config.mix),
-      })
+      const note = printNoteFor(config, layout)
       return `${theme} ${note}`
     },
   },
@@ -74,7 +84,8 @@ export const RJ_CONFIG_SCHEMA: StudioConfigField[] = [
     default: '',
     max: AI_THEME_MAX_LENGTH,
     visibleWhen: isCustomRetirementTheme,
-    help: `What the riddles and jokes should be about (for example, life on the allotment). Max ${AI_THEME_MAX_LENGTH} characters.`,
+    helpWhen: (config, layout) =>
+      `What the riddles and jokes should be about (for example, life on the allotment). Max ${AI_THEME_MAX_LENGTH} characters. ${printNoteFor(config, layout)}`,
     warningWhen: (config) => themeIpWarning(String(config.customTheme ?? '')),
   },
   {

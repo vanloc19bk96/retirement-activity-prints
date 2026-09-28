@@ -770,12 +770,12 @@ describe('riddle-scramble form', () => {
   })
 
   it('requires a theme when the seller chose to write their own', () => {
-    expect(validateRiddleScrambleConfig({ theme: 'custom', customTheme: '' })).toEqual({
+    expect(validateRiddleScrambleConfig({ writeOwnTheme: true, customTheme: '' })).toEqual({
       field: 'customTheme',
       message: 'Enter a theme for the riddle and words.',
     })
     expect(
-      validateRiddleScrambleConfig({ theme: 'custom', customTheme: 'Sunday roasts' }),
+      validateRiddleScrambleConfig({ writeOwnTheme: true, customTheme: 'Sunday roasts' }),
     ).toBeNull()
   })
 

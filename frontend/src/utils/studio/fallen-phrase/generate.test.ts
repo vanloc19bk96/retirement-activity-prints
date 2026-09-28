@@ -246,7 +246,7 @@ describe('fallen-phrase registration', () => {
     const keys = fallenPhraseTemplate.configSchema
       .map((field) => field.key)
       .filter((key) => !['showTitle', 'title', 'showInstructions'].includes(key))
-    expect(keys).toEqual(['theme', 'customTheme', 'level'])
+    expect(keys).toEqual(['writeOwnTheme', 'theme', 'customTheme', 'level'])
   })
 })
 
@@ -894,11 +894,11 @@ describe('fallen-phrase preflight', () => {
 describe('fallen-phrase config', () => {
   it('requires a theme only when the seller chose to write one', () => {
     expect(validateFallenPhraseConfig({ theme: 'mixed' })).toBeNull()
-    expect(validateFallenPhraseConfig({ theme: 'custom', customTheme: '' })?.field).toBe(
+    expect(validateFallenPhraseConfig({ writeOwnTheme: true, customTheme: '' })?.field).toBe(
       'customTheme',
     )
     expect(
-      validateFallenPhraseConfig({ theme: 'custom', customTheme: 'weekend gardening' }),
+      validateFallenPhraseConfig({ writeOwnTheme: true, customTheme: 'weekend gardening' }),
     ).toBeNull()
   })
 

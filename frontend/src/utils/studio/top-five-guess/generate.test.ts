@@ -106,17 +106,18 @@ describe('top-five-guess registry', () => {
 
   it('asks only for a theme (plus a typed theme when chosen)', () => {
     expect(topFiveGuessTemplate.configSchema.map((field) => field.key)).toEqual([
+      'writeOwnTheme',
       'theme',
       'customTheme',
     ])
     const custom = topFiveGuessTemplate.configSchema.find((f) => f.key === 'customTheme')!
     expect(custom.visibleWhen?.({ theme: 'mixed' })).toBe(false)
-    expect(custom.visibleWhen?.({ theme: 'custom' })).toBe(true)
+    expect(custom.visibleWhen?.({ writeOwnTheme: true })).toBe(true)
   })
 
   it('refuses an empty custom theme', () => {
-    expect(validateTopFiveConfig({ theme: 'custom', customTheme: '' })?.field).toBe('customTheme')
-    expect(validateTopFiveConfig({ theme: 'custom', customTheme: 'Lake days' })).toBeNull()
+    expect(validateTopFiveConfig({ writeOwnTheme: true, customTheme: '' })?.field).toBe('customTheme')
+    expect(validateTopFiveConfig({ writeOwnTheme: true, customTheme: 'Lake days' })).toBeNull()
     expect(validateTopFiveConfig({ theme: 'mixed' })).toBeNull()
   })
 })

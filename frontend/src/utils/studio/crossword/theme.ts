@@ -26,7 +26,7 @@ export { AI_THEME_MAX_LENGTH }
 
 /** Rotate a different preset in per puzzle. */
 export const CROSSWORD_THEME_MIXED = 'mixed'
-/** Seller types their own theme for the AI. */
+/** Seller types their own theme for the AI (the `writeOwnTheme` switch). */
 export const CROSSWORD_THEME_CUSTOM = 'custom'
 
 export const CROSSWORD_DEFAULT_THEME = CROSSWORD_THEME_MIXED
@@ -44,7 +44,6 @@ export function crosswordThemeSelectOptions(): StudioSelectOption[] {
   return [
     { label: 'Mixed retirement themes', value: CROSSWORD_THEME_MIXED },
     ...RETIREMENT_THEMES.map((theme) => ({ label: theme.label, value: theme.id })),
-    { label: 'Write my own theme…', value: CROSSWORD_THEME_CUSTOM },
   ]
 }
 
@@ -61,18 +60,27 @@ export function customCrosswordThemeText(config: StudioConfig): string {
  * job saved against that form still generates the theme its seller chose.
  */
 export function parseCrosswordThemeChoice(config: StudioConfig): string {
+  if (parseWriteOwnTheme(config.writeOwnTheme)) return CROSSWORD_THEME_CUSTOM
   const raw = String(config.theme ?? '').trim()
-  if (raw === CROSSWORD_THEME_MIXED || raw === CROSSWORD_THEME_CUSTOM) return raw
+  // Saved while "custom" was a picker option; a switch turned off overrides it.
+  if (raw === CROSSWORD_THEME_CUSTOM) {
+    return config.writeOwnTheme === false ? CROSSWORD_DEFAULT_THEME : CROSSWORD_THEME_CUSTOM
+  }
+  if (raw === CROSSWORD_THEME_MIXED) return raw
   if (getRetirementTheme(raw)) return raw
   if (raw) return CROSSWORD_DEFAULT_THEME
-  // Legacy form: writeOwnTheme + retirementCategory + presetThemeId.
-  if (parseWriteOwnTheme(config.writeOwnTheme)) return CROSSWORD_THEME_CUSTOM
+  // Legacy form: retirementCategory + presetThemeId.
   if (config.presetThemeId != null) return resolvePresetThemeId(config)
   return CROSSWORD_DEFAULT_THEME
 }
 
 export function isCustomCrosswordTheme(config: StudioConfig): boolean {
   return parseCrosswordThemeChoice(config) === CROSSWORD_THEME_CUSTOM
+}
+
+/** `visibleWhen` for the preset picker: hidden while the seller types their own. */
+export function isPresetCrosswordTheme(config: StudioConfig): boolean {
+  return !isCustomCrosswordTheme(config)
 }
 
 /**

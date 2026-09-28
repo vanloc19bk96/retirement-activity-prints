@@ -62,7 +62,7 @@ describe('missingVowelsPrefetch', () => {
     generateMock.mockReset()
     generateMock.mockResolvedValue(ok)
     await missingVowelsPrefetch(
-      config({ theme: 'custom', customTheme: 'weekends by the canal' }),
+      config({ writeOwnTheme: true, customTheme: 'weekends by the canal' }),
       new AbortController().signal,
     )
     expect(lastRequest().theme).toBe('weekends by the canal')

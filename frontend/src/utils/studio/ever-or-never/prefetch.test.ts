@@ -48,7 +48,7 @@ describe('everOrNeverPrefetch', () => {
     expect(lastRequest().style).toBe('playful')
 
     clearStudioRecentContent()
-    await everOrNeverPrefetch(config({ theme: 'custom', customTheme: 'summers at the lake' }), signal())
+    await everOrNeverPrefetch(config({ writeOwnTheme: true, customTheme: 'summers at the lake' }), signal())
     expect(lastRequest().theme).toBe('summers at the lake')
   })
 

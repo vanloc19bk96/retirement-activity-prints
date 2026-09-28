@@ -53,7 +53,7 @@ describe('twoTruthsFibPrefetch', () => {
     expect(lastRequest()).toMatchObject({ subject: 'inventions', level: 'gentle' })
     expect(lastRequest().customSubject).toBeUndefined()
 
-    await twoTruthsFibPrefetch(config({ subject: 'custom', customSubject: 'canals and narrowboats' }), signal())
+    await twoTruthsFibPrefetch(config({ writeOwnSubject: true, customSubject: 'canals and narrowboats' }), signal())
     expect(lastRequest()).toMatchObject({ subject: 'custom', customSubject: 'canals and narrowboats' })
   })
 

@@ -137,6 +137,7 @@ describe('ever-or-never registry', () => {
 
   it('asks only for theme, tone and a story line', () => {
     expect(everOrNeverTemplate.configSchema.map((field) => field.key)).toEqual([
+      'writeOwnTheme',
       'theme',
       'customTheme',
       'tone',
@@ -144,17 +145,17 @@ describe('ever-or-never registry', () => {
     ])
     const custom = everOrNeverTemplate.configSchema.find((f) => f.key === 'customTheme')!
     expect(custom.visibleWhen?.({ theme: 'mixed' })).toBe(false)
-    expect(custom.visibleWhen?.({ theme: 'custom' })).toBe(true)
+    expect(custom.visibleWhen?.({ writeOwnTheme: true })).toBe(true)
   })
 
   it('refuses an empty custom theme', () => {
-    expect(validateEonConfig({ theme: 'custom', customTheme: '' })?.field).toBe('customTheme')
-    expect(validateEonConfig({ theme: 'custom', customTheme: 'Lake days' })).toBeNull()
+    expect(validateEonConfig({ writeOwnTheme: true, customTheme: '' })?.field).toBe('customTheme')
+    expect(validateEonConfig({ writeOwnTheme: true, customTheme: 'Lake days' })).toBeNull()
     expect(validateEonConfig({ theme: 'mixed' })).toBeNull()
   })
 
   it('reports what the trim prints in the theme help', () => {
-    const help = everOrNeverTemplate.configSchema[0]!.helpWhen!(base, kdpCtx(6, 9))
+    const help = everOrNeverTemplate.configSchema.find((f) => f.key === 'theme')!.helpWhen!(base, kdpCtx(6, 9))
     expect(help).toMatch(/\d+ statements a page/)
     expect(help).toMatch(/\d+ pt/)
   })

@@ -142,23 +142,23 @@ describe('retired-name registry', () => {
   })
 
   it('asks only for a theme', () => {
-    expect(retiredNameTemplate.configSchema.map((field) => field.key)).toEqual(['theme', 'customTheme'])
+    expect(retiredNameTemplate.configSchema.map((field) => field.key)).toEqual(['writeOwnTheme', 'theme', 'customTheme'])
     const custom = retiredNameTemplate.configSchema.find((f) => f.key === 'customTheme')!
     expect(custom.visibleWhen?.({ theme: 'mixed' })).toBe(false)
-    expect(custom.visibleWhen?.({ theme: 'custom' })).toBe(true)
+    expect(custom.visibleWhen?.({ writeOwnTheme: true })).toBe(true)
   })
 
   it('refuses an empty custom theme', () => {
-    expect(validateRnConfig({ theme: 'custom', customTheme: '' })?.field).toBe('customTheme')
-    expect(validateRnConfig({ theme: 'custom', customTheme: 'Golf' })).toBeNull()
+    expect(validateRnConfig({ writeOwnTheme: true, customTheme: '' })?.field).toBe('customTheme')
+    expect(validateRnConfig({ writeOwnTheme: true, customTheme: 'Golf' })).toBeNull()
     expect(validateRnConfig({ theme: 'mixed' })).toBeNull()
   })
 
   it('reports what the trim prints in the theme help', () => {
-    const help = retiredNameTemplate.configSchema[0]!.helpWhen!(base, kdpCtx(6, 9))
+    const help = retiredNameTemplate.configSchema.find((f) => f.key === 'theme')!.helpWhen!(base, kdpCtx(6, 9))
     expect(help).toMatch(/All 26 letters and 12 months/)
     expect(help).toMatch(/\d+ pt/)
-    const tooSmall = retiredNameTemplate.configSchema[0]!.helpWhen!(base, kdpCtx(5, 8))
+    const tooSmall = retiredNameTemplate.configSchema.find((f) => f.key === 'theme')!.helpWhen!(base, kdpCtx(5, 8))
     expect(tooSmall).toMatch(/too small/)
   })
 })

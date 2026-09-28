@@ -29,7 +29,6 @@ import {
 import { resolveStudioMarginForPage } from '../studio-margin'
 import { createRng } from '../studio-rng'
 import {
-  RETIREMENT_THEME_CUSTOM,
   RETIREMENT_THEME_MIXED,
   resolveRetirementTheme,
 } from '../_shared/retirement-theme-config'
@@ -217,9 +216,8 @@ describe('cryptogram content', () => {
 describe('cryptogram levels and theme', () => {
   it('asks two questions and keeps the old knobs off the form', () => {
     const keys = CRYPTOGRAM_CONFIG_SCHEMA.map((field) => field.key)
-    expect(keys).toEqual(['theme', 'customTheme', 'level'])
+    expect(keys).toEqual(['writeOwnTheme', 'theme', 'customTheme', 'level'])
     for (const dropped of [
-      'writeOwnTheme',
       'retirementCategory',
       'presetThemeId',
       'length',
@@ -267,17 +265,17 @@ describe('cryptogram levels and theme', () => {
   it('requires theme text only when the seller writes their own', () => {
     expect(validateCryptogramConfig({ theme: RETIREMENT_THEME_MIXED })).toBeNull()
     expect(
-      validateCryptogramConfig({ theme: RETIREMENT_THEME_CUSTOM, customTheme: '  ' }),
+      validateCryptogramConfig({ writeOwnTheme: true, customTheme: '  ' }),
     ).toMatchObject({ field: 'customTheme' })
     expect(
       validateCryptogramConfig({
-        theme: RETIREMENT_THEME_CUSTOM,
+        writeOwnTheme: true,
         customTheme: 'Weekends in the garden',
       }),
     ).toBeNull()
     expect(
       validateCryptogramConfig({
-        theme: RETIREMENT_THEME_CUSTOM,
+        writeOwnTheme: true,
         customTheme: 'x'.repeat(200),
       }),
     ).toMatchObject({ field: 'customTheme' })

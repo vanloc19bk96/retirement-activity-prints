@@ -1,8 +1,10 @@
 import type {
   StudioConfig,
   StudioConfigField,
+  StudioConfigLayoutContext,
   StudioConfigValidationError,
 } from '@/types/studio-template.types'
+import type { TwoTruthsFibSubject } from '@/types/studio-two-truths-fib.types'
 import { STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
 import { AI_THEME_MAX_LENGTH } from '../_shared/retirement-theme-config'
 import { themeIpWarning } from '../retirement-word-search/content-quality'
@@ -14,8 +16,30 @@ export function instructionFor(config: StudioConfig): string {
   return config.showInstructions === false ? '' : ttfInstruction()
 }
 
+/**
+ * The subject a page is written on: the `writeOwnSubject` switch wins, then
+ * the picker. A `custom` saved in the picker by the old form still counts,
+ * unless the switch has since been turned off.
+ */
+export function resolveTtfSubject(config: StudioConfig): TwoTruthsFibSubject {
+  if (config.writeOwnSubject === true) return 'custom'
+  const subject = parseTtfSubject(config.subject)
+  if (subject === 'custom' && config.writeOwnSubject === false) return 'mixed'
+  return subject
+}
+
 export const isCustomTtfSubject = (config: StudioConfig) =>
-  parseTtfSubject(config.subject) === 'custom'
+  resolveTtfSubject(config) === 'custom'
+
+/** The subject help line's page report, shown under whichever subject field is visible. */
+function printNoteFor(config: StudioConfig, layout?: StudioConfigLayoutContext): string {
+  return ttfPrintNote({
+    page: layout,
+    config,
+    instruction: instructionFor(config),
+    font: String(config.fontFamily ?? STUDIO_DEFAULT_FONT),
+  })
+}
 
 /** What the seller typed, trimmed to the prompt budget. */
 export function customTtfSubject(config: StudioConfig): string {
@@ -49,24 +73,20 @@ export function customTtfSubject(config: StudioConfig): string {
  * knowledge to draw true facts from.
  */
 export const TTF_CONFIG_SCHEMA: StudioConfigField[] = [
+  { key: 'writeOwnSubject', label: 'Write my own subject', type: 'toggle', default: false },
   {
     key: 'subject',
     label: 'Subject',
     type: 'select',
     default: 'mixed',
     options: TTF_SUBJECTS.map((subject) => ({ label: subject.label, value: subject.value })),
+    visibleWhen: (config) => !isCustomTtfSubject(config),
     helpWhen: (config, layout) => {
       const subject =
-        parseTtfSubject(config.subject) === 'mixed'
+        resolveTtfSubject(config) === 'mixed'
           ? 'Work, inventions, home life, travel, food, nature and more, a different one for every puzzle.'
           : 'Every puzzle explores a different corner of this subject.'
-      const note = ttfPrintNote({
-        page: layout,
-        config,
-        instruction: instructionFor(config),
-        font: String(config.fontFamily ?? STUDIO_DEFAULT_FONT),
-      })
-      return `${subject} ${note}`
+      return `${subject} ${printNoteFor(config, layout)}`
     },
   },
   {
@@ -76,7 +96,8 @@ export const TTF_CONFIG_SCHEMA: StudioConfigField[] = [
     default: '',
     max: AI_THEME_MAX_LENGTH,
     visibleWhen: isCustomTtfSubject,
-    help: `A field of facts, for example: canals and narrowboats, or the history of the post office. Max ${AI_THEME_MAX_LENGTH} characters.`,
+    helpWhen: (config, layout) =>
+      `A field of facts, for example: canals and narrowboats, or the history of the post office. Max ${AI_THEME_MAX_LENGTH} characters. ${printNoteFor(config, layout)}`,
     warningWhen: (config) => themeIpWarning(String(config.customSubject ?? '')),
   },
   {

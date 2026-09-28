@@ -16,6 +16,7 @@
 
 import type {
   StudioConfig,
+  StudioConfigField,
   StudioConfigValidationError,
   StudioSelectOption,
 } from '@/types/studio-template.types'
@@ -60,11 +61,21 @@ export function resolvePresetThemeId(config: StudioConfig): string {
  * One field, one click, and its first option rotates the theme per puzzle,
  * which is what a *book* wants: twelve pages on "Gardening" is twelve pages
  * of the same vocabulary.
+ *
+ * Typing a theme of one's own is a switch above the picker rather than the
+ * picker's last option: it swaps the list for a text box, and a seller
+ * scanning thirty presets should not have to reach the bottom to find it.
  * ------------------------------------------------------------------ */
 
 /** Rotate a different preset theme in for every puzzle. */
 export const RETIREMENT_THEME_MIXED = 'mixed'
-/** Seller types their own theme for the AI. */
+/**
+ * Seller types their own theme for the AI.
+ *
+ * No longer a picker option — `writeOwnTheme` says so — but still what
+ * `parseRetirementThemeChoice` returns for it, and still read from `theme` on
+ * configs saved while it was one.
+ */
 export const RETIREMENT_THEME_CUSTOM = 'custom'
 
 export interface ResolvedRetirementTheme {
@@ -78,13 +89,16 @@ export interface ResolvedRetirementTheme {
 
 export function retirementThemeSelectOptions(
   mixedLabel = 'Mixed retirement themes',
-  customLabel = 'Write my own theme…',
 ): StudioSelectOption[] {
   return [
     { label: mixedLabel, value: RETIREMENT_THEME_MIXED },
     ...RETIREMENT_THEMES.map((theme) => ({ label: theme.label, value: theme.id })),
-    { label: customLabel, value: RETIREMENT_THEME_CUSTOM },
   ]
+}
+
+/** The switch that swaps the theme picker for the `customTheme` box. */
+export function writeOwnThemeField(label = 'Write my own theme'): StudioConfigField {
+  return { key: 'writeOwnTheme', label, type: 'toggle', default: false }
 }
 
 /**
@@ -95,18 +109,27 @@ export function retirementThemeSelectOptions(
  * chose rather than silently falling back to mixed.
  */
 export function parseRetirementThemeChoice(config: StudioConfig): string {
+  if (parseWriteOwnTheme(config.writeOwnTheme)) return RETIREMENT_THEME_CUSTOM
   const raw = String(config.theme ?? '').trim()
-  if (raw === RETIREMENT_THEME_MIXED || raw === RETIREMENT_THEME_CUSTOM) return raw
+  // Saved while "custom" was a picker option; a switch turned off overrides it.
+  if (raw === RETIREMENT_THEME_CUSTOM) {
+    return config.writeOwnTheme === false ? RETIREMENT_THEME_MIXED : RETIREMENT_THEME_CUSTOM
+  }
+  if (raw === RETIREMENT_THEME_MIXED) return raw
   if (getRetirementTheme(raw)) return raw
   if (raw) return RETIREMENT_THEME_MIXED
-  // Legacy form: writeOwnTheme + retirementCategory + presetThemeId.
-  if (parseWriteOwnTheme(config.writeOwnTheme)) return RETIREMENT_THEME_CUSTOM
+  // Legacy form: retirementCategory + presetThemeId.
   if (config.presetThemeId != null) return resolvePresetThemeId(config)
   return RETIREMENT_THEME_MIXED
 }
 
 export function isCustomRetirementTheme(config: StudioConfig): boolean {
   return parseRetirementThemeChoice(config) === RETIREMENT_THEME_CUSTOM
+}
+
+/** `visibleWhen` for the preset picker: hidden while the seller types their own. */
+export function isPresetRetirementTheme(config: StudioConfig): boolean {
+  return !isCustomRetirementTheme(config)
 }
 
 /** What the seller typed, trimmed to the prompt budget. */

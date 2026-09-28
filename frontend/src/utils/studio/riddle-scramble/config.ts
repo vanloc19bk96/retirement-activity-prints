@@ -8,9 +8,11 @@ import {
   AI_THEME_MAX_LENGTH,
   RETIREMENT_THEME_MIXED,
   isCustomRetirementTheme,
+  isPresetRetirementTheme,
   parseRetirementThemeChoice,
   retirementThemeSelectOptions,
   validateRetirementThemeChoice,
+  writeOwnThemeField,
 } from '../_shared/retirement-theme-config'
 import { themeIpWarning } from '../retirement-word-search/content-quality'
 import { instructionFor, riddleScramblePrintNote } from './layout'
@@ -39,12 +41,14 @@ export { instructionFor }
  * twelve pages of the same vocabulary.
  */
 export const RIDDLE_SCRAMBLE_CONFIG_SCHEMA: StudioConfigField[] = [
+  writeOwnThemeField(),
   {
     key: 'theme',
     label: 'Theme',
     type: 'select',
     default: RETIREMENT_THEME_MIXED,
     options: retirementThemeSelectOptions(),
+    visibleWhen: isPresetRetirementTheme,
     helpWhen: (config) =>
       parseRetirementThemeChoice(config) === RETIREMENT_THEME_MIXED
         ? 'A different retirement theme each page, the right pick for a whole book.'

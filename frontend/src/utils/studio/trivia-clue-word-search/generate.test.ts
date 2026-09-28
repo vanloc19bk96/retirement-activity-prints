@@ -208,9 +208,9 @@ describe('trivia clue word search — form', () => {
 
   it('requires a theme only when the seller chose to write one', () => {
     expect(validateTriviaConfig(base)).toBeNull()
-    expect(validateTriviaConfig({ ...base, theme: 'custom' })?.field).toBe('customTheme')
+    expect(validateTriviaConfig({ ...base, writeOwnTheme: true })?.field).toBe('customTheme')
     expect(
-      validateTriviaConfig({ ...base, theme: 'custom', customTheme: 'Garden days' }),
+      validateTriviaConfig({ ...base, writeOwnTheme: true, customTheme: 'Garden days' }),
     ).toBeNull()
   })
 

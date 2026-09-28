@@ -133,20 +133,20 @@ describe('fill-in-funnies registry', () => {
   })
 
   it('asks only for a theme', () => {
-    expect(fillInFunniesTemplate.configSchema.map((field) => field.key)).toEqual(['theme', 'customTheme'])
+    expect(fillInFunniesTemplate.configSchema.map((field) => field.key)).toEqual(['writeOwnTheme', 'theme', 'customTheme'])
     const custom = fillInFunniesTemplate.configSchema.find((f) => f.key === 'customTheme')!
     expect(custom.visibleWhen?.({ theme: 'mixed' })).toBe(false)
-    expect(custom.visibleWhen?.({ theme: 'custom' })).toBe(true)
+    expect(custom.visibleWhen?.({ writeOwnTheme: true })).toBe(true)
   })
 
   it('refuses an empty custom theme', () => {
-    expect(validateFifConfig({ theme: 'custom', customTheme: '' })?.field).toBe('customTheme')
-    expect(validateFifConfig({ theme: 'custom', customTheme: 'Caravan trips' })).toBeNull()
+    expect(validateFifConfig({ writeOwnTheme: true, customTheme: '' })?.field).toBe('customTheme')
+    expect(validateFifConfig({ writeOwnTheme: true, customTheme: 'Caravan trips' })).toBeNull()
     expect(validateFifConfig({ theme: 'mixed' })).toBeNull()
   })
 
   it('reports what the trim prints in the theme help', () => {
-    const help = fillInFunniesTemplate.configSchema[0]!.helpWhen!(base, kdpCtx(6, 9))
+    const help = fillInFunniesTemplate.configSchema.find((f) => f.key === 'theme')!.helpWhen!(base, kdpCtx(6, 9))
     expect(help).toMatch(/word list at \d+ pt/)
     expect(help).toMatch(/story at \d+ pt/)
   })

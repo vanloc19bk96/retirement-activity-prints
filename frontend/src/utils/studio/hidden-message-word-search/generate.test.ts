@@ -160,7 +160,7 @@ assertGeneratorEntropy(hiddenMessageWordSearchTemplate, {
 describe('hidden-message-word-search form', () => {
   it('asks three questions, and the third is optional', () => {
     const keys = hiddenMessageWordSearchTemplate.configSchema.map((field) => field.key)
-    expect(keys).toEqual(['theme', 'customTheme', 'level', 'customMessage'])
+    expect(keys).toEqual(['writeOwnTheme', 'theme', 'customTheme', 'level', 'customMessage'])
     // The retired form's fields must not come back by accident.
     for (const gone of ['wordsFrom', 'presetThemeId', 'difficulty', 'printStyle', 'tone']) {
       expect(keys).not.toContain(gone)
@@ -207,9 +207,9 @@ describe('hidden-message-word-search form', () => {
   })
 
   it('requires a typed theme only when the theme picker asks for one', () => {
-    expect(validateHiddenMessageConfig({ ...base, theme: 'custom', customTheme: '' })).not.toBeNull()
+    expect(validateHiddenMessageConfig({ ...base, writeOwnTheme: true, customTheme: '' })).not.toBeNull()
     expect(
-      validateHiddenMessageConfig({ ...base, theme: 'custom', customTheme: 'Weekends' }),
+      validateHiddenMessageConfig({ ...base, writeOwnTheme: true, customTheme: 'Weekends' }),
     ).toBeNull()
     expect(validateHiddenMessageConfig({ ...base, theme: 'gardening' })).toBeNull()
   })

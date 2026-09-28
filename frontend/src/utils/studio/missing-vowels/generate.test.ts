@@ -470,7 +470,7 @@ describe('missing-vowels content gates', () => {
 describe('missing-vowels form', () => {
   it('asks two questions and derives the rest from the page', () => {
     const keys = missingVowelsTemplate.configSchema.map((field) => field.key)
-    expect(keys).toEqual(['theme', 'customTheme', 'level'])
+    expect(keys).toEqual(['writeOwnTheme', 'theme', 'customTheme', 'level'])
     // Everything the old form asked about the page is gone.
     for (const dropped of ['itemCount', 'printStyle', 'difficulty', 'retirementCategory']) {
       expect(keys).not.toContain(dropped)
@@ -500,12 +500,12 @@ describe('missing-vowels form', () => {
 
   it('only asks for a typed theme when the seller chose to type one', () => {
     expect(validateMissingVowelsConfig({ theme: 'mixed' })).toBeNull()
-    expect(validateMissingVowelsConfig({ theme: 'custom', customTheme: '' })).toEqual({
+    expect(validateMissingVowelsConfig({ writeOwnTheme: true, customTheme: '' })).toEqual({
       field: 'customTheme',
       message: 'Enter a theme for the words.',
     })
     expect(
-      validateMissingVowelsConfig({ theme: 'custom', customTheme: 'canal weekends' }),
+      validateMissingVowelsConfig({ writeOwnTheme: true, customTheme: 'canal weekends' }),
     ).toBeNull()
   })
 

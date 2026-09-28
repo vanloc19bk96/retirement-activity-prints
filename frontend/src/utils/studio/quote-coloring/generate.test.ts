@@ -97,16 +97,16 @@ describe('quote coloring registry and form', () => {
   })
 
   it('asks four questions, each with a default, and nothing technical', () => {
-    expect(QC_CONFIG_SCHEMA.map((f) => f.key)).toEqual(['theme', 'customTheme', 'tone', 'pattern', 'detail'])
+    expect(QC_CONFIG_SCHEMA.map((f) => f.key)).toEqual(['writeOwnTheme', 'theme', 'customTheme', 'tone', 'pattern', 'detail'])
     for (const field of QC_CONFIG_SCHEMA) expect(field.default).not.toBeUndefined()
     const visible = QC_CONFIG_SCHEMA.filter((f) => !f.visibleWhen || f.visibleWhen(buildDefaultConfig(quoteColoringTemplate)))
-    expect(visible.map((f) => f.key)).toEqual(['theme', 'tone', 'pattern', 'detail'])
+    expect(visible.map((f) => f.key)).toEqual(['writeOwnTheme', 'theme', 'tone', 'pattern', 'detail'])
   })
 
   it('needs a typed theme only when the seller chose to write one', () => {
     expect(quoteColoringTemplate.validateConfig!(base)).toBeNull()
-    expect(quoteColoringTemplate.validateConfig!({ ...base, theme: 'custom', customTheme: '' })?.field).toBe('customTheme')
-    expect(quoteColoringTemplate.validateConfig!({ ...base, theme: 'custom', customTheme: 'life by the sea' })).toBeNull()
+    expect(quoteColoringTemplate.validateConfig!({ ...base, writeOwnTheme: true, customTheme: '' })?.field).toBe('customTheme')
+    expect(quoteColoringTemplate.validateConfig!({ ...base, writeOwnTheme: true, customTheme: 'life by the sea' })).toBeNull()
   })
 
   it('says so in the form when the trim is too small', () => {

@@ -8,7 +8,7 @@ import {
   studioVarietyKey,
 } from '../studio-variety'
 import { filterUnsafeThemeCopy } from '../retirement-word-search/content-quality'
-import { customTtfSubject } from './config'
+import { customTtfSubject, resolveTtfSubject } from './config'
 import {
   MAX_FACT_CHARS,
   MAX_STATEMENT_CHARS,
@@ -17,7 +17,6 @@ import {
   TTF_TEMPLATE_KEY,
   compactTtfLabel,
   parseTtfLevel,
-  parseTtfSubject,
   selectTtfSets,
   ttfItemFromSet,
   ttfSetLabels,
@@ -94,7 +93,7 @@ export async function twoTruthsFibPrefetch(
   context?: StudioPrefetchContext,
 ): Promise<TwoTruthsFibResponse> {
   const seed = Number(config.seed ?? 1)
-  const subject = parseTtfSubject(config.subject)
+  const subject = resolveTtfSubject(config)
   const typed = subject === 'custom' ? customTtfSubject(config) : ''
   const customSubject = typed ? (filterUnsafeThemeCopy(typed) ?? typed) : ''
   const varietyKey = studioVarietyKey(TTF_TEMPLATE_KEY, subject === 'custom' ? customSubject : subject)

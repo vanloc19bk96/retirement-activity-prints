@@ -55,7 +55,7 @@ describe('phraseFinderPrefetch', () => {
   it('sends the theme the seller picked, and a typed one when they wrote it', async () => {
     generateMock.mockResolvedValue(ok)
     await phraseFinderPrefetch(
-      config({ theme: 'custom', customTheme: 'weekends in the garden' }),
+      config({ writeOwnTheme: true, customTheme: 'weekends in the garden' }),
       new AbortController().signal,
     )
     expect(requestAt(0).theme).toContain('weekends in the garden')

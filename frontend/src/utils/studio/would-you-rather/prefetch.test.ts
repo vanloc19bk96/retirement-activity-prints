@@ -47,7 +47,7 @@ describe('wouldYouRatherPrefetch', () => {
     expect(lastRequest().mixedTopics).toBe(false)
     expect(lastRequest().style).toBe('playful')
 
-    await wouldYouRatherPrefetch(config({ theme: 'custom', customTheme: 'summers at the lake' }), signal())
+    await wouldYouRatherPrefetch(config({ writeOwnTheme: true, customTheme: 'summers at the lake' }), signal())
     expect(lastRequest().theme).toBe('summers at the lake')
   })
 

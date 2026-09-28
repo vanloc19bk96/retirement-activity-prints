@@ -53,7 +53,7 @@ describe('retireeQuizPrefetch', () => {
 
   it('sends a chosen or typed theme', async () => {
     generateMock.mockResolvedValue(RQ_FIXTURE)
-    await retireeQuizPrefetch(config({ theme: 'custom', customTheme: 'life by the sea' }), signal())
+    await retireeQuizPrefetch(config({ writeOwnTheme: true, customTheme: 'life by the sea' }), signal())
     expect(lastRequest()).toMatchObject({ mixedTopics: false })
     expect(lastRequest().theme.toLowerCase()).toContain('life by the sea')
   })

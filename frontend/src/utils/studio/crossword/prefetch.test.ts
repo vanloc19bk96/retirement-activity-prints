@@ -10,7 +10,7 @@ vi.mock('@/api/studio-crossword.api', () => ({
 import { generateCrosswordClues } from '@/api/studio-crossword.api'
 import { crosswordTemplate } from './generate'
 import { CROSSWORD_AI_EMPTY_MESSAGE, crosswordPrefetch } from './prefetch'
-import { CROSSWORD_THEME_CUSTOM, CROSSWORD_THEME_MIXED } from './theme'
+import { CROSSWORD_THEME_MIXED } from './theme'
 
 const generateMock = vi.mocked(generateCrosswordClues)
 
@@ -53,7 +53,7 @@ describe('crosswordPrefetch', () => {
     await crosswordPrefetch(
       {
         ...defaults,
-        theme: CROSSWORD_THEME_CUSTOM,
+        writeOwnTheme: true,
         customTheme: 'Weekends in the garden',
         seed: 3,
       },
