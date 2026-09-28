@@ -240,6 +240,31 @@ export function formatStudioGameTitle(ordinal: number): string {
   return `${STUDIO_GAME_TITLE_PREFIX} ${ordinal}`
 }
 
+/**
+ * Auto-numbered Page title, bare (“Game 3”) or already named (“Game 3: Maze”).
+ * Anything else was typed by the seller and is left alone.
+ */
+export function isStudioAutoGameTitle(title: unknown): boolean {
+  return new RegExp(`^${STUDIO_GAME_TITLE_PREFIX}\\s+\\d+(?::.*)?$`, 'i').test(
+    String(title ?? '').trim(),
+  )
+}
+
+/**
+ * Printed heading for an auto-numbered page: “Game 3” → “Game 3: Crossword”.
+ * The label's subtitle is dropped (“Country Fence: Fence the Pasture” names the
+ * page “Game 3: Country Fence”) so the heading stays short enough to print at
+ * full size. Custom titles, blank titles and already-named ones pass through.
+ */
+export function withStudioGameName(title: unknown, gameLabel: string): string {
+  const trimmed = String(title ?? '').trim()
+  const name = gameLabel.split(':')[0]!.trim()
+  if (!name || !new RegExp(`^${STUDIO_GAME_TITLE_PREFIX}\\s+\\d+$`, 'i').test(trimmed)) {
+    return trimmed
+  }
+  return `${trimmed}: ${name}`
+}
+
 /** Format a solution / answer-key Page title, e.g. "Solution Game 3". */
 export function formatStudioSolutionTitle(ordinal: number): string {
   return `${STUDIO_SOLUTION_TITLE_PREFIX} ${formatStudioGameTitle(ordinal)}`
@@ -247,7 +272,8 @@ export function formatStudioSolutionTitle(ordinal: number): string {
 
 /**
  * Puzzle title → solution-page title.
- * “Game 3” → “Solution Game 3”; already-prefixed titles stay stable.
+ * “Game 3” → “Solution Game 3”, “Game 3: Maze” → “Solution Game 3: Maze”;
+ * already-prefixed titles stay stable.
  */
 export function toStudioSolutionTitle(puzzleTitle: string): string {
   const trimmed = puzzleTitle.trim()

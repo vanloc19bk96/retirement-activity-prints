@@ -11,6 +11,7 @@ import type { CanvasStateStore } from '@/utils/canvas-state-store'
 /** One text box pinned to the top-left of the content box, the same every seed. */
 const fakeTemplate = {
   key: 'fake-sheet',
+  label: 'Fake Sheet',
   pageCount: 1,
   producesAnswerKey: false,
   generate: (_config: StudioConfig, ctx: StudioGenerateContext): StudioPageOutput[] => [

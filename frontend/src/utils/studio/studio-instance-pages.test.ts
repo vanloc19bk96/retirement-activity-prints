@@ -6,6 +6,7 @@ import {
   findStudioInstanceEndPageIndex,
   formatStudioBulkTitleRange,
   isStudioAnswerKeyPage,
+  isStudioAutoGameTitle,
   nextStudioGameTitle,
   resolveStudioGeneratePlacement,
   resolveStudioInsertStartPageIndex,
@@ -14,6 +15,7 @@ import {
   studioGameOrdinalAtPageIndex,
   studioGameTitleAtPageIndex,
   toStudioSolutionTitle,
+  withStudioGameName,
 } from './studio-instance-pages'
 
 function makeStore(pages: Record<number, object[]>): CanvasStateStore {
@@ -340,5 +342,39 @@ describe('toStudioSolutionTitle', () => {
 
   it('prefixes custom titles', () => {
     expect(toStudioSolutionTitle('Sudoku Warmup')).toBe('Solution Sudoku Warmup')
+  })
+
+  it('keeps the game name on the key', () => {
+    expect(toStudioSolutionTitle('Game 3: Maze')).toBe('Solution Game 3: Maze')
+    expect(toStudioSolutionTitle('Solution Game 3: Maze')).toBe('Solution Game 3: Maze')
+  })
+})
+
+describe('withStudioGameName', () => {
+  it('names an auto-numbered title after the game', () => {
+    expect(withStudioGameName('Game 3', 'Crossword')).toBe('Game 3: Crossword')
+    expect(withStudioGameName(' Game 12 ', 'Word Search')).toBe('Game 12: Word Search')
+  })
+
+  it('drops the label subtitle', () => {
+    expect(withStudioGameName('Game 1', 'Country Fence: Fence the Pasture')).toBe(
+      'Game 1: Country Fence',
+    )
+  })
+
+  it('leaves custom, blank and already-named titles alone', () => {
+    expect(withStudioGameName('Sudoku Warmup', 'Sudoku')).toBe('Sudoku Warmup')
+    expect(withStudioGameName('', 'Sudoku')).toBe('')
+    expect(withStudioGameName(undefined, 'Sudoku')).toBe('')
+    expect(withStudioGameName('Game 2: Sudoku', 'Sudoku')).toBe('Game 2: Sudoku')
+  })
+})
+
+describe('isStudioAutoGameTitle', () => {
+  it('matches bare and named Game N titles only', () => {
+    expect(isStudioAutoGameTitle('Game 3')).toBe(true)
+    expect(isStudioAutoGameTitle('Game 3: Certificate of Retirement')).toBe(true)
+    expect(isStudioAutoGameTitle('Game Night')).toBe(false)
+    expect(isStudioAutoGameTitle('Happy Retirement')).toBe(false)
   })
 })

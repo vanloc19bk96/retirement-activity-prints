@@ -5,7 +5,8 @@ import type {
   StudioPageOutput,
   StudioTemplateDefinition,
 } from '@/types/studio-template.types'
-import { STUDIO_BODY_SIZE, STUDIO_DEFAULT_FONT, STUDIO_GAME_TITLE_PREFIX } from '@/constants/studio.constants'
+import { STUDIO_BODY_SIZE, STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
+import { isStudioAutoGameTitle } from '@/utils/studio/studio-instance-pages'
 import { boxCenterX } from '../studio-layout'
 import { buildText, type StudioTag } from '../studio-fabric-builders'
 import { createRng, deriveSeed } from '../studio-rng'
@@ -74,8 +75,6 @@ import { parseCrRemoteData, retirementCertificatePrefetch } from './prefetch'
 const RECENT_DESIGN = 24
 const RECENT_TITLES = 40
 
-const GAME_TITLE_RE = new RegExp(`^${STUDIO_GAME_TITLE_PREFIX}\\s+\\d+$`)
-
 function errorPage(ctx: StudioGenerateContext, config: StudioConfig, tag: StudioTag, message: string): StudioPageOutput {
   const safe = crSafeBox(ctx)
   return {
@@ -126,7 +125,7 @@ function expandBookLabels(labels: readonly string[]): Set<string> {
  */
 function headingMode(config: StudioConfig): { auto: boolean; typed: string } {
   const typed = config.showTitle === false ? '' : String(config.title ?? '').trim()
-  return { auto: typed === CR_DEFAULT_TITLE || GAME_TITLE_RE.test(typed), typed }
+  return { auto: typed === CR_DEFAULT_TITLE || isStudioAutoGameTitle(typed), typed }
 }
 
 /**

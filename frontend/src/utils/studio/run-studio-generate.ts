@@ -15,6 +15,7 @@ import {
   findStudioInstanceEndPageIndex,
   findStudioInstanceStartPageIndex,
   resolveStudioInstancePageSpan,
+  withStudioGameName,
 } from '@/utils/studio/studio-instance-pages'
 import { yieldToMainThread } from '@/utils/yield-to-main-thread'
 import { ensureFontFamilyLoaded } from '@/utils/font-loader'
@@ -201,6 +202,12 @@ export async function runStudioGenerateOnce(options: {
       collectStudioContentLabels(canvasStateStore, req.interiorPageCount, templateKey),
   }
 
+  // “Game 3” prints as “Game 3: Crossword” so a reader can find a game by name.
+  const pageConfig: StudioConfig = {
+    ...req.config,
+    title: withStudioGameName(req.config.title, def.label),
+  }
+
   // Seed-invariant sheets never vary by seed — fingerprint retries
   // would exhaust and skip every duplicate instance in a book/bulk run.
   const claimed = await claimUniqueStudioOutputs({
@@ -214,7 +221,7 @@ export async function runStudioGenerateOnce(options: {
     isAborted: () => signal.aborted,
     build: async (seed) => {
       if (signal.aborted) return 'aborted'
-      const attemptConfig: StudioConfig = { ...req.config, seed }
+      const attemptConfig: StudioConfig = { ...pageConfig, seed }
 
       let remoteData: unknown
       if (def.prefetch) {
