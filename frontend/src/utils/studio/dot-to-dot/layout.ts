@@ -1,6 +1,6 @@
 import type { StudioConfig, StudioConfigLayoutContext } from '@/types/studio-template.types'
 import { DPI } from '@/types/canvas-settings.types'
-import { contentBox, measureHeaderHeight, type Box } from '../studio-layout'
+import { contentBox, measureHeaderHeightOverFullWidth, type Box } from '../studio-layout'
 import { dtdInstructionOptions, dtdLevelSpec, type DtdLevel } from './content'
 import { labelRoom } from './puzzle'
 
@@ -35,7 +35,7 @@ export const dtdPanelFits = (b: Box) => b.width >= DTD_MIN_PANEL_WIDTH && b.heig
 /** The panel on a page, measured without drawing (for the form). */
 export function dtdPanelFor(page: StudioConfigLayoutContext, config: StudioConfig, instruction: string): Box {
   const body = contentBox(page)
-  const header = measureHeaderHeight(config, instruction, body.width)
+  const header = measureHeaderHeightOverFullWidth(config, instruction, body.width)
   return dtdPanelInBody({ ...body, top: body.top + header, height: body.height - header }, header > 0)
 }
 

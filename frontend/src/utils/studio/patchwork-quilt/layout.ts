@@ -1,6 +1,6 @@
 import type { StudioConfig, StudioConfigLayoutContext } from '@/types/studio-template.types'
 import { DPI, PDF_POINTS_PER_INCH } from '@/types/canvas-settings.types'
-import { STUDIO_CONTENT_SAFE_INSET_X, STUDIO_DIGIT_FONT } from '@/constants/studio.constants'
+import { STUDIO_CONTENT_SAFE_INSET_X, STUDIO_PANEL_FOOT_AIR, STUDIO_DIGIT_FONT } from '@/constants/studio.constants'
 import { contentBox, insetHorizontal, measureHeaderHeight, type Box } from '../studio-layout'
 import { fabricTextHeight, hugTextBoxWidth, type FontSpec } from '../studio-text-metrics'
 import { PQ_LEGEND_SAMPLE, PQ_QUILTS, pqInstruction, pqLevelSpec, pqPatchWord, pqSampleWord, pqSignText, type PqLevel } from './content'
@@ -87,7 +87,7 @@ export function pqContentBox(page: StudioConfigLayoutContext): Box {
 /** The puzzle's panel inside what a heading left of the page (`body`, from `drawHeader`). */
 export function pqPanelInBody(body: Box, headed: boolean): Box {
   const air = headed ? PQ_HEADER_AIR : 0
-  return { ...body, top: body.top + air, height: Math.max(1, body.height - air) }
+  return { ...body, top: body.top + air, height: Math.max(1, body.height - air - STUDIO_PANEL_FOOT_AIR) }
 }
 
 /** The panel on a page, measured without drawing (for the form and the page). */

@@ -24,6 +24,7 @@ import {
   STUDIO_ANSWER_INK,
   STUDIO_ANSWER_INK_MONO,
   STUDIO_ANSWER_INK_MONO_TEMPLATES,
+  STUDIO_CONTENT_SAFE_INSET_X,
   STUDIO_DEFAULT_FONT,
 } from '@/constants/studio.constants'
 import type {
@@ -344,7 +345,9 @@ export async function runStudioGenerateOnce(options: {
         buildAnswerPage(out.answerSourceObjects ?? out.objects, answerInk, {
           // The key page re-titles "Game N" as "Solution Game N"; it has to fit
           // the same column, which is tight on small trims (5 x 8 is ~252pt).
-          contentWidth: pageWidth - keyMargin.left - keyMargin.right,
+          // The shared side inset too: fitted to the whole safe width, its
+          // first and last letters sat on the safe-area guide.
+          contentWidth: pageWidth - keyMargin.left - keyMargin.right - STUDIO_CONTENT_SAFE_INSET_X * 2,
         }),
         keyMargin.left - firstMargin.left,
       ),

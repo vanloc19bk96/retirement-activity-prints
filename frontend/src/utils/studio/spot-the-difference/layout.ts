@@ -1,6 +1,6 @@
 import type { StudioConfig, StudioConfigLayoutContext } from '@/types/studio-template.types'
 import { DPI } from '@/types/canvas-settings.types'
-import { contentBox, measureHeaderHeight, type Box } from '../studio-layout'
+import { contentBox, measureHeaderHeightOverFullWidth, type Box } from '../studio-layout'
 import { sdInstructionOptions, type SdGroupChoice, type SdLevel } from './content'
 import { SD_MARK_OVERHANG } from './differences'
 
@@ -81,7 +81,7 @@ export function sdPanelFor(page: StudioConfigLayoutContext, config: StudioConfig
   const body = contentBox(page)
   const texts = sdInstructionOptions(config)
   const sizes = (texts.length > 0 ? texts : ['']).map((text) => {
-    const header = measureHeaderHeight(config, text, body.width)
+    const header = measureHeaderHeightOverFullWidth(config, text, body.width)
     return sdPanelSize({ ...body, top: body.top + header, height: body.height - header }, header > 0)
   })
   if (sizes.some((s) => !s)) return null

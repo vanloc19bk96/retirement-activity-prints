@@ -7,7 +7,7 @@ import type {
 import { STUDIO_BODY_SIZE, STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
 import { createRngFromSeedInput, resolveOwnerSalt } from '../_shared/uniqueness'
 import { sgVariantKey } from '../stained-glass/content'
-import { boxCenterX, contentBox, drawHeader } from '../studio-layout'
+import { boxCenterX, contentBox, drawHeaderOverFullWidth } from '../studio-layout'
 import { buildText, type StudioTag } from '../studio-fabric-builders'
 import { rememberStudioContent, studioAvoidList, studioVarietyKey } from '../studio-variety'
 import { DTD_CONFIG_SCHEMA } from './config'
@@ -42,7 +42,7 @@ const RECENT_SHAPE_WINDOW = 200
 const ATTEMPTS = 12
 
 function errorPage(ctx: StudioGenerateContext, config: StudioConfig, tag: StudioTag, message: string, instruction: string): StudioPageOutput {
-  const header = drawHeader(contentBox(ctx), config, tag, instruction)
+  const header = drawHeaderOverFullWidth(contentBox(ctx), config, tag, instruction)
   return {
     pageRole: 'single',
     objects: [
@@ -88,7 +88,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
   const tag: StudioTag = { templateKey: DTD_TEMPLATE_KEY, instanceId: ctx.instanceId, pageRole: 'single' }
   const fail = (message: string) => [errorPage(ctx, config, tag, message, instruction)]
 
-  const header = drawHeader(contentBox(ctx), config, tag, instruction)
+  const header = drawHeaderOverFullWidth(contentBox(ctx), config, tag, instruction)
   const panel = dtdPanelInBody(header.body, header.objects.length > 0)
   if (!dtdPanelFits(panel)) return fail(DTD_PAGE_TOO_SMALL_MESSAGE)
 

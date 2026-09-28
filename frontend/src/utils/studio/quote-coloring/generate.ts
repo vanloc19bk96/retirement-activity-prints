@@ -6,7 +6,7 @@ import type {
 } from '@/types/studio-template.types'
 import { STUDIO_BODY_SIZE, STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
 import { createRngFromSeedInput, resolveOwnerSalt } from '../_shared/uniqueness'
-import { boxCenterX, contentBox, drawHeader } from '../studio-layout'
+import { boxCenterX, contentBox, drawHeaderOverFullWidth } from '../studio-layout'
 import { buildText, type StudioTag } from '../studio-fabric-builders'
 import { rememberStudioContent, studioAvoidList } from '../studio-variety'
 import { canLetter, composeQuotePage } from './compose'
@@ -39,7 +39,7 @@ import { parseQcRemoteData, qcVarietyKey, quoteColoringPrefetch } from './prefet
 const MAX_COMPOSE = 10
 
 function errorPage(ctx: StudioGenerateContext, config: StudioConfig, tag: StudioTag, message: string, instruction: string): StudioPageOutput {
-  const header = drawHeader(contentBox(ctx), config, tag, instruction)
+  const header = drawHeaderOverFullWidth(contentBox(ctx), config, tag, instruction)
   return {
     pageRole: 'single',
     objects: [
@@ -95,7 +95,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
   const tag: StudioTag = { templateKey: QC_TEMPLATE_KEY, instanceId: ctx.instanceId, pageRole: 'single' }
   const fail = (message: string) => [errorPage(ctx, config, tag, message, instruction)]
 
-  const header = drawHeader(contentBox(ctx), config, tag, instruction)
+  const header = drawHeaderOverFullWidth(contentBox(ctx), config, tag, instruction)
   const box = qcPanelInBody(header.body, header.objects.length > 0)
   if (!qcPanelFits(box)) return fail(QC_PAGE_TOO_SMALL_MESSAGE)
 

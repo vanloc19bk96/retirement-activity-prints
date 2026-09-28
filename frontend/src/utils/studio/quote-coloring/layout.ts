@@ -1,6 +1,6 @@
 import type { StudioConfig, StudioConfigLayoutContext } from '@/types/studio-template.types'
 import { DPI } from '@/types/canvas-settings.types'
-import { contentBox, measureHeaderHeight, type Box } from '../studio-layout'
+import { contentBox, measureHeaderHeightOverFullWidth, type Box } from '../studio-layout'
 import type { Bounds } from '../stained-glass/geometry'
 import { qcDetailSpec, qcInstructionOptions, type QcDetail } from './content'
 
@@ -33,7 +33,7 @@ export function qcPanelInBody(body: Box, headed: boolean): Box {
 /** The panel's box on a page, measured without drawing (for the form). */
 export function qcPanelBox(page: StudioConfigLayoutContext, config: StudioConfig, instruction: string): Box {
   const body = contentBox(page)
-  const header = measureHeaderHeight(config, instruction, body.width)
+  const header = measureHeaderHeightOverFullWidth(config, instruction, body.width)
   return qcPanelInBody({ ...body, top: body.top + header, height: body.height - header }, header > 0)
 }
 

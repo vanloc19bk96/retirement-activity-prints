@@ -262,13 +262,16 @@ function endRings(box: Box, radius: number, tag: StudioTag, name: string, extra:
  * The legend's icons
  * ------------------------------------------------------------------ */
 
+/** An icon's outline drawn inside its box: the stroke's outer half would otherwise print past the legend's edge. */
+const strokeInside = (box: Box, stroke: number): Box => ({ left: box.left + stroke / 2, top: box.top + stroke / 2, width: box.width - stroke, height: box.height - stroke })
+
 /** Two neighbouring stones numbered one after the other. */
 function legendPair(box: Box, legendSize: number, tag: StudioTag): StudioFabricObject[] {
   const side = box.height
   const radius = Math.round(side * 0.24)
   const stones: Box[] = [
-    { left: box.left, top: box.top, width: side, height: side },
-    { left: box.left + side + STONES_LEGEND_PAIR_GAP, top: box.top, width: side, height: side },
+    strokeInside({ left: box.left, top: box.top, width: side, height: side }, STUDIO_STROKE_HAIRLINE),
+    strokeInside({ left: box.left + side + STONES_LEGEND_PAIR_GAP, top: box.top, width: side, height: side }, STUDIO_STROKE_HAIRLINE),
   ]
   return [
     part(
@@ -276,7 +279,7 @@ function legendPair(box: Box, legendSize: number, tag: StudioTag): StudioFabricO
       'legend-stones',
     ),
     ...stones.map((b, k) =>
-      numberText({ value: STONES_LEGEND_PAIR[k]!, cx: b.left + side / 2, cy: b.top + side / 2, size: legendSize, weight: 700, tag, role: 'prompt', name: 'legend-number', extra: {} }),
+      numberText({ value: STONES_LEGEND_PAIR[k]!, cx: b.left + b.width / 2, cy: b.top + b.height / 2, size: legendSize, weight: 700, tag, role: 'prompt', name: 'legend-number', extra: {} }),
     ),
   ]
 }
@@ -284,7 +287,7 @@ function legendPair(box: Box, legendSize: number, tag: StudioTag): StudioFabricO
 /** The start stone, ringed twice, with its 1. */
 function legendEnd(box: Box, legendSize: number, tag: StudioTag): StudioFabricObject[] {
   return [
-    ...endRings(box, Math.round(box.width * 0.24), tag, 'legend-end', {}),
+    ...endRings(strokeInside(box, END_RING), Math.round(box.width * 0.24), tag, 'legend-end', {}),
     numberText({ value: 1, cx: box.left + box.width / 2, cy: box.top + box.height / 2, size: legendSize, weight: 700, tag, role: 'prompt', name: 'legend-number', extra: {} }),
   ]
 }

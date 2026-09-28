@@ -1,6 +1,6 @@
 import type { StudioConfig, StudioConfigLayoutContext } from '@/types/studio-template.types'
 import { DPI, PDF_POINTS_PER_INCH } from '@/types/canvas-settings.types'
-import { STUDIO_CONTENT_SAFE_INSET_X } from '@/constants/studio.constants'
+import { STUDIO_CONTENT_SAFE_INSET_X, STUDIO_PANEL_FOOT_AIR } from '@/constants/studio.constants'
 import { contentBox, insetHorizontal, measureHeaderHeight, type Box } from '../studio-layout'
 import { fabricTextHeight, hugTextBoxWidth, type FontSpec } from '../studio-text-metrics'
 import { GP_GARDENS, gpBedWord, gpFlowerWord, gpInstruction, gpLevelSpec, gpSignText, type GpLevel } from './content'
@@ -81,7 +81,7 @@ export function gpContentBox(page: StudioConfigLayoutContext): Box {
 /** The puzzle's panel inside what a heading left of the page (`body`, from `drawHeader`). */
 export function gpPanelInBody(body: Box, headed: boolean): Box {
   const air = headed ? GP_HEADER_AIR : 0
-  return { ...body, top: body.top + air, height: Math.max(1, body.height - air) }
+  return { ...body, top: body.top + air, height: Math.max(1, body.height - air - STUDIO_PANEL_FOOT_AIR) }
 }
 
 /** The panel on a page, measured without drawing (for the form and the page). */

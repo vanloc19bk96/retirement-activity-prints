@@ -7,7 +7,7 @@ import type {
 import { STUDIO_BODY_SIZE, STUDIO_DEFAULT_FONT, STUDIO_DIGIT_FONT } from '@/constants/studio.constants'
 import { kickOffFontFamilyLoading } from '@/utils/font-loader'
 import { resolveOwnerSalt } from '../_shared/uniqueness'
-import { boxCenterX, contentBox, drawHeader } from '../studio-layout'
+import { boxCenterX, contentBox, drawHeaderOverFullWidth } from '../studio-layout'
 import { buildText, type StudioTag } from '../studio-fabric-builders'
 import { rememberStudioContent, studioAvoidList, studioVarietyKey } from '../studio-variety'
 import { PL_CONFIG_SCHEMA } from './config'
@@ -34,7 +34,7 @@ const varietyKey = (level: string) => studioVarietyKey(PL_TEMPLATE_KEY, level)
 const ATTEMPTS = 8
 
 function errorPage(ctx: StudioGenerateContext, config: StudioConfig, tag: StudioTag, message: string, instruction: string): StudioPageOutput {
-  const header = drawHeader(contentBox(ctx), config, tag, instruction)
+  const header = drawHeaderOverFullWidth(contentBox(ctx), config, tag, instruction)
   return {
     pageRole: 'single',
     objects: [
@@ -80,7 +80,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
   const tag: StudioTag = { templateKey: PL_TEMPLATE_KEY, instanceId: ctx.instanceId, pageRole: 'single' }
   const fail = (message: string) => [errorPage(ctx, config, tag, message, instruction)]
 
-  const header = drawHeader(contentBox(ctx), config, tag, instruction)
+  const header = drawHeaderOverFullWidth(contentBox(ctx), config, tag, instruction)
   const panel = plPanelInBody(header.body, header.objects.length > 0)
   const book = parsePlBook(parsePlRemoteData(ctx.remoteData).bookLabels)
   // All but a few of the level's pictures: a seller's next book opens with
@@ -110,7 +110,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
         objects: [...header.objects, puzzle],
         // Drawn afresh for the key, where the puzzle page put it: only the
         // how-to line goes, and the picture and its name appear.
-        answerSourceObjects: [...drawHeader(contentBox(ctx), config, tag, '').objects, buildPlPuzzle({ design, plan, tag, font })],
+        answerSourceObjects: [...drawHeaderOverFullWidth(contentBox(ctx), config, tag, '').objects, buildPlPuzzle({ design, plan, tag, font })],
       },
     ]
   }

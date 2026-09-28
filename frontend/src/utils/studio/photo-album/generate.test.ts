@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import type { StudioConfig, StudioFabricObject, StudioGenerateContext } from '@/types/studio-template.types'
 import { STUDIO_TEMPLATES, buildDefaultConfig } from '@/constants/studio-templates'
-import { STUDIO_ANSWER_INK_MONO_TEMPLATES, STUDIO_INK } from '@/constants/studio.constants'
+import { STUDIO_ANSWER_INK_MONO_TEMPLATES, STUDIO_INK, STUDIO_PANEL_FOOT_AIR } from '@/constants/studio.constants'
 import { DPI } from '@/types/canvas-settings.types'
 import { resetObjectCounter } from '../studio-fabric-builders'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
@@ -481,6 +481,9 @@ describe('photo-album pages', () => {
         expect(paDigitAir(plan.cell, plan.digitSize)).toBeGreaterThanOrEqual(paDigitAirNeeded(plan.cell))
         expect(paCornerClearance(plan.border, plan.cornerLeg)).toBeGreaterThanOrEqual(PA_CORNER_CLEAR)
         if (plan.legend) expect(plan.legend.box.top - (plan.frame.top + plan.frame.height)).toBeGreaterThanOrEqual(PA_LEGEND_GAP)
+        // Clear of the safe area's foot, never flush on its guide.
+        const ctx = kdpCtx(w, h)
+        expect(plan.block.top + plan.block.height, `${level} ${w}x${h}`).toBeLessThanOrEqual(ctx.pageHeight - ctx.margin.bottom - STUDIO_PANEL_FOOT_AIR)
         const line = plan.caption.lineRight - plan.caption.lineLeft
         for (const p of paLevelPictures(level)) expect(paTextWidth(p.name, PA_NAME_SIZE, paTextSpec(FONT, 700))).toBeLessThanOrEqual(line)
       }

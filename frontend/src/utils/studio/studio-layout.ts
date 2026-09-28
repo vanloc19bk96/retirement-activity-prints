@@ -18,6 +18,7 @@ import {
   STUDIO_INSTRUCTION_GAP,
   STUDIO_INK_MUTED,
   STUDIO_DEFAULT_FONT,
+  STUDIO_CONTENT_SAFE_INSET_X,
 } from '@/constants/studio.constants'
 
 export interface Box {
@@ -438,4 +439,29 @@ export function drawHeader(
   }
 
   return { objects, body }
+}
+
+/**
+ * `drawHeader` for a page whose body spans the whole safe width (the picture
+ * games). The heading and how-to line keep to the shared inset column — set
+ * on the full width, a fitted heading or a wrapped line ran its ink onto the
+ * safe-area guide — while the body under them keeps every pixel of width.
+ */
+export function drawHeaderOverFullWidth(
+  box: Box,
+  config: StudioConfig,
+  tag: StudioTag,
+  instructionText: string,
+): { objects: StudioFabricObject[]; body: Box } {
+  const header = drawHeader(insetHorizontal(box, STUDIO_CONTENT_SAFE_INSET_X), config, tag, instructionText)
+  return { objects: header.objects, body: { ...header.body, left: box.left, width: box.width } }
+}
+
+/** `measureHeaderHeight` for `drawHeaderOverFullWidth`: `contentWidth` is the full body width. */
+export function measureHeaderHeightOverFullWidth(
+  config: StudioConfig,
+  instructionText: string,
+  contentWidth: number,
+): number {
+  return measureHeaderHeight(config, instructionText, contentWidth - STUDIO_CONTENT_SAFE_INSET_X * 2)
 }

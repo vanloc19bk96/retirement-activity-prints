@@ -7,7 +7,7 @@
 } from '@/types/studio-template.types'
 import { STUDIO_BODY_SIZE, STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
 import { createRngFromSeedInput, resolveOwnerSalt } from '../_shared/uniqueness'
-import { boxCenterX, contentBox, drawHeader, type Box } from '../studio-layout'
+import { boxCenterX, contentBox, drawHeaderOverFullWidth, type Box } from '../studio-layout'
 import { buildText, type StudioTag } from '../studio-fabric-builders'
 import { rememberStudioContent, studioAvoidList, studioVarietyKey } from '../studio-variety'
 import type { Bounds } from '../stained-glass/geometry'
@@ -51,7 +51,7 @@ const SIMILAR_ENOUGH = 0.5
 const RECHOOSE = 2
 
 function errorPage(ctx: StudioGenerateContext, config: StudioConfig, tag: StudioTag, message: string): StudioPageOutput {
-  const header = drawHeader(contentBox(ctx), config, tag, '')
+  const header = drawHeaderOverFullWidth(contentBox(ctx), config, tag, '')
   return {
     pageRole: 'single',
     objects: [
@@ -88,7 +88,7 @@ function puzzlePage(options: {
   font: string
 }): StudioFabricObject[] {
   const { ctx, config, tag, size, lines, differences, instruction, label, canonical, font } = options
-  const header = drawHeader(contentBox(ctx), config, tag, instruction)
+  const header = drawHeaderOverFullWidth(contentBox(ctx), config, tag, instruction)
   const layout = sdPlacePanels(header.body, size, header.objects.length > 0, SD_TALLY_AIR + SD_TALLY_H)
   const marks = differences.map((d) => d.mark)
   const tallyBox: Box = { left: layout.foot.left, top: layout.foot.top + SD_TALLY_AIR, width: layout.foot.width, height: SD_TALLY_H }
@@ -116,7 +116,7 @@ function answerPage(options: {
   font: string
 }): StudioFabricObject[] {
   const { ctx, config, tag, size, lines, differences, canonical, font } = options
-  const header = drawHeader(contentBox(ctx), config, tag, '')
+  const header = drawHeaderOverFullWidth(contentBox(ctx), config, tag, '')
   const headed = header.objects.length > 0
   const labels = differences.map((d) => d.label)
   // Measure the legend against all the room the pictures leave, then centre the whole block.
@@ -164,7 +164,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
   const fail = (message: string) => [errorPage(ctx, config, tag, message)]
 
   // Sized for the longest instruction this page could print, so the pictures always fit.
-  const widest = drawHeader(contentBox(ctx), config, tag, sdInstruction(config, ownerSalt, fair.count[1]))
+  const widest = drawHeaderOverFullWidth(contentBox(ctx), config, tag, sdInstruction(config, ownerSalt, fair.count[1]))
   const size = sdPanelSize(widest.body, widest.objects.length > 0)
   if (!size) return fail(SD_PAGE_TOO_SMALL_MESSAGE)
   const panel: Bounds = { minX: 0, minY: 0, maxX: size.w, maxY: size.h }

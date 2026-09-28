@@ -1,6 +1,6 @@
 import type { StudioConfig, StudioConfigLayoutContext } from '@/types/studio-template.types'
 import { DPI } from '@/types/canvas-settings.types'
-import { contentBox, estimateTextBoxWidth, measureHeaderHeight, type Box } from '../studio-layout'
+import { contentBox, estimateTextBoxWidth, measureHeaderHeightOverFullWidth, type Box } from '../studio-layout'
 import { PL_MYSTERY_PROMPT, plDesign, plInstruction, plLevelPictures, plLevelSpec, type PlDesign, type PlLevel } from './content'
 import type { Clues } from './solver'
 
@@ -226,7 +226,7 @@ export function plFitWarning(options: { page?: StudioConfigLayoutContext; config
 /** The panel on a page, measured without drawing (for the form). */
 export function plPanelFor(page: StudioConfigLayoutContext, config: StudioConfig): Box {
   const body = contentBox(page)
-  const header = measureHeaderHeight(config, plInstruction(config), body.width)
+  const header = measureHeaderHeightOverFullWidth(config, plInstruction(config), body.width)
   return plPanelInBody({ ...body, top: body.top + header, height: body.height - header }, header > 0)
 }
 

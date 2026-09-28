@@ -1,7 +1,7 @@
 import type { StudioConfig, StudioConfigLayoutContext } from '@/types/studio-template.types'
 import { DPI } from '@/types/canvas-settings.types'
 import { STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
-import { contentBox, measureHeaderHeight, type Box } from '../studio-layout'
+import { contentBox, measureHeaderHeightOverFullWidth, type Box } from '../studio-layout'
 import { hugTextBoxWidth } from '../studio-text-metrics'
 import type { Bounds } from '../stained-glass/geometry'
 import { cbnInstructionOptions, cbnLevelSpec, type CbnKeyStyle, type CbnLevel } from './content'
@@ -158,7 +158,7 @@ export const boxToBounds = (b: Box): Bounds => ({ minX: b.left, minY: b.top, max
 /** The layout on a page, measured without drawing (for the form). */
 export function cbnLayoutFor(page: StudioConfigLayoutContext, config: StudioConfig, instruction: string, keyStyle: CbnKeyStyle): CbnPageLayout {
   const body = contentBox(page)
-  const header = measureHeaderHeight(config, instruction, body.width)
+  const header = measureHeaderHeightOverFullWidth(config, instruction, body.width)
   const font = String(config.fontFamily ?? STUDIO_DEFAULT_FONT)
   return cbnLayoutInBody({ ...body, top: body.top + header, height: body.height - header }, header > 0, font, keyStyle)
 }

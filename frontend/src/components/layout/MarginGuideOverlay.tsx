@@ -31,14 +31,16 @@ export function MarginGuideOverlay({
       className="pointer-events-none absolute inset-0 z-[2]"
       aria-hidden="true"
     >
+      {/* An outline, not a border: a border paints over the safe area's own
+          edge, so content set flush on it looked like it printed past it. */}
       <div
-        className="absolute border-2 border-dashed"
+        className="absolute"
         style={{
           top: safeTop,
           left: safeLeft,
           right: safeRight,
           bottom: safeBottom,
-          borderColor: '#ef4444',
+          outline: '2px dashed #ef4444',
         }}
       />
     </div>

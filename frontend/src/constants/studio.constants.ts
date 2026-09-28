@@ -79,6 +79,13 @@ export const STUDIO_INSTRUCTION_GAP = 32
 export const STUDIO_SECTION_GAP = 40
 /** Extra left/right inset inside the safe area — shared by all studio games. */
 export const STUDIO_CONTENT_SAFE_INSET_X = 28
+/**
+ * Air a grid game's puzzle panel keeps above the safe area's foot. Grids
+ * sized to fill the panel otherwise set their legend flush on that edge, and
+ * the half of a stroke that falls outside its box ran up to 3px past it, onto
+ * the editor's safe-area guide.
+ */
+export const STUDIO_PANEL_FOOT_AIR = 6
 
 export const STUDIO_DEFAULT_FONT = 'PT Serif'
 /**
