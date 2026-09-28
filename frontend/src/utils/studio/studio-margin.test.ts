@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { STUDIO_SAFE_AREA_PADDING_Y } from '@/constants/studio.constants'
 import { DPI, calculateMarginGuide } from '@/types/canvas-settings.types'
 import { resolveStudioMarginForPage, studioMarginGuideForPageCount } from './studio-margin'
 
@@ -58,8 +59,9 @@ describe('resolveStudioMarginForPage', () => {
     expect(recto.right).toBe(outside)
     expect(verso.left).toBe(outside)
     expect(verso.right).toBe(inches(0.5))
-    expect(recto.top).toBe(outside)
-    expect(recto.bottom).toBe(outside)
+    // Head and foot keep a little air inside the guide.
+    expect(recto.top).toBe(outside + STUDIO_SAFE_AREA_PADDING_Y)
+    expect(recto.bottom).toBe(outside + STUDIO_SAFE_AREA_PADDING_Y)
     // Same column either side, so a sheet laid out once can be shifted across.
     expect(width - recto.left - recto.right).toBe(width - verso.left - verso.right)
   })

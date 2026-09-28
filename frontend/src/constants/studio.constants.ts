@@ -77,6 +77,12 @@ export const STUDIO_TITLE_TOP_INSET = 24
 export const STUDIO_TITLE_GAP = 24
 export const STUDIO_INSTRUCTION_GAP = 32
 export const STUDIO_SECTION_GAP = 40
+/**
+ * Air every studio page keeps inside the editor's safe area, top and bottom.
+ * Without it frames, rules and corner ornaments landed flush on the
+ * safe-area guide and read as clipped.
+ */
+export const STUDIO_SAFE_AREA_PADDING_Y = 10
 /** Extra left/right inset inside the safe area — shared by all studio games. */
 export const STUDIO_CONTENT_SAFE_INSET_X = 28
 /**

@@ -1,3 +1,4 @@
+import { STUDIO_SAFE_AREA_PADDING_Y } from '@/constants/studio.constants'
 import { DPI, getInsideMarginInches, type MarginGuide } from '@/types/canvas-settings.types'
 import type { StudioMargin } from '@/types/studio-template.types'
 import {
@@ -24,10 +25,19 @@ export function toStudioMargin(
 
 /** Fallback when safe-area math cannot produce a valid box. */
 export const STUDIO_FALLBACK_MARGIN: StudioMargin = {
-  top: 36,
+  top: 36 + STUDIO_SAFE_AREA_PADDING_Y,
   right: 36,
-  bottom: 36,
+  bottom: 36 + STUDIO_SAFE_AREA_PADDING_Y,
   left: 48,
+}
+
+/** Left/right already carry `STUDIO_CONTENT_SAFE_INSET_X`; only the head and foot need air. */
+function padStudioMargin(margin: StudioMargin): StudioMargin {
+  return {
+    ...margin,
+    top: margin.top + STUDIO_SAFE_AREA_PADDING_Y,
+    bottom: margin.bottom + STUDIO_SAFE_AREA_PADDING_Y,
+  }
 }
 
 export function resolveStudioMarginForPage(options: {
@@ -44,7 +54,8 @@ export function resolveStudioMarginForPage(options: {
     isLeftPage,
   })
   if (!safe) return STUDIO_FALLBACK_MARGIN
-  return toStudioMargin(safe, pageWidth, pageHeight)
+  // Pad inside the guide so nothing a generator draws sits on its edge.
+  return padStudioMargin(toStudioMargin(safe, pageWidth, pageHeight))
 }
 
 /**
