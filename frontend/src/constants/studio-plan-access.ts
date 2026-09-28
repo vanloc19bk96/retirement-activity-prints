@@ -29,7 +29,7 @@ export const STARTER_STUDIO_TEMPLATE_KEYS: readonly string[] = [
   'color-by-number',
 
   // Trivia (1)
-  'price-check',
+  'office-relics',
 
   // Party (1)
   'would-you-rather',

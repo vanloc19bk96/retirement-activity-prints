@@ -108,10 +108,10 @@ const MIN_ROWS_PER_COLUMN = 2
 /** Air between columns, as a share of the printable column. */
 const COLUMN_GUTTER_SHARE = 0.045
 
-/** Ink weight of a picture, against its size — Lucide draws 2 in a 24 box. */
-const ICON_STROKE_RATIO = 0.055
-const ICON_STROKE_MIN = 2.2
-const ICON_STROKE_MAX = 5
+/** Ink weight of a picture, in px — one light weight at every picture size. */
+const ICON_STROKE = 2
+/** Air around a picture's box, against its size — room for the stroke overhang. */
+const ICON_PAD_RATIO = 0.055
 
 /** Width of the "+" cell between two pictures, against picture size. */
 const PLUS_WIDTH_RATIO = 0.42
@@ -217,11 +217,8 @@ export function pictureRebusMetrics(options: {
   const { iconSize, slotWidth } = options
   return {
     iconSize,
-    iconStroke: Math.min(
-      ICON_STROKE_MAX,
-      Math.max(ICON_STROKE_MIN, Math.round(iconSize * ICON_STROKE_RATIO * 10) / 10),
-    ),
-    iconPad: Math.ceil(iconSize * ICON_STROKE_RATIO),
+    iconStroke: ICON_STROKE,
+    iconPad: Math.ceil(iconSize * ICON_PAD_RATIO),
     plusWidth: Math.round(iconSize * PLUS_WIDTH_RATIO),
     plusGap: Math.round(iconSize * PLUS_GAP_RATIO),
     plusFont: Math.round(iconSize * PLUS_FONT_RATIO),

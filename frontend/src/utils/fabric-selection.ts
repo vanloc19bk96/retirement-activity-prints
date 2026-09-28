@@ -2,7 +2,7 @@ import { ActiveSelection, Group, type Canvas } from 'fabric'
 
 import { normalizeFontFamilyForToolbar } from '@/constants/font-families'
 import { isFabricActiveSelection } from '@/utils/fabric-active-selection'
-import { isLucideIconGroup } from '@/utils/lucide-fabric'
+import { isLucideIconGroup, isLucideViewBoxFrame } from '@/utils/lucide-fabric'
 import {
   isPhosphorIconGroup,
   readPhosphorPrimaryFill,
@@ -83,12 +83,15 @@ const selectionIncludesLucideIcon = (target: any): boolean => {
   return isLucideIconGroup(target)
 }
 
+/** First drawn child of a Lucide group — child 0 is the invisible viewBox frame (stroke 0). */
+const readLucideGlyphChild = (obj: any): any =>
+  ((obj.getObjects?.() ?? []) as unknown[]).find((child) => !isLucideViewBoxFrame(child))
+
 const readStrokeWidth = (obj: any): number | undefined => {
   // Phosphor duotone is fill geometry — stroke width does not drive appearance.
   if (isPhosphorIconGroup(obj)) return 0
   if (isLucideIconGroup(obj)) {
-    const firstChild = (obj.getObjects?.() ?? [])[0] as any
-    const groupValue = firstChild?.strokeWidth
+    const groupValue = readLucideGlyphChild(obj)?.strokeWidth
     return typeof groupValue === 'number' && Number.isFinite(groupValue) ? groupValue : undefined
   }
   if (isStudioShapeGroup(obj)) {
@@ -103,8 +106,7 @@ const readStrokeWidth = (obj: any): number | undefined => {
 const readStrokeColor = (obj: any): string | undefined => {
   if (isPhosphorIconGroup(obj)) return readPhosphorPrimaryFill(obj)
   if (isLucideIconGroup(obj)) {
-    const firstChild = (obj.getObjects?.() ?? [])[0] as any
-    const groupStroke = firstChild?.stroke
+    const groupStroke = readLucideGlyphChild(obj)?.stroke
     return typeof groupStroke === 'string' && groupStroke.length > 0 ? groupStroke : undefined
   }
   if (isStudioShapeGroup(obj)) {
@@ -192,7 +194,7 @@ const canEditCornerRadius = (obj: any): boolean => String(obj?.type ?? '') === '
 const readBorderStyle = (obj: any): ShapeBorderStyle | undefined => {
   if (isPhosphorIconGroup(obj)) return 'solid'
   const dash = isLucideIconGroup(obj)
-    ? (obj.getObjects?.() ?? [])[0]?.strokeDashArray
+    ? readLucideGlyphChild(obj)?.strokeDashArray
     : isStudioShapeGroup(obj)
       ? (readStudioShapeGroupInkChild(obj) as { strokeDashArray?: unknown } | null)?.strokeDashArray
       : obj?.strokeDashArray

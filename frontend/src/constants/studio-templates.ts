@@ -64,7 +64,6 @@ import { twoTruthsFibTemplate } from '@/utils/studio/two-truths-and-a-fib/genera
 import { retireeQuizTemplate } from '@/utils/studio/what-kind-of-retiree/generate'
 import { fillInFunniesTemplate } from '@/utils/studio/fill-in-funnies/generate'
 import { riddlesJokesTemplate } from '@/utils/studio/riddles-and-jokes/generate'
-import { priceCheckTemplate } from '@/utils/studio/price-check/generate'
 import { officeRelicsTemplate } from '@/utils/studio/office-relics/generate'
 import { stainedGlassTemplate } from '@/utils/studio/stained-glass/generate'
 import { quoteColoringTemplate } from '@/utils/studio/quote-coloring/generate'
@@ -130,7 +129,6 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   quoteColoringTemplate,
 
   // Trivia
-  priceCheckTemplate,
   occupationTriviaTemplate,
   officeRelicsTemplate,
   workLingoTemplate,

@@ -54,7 +54,6 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'top-five-guess',
   'two-truths-and-a-fib',
   'riddles-and-jokes',
-  'price-check',
   'office-relics',
   'work-lingo-match',
   'occupation-trivia',
