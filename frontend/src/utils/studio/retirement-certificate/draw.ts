@@ -1,14 +1,15 @@
-import type { StudioFabricObject } from '@/types/studio-template.types'
+import type { StudioFabricObject, StudioRole } from '@/types/studio-template.types'
 import { STUDIO_INK, STUDIO_RULE } from '@/constants/studio.constants'
 import {
   buildCircle,
+  buildGroup,
   buildPolygon,
   buildPolyline,
   buildRect,
   buildText,
   type StudioTag,
 } from '../studio-fabric-builders'
-import { boxBottom, boxCenterX, boxRight, type Box } from '../studio-layout'
+import { boxBottom, boxCenterX, boxRight, unionObjectBounds, type Box } from '../studio-layout'
 import { fabricTextHeight } from '../studio-text-metrics'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import type { CrEmblem, CrFrame, CrSeal } from './content'
@@ -28,6 +29,21 @@ const FINE = 1
 
 const withLabel = (obj: StudioFabricObject, label?: string): StudioFabricObject =>
   label ? { ...obj, data: { ...obj.data, [STUDIO_CONTENT_LABEL_KEY]: label } } : obj
+
+/**
+ * Everything drawn since `from` becomes one group, so an ornament built from a
+ * dozen strokes — a frame's corners, an emblem and its arms, the seal — moves
+ * in the editor as the one thing it is. A single mark is left as it is: a
+ * group of one is only a wrapper. Children keep their own roles and content
+ * labels; labels are read recursively, so nothing has to stay loose for them.
+ */
+function groupSince(ctx: DrawContext, from: number, role: StudioRole = 'decoration') {
+  if (ctx.objects.length - from <= 1) return
+  const parts = ctx.objects.slice(from)
+  const bounds = unionObjectBounds(parts)
+  if (!bounds) return
+  ctx.objects.splice(from, parts.length, buildGroup(parts, bounds, ctx.tag, role))
+}
 
 /** A hairline drawn as a filled strip, so it prints crisp at any zoom. */
 function rule(ctx: DrawContext, left: number, top: number, width: number, height = 1) {
@@ -144,8 +160,17 @@ const corners = (b: Box) => [
  * The certificate frame: an outer rule at the safe area and a finer inner
  * rule, dressed at the corners in one of seven quiet styles. Everything stays
  * within `FRAME_DEPTH` of the outer edge, well clear of the text.
+ *
+ * Drawn as one group, so the rules and their corner dressing cannot drift
+ * apart in the editor. The design label stays on the outer rule inside it.
  */
 export function drawFrame(ctx: DrawContext, frame: Box, style: CrFrame, label: string) {
+  const before = ctx.objects.length
+  drawFrameParts(ctx, frame, style, label)
+  groupSince(ctx, before, 'structure')
+}
+
+function drawFrameParts(ctx: DrawContext, frame: Box, style: CrFrame, label: string) {
   const inner = inset(frame, 6)
   switch (style) {
     case 'double':
@@ -400,7 +425,10 @@ const EMBLEMS: Record<CrEmblem, EmblemDraw> = {
   },
 }
 
-/** The small line-art emblem over the heading, with hairlines either side where it is narrow. */
+/**
+ * The small line-art emblem over the heading, with hairlines either side where
+ * it is narrow — all one group. The emblem's label stays on its first stroke.
+ */
 export function drawEmblem(ctx: DrawContext, block: CrBlock, area: Box, emblem: CrEmblem, label: string) {
   const spec = EMBLEMS[emblem]
   const h = block.box.height
@@ -417,6 +445,7 @@ export function drawEmblem(ctx: DrawContext, block: CrBlock, area: Box, emblem: 
     rule(ctx, left - gap - arm, y, arm)
     rule(ctx, left + w + gap, y, arm)
   }
+  groupSince(ctx, before)
 }
 
 /** Width an emblem takes, for the preflight. */
@@ -427,9 +456,21 @@ export const emblemWidth = (emblem: CrEmblem, h: number) => Math.round(h * EMBLE
 /**
  * A line-art seal between the signature lines: a shaped edge, an inner ring
  * and the retirement year (or a star when the year is not known). No fill,
- * no tiny lettering — it stays crisp in black and white.
+ * no tiny lettering — it stays crisp in black and white. One group, year and
+ * all, so the seal moves as a stamp rather than a scatter of rings and dots.
  */
 export function drawSeal(
+  ctx: DrawContext,
+  seal: { cx: number; cy: number; radius: number },
+  style: Exclude<CrSeal, 'none'>,
+  year: string,
+) {
+  const before = ctx.objects.length
+  drawSealParts(ctx, seal, style, year)
+  groupSince(ctx, before)
+}
+
+function drawSealParts(
   ctx: DrawContext,
   seal: { cx: number; cy: number; radius: number },
   style: Exclude<CrSeal, 'none'>,
@@ -521,8 +562,9 @@ export function drawText(ctx: DrawContext, text: CrText, centerX: number, top: n
   )
 }
 
-/** Hairline, small diamond, hairline — under a printed name. */
+/** Hairline, small diamond, hairline — under a printed name, as one group. */
 export function drawDivider(ctx: DrawContext, block: CrBlock) {
+  const before = ctx.objects.length
   const { box } = block
   const cx = boxCenterX(box)
   const mid = box.top + box.height / 2
@@ -544,6 +586,7 @@ export function drawDivider(ctx: DrawContext, block: CrBlock) {
     true,
     FINE,
   )
+  groupSince(ctx, before)
 }
 
 /** A blank name: one long line to write on, at the foot of a tall writing room. */
@@ -562,12 +605,19 @@ export function drawPromotionArms(ctx: DrawContext, block: CrBlock, area: Box) {
   rule(ctx, boxRight(block.box) + gap, y, arm)
 }
 
-/** Signature and date lines, their labels, a printed date and the seal. */
+/**
+ * Signature and date lines, their labels, a printed date and the seal.
+ *
+ * Each slot — its line, the label under it and any date printed on it — is one
+ * group, so a label or a date can never be left behind the line it names.
+ */
 export function drawSignRow(ctx: DrawContext, plan: CrPlan, seal: CrSeal, year: string) {
   for (const slot of plan.sign.slots) {
+    const before = ctx.objects.length
     rule(ctx, slot.left, slot.lineY, slot.width)
     drawText(ctx, slot.label, slot.left + slot.width / 2, slot.labelTop)
     if (slot.date && slot.dateTop != null) drawText(ctx, slot.date, slot.left + slot.width / 2, slot.dateTop)
+    groupSince(ctx, before, 'structure')
   }
   if (plan.sign.seal && seal !== 'none') drawSeal(ctx, plan.sign.seal, seal, year)
 }

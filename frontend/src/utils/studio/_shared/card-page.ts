@@ -358,6 +358,9 @@ export interface WriteInSlot {
  * Each slot carries a hidden `answer` object, so the solution page is built by
  * the Studio's own answer-key pass rather than by a second layout routine that
  * could disagree with this one.
+ *
+ * Each slot (prefix, line or box, and its hidden answer) is one group, so a
+ * seller moves a write-in whole and the answer never drifts off its line.
  */
 export function drawWriteInSlots(options: {
   field: Box
@@ -425,12 +428,13 @@ export function drawWriteInSlots(options: {
       pt(12),
     )
     const baseline = Math.round(inner.top + inner.height * 0.66)
+    const parts: StudioFabricObject[] = []
     let textLeft = inner.left
     let textWidth = inner.width
 
     if (slot.prefix) {
       const prefixWidth = estimateTextBoxWidth(slot.prefix, size, inner.width * 0.55)
-      objects.push(
+      parts.push(
         buildText(
           {
             left: inner.left,
@@ -450,7 +454,7 @@ export function drawWriteInSlots(options: {
     }
 
     if (affordance === 'boxedField') {
-      objects.push(
+      parts.push(
         buildRect(
           {
             left: textLeft,
@@ -468,7 +472,7 @@ export function drawWriteInSlots(options: {
         ),
       )
     } else {
-      objects.push(
+      parts.push(
         buildLine(
           {
             x1: textLeft,
@@ -484,7 +488,7 @@ export function drawWriteInSlots(options: {
       )
     }
 
-    objects.push(
+    parts.push(
       buildText(
         {
           left: textLeft + textWidth / 2,
@@ -501,6 +505,8 @@ export function drawWriteInSlots(options: {
         'answer',
       ),
     )
+    const bounds = unionObjectBounds(parts)
+    if (bounds) objects.push(buildGroup(parts, bounds, tag, 'structure'))
   })
 
   return objects

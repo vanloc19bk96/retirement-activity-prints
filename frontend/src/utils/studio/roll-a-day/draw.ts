@@ -5,8 +5,8 @@ import {
   STUDIO_RULE_MEDIUM,
   STUDIO_STROKE_NORMAL,
 } from '@/constants/studio.constants'
-import { buildCircle, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
-import type { Box } from '../studio-layout'
+import { buildCircle, buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import { unionObjectBounds, type Box } from '../studio-layout'
 import { fabricTextHeight, hugTextBoxWidth } from '../studio-text-metrics'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import { RD_FACES, RD_HEADINGS, type RdEntry, type RdSide, type RdTable } from './content'
@@ -67,6 +67,18 @@ export function spacedHeight(plan: RdPagePlan, spacing: RdSpacing): number {
   return blockHeight(plan, spacing.rowH) + gapCount(plan) * spacing.extraGap
 }
 
+/**
+ * Draws with `ctx` pointed at a fresh list and pushes what it drew as one
+ * group, so a seller drags or deletes the block whole in the editor. Nothing
+ * drawn, nothing pushed.
+ */
+function grouped(ctx: DrawContext, draw: (inner: DrawContext) => void): void {
+  const parts: StudioFabricObject[] = []
+  draw({ ...ctx, objects: parts })
+  const bounds = unionObjectBounds(parts)
+  if (bounds) ctx.objects.push(buildGroup(parts, bounds, ctx.tag, 'structure'))
+}
+
 function rule(ctx: DrawContext, left: number, top: number, width: number, height: number, fill: string) {
   ctx.objects.push(
     buildRect(
@@ -90,8 +102,15 @@ const PIPS: Readonly<Record<number, readonly (readonly [number, number])[]>> = {
   6: [[LO, LO], [LO, MID], [LO, HI], [HI, LO], [HI, MID], [HI, HI]],
 }
 
-/** A die face in black ink: a rounded square and its pips, as on the die in hand. */
-function drawDie(ctx: DrawContext, left: number, top: number, face: number) {
+/**
+ * A die face in black ink: a rounded square and its pips, as on the die in
+ * hand. Grouped, so a pip cannot be nudged off its face.
+ */
+function drawDie(outer: DrawContext, left: number, top: number, face: number) {
+  grouped(outer, (ctx) => drawDieParts(ctx, left, top, face))
+}
+
+function drawDieParts(ctx: DrawContext, left: number, top: number, face: number) {
   const size = ctx.plan.metrics.die
   ctx.objects.push({
     ...buildRect(
@@ -128,70 +147,105 @@ function drawDie(ctx: DrawContext, left: number, top: number, face: number) {
  * rows — a die face, its activity beside it, a hairline under each so the eye
  * tracks from face to activity. Each activity is stamped so later runs can
  * avoid it. Returns the table's bottom.
+ *
+ * The table is one group; inside it the heading and its rule are one piece and
+ * each row — die, activity and the hairline under it — is another, so a seller
+ * can move the whole table or pull out a single row.
  */
 function drawSection(
-  ctx: DrawContext,
+  outer: DrawContext,
   side: RdSide,
   entries: readonly RdEntry[],
   left: number,
   top: number,
   spacing: RdSpacing,
 ): number {
-  const { plan, font } = ctx
+  let bottom = top
+  grouped(outer, (ctx) => {
+    bottom = drawSectionParts(ctx, side, entries, left, top, spacing)
+  })
+  return bottom
+}
+
+function drawSectionParts(
+  table: DrawContext,
+  side: RdSide,
+  entries: readonly RdEntry[],
+  left: number,
+  top: number,
+  spacing: RdSpacing,
+): number {
+  const { plan, font } = table
   const { metrics } = plan
   const heading = RD_HEADINGS[side]
-  ctx.objects.push(
-    buildText(
-      {
-        left,
-        top,
-        text: heading,
-        width: hugTextBoxWidth(heading, metrics.headFont, plan.blockWidth, boldSpec(font)),
-        fontFamily: font,
-        fontSize: metrics.headFont,
-        fontWeight: 700,
-        lineHeight: 1,
-      },
-      ctx.tag,
-      'decoration',
-    ),
-  )
   const ruleTop = Math.round(top + metrics.headH + metrics.headGap)
-  rule(ctx, left, ruleTop, plan.blockWidth, HEADING_RULE, STUDIO_INK)
+  grouped(table, (ctx) => {
+    ctx.objects.push(
+      buildText(
+        {
+          left,
+          top,
+          text: heading,
+          width: hugTextBoxWidth(heading, metrics.headFont, plan.blockWidth, boldSpec(font)),
+          fontFamily: font,
+          fontSize: metrics.headFont,
+          fontWeight: 700,
+          lineHeight: 1,
+        },
+        ctx.tag,
+        'decoration',
+      ),
+    )
+    rule(ctx, left, ruleTop, plan.blockWidth, HEADING_RULE, STUDIO_INK)
+  })
   const rowsTop = ruleTop + HEADING_RULE
 
   entries.forEach((entry, index) => {
-    const rowTop = rowsTop + index * spacing.rowH
-    drawDie(ctx, left, Math.round(rowTop + (spacing.rowH - metrics.die) / 2), entry.face)
-    const lines = breakActivity(entry.activity, plan, font)
-    const textH = fabricTextHeight(lines.length, metrics.font, ACTIVITY_LINE_HEIGHT)
-    ctx.objects.push({
-      ...buildText(
-        {
-          left: left + metrics.die + metrics.dieGap,
-          top: Math.round(rowTop + (spacing.rowH - textH) / 2),
-          text: lines.join('\n'),
-          width: Math.floor(plan.textWidth),
-          fontFamily: font,
-          fontSize: metrics.font,
-          lineHeight: ACTIVITY_LINE_HEIGHT,
-        },
-        ctx.tag,
-        'prompt',
-      ),
-      data: { [STUDIO_CONTENT_LABEL_KEY]: entry.activity },
-    })
-    rule(ctx, left, Math.round(rowTop + spacing.rowH) - 1, plan.blockWidth, 1, STUDIO_RULE_MEDIUM)
+    grouped(table, (ctx) => drawRow(ctx, entry, left, rowsTop + index * spacing.rowH, spacing))
   })
   return rowsTop + entries.length * spacing.rowH
 }
 
-/** "I rolled:  Morning ☐   Afternoon ☐" — a box for each number rolled. */
-function drawWriteIn(ctx: DrawContext, left: number, top: number) {
-  const { metrics } = ctx.plan
+/** One row of a table: its die, the activity beside it, the hairline under it. */
+function drawRow(ctx: DrawContext, entry: RdEntry, left: number, rowTop: number, spacing: RdSpacing) {
+  const { plan, font } = ctx
+  const { metrics } = plan
+  drawDie(ctx, left, Math.round(rowTop + (spacing.rowH - metrics.die) / 2), entry.face)
+  const lines = breakActivity(entry.activity, plan, font)
+  const textH = fabricTextHeight(lines.length, metrics.font, ACTIVITY_LINE_HEIGHT)
+  ctx.objects.push({
+    ...buildText(
+      {
+        left: left + metrics.die + metrics.dieGap,
+        top: Math.round(rowTop + (spacing.rowH - textH) / 2),
+        text: lines.join('\n'),
+        width: Math.floor(plan.textWidth),
+        fontFamily: font,
+        fontSize: metrics.font,
+        lineHeight: ACTIVITY_LINE_HEIGHT,
+      },
+      ctx.tag,
+      'prompt',
+    ),
+    data: { [STUDIO_CONTENT_LABEL_KEY]: entry.activity },
+  })
+  rule(ctx, left, Math.round(rowTop + spacing.rowH) - 1, plan.blockWidth, 1, STUDIO_RULE_MEDIUM)
+}
+
+/**
+ * "I rolled:  Morning ☐   Afternoon ☐" — a box for each number rolled.
+ *
+ * One group, with each word kept together with the box it labels.
+ */
+function drawWriteIn(outer: DrawContext, left: number, top: number) {
+  grouped(outer, (ctx) => drawWriteInParts(ctx, left, top))
+}
+
+function drawWriteInParts(line: DrawContext, left: number, top: number) {
+  const { metrics } = line.plan
   const box = metrics.writeBox
   const textTop = Math.round(top + (box - fabricTextHeight(1, metrics.font)) / 2)
-  const text = (x: number, value: string, bold: boolean) => {
+  const text = (ctx: DrawContext, x: number, value: string, bold: boolean) => {
     const width = hugTextBoxWidth(value, metrics.font, Infinity, bold ? boldSpec(ctx.font) : plainSpec(ctx.font))
     ctx.objects.push(
       buildText(
@@ -212,17 +266,20 @@ function drawWriteIn(ctx: DrawContext, left: number, top: number) {
     return width
   }
 
-  let x = left + text(left, WRITE_IN_LABEL, true) + 2 * metrics.writeLabelGap
+  let x = left + text(line, left, WRITE_IN_LABEL, true) + 2 * metrics.writeLabelGap
   WRITE_IN_PARTS.forEach((part, index) => {
-    x += text(x, part, false) + metrics.writeLabelGap
-    ctx.objects.push(
-      buildRect(
-        { left: Math.round(x), top, width: box, height: box, rx: 4, ry: 4, stroke: STUDIO_INK, strokeWidth: STUDIO_STROKE_NORMAL },
-        ctx.tag,
-        'decoration',
-      ),
-    )
-    x += box + (index < WRITE_IN_PARTS.length - 1 ? metrics.writeItemGap : 0)
+    grouped(line, (ctx) => {
+      x += text(ctx, x, part, false) + metrics.writeLabelGap
+      ctx.objects.push(
+        buildRect(
+          { left: Math.round(x), top, width: box, height: box, rx: 4, ry: 4, stroke: STUDIO_INK, strokeWidth: STUDIO_STROKE_NORMAL },
+          ctx.tag,
+          'decoration',
+        ),
+      )
+      x += box
+    })
+    if (index < WRITE_IN_PARTS.length - 1) x += metrics.writeItemGap
   })
 }
 

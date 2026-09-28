@@ -4,8 +4,14 @@ import {
   STUDIO_RULE_MEDIUM,
   STUDIO_STROKE_BOLD,
 } from '@/constants/studio.constants'
-import { toNonBreakingSpaces, type Box } from '../studio-layout'
-import { buildCircle, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import { toNonBreakingSpaces, unionObjectBounds, type Box } from '../studio-layout'
+import {
+  buildCircle,
+  buildGroup,
+  buildRect,
+  buildText,
+  type StudioTag,
+} from '../studio-fabric-builders'
 import { FABRIC_FONT_SIZE_MULT, hugTextBoxWidth } from '../studio-text-metrics'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import { TTF_LETTERS } from './content'
@@ -156,20 +162,40 @@ function blockHeight(ctx: DrawContext, set: FittedTtfSet): number {
     : puzzleBlockHeight(rows, ctx.plan.metrics)
 }
 
+/** Wraps `parts` in a group hugging their drawn extent; nothing to wrap, nothing pushed. */
+function pushGroup(out: StudioFabricObject[], parts: StudioFabricObject[], tag: StudioTag): void {
+  const bounds = unionObjectBounds(parts)
+  if (bounds) out.push(buildGroup(parts, bounds, tag, 'structure'))
+}
+
+/**
+ * One set as one group, so a seller drags, deletes or re-spaces a whole puzzle
+ * in the editor instead of chasing a heading and six loose lines of type.
+ *
+ * Inside it each lettered row is its own group — the letter, its statement
+ * and, on the fib's row, the hidden ring — so ungrouping a set hands back
+ * rows rather than glyphs, and the ring can never be nudged off the letter it
+ * marks. The heading and the answer page's correction stay direct children:
+ * each is one object already.
+ */
 function drawBlock(ctx: DrawContext, set: FittedTtfSet, index: number, left: number, top: number) {
   const { metrics } = ctx.plan
-  heading(ctx, set, index, left, top)
+  const block: DrawContext = { ...ctx, objects: [] }
+  heading(block, set, index, left, top)
   let y = top + titleHeight(metrics) + metrics.titleGap
   set.statements.forEach((statement, r) => {
     const lines = set.lines[r]!
-    row(ctx, TTF_LETTERS[r]!, lines, statement, left, Math.round(y))
-    if (r === set.fibIndex) ring(ctx, left, Math.round(y))
+    const line: DrawContext = { ...ctx, objects: [] }
+    row(line, TTF_LETTERS[r]!, lines, statement, left, Math.round(y))
+    if (r === set.fibIndex) ring(line, left, Math.round(y))
+    pushGroup(block.objects, line.objects, ctx.tag)
     y += statementHeight(lines.length, metrics) + metrics.rowGap
   })
   if (ctx.mode === 'answers') {
     const explanationTop = y - metrics.rowGap + metrics.explanationGap
-    explanation(ctx, set, left + metrics.letterW, Math.round(explanationTop))
+    explanation(block, set, left + metrics.letterW, Math.round(explanationTop))
   }
+  pushGroup(ctx.objects, block.objects, ctx.tag)
 }
 
 /**

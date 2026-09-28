@@ -83,16 +83,26 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext) {
 
 const clean = (text: unknown) => String(text ?? '').replace(/ /g, ' ')
 const oneLine = (text: string) => text.replace(/\n/g, ' ')
-const texts = (objects: StudioFabricObject[]) => objects.map((o) => oneLine(clean(o.text))).filter(Boolean)
+/** Every object on the page, with the item groups opened up. */
+const flatten = (objects: StudioFabricObject[]): StudioFabricObject[] =>
+  objects.flatMap((o) => (o.objects ? [o, ...flatten(o.objects)] : [o]))
+const texts = (objects: StudioFabricObject[]) =>
+  flatten(objects).map((o) => oneLine(clean(o.text))).filter(Boolean)
 const numbers = (objects: StudioFabricObject[]) => texts(objects).filter((t) => /^\d\.$/.test(t))
 
 const setups = new Map(RJ_FIXTURE_ITEMS.map((item) => [item.setup, item]))
 const answers = new Set(RJ_FIXTURE_ITEMS.map((item) => item.answer))
 const fixtureItems = () => selectRjItems(RJ_FIXTURE_ITEMS, { cap: 20 })
 
-/** The text object sitting on the same row as a number, right of it. */
+/**
+ * The text object sitting on the same row as a number, right of it.
+ *
+ * Only the number's own siblings are searched: children are stored relative to
+ * their group, so two items' texts share the same local `top`.
+ */
 function rowText(objects: StudioFabricObject[], numberObj: StudioFabricObject): string {
-  const row = objects.filter(
+  const siblings = flatten(objects).find((o) => o.objects?.includes(numberObj))?.objects ?? objects
+  const row = siblings.filter(
     (o) => o !== numberObj && o.type === 'textbox' && o.top === numberObj.top && o.left > numberObj.left,
   )
   expect(row).toHaveLength(1)
@@ -285,8 +295,8 @@ describe('riddles-and-jokes page', () => {
       for (const [w, h] of TRIMS) {
         const [page] = generate({ ...base, seed }, kdpCtx(w, h, RJ_FIXTURE, seed))
         const key = buildAnswerPage(page!.answerSourceObjects!, STUDIO_ANSWER_INK_MONO)
-        const puzzleNumbers = page!.objects.filter((o) => /^\d\.$/.test(clean(o.text)))
-        const keyNumbers = key.filter((o) => /^\d\.$/.test(clean(o.text)))
+        const puzzleNumbers = flatten(page!.objects).filter((o) => /^\d\.$/.test(clean(o.text)))
+        const keyNumbers = flatten(key).filter((o) => /^\d\.$/.test(clean(o.text)))
         expect(keyNumbers.map((o) => clean(o.text))).toEqual(puzzleNumbers.map((o) => clean(o.text)))
 
         puzzleNumbers.forEach((numberObj, i) => {
@@ -296,7 +306,7 @@ describe('riddles-and-jokes page', () => {
         })
 
         // Answers are revealed on the key, in bold — told apart without colour.
-        const revealed = key.filter((o) => answers.has(oneLine(clean(o.text))))
+        const revealed = flatten(key).filter((o) => answers.has(oneLine(clean(o.text))))
         expect(revealed).toHaveLength(puzzleNumbers.length)
         expect(revealed.every((o) => o.visible === true && o.fontWeight === 700)).toBe(true)
         // The how-to line stays on the puzzle page.
@@ -308,13 +318,32 @@ describe('riddles-and-jokes page', () => {
   it('stamps questions and answers so later pages can avoid them', () => {
     const [page] = generate(base, kdpCtx(6, 9))
     const labelsOf = (objects: StudioFabricObject[]) =>
-      objects.map((o) => o.data?.[STUDIO_CONTENT_LABEL_KEY]).filter((l): l is string => typeof l === 'string')
+      flatten(objects).map((o) => o.data?.[STUDIO_CONTENT_LABEL_KEY]).filter((l): l is string => typeof l === 'string')
     const puzzle = labelsOf(page!.objects)
     const key = labelsOf(page!.answerSourceObjects!)
     expect(puzzle.every((label) => setups.has(label))).toBe(true)
     expect(key.every((label) => answers.has(label))).toBe(true)
     expect(puzzle).toHaveLength(numbers(page!.objects).length)
     expect(key.map((answer) => [...setups.values()].find((i) => i.answer === answer)!.setup)).toEqual(puzzle)
+  })
+
+  it('groups each item, its number together with its question', () => {
+    for (const mode of ['puzzle', 'answers'] as const) {
+      const [page] = generate(base, kdpCtx(6, 9))
+      const objects = mode === 'puzzle' ? page!.objects : page!.answerSourceObjects!
+      const items = objects.filter((o) => o.type === 'group')
+      expect(items).toHaveLength(numbers(page!.objects).length)
+      items.forEach((item, index) => {
+        expect(item.studioRole).toBe('structure')
+        const [number, body, ...rest] = item.objects ?? []
+        expect(rest).toEqual([])
+        expect(clean(number?.text)).toBe(`${index + 1}.`)
+        expect(body?.data?.[STUDIO_CONTENT_LABEL_KEY]).toBeTypeOf('string')
+        expect(body?.studioRole).toBe(mode === 'puzzle' ? 'prompt' : 'answer')
+      })
+      // Nothing numbered is left loose beside the groups.
+      expect(objects.some((o) => /^\d\.$/.test(clean(o.text)))).toBe(false)
+    }
   })
 
   it('never lets more than two questions on a page open the same way', () => {

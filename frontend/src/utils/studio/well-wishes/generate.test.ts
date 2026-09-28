@@ -75,12 +75,25 @@ function run(config: StudioConfig, ctx: StudioGenerateContext): StudioPageOutput
   return wellWishesTemplate.generate({ ...config, seed: ctx.seed }, ctx)
 }
 
-const frames = (page: StudioPageOutput) => page.objects.filter((o) => o.studioRole === 'structure')
-const prompts = (page: StudioPageOutput) => page.objects.filter((o) => o.studioRole === 'prompt')
+/**
+ * Every drawn mark, with the box and ornament groups opened up and each child
+ * moved back to page coordinates (Fabric stores group children centre-relative).
+ */
+function leaves(objects: readonly StudioFabricObject[]): StudioFabricObject[] {
+  return objects.flatMap((obj) => {
+    if (obj.type !== 'group' || !obj.objects) return [obj]
+    const cx = obj.left + obj.width! / 2
+    const cy = obj.top + obj.height! / 2
+    return leaves(obj.objects.map((child) => ({ ...child, left: child.left + cx, top: child.top + cy })))
+  })
+}
+
+const frames = (page: StudioPageOutput) => leaves(page.objects).filter((o) => o.studioRole === 'structure')
+const prompts = (page: StudioPageOutput) => leaves(page.objects).filter((o) => o.studioRole === 'prompt')
 const title = (page: StudioPageOutput) => page.objects.find(isStudioHeaderTitle)?.text?.replace(/ /g, ' ')
 const labels = (pages: StudioPageOutput[]) =>
   pages.flatMap((p) =>
-    p.objects.flatMap((o) => {
+    leaves(p.objects).flatMap((o) => {
       const label = o.data?.[STUDIO_CONTENT_LABEL_KEY]
       return typeof label === 'string' ? [label] : []
     }),
@@ -96,7 +109,7 @@ function frameBox(o: StudioFabricObject) {
 }
 
 const isErrorPage = (pages: StudioPageOutput[]) =>
-  pages.length === 1 && pages[0]!.objects.every((o) => o.studioRole !== 'structure')
+  pages.length === 1 && leaves(pages[0]!.objects).every((o) => o.studioRole !== 'structure')
 
 beforeEach(() => clearStudioRecentContent())
 
@@ -171,7 +184,7 @@ describe('well-wishes pages on every KDP trim', () => {
               expect(o.fontSize).toBeGreaterThanOrEqual(LABEL_FONT_MIN)
             }
             // Black and grey ink only.
-            for (const o of page.objects) {
+            for (const o of leaves(page.objects)) {
               for (const paint of [o.fill, o.stroke]) {
                 if (!paint || paint === 'transparent') continue
                 expect(['#000000', '#111827', '#6B7280', '#9CA3AF', '#FFFFFF']).toContain(paint)
@@ -186,7 +199,7 @@ describe('well-wishes pages on every KDP trim', () => {
   it('keeps writing lines at least wide-ruled and three or more per box', () => {
     const out = run(base, kdpCtx(6, 9))
     for (const page of out) {
-      const lines = page.objects
+      const lines = leaves(page.objects)
         .filter((o) => o.type === 'rect' && o.height === 1 && o.fill === '#9CA3AF')
         .map((o) => o.top)
         .sort((a, b) => a - b)
@@ -223,6 +236,42 @@ describe('well-wishes pages on every KDP trim', () => {
   })
 })
 
+describe('well-wishes structure', () => {
+  it('groups each box, with its prompt and sign-off kept on their lines', () => {
+    const looks = new Set<string>()
+    for (let seed = 1; seed <= 30; seed++) {
+      clearStudioRecentContent()
+      const out = run(base, kdpCtx(6, 9, seed * 7919))
+      const design = labels(out).find((l) => l.startsWith('d:'))!
+      looks.add(design.split('/').slice(0, 2).join('/'))
+      out.forEach((page) => {
+        const boxes = page.objects.filter((o) => o.type === 'group' && o.studioRole === 'structure')
+        expect(boxes).toHaveLength(frames(page).length)
+        // Nothing of a box is left loose on the page.
+        expect(page.objects.filter((o) => o.studioRole === 'prompt' || o.studioRole === 'structure')).toEqual(boxes)
+        for (const box of boxes) {
+          const [frame, prompt, ...rest] = box.objects ?? []
+          const signoff = rest.pop()!
+          // A frame drawn in several strokes travels as one piece.
+          expect(leaves([frame!]).filter((o) => o.studioRole === 'structure')).toHaveLength(1)
+          expect(leaves([prompt!]).filter((o) => o.studioRole === 'prompt')).toHaveLength(1)
+          expect(rest.length).toBeGreaterThanOrEqual(3)
+          expect(rest.every((o) => o.type === 'rect' && o.height === 1)).toBe(true)
+          expect(signoff.type).toBe('group')
+          expect(signoff.objects!.map((o) => o.type)).toEqual(['textbox', 'rect'])
+        }
+        // The flourish under each heading is one piece too: two hairlines and the motif.
+        const ornaments = page.objects.filter((o) => o.type === 'group' && o.studioRole === 'decoration')
+        expect(ornaments).toHaveLength(title(page) ? 1 : 0)
+        for (const ornament of ornaments) expect(ornament.objects).toHaveLength(3)
+      })
+    }
+    // The sample covers every frame style, tab and inset prompts alike.
+    expect(new Set([...looks].map((l) => l.split('/')[0])).size).toBe(6)
+    expect(new Set([...looks].map((l) => l.split('/')[1])).size).toBeGreaterThan(1)
+  })
+})
+
 describe('well-wishes headings and personalization', () => {
   it('picks one of its own headings when the title is left as the default', () => {
     const out = run(base, kdpCtx(6, 9))
@@ -234,7 +283,7 @@ describe('well-wishes headings and personalization', () => {
   it('names the retiree in the heading or intro when a name is given', () => {
     for (let seed = 1; seed <= 12; seed++) {
       const out = run({ ...base, retireeName: 'Linda' }, kdpCtx(6, 9, seed))
-      const texts = out[0]!.objects.map((o) => o.text ?? '').join(' ').replace(/ /g, ' ')
+      const texts = leaves(out[0]!.objects).map((o) => o.text ?? '').join(' ').replace(/ /g, ' ')
       expect(texts).toContain('Linda')
     }
   })

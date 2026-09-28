@@ -1,7 +1,7 @@
 import type { StudioFabricObject } from '@/types/studio-template.types'
 import { STUDIO_RULE_MEDIUM } from '@/constants/studio.constants'
-import type { Box } from '../studio-layout'
-import { buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import { unionObjectBounds, type Box } from '../studio-layout'
+import { buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import type { FittedRjItem } from './fit'
 import { TEXT_LINE_HEIGHT, itemNumber, textHeight, type RjPagePlan } from './layout'
@@ -87,6 +87,10 @@ function body(ctx: DrawContext, item: FittedRjItem, left: number, top: number) {
  * are capped in width and centred, so a letter page does not run questions
  * six inches across. A light rule halfway down each gap keeps two items apart
  * without relying on colour.
+ *
+ * Each item — its number and its text — is one group, so a seller drags or
+ * deletes a whole riddle in the editor rather than leaving its number behind.
+ * The separating rule belongs to the gap, not to either item, so it stays loose.
  */
 export function drawRjPage(
   objects: StudioFabricObject[],
@@ -115,8 +119,12 @@ export function drawRjPage(
   let top = Math.round(field.top + Math.min(Math.max(0, usable - stack), metrics.font * 0.8))
 
   items.forEach((item, index) => {
-    number(ctx, index, left, top)
-    body(ctx, item, left, top)
+    const parts: StudioFabricObject[] = []
+    const itemCtx: DrawContext = { ...ctx, objects: parts }
+    number(itemCtx, index, left, top)
+    body(itemCtx, item, left, top)
+    const bounds = unionObjectBounds(parts)
+    if (bounds) objects.push(buildGroup(parts, bounds, tag, 'structure'))
     top += heights[index]!
     if (index < gaps) {
       objects.push(

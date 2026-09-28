@@ -99,11 +99,24 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext) {
 const planFor = (w: number, h: number, config: StudioConfig = base) =>
   rnWorstCasePlan({ page: kdpCtx(w, h), config, instruction: instructionFor(config), font: FONT })
 
+/**
+ * Every drawn mark on the page, with the groups opened up and each child moved
+ * back to page coordinates — a group stores its children relative to its
+ * centre, and these tests measure where things land on the paper.
+ */
+function leaves(objects: StudioFabricObject[], dx = 0, dy = 0): StudioFabricObject[] {
+  return objects.flatMap((o) => {
+    const placed = { ...o, left: o.left + dx, top: o.top + dy }
+    if (!o.objects) return [placed]
+    return leaves(o.objects, placed.left + (o.width ?? 0) / 2, placed.top + (o.height ?? 0) / 2)
+  })
+}
+
 const texts = (objects: StudioFabricObject[]) =>
-  objects.map((o) => String(o.text ?? '').replace(/ /g, ' ')).filter(Boolean)
+  leaves(objects).map((o) => String(o.text ?? '').replace(/ /g, ' ')).filter(Boolean)
 
 const names = (objects: StudioFabricObject[]) =>
-  objects.filter((o) => typeof o.data?.[STUDIO_CONTENT_LABEL_KEY] === 'string')
+  leaves(objects).filter((o) => typeof o.data?.[STUDIO_CONTENT_LABEL_KEY] === 'string')
 
 function extent(o: StudioFabricObject) {
   const w = o.width ?? 0
@@ -193,6 +206,49 @@ describe('retired-name page', () => {
     expect(all).toContain(WRITE_IN_LABEL)
   })
 
+  it('groups each table by its rows, each key with its name, and the example and write-in', () => {
+    for (const [w, h] of TRIMS) {
+      const [page] = generate(base, kdpCtx(w, h))
+      const plan = planFor(w, h)!
+      const groups = page!.objects.filter((o) => o.type === 'group')
+      expect(groups, `${w}x${h}`).toHaveLength(2 + (plan.example ? 1 : 0) + (plan.writeIn ? 1 : 0))
+      const [letters, months] = groups
+      for (const [table, section, count] of [
+        [letters, plan.letters, RN_LETTERS.length],
+        [months, plan.months, RN_MONTHS.length],
+      ] as const) {
+        expect(table!.studioRole).toBe('structure')
+        const [heading, ...rows] = table!.objects ?? []
+        // The heading keeps its heavy rule.
+        expect(heading!.objects!.map((o) => o.type)).toEqual(['textbox', 'rect'])
+        expect(rows).toHaveLength(section.rows)
+        let entries = 0
+        for (const row of rows) {
+          const cells = row.objects!.slice(0, -1)
+          // Each row keeps the hairline its entries sit on, last.
+          expect(row.objects!.at(-1)!.type).toBe('rect')
+          for (const cell of cells) {
+            const [key, name, ...rest] = cell.objects ?? []
+            expect(rest).toEqual([])
+            expect(key!.data?.[STUDIO_CONTENT_LABEL_KEY]).toBeUndefined()
+            expect(name!.data?.[STUDIO_CONTENT_LABEL_KEY]).toBe(name!.text)
+          }
+          entries += cells.length
+        }
+        expect(entries).toBe(count)
+      }
+      const blocks = groups.slice(2)
+      if (plan.example) expect(texts([blocks.shift()!]).some((t) => t.startsWith('Example: '))).toBe(true)
+      if (plan.writeIn) {
+        expect(blocks[0]!.objects!.map((o) => o.type)).toEqual(['textbox', 'rect'])
+        expect(texts(blocks)).toEqual([WRITE_IN_LABEL])
+      }
+      // No name, key or rule is left loose on the page.
+      expect(page!.objects.some((o) => o.type === 'rect')).toBe(false)
+      expect(page!.objects.some((o) => o.data?.[STUDIO_CONTENT_LABEL_KEY])).toBe(false)
+    }
+  })
+
   it('has no hidden answers and no answer page', () => {
     const pages = generate(base, kdpCtx(6, 9))
     expect(pages).toHaveLength(1)
@@ -203,7 +259,7 @@ describe('retired-name page', () => {
   it('prints only black, white and grey', () => {
     const [page] = generate(base, kdpCtx(8.5, 11))
     const colours = new Set(
-      page!.objects.flatMap((o) => [o.fill, o.stroke]).filter((c): c is string => !!c && c !== 'transparent'),
+      leaves(page!.objects).flatMap((o) => [o.fill, o.stroke]).filter((c): c is string => !!c && c !== 'transparent'),
     )
     for (const colour of colours) {
       const hex = colour.replace('#', '')
@@ -221,7 +277,7 @@ describe('retired-name page', () => {
         expect(names(page!.objects)).toHaveLength(38)
         assertObjectsInSafeMargin(page!.objects, ctx)
 
-        const solid = page!.objects.filter((o) => o.type === 'textbox')
+        const solid = leaves(page!.objects).filter((o) => o.type === 'textbox')
         const boxes = solid.map(extent)
         for (let i = 0; i < boxes.length; i++) {
           for (let j = i + 1; j < boxes.length; j++) {

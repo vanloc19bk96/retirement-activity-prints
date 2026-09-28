@@ -1,7 +1,7 @@
 import type { StudioFabricObject } from '@/types/studio-template.types'
 import { STUDIO_INK, STUDIO_RULE_MEDIUM, STUDIO_STROKE_NORMAL } from '@/constants/studio.constants'
-import { buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
-import { toNonBreakingSpaces, type Box } from '../studio-layout'
+import { buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import { toNonBreakingSpaces, unionObjectBounds, type Box } from '../studio-layout'
 import { fabricTextHeight, hugTextBoxWidth } from '../studio-text-metrics'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import {
@@ -98,10 +98,22 @@ function label(
   return width
 }
 
+/**
+ * Draws into a fresh list and wraps whatever landed there in one group, so a
+ * seller drags or deletes a whole card, box or labelled line in the editor
+ * instead of chasing its loose parts. Nothing drawn, nothing pushed.
+ */
+function grouped(ctx: DrawContext, draw: (inner: DrawContext) => void) {
+  const parts: StudioFabricObject[] = []
+  draw({ ...ctx, objects: parts })
+  const bounds = unionObjectBounds(parts)
+  if (bounds) ctx.objects.push(buildGroup(parts, bounds, ctx.tag, 'structure'))
+}
+
 /** Where a handwritten line sits under a label's baseline. */
 const lineUnder = (ctx: DrawContext, baseline: number) => baseline + Math.round(ctx.plan.metrics.font * 0.12)
 
-/** "I began my year of firsts on: ________" */
+/** "I began my year of firsts on: ________" — one group, the label with its line. */
 function drawStart(ctx: DrawContext, top: number, height: number) {
   const { metrics, blockWidth, startLabel } = ctx.plan
   const lineY = top + height - 2
@@ -115,6 +127,10 @@ function drawStart(ctx: DrawContext, top: number, height: number) {
  * One week: the frame, "Week 12" and the date line across the top, the idea
  * (stamped so later runs can avoid it), then the notes lines. Everything is
  * set from the card's own top, so no part of a week can land on another page.
+ *
+ * The card is one group; inside it the "Date:" label and the line it sits on
+ * are a group of their own, so ungrouping a card never strands the label from
+ * its line.
  */
 function drawCard(ctx: DrawContext, week: FittedWfWeek, top: number, height: number, lines: number) {
   const { metrics, innerWidth, dateLabelW, dateLineW } = ctx.plan
@@ -130,11 +146,13 @@ function drawCard(ctx: DrawContext, week: FittedWfWeek, top: number, height: num
     maxWidth: innerWidth,
   })
   const lineLeft = right - dateLineW
-  label(ctx, DATE_LABEL, lineLeft - metrics.labelGap - dateLabelW, baseline, {
-    size: metrics.font,
-    maxWidth: dateLabelW,
+  grouped(ctx, (date) => {
+    label(date, DATE_LABEL, lineLeft - metrics.labelGap - dateLabelW, baseline, {
+      size: metrics.font,
+      maxWidth: dateLabelW,
+    })
+    rule(date, lineLeft, lineUnder(date, baseline), dateLineW, STUDIO_INK)
   })
-  rule(ctx, lineLeft, lineUnder(ctx, baseline), dateLineW, STUDIO_INK)
 
   // Pre-broken and set in a box exactly the measure it was broken to, so
   // Fabric has no reason to re-wrap it into a line the card did not reserve.
@@ -160,7 +178,10 @@ function drawCard(ctx: DrawContext, week: FittedWfWeek, top: number, height: num
   for (let line = 1; line <= lines; line++) rule(ctx, inner, notesTop + line * metrics.pitch, innerWidth)
 }
 
-/** "Looking Back on My Year of Firsts" (or its short form where it would not fit), then lines. */
+/**
+ * "Looking Back on My Year of Firsts" (or its short form where it would not
+ * fit), then lines. A prompted line is grouped with its prompt.
+ */
 function drawBox(ctx: DrawContext, block: Extract<WfBlock, { kind: 'box' }>) {
   const { metrics, innerWidth } = ctx.plan
   frame(ctx, block.top, block.height)
@@ -181,9 +202,11 @@ function drawBox(ctx: DrawContext, block: Extract<WfBlock, { kind: 'box' }>) {
     const prompt = prompts[line - 1]
     const promptW = prompt ? hugTextBoxWidth(prompt, metrics.font, Infinity, plainSpec(ctx.font)) : 0
     if (prompt && innerWidth - promptW - metrics.labelGap >= DATE_LINE_MIN) {
-      label(ctx, prompt, inner, y - Math.round(metrics.font * 0.12), { size: metrics.font, maxWidth: innerWidth })
-      const lineLeft = inner + promptW + metrics.labelGap
-      rule(ctx, lineLeft, y, inner + innerWidth - lineLeft)
+      grouped(ctx, (line) => {
+        label(line, prompt, inner, y - Math.round(metrics.font * 0.12), { size: metrics.font, maxWidth: innerWidth })
+        const lineLeft = inner + promptW + metrics.labelGap
+        rule(line, lineLeft, y, inner + innerWidth - lineLeft)
+      })
     } else {
       rule(ctx, inner, y, innerWidth)
     }
@@ -193,6 +216,7 @@ function drawBox(ctx: DrawContext, block: Extract<WfBlock, { kind: 'box' }>) {
 /**
  * Lay one page out in its body field, top down, exactly as the pagination
  * measured it: the same card shape on every page, centred in the column.
+ * Each block — the start line, a week's card, a reflection box — is one group.
  */
 export function drawWfPage(
   objects: StudioFabricObject[],
@@ -208,8 +232,10 @@ export function drawWfPage(
   }
   for (const block of page.blocks) {
     const top = field.top + block.top
-    if (block.kind === 'start') drawStart(ctx, top, block.height)
-    else if (block.kind === 'card') drawCard(ctx, block.week, top, block.height, block.lines)
-    else drawBox(ctx, { ...block, top })
+    grouped(ctx, (inner) => {
+      if (block.kind === 'start') drawStart(inner, top, block.height)
+      else if (block.kind === 'card') drawCard(inner, block.week, top, block.height, block.lines)
+      else drawBox(inner, { ...block, top })
+    })
   }
 }

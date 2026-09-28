@@ -80,8 +80,23 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext) {
 
 const clean = (text: unknown) => String(text ?? '').replace(/ /g, ' ')
 const oneLine = (text: string) => text.replace(/\n/g, ' ')
-const textboxes = (objects: StudioFabricObject[]) => objects.filter((o) => o.type === 'textbox')
-const texts = (objects: StudioFabricObject[]) => objects.map((o) => oneLine(clean(o.text))).filter(Boolean)
+
+/**
+ * Every drawn object with the entry groups opened up, placed where it prints.
+ * A group's children sit relative to its centre, so each is moved back by the
+ * group's centre, which is what lets `beside` still match a row by its top.
+ */
+function leaves(objects: readonly StudioFabricObject[], dx = 0, dy = 0): StudioFabricObject[] {
+  const at = (n: number) => Math.round(n * 1e6) / 1e6
+  return objects.flatMap((o) =>
+    o.type === 'group'
+      ? leaves(o.objects ?? [], dx + o.left + (o.width ?? 0) / 2, dy + o.top + (o.height ?? 0) / 2)
+      : [{ ...o, left: at(o.left + dx), top: at(o.top + dy) }],
+  )
+}
+
+const textboxes = (objects: StudioFabricObject[]) => leaves(objects).filter((o) => o.type === 'textbox')
+const texts = (objects: StudioFabricObject[]) => leaves(objects).map((o) => oneLine(clean(o.text))).filter(Boolean)
 const numbers = (objects: StudioFabricObject[]) => textboxes(objects).filter((o) => /^\d+\.$/.test(clean(o.text)))
 const letters = (objects: StudioFabricObject[]) => textboxes(objects).filter((o) => /^[A-Z]\.$/.test(clean(o.text)))
 
@@ -263,7 +278,7 @@ describe('work-lingo-match page', () => {
     expect([...list.values()].sort()).toEqual(phrases.map((phrase) => meaningOf.get(phrase)).sort())
     // Nothing on the page names a letter next to a phrase.
     expect(texts(objects).filter((t) => /^[A-Z]$/.test(t))).toHaveLength(0)
-    const boxes = objects.filter((o) => o.type === 'rect' && o.width === o.height)
+    const boxes = leaves(objects).filter((o) => o.type === 'rect' && o.width === o.height)
     expect(boxes).toHaveLength(phrases.length)
   })
 
@@ -291,7 +306,7 @@ describe('work-lingo-match page', () => {
         })
 
         // Letters are revealed on the key in bold — told apart without colour.
-        const revealed = key.filter((o) => /^[A-Z]$/.test(clean(o.text)))
+        const revealed = leaves(key).filter((o) => /^[A-Z]$/.test(clean(o.text)))
         expect(revealed).toHaveLength(puzzleNumbers.length)
         expect(revealed.every((o) => o.visible === true && o.fontWeight === 700)).toBe(true)
         expect(texts(key).some((t) => t === instructionFor(base))).toBe(false)
@@ -301,7 +316,7 @@ describe('work-lingo-match page', () => {
 
   it('stamps its phrases so later pages can avoid them', () => {
     const [page] = generate(base, kdpCtx(6, 9))
-    const labels = page!.objects
+    const labels = leaves(page!.objects)
       .map((o) => o.data?.[STUDIO_CONTENT_LABEL_KEY])
       .filter((label): label is string => typeof label === 'string')
     expect(labels).toHaveLength(numbers(page!.objects).length)
@@ -318,6 +333,57 @@ describe('work-lingo-match page', () => {
     const [page] = generate(base, kdpCtx(8.5, 11, thin))
     expect(page!.answerSourceObjects).toBeUndefined()
     expect(texts(page!.objects)).toContain(WL_BUILD_FAILED_MESSAGE)
+  })
+})
+
+describe('work-lingo-match object tree', () => {
+  const kids = (o: StudioFabricObject | undefined) => o?.objects ?? []
+
+  it('groups each phrase with its box and number, each meaning with its letter, each heading with its rule', () => {
+    for (const [w, h] of [[6, 9], [8.5, 11]] as const) {
+      const [page] = generate(base, kdpCtx(w, h))
+      const groups = page!.objects.filter((o) => o.type === 'group')
+      const count = numbers(page!.objects).length
+      // Nothing of a list is left loose: every phrase, number, meaning and box sits in a group.
+      expect(textboxes(page!.objects.filter((o) => o.type !== 'group')).filter((o) => /^(\d+|[A-Z])\.$/.test(clean(o.text)))).toEqual([])
+
+      const rows = groups.filter((g) => kids(g).some((o) => typeof o.data?.[STUDIO_CONTENT_LABEL_KEY] === 'string'))
+      expect(rows).toHaveLength(count)
+      rows.forEach((row, i) => {
+        const [box, number, phrase, ...rest] = kids(row)
+        expect(rest).toEqual([])
+        expect(box!.type === 'rect' && box!.width === box!.height).toBe(true)
+        expect(clean(number!.text)).toBe(`${i + 1}.`)
+        expect(phrase!.fontWeight).toBe(700)
+      })
+
+      const meanings = groups.filter((g) => /^[A-Z]\.$/.test(clean(kids(g)[0]?.text)))
+      expect(meanings).toHaveLength(count)
+      for (const meaning of meanings) expect(kids(meaning)).toHaveLength(2)
+
+      const headings = groups.filter((g) => kids(g).some((o) => o.charSpacing === 80))
+      expect(headings).toHaveLength(2)
+      for (const heading of headings) expect(kids(heading).map((o) => o.type)).toEqual(['textbox', 'rect'])
+    }
+  })
+
+  it('keeps each answer letter in its box on the key, inside that entry’s group', () => {
+    const [page] = generate(base, kdpCtx(6, 9))
+    const source = page!.answerSourceObjects!
+    const entries = source.filter((o) => o.type === 'group')
+    expect(entries).toHaveLength(numbers(page!.objects).length)
+    entries.forEach((entry, i) => {
+      const [box, number, phrase, meaning, ...rest] = kids(entry)
+      expect(rest).toEqual([])
+      expect(kids(box).map((o) => o.type)).toEqual(['rect', 'textbox'])
+      expect(kids(box)[1]!.studioRole).toBe('answer')
+      expect(clean(number!.text)).toBe(`${i + 1}.`)
+      expect(typeof phrase!.data?.[STUDIO_CONTENT_LABEL_KEY]).toBe('string')
+      expect(meaning!.fontStyle).toBe('italic')
+    })
+    // The group never takes the answer role itself; the key reveals the letter inside it.
+    expect(entries.every((entry) => entry.studioRole !== 'answer')).toBe(true)
+    expect(harvestAnswers(source)).toHaveLength(entries.length)
   })
 })
 

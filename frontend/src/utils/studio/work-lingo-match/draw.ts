@@ -1,7 +1,7 @@
 import type { StudioFabricObject } from '@/types/studio-template.types'
 import { STUDIO_INK, STUDIO_RULE_MEDIUM, STUDIO_STROKE_NORMAL } from '@/constants/studio.constants'
-import type { Box } from '../studio-layout'
-import { buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import { unionObjectBounds, type Box } from '../studio-layout'
+import { buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import { meaningsByLetter, type FittedWlPair } from './fit'
 import {
@@ -62,6 +62,27 @@ function text(
   )
 }
 
+/**
+ * Pushes `parts` as one group hugging their drawn extent, so a seller drags or
+ * deletes a phrase, a meaning or a heading whole in the editor. A lone part is
+ * pushed as it is: a group of one only adds a click.
+ */
+function pushGroup(objects: StudioFabricObject[], parts: StudioFabricObject[], tag: StudioTag) {
+  if (parts.length === 1) {
+    objects.push(parts[0]!)
+    return
+  }
+  const bounds = unionObjectBounds(parts)
+  if (bounds) objects.push(buildGroup(parts, bounds, tag, 'structure'))
+}
+
+/** Draws whatever `draw` adds as one group on `ctx.objects` (see `pushGroup`). */
+function grouped(ctx: DrawContext, draw: (inner: DrawContext) => void) {
+  const parts: StudioFabricObject[] = []
+  draw({ ...ctx, objects: parts })
+  pushGroup(ctx.objects, parts, ctx.tag)
+}
+
 /** A thin rule across a list; structure without colour. */
 function rule(ctx: DrawContext, left: number, width: number, top: number) {
   ctx.objects.push(
@@ -81,28 +102,33 @@ function rule(ctx: DrawContext, left: number, width: number, top: number) {
   )
 }
 
-/** A list heading in spaced capitals, with a rule under it. Returns the height used. */
+/**
+ * A list heading in spaced capitals, with a rule under it: one group, so the
+ * rule never strays from its heading. Returns the height used.
+ */
 function heading(ctx: DrawContext, label: string, left: number, width: number, top: number): number {
   const { metrics } = ctx.plan
-  ctx.objects.push(
-    buildText(
-      {
-        left,
-        top,
-        text: label,
-        width,
-        fontFamily: ctx.font,
-        fontSize: metrics.headingFont,
-        fontWeight: 700,
-        charSpacing: 80,
-        lineHeight: 1,
-        fill: STUDIO_INK,
-      },
-      ctx.tag,
-      'decoration',
-    ),
-  )
-  rule(ctx, left, width, top + metrics.headingFont + metrics.headingGap / 2)
+  grouped(ctx, (inner) => {
+    inner.objects.push(
+      buildText(
+        {
+          left,
+          top,
+          text: label,
+          width,
+          fontFamily: inner.font,
+          fontSize: metrics.headingFont,
+          fontWeight: 700,
+          charSpacing: 80,
+          lineHeight: 1,
+          fill: STUDIO_INK,
+        },
+        inner.tag,
+        'decoration',
+      ),
+    )
+    rule(inner, left, width, top + metrics.headingFont + metrics.headingGap / 2)
+  })
   return headingHeight(metrics)
 }
 
@@ -133,6 +159,10 @@ function box(ctx: DrawContext, top: number) {
  * set in a box exactly the measure it was broken to, so Fabric has no reason
  * to re-wrap it, and carries its wording as a content label so later pages in
  * the book can refuse to repeat it.
+ *
+ * On the key, `letter` is written in the box as an `answer` object, and the
+ * two are a group of their own, so the letter cannot be dragged out of its
+ * box. The caller wraps the row, with anything it adds, into the item's group.
  */
 function phraseRow(
   ctx: DrawContext,
@@ -141,10 +171,21 @@ function phraseRow(
   top: number,
   lines: readonly string[],
   width: number,
+  letter?: string,
 ) {
   const { metrics } = ctx.plan
   const lineTop = top + textOffset(metrics)
-  box(ctx, top)
+  grouped(ctx, (inner) => {
+    box(inner, top)
+    if (letter === undefined) return
+    inner.objects.push(
+      text(
+        inner,
+        { left: inner.left, top: lineTop, text: letter, width: metrics.boxSize, fontWeight: 700, textAlign: 'center' },
+        'answer',
+      ),
+    )
+  })
   ctx.objects.push(
     // `prompt`, not `decoration`: the numbers must survive onto the key.
     text(ctx, { left: ctx.left + metrics.markW, top: lineTop, text: pairNumber(index), width: metrics.numberW, fontWeight: 700 }),
@@ -176,21 +217,28 @@ function firstTop(field: Box, usable: number, stack: number, font: number): numb
 function drawPhrases(ctx: DrawContext, pairs: readonly FittedWlPair[], top: number, extra: number): number {
   const { metrics, phraseWidth } = ctx.plan
   pairs.forEach((pair, index) => {
-    phraseRow(ctx, pair, index, top, pair.phraseLines, phraseWidth)
+    grouped(ctx, (row) => phraseRow(row, pair, index, top, pair.phraseLines, phraseWidth))
     top += phraseRowHeight(pair.phraseLines.length, metrics)
     if (index < pairs.length - 1) top = Math.round(top + metrics.rowGap + extra)
   })
   return top
 }
 
-/** Lettered meanings down from `top`, A first, with `extra` added to every gap. */
+/**
+ * Lettered meanings down from `top`, A first, with `extra` added to every gap.
+ * Each letter and its meaning are one group.
+ */
 function drawMeanings(ctx: DrawContext, meanings: readonly FittedWlPair[], top: number, extra: number) {
   const { metrics, meaningLeft, meaningWidth } = ctx.plan
   const left = ctx.left + meaningLeft
   meanings.forEach((pair, index) => {
-    ctx.objects.push(
-      text(ctx, { left, top, text: `${pair.letter}.`, width: metrics.letterW, fontWeight: 700 }),
-      text(ctx, { left: left + metrics.letterW, top, text: pair.meaningLines.join('\n'), width: meaningWidth }),
+    pushGroup(
+      ctx.objects,
+      [
+        text(ctx, { left, top, text: `${pair.letter}.`, width: metrics.letterW, fontWeight: 700 }),
+        text(ctx, { left: left + metrics.letterW, top, text: pair.meaningLines.join('\n'), width: meaningWidth }),
+      ],
+      ctx.tag,
     )
     top += textHeight(pair.meaningLines.length, metrics)
     if (index < meanings.length - 1) top = Math.round(top + metrics.meaningGap + extra)
@@ -248,6 +296,7 @@ function drawPuzzle(ctx: DrawContext, field: Box, pairs: readonly FittedWlPair[]
  * `answer` object in bold — the key reveals it in its own ink — and the exact
  * meaning from the puzzle set in italics under the phrase, so the key reads
  * "1. Circle back · C · Return to the topic later" without turning back.
+ * Each entry (box and letter, number, phrase, meaning) is one group.
  */
 function drawAnswers(ctx: DrawContext, field: Box, pairs: readonly FittedWlPair[]) {
   const { metrics, bottomGuard, keyPhraseWidth, keyWidth } = ctx.plan
@@ -262,32 +311,21 @@ function drawAnswers(ctx: DrawContext, field: Box, pairs: readonly FittedWlPair[
   let top = firstTop(field, usable, content + extra * gaps, metrics.font)
 
   pairs.forEach((pair, index) => {
-    phraseRow(ctx, pair, index, top, pair.keyPhraseLines, keyPhraseWidth)
-    ctx.objects.push(
-      text(
-        ctx,
-        {
-          left: ctx.left,
-          top: top + textOffset(metrics),
-          text: pair.letter,
-          width: metrics.boxSize,
-          fontWeight: 700,
-          textAlign: 'center',
-        },
-        'answer',
-      ),
-    )
-    top += phraseRowHeight(pair.keyPhraseLines.length, metrics) + metrics.innerGap
-    ctx.objects.push(
-      text(ctx, {
-        left: ctx.left + metrics.markW,
-        top,
-        text: pair.keyLines.join('\n'),
-        width: keyWidth,
-        fontStyle: 'italic',
-      }),
-    )
-    top += textHeight(pair.keyLines.length, metrics)
+    const rowTop = top
+    const meaningTop = rowTop + phraseRowHeight(pair.keyPhraseLines.length, metrics) + metrics.innerGap
+    grouped(ctx, (row) => {
+      phraseRow(row, pair, index, rowTop, pair.keyPhraseLines, keyPhraseWidth, pair.letter)
+      row.objects.push(
+        text(row, {
+          left: row.left + metrics.markW,
+          top: meaningTop,
+          text: pair.keyLines.join('\n'),
+          width: keyWidth,
+          fontStyle: 'italic',
+        }),
+      )
+    })
+    top = meaningTop + textHeight(pair.keyLines.length, metrics)
     if (index < gaps) top = Math.round(top + metrics.rowGap + extra)
   })
 }

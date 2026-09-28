@@ -120,12 +120,11 @@ interface PageOptions {
 }
 
 /**
- * The wheel and the nine slots — same geometry on both pages.
- *
- * The solution tucks the revealed word into the rule group. The puzzle leaves
- * those letters beside it, still hidden, so the key can reveal them in place.
+ * The wheel and the nine slots — same geometry, and the same object tree, on
+ * both pages. The slot letters ride in the slot group on each: hidden answers
+ * on the puzzle, the revealed word on the solution.
  */
-function drawSharedBlocks(options: PageOptions, groupSlotLetters = false): {
+function drawSharedBlocks(options: PageOptions): {
   objects: StudioFabricObject[]
   work: Box
 } {
@@ -146,14 +145,13 @@ function drawSharedBlocks(options: PageOptions, groupSlotLetters = false): {
         tag,
         canonicalKey: wordWheelCanonicalKey(puzzle),
       }),
-      ...drawWordWheelSlots({
+      drawWordWheelSlots({
         area: bands.slots,
         plan: plan.slots,
         target: puzzle.target,
         font,
         tag,
         firstLetterGiven: level.firstLetterGiven,
-        groupLettersWithRules: groupSlotLetters,
       }),
     ],
     work: bands.work,
@@ -185,7 +183,7 @@ export function drawWordWheelPuzzlePage(options: PageOptions): StudioFabricObjec
 
 export function drawWordWheelSolutionPage(options: PageOptions): StudioFabricObject[] {
   const { sheet, font, tag } = options
-  const shared = drawSharedBlocks(options, true)
+  const shared = drawSharedBlocks(options)
   return [
     ...shared.objects,
     drawWordWheelList({

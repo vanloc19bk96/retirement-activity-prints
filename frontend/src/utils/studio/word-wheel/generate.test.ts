@@ -11,6 +11,7 @@ import {
   STUDIO_ANSWER_INK_MONO_TEMPLATES,
 } from '@/constants/studio.constants'
 import { resetObjectCounter } from '../studio-fabric-builders'
+import { toNonBreakingSpaces } from '../studio-layout'
 import { buildAnswerPage, harvestAnswers } from '../studio-answer-key'
 import { withStudioPageHeader } from '../studio-page-header'
 import { contentFingerprint } from '../studio-content-fingerprint'
@@ -583,30 +584,45 @@ describe('word wheel — puzzle page and solution page', () => {
     }
   })
 
-  it('groups the nine-letter word rules so they move as one block', () => {
-    const { page, puzzle } = renderSheet(kdpCtx(6, 9))
-    const ruleGroups = page.objects.filter(
-      (obj) =>
+  /**
+   * The nine-letter word's caption, rules and letters as one flat group, found
+   * by content: the letters (every textbox but the caption) must spell the word
+   * in order, one rule under each.
+   */
+  const slotGroupsOf = (objects: StudioFabricObject[], target: string) =>
+    objects.filter((obj) => {
+      const children = obj.objects ?? []
+      const texts = children.filter((child) => child.type === 'textbox')
+      const letters = texts
+        .filter((child) => child.text !== toNonBreakingSpaces(SLOT_LABEL))
+        .map((child) => String(child.text ?? ''))
+        .join('')
+      const rules = children.filter((child) => child.type === 'rect')
+      return (
         obj.type === 'group' &&
-        (obj.objects ?? []).length === puzzle.target.length &&
-        (obj.objects ?? []).every((child) => child.type === 'rect'),
-    )
-    expect(ruleGroups).toHaveLength(1)
+        children.length === 1 + target.length * 2 &&
+        texts[0]?.text === toNonBreakingSpaces(SLOT_LABEL) &&
+        letters === target &&
+        rules.length === target.length
+      )
+    })
+
+  it('groups the nine-letter word with its caption and rules on the puzzle page', () => {
+    const { page, puzzle } = renderSheet(kdpCtx(6, 9))
+    const slotGroups = slotGroupsOf(page.objects, puzzle.target)
+    expect(slotGroups).toHaveLength(1)
+    // The letters ride in the group still hidden; nothing is left loose beside it.
+    const hidden = (slotGroups[0]!.objects ?? []).filter((child) => child.studioRole === 'answer')
+    expect(hidden.length).toBeGreaterThan(0)
+    expect(hidden.every((child) => child.visible === false)).toBe(true)
+    expect(page.objects.some((obj) => obj.studioRole === 'answer')).toBe(false)
+    expect(page.objects.some((obj) => obj.text === toNonBreakingSpaces(SLOT_LABEL))).toBe(false)
   })
 
   it('groups the solution word with the lines under it, and the word list as one block', () => {
     const { page, puzzle, sheet } = renderSheet(kdpCtx(6, 9))
     const solution = page.answerSourceObjects ?? []
-    const slotGroups = solution.filter((obj) => {
-      const children = obj.objects ?? []
-      const letters = children
-        .filter((child) => child.type === 'textbox')
-        .map((child) => String(child.text ?? ''))
-        .join('')
-      const rules = children.filter((child) => child.type === 'rect')
-      return obj.type === 'group' && letters === puzzle.target && rules.length === puzzle.target.length
-    })
-    expect(slotGroups).toHaveLength(1)
+    expect(slotGroupsOf(solution, puzzle.target)).toHaveLength(1)
 
     const listGroups = solution.filter(
       (obj) =>

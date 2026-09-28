@@ -61,8 +61,9 @@ const MAX_BOOK_CONTENT_LABELS = 400
  * that write prose need the finer grain — the same question on page 3 and page
  * 41 under a different sheet — so their generators stamp each printed item's
  * text as `data.studioContentLabel`, and their prefetch reads it back here.
- * Top-level objects only, like the hash scan. Capped from the end, so a very
- * long book keeps its most recent pages in view.
+ * Unlike the hash scan this descends into groups: a question is grouped with
+ * its number and answer lines, so its label sits on a child. Capped from the
+ * end, so a very long book keeps its most recent pages in view.
  */
 export function collectStudioContentLabels(
   store: CanvasStateStore,
@@ -71,18 +72,22 @@ export function collectStudioContentLabels(
 ): string[] {
   const labels: string[] = []
   const seen = new Set<string>()
-  for (let pageIndex = 0; pageIndex < pageCount; pageIndex++) {
-    const json = store.getSerialized(pageIndex) as StoredCanvasJson | null
-    const objects = Array.isArray(json?.objects) ? json.objects : []
+  const walk = (objects: unknown[]): void => {
     for (const raw of objects) {
       if (!raw || typeof raw !== 'object') continue
       const obj = raw as StudioFabricObject
       if (obj.studioTemplateKey !== templateKey) continue
       const label = obj.data?.[STUDIO_CONTENT_LABEL_KEY]
-      if (typeof label !== 'string' || !label.trim() || seen.has(label)) continue
-      seen.add(label)
-      labels.push(label)
+      if (typeof label === 'string' && label.trim() && !seen.has(label)) {
+        seen.add(label)
+        labels.push(label)
+      }
+      if (Array.isArray(obj.objects)) walk(obj.objects)
     }
+  }
+  for (let pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+    const json = store.getSerialized(pageIndex) as StoredCanvasJson | null
+    walk(Array.isArray(json?.objects) ? json.objects : [])
   }
   return labels.slice(-MAX_BOOK_CONTENT_LABELS)
 }

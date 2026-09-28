@@ -83,11 +83,25 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext) {
   return careerNumbersTemplate.generate(config, ctx)
 }
 
+/**
+ * Every mark on the page with the row groups opened up, each moved to where it
+ * prints: a group keeps its children relative to its own centre. A motif icon
+ * is itself a group of Lucide paths but stays one mark, as a seller sees it.
+ */
+function marksOf(objects: StudioFabricObject[], dx = 0, dy = 0): StudioFabricObject[] {
+  return objects.flatMap((o) => {
+    const placed = { ...o, left: o.left + dx, top: o.top + dy }
+    if (!o.objects || o.data?.source === 'lucide-icon') return [placed]
+    return marksOf(o.objects, placed.left + (o.width ?? 0) / 2, placed.top + (o.height ?? 0) / 2)
+  })
+}
+
 const textOf = (o: StudioFabricObject) => String(o.text ?? '').replace(/ /g, ' ')
-const texts = (pages: StudioPageOutput[]) => pages.flatMap((p) => p.objects.map(textOf))
+const texts = (pages: StudioPageOutput[]) => pages.flatMap((p) => marksOf(p.objects).map(textOf))
 const questionsOn = (objects: StudioFabricObject[]) =>
-  objects.filter((o) => typeof o.data?.[CBN_QUESTION_KEY] === 'number')
-const tagged = (objects: StudioFabricObject[], key: string) => objects.filter((o) => o.data?.[key] !== undefined)
+  marksOf(objects).filter((o) => typeof o.data?.[CBN_QUESTION_KEY] === 'number')
+const tagged = (objects: StudioFabricObject[], key: string) =>
+  marksOf(objects).filter((o) => o.data?.[key] !== undefined)
 const numbersOf = (pages: StudioPageOutput[]) =>
   pages.flatMap((p) => questionsOn(p.objects).map((o) => o.data![CBN_QUESTION_KEY] as number))
 const headingOf = (page: StudioPageOutput) =>
@@ -172,7 +186,7 @@ describe.each(TRIMS)('on a %s x %s trim', (w, h) => {
   it('stamps every printed question so later runs can avoid it', () => {
     const pages = generate(base, ctx)
     const labels = pages.flatMap((p) =>
-      p.objects.filter((o) => typeof o.data?.[STUDIO_CONTENT_LABEL_KEY] === 'string').map((o) => o.data![STUDIO_CONTENT_LABEL_KEY]),
+      marksOf(p.objects).filter((o) => typeof o.data?.[STUDIO_CONTENT_LABEL_KEY] === 'string').map((o) => o.data![STUDIO_CONTENT_LABEL_KEY]),
     )
     expect(labels).toHaveLength(CBN_DEFAULT_COUNT)
     expect(new Set(labels).size).toBe(CBN_DEFAULT_COUNT)
@@ -202,7 +216,7 @@ describe('the page', () => {
 
   it('prints in black ink with grey writing lines only: no fills that print as blocks', () => {
     const pages = generate({ ...base, questions: 20 }, kdpCtx(6, 9))
-    for (const o of pages.flatMap((p) => p.objects)) {
+    for (const o of pages.flatMap((p) => marksOf(p.objects))) {
       if (o.data?.[CBN_MOTIF_KEY]) continue
       // The shared how-to line is the Studio's muted ink; everything else is black.
       if (o.type === 'textbox') expect([STUDIO_INK, STUDIO_INK_MUTED]).toContain(o.fill)
@@ -223,6 +237,32 @@ describe('the page', () => {
       }
     }
     expect(drawn).toBeGreaterThan(0)
+  })
+
+  it('groups each question with its ring, and its line with “About” and the unit', () => {
+    const pages = generate({ ...base, questions: 20 }, kdpCtx(6, 9))
+    const rows = pages.flatMap((p) => p.objects.filter((o) => o.type === 'group' && o.studioRole === 'structure'))
+    expect(rows).toHaveLength(20)
+    rows.forEach((row, i) => {
+      const [badge, question, answer, ...rest] = row.objects!
+      expect(rest).toEqual([])
+      expect(badge!.objects!.map((o) => o.type)).toEqual(['circle', 'textbox'])
+      expect(textOf(badge!.objects![1]!)).toBe(String(i + 1))
+      expect(question!.data![CBN_QUESTION_KEY]).toBe(i + 1)
+      const [about, line, unit, ...more] = answer!.objects!
+      expect(more).toEqual([])
+      expect(textOf(about!)).toBe('About')
+      expect(line!.data![CBN_LINE_KEY]).toBe(i + 1)
+      expect(unit!.data![CBN_UNIT_KEY]).toBe(i + 1)
+    })
+    // Beside the rows a page holds only its header and, last, one motif group.
+    for (const page of pages) {
+      const rest = page.objects.filter((o) => !(o.type === 'group' && o.studioRole === 'structure'))
+      const motifs = rest.filter((o) => o.type === 'group')
+      expect(motifs.length).toBeLessThanOrEqual(1)
+      for (const motif of motifs) expect(motif.objects!.every((icon) => icon.data?.[CBN_MOTIF_KEY])).toBe(true)
+      expect(rest.filter((o) => o.type !== 'group').every((o) => o.type === 'textbox')).toBe(true)
+    }
   })
 
   it('keeps every page’s heading and gives the how-to once, estimates welcome', () => {

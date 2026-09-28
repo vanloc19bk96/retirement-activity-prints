@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import type { CanvasStateStore } from '@/utils/canvas-state-store'
 import type { StudioFabricObject } from '@/types/studio-template.types'
 import {
+  STUDIO_CONTENT_LABEL_KEY,
   collectStudioContentHashes,
+  collectStudioContentLabels,
   withStudioContentHash,
 } from './studio-content-history'
 
@@ -56,5 +58,45 @@ describe('collectStudioContentHashes', () => {
 
   it('survives an empty book', () => {
     expect(collectStudioContentHashes(makeStore({}), 4).size).toBe(0)
+  })
+})
+
+describe('collectStudioContentLabels', () => {
+  const labelled = (label: string, templateKey = 'trivia') => ({
+    type: 'textbox',
+    studioTemplateKey: templateKey,
+    data: { [STUDIO_CONTENT_LABEL_KEY]: label },
+  })
+
+  it('finds a label on a question grouped with its number and lines', () => {
+    const store = makeStore({
+      0: [labelled('Loose question')],
+      1: [
+        {
+          type: 'group',
+          studioTemplateKey: 'trivia',
+          objects: [
+            { type: 'textbox', studioTemplateKey: 'trivia', text: '1.' },
+            {
+              type: 'group',
+              studioTemplateKey: 'trivia',
+              objects: [labelled('Nested question')],
+            },
+          ],
+        },
+      ],
+    })
+    expect(collectStudioContentLabels(store, 2, 'trivia')).toEqual([
+      'Loose question',
+      'Nested question',
+    ])
+  })
+
+  it('reads only the game it was asked about, once per label', () => {
+    const store = makeStore({
+      0: [labelled('Shared'), labelled('Other game', 'riddles')],
+      1: [{ type: 'group', studioTemplateKey: 'trivia', objects: [labelled('Shared')] }],
+    })
+    expect(collectStudioContentLabels(store, 2, 'trivia')).toEqual(['Shared'])
   })
 })

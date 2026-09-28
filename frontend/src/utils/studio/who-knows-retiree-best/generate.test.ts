@@ -26,8 +26,10 @@ import {
 import { WKB_BOX_KEY, WKB_QUESTION_KEY, WKB_SHEET_KEY } from './draw'
 import {
   ANSWER_PITCH_MIN,
+  PLAYER_LABEL,
   QUESTION_FONT_MIN,
   SCOREBOARD_TITLE,
+  SCORE_LABEL,
   fitWkbQuestions,
   paginateWkbSheet,
   pxToPt,
@@ -79,12 +81,17 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext) {
   return whoKnowsBestTemplate.generate(config, ctx)
 }
 
+/** Every object on a page, with the question, name and scoreboard groups opened up. */
+const flatten = (objects: readonly StudioFabricObject[]): StudioFabricObject[] =>
+  objects.flatMap((o) => [o, ...flatten(o.objects ?? [])])
 const numbersOn = (objects: StudioFabricObject[]) =>
-  objects.filter((o) => typeof o.data?.[WKB_QUESTION_KEY] === 'number')
+  flatten(objects).filter((o) => typeof o.data?.[WKB_QUESTION_KEY] === 'number')
 const questionsOn = (objects: StudioFabricObject[]) =>
-  objects.filter((o) => typeof o.data?.[STUDIO_CONTENT_LABEL_KEY] === 'string')
+  flatten(objects).filter((o) => typeof o.data?.[STUDIO_CONTENT_LABEL_KEY] === 'string')
+const boxesOn = (objects: StudioFabricObject[]) =>
+  flatten(objects).filter((o) => typeof o.data?.[WKB_BOX_KEY] === 'number')
 const textOf = (o: StudioFabricObject) => String(o.text ?? '').replace(/ /g, ' ')
-const texts = (pages: StudioPageOutput[]) => pages.flatMap((p) => p.objects.map(textOf))
+const texts = (pages: StudioPageOutput[]) => pages.flatMap((p) => flatten(p.objects).map(textOf))
 const titleOf = (page: StudioPageOutput) => textOf(page.objects.find(isStudioHeaderTitle) ?? ({} as StudioFabricObject))
 
 /** Every sheet in page order: which sheet each page belongs to, by the blocks it carries. */
@@ -97,7 +104,7 @@ function sheetsOf(pages: StudioPageOutput[]) {
     const sheet = sheets.get(current) ?? { pages: [], numbers: [], boxes: 0 }
     sheet.pages.push(index)
     sheet.numbers.push(...numbers.map((o) => o.data![WKB_QUESTION_KEY] as number))
-    sheet.boxes += page.objects.filter((o) => typeof o.data?.[WKB_BOX_KEY] === 'number').length
+    sheet.boxes += boxesOn(page.objects).length
     sheets.set(current, sheet)
   })
   return sheets
@@ -170,7 +177,7 @@ describe.each(TRIMS)('on a %s x %s trim', (w, h) => {
       for (const q of questionsOn(page.objects)) expect(q.fontSize).toBeGreaterThanOrEqual(QUESTION_FONT_MIN)
       // A question never parts from its box: both land on the same page.
       const numbers = numbersOn(page.objects).filter((o) => o.data![WKB_SHEET_KEY] !== 'answers')
-      const boxes = page.objects.filter((o) => typeof o.data?.[WKB_BOX_KEY] === 'number')
+      const boxes = boxesOn(page.objects)
       expect(boxes.map((o) => o.data![WKB_BOX_KEY])).toEqual(numbers.map((o) => o.data![WKB_QUESTION_KEY]))
     }
   })
@@ -179,7 +186,7 @@ describe.each(TRIMS)('on a %s x %s trim', (w, h) => {
     const pages = generate(base, ctx)
     for (const page of pages) {
       const count = numbersOn(page.objects).length
-      const isBoard = page.objects.some((o) => textOf(o) === SCOREBOARD_TITLE)
+      const isBoard = flatten(page.objects).some((o) => textOf(o) === SCOREBOARD_TITLE)
       if (!isBoard) expect(count).toBeGreaterThan(0)
       expect(count).toBeLessThanOrEqual(WKB_QUESTIONS)
     }
@@ -190,6 +197,51 @@ describe.each(TRIMS)('on a %s x %s trim', (w, h) => {
     const layout = wkbLayout({ page: ctx, config: base, font: FONT, name: '', players: 2 })!
     expect(note).toContain(`${pxToPt(layout.plan.metrics.font)} pt large print`)
     expect(note).toMatch(/Each of 2 players gets a \d+-page answer sheet/)
+  })
+})
+
+describe('the object tree', () => {
+  it('groups each question with its lines and box, and each name, score and scoreboard row', () => {
+    const players = 2
+    const pages = generate({ ...base, players }, kdpCtx(6, 9))
+    const groups = pages.flatMap((page) => page.objects.filter((o) => o.type === 'group'))
+    const firstText = (o: StudioFabricObject) => textOf(o.objects?.[0] ?? ({} as StudioFabricObject))
+
+    // No part of a question is left loose on the page.
+    for (const page of pages) {
+      const loose = page.objects.filter(
+        (o) =>
+          o.data?.[WKB_QUESTION_KEY] !== undefined ||
+          o.data?.[WKB_BOX_KEY] !== undefined ||
+          o.data?.[STUDIO_CONTENT_LABEL_KEY] !== undefined,
+      )
+      expect(loose).toEqual([])
+    }
+
+    const questions = groups.filter((g) => typeof g.objects?.[0]?.data?.[WKB_QUESTION_KEY] === 'number')
+    expect(questions).toHaveLength((players + 1) * WKB_QUESTIONS)
+    for (const group of questions) {
+      const [number, prompt, answer, ...rest] = group.objects!
+      expect(rest).toEqual([])
+      expect(prompt!.studioRole).toBe('prompt')
+      expect(typeof prompt!.data?.[STUDIO_CONTENT_LABEL_KEY]).toBe('string')
+      // The lines a player writes on travel with the box they tick.
+      const parts = answer!.type === 'group' ? answer!.objects! : [answer!]
+      const boxes = parts.filter((o) => o.data?.[WKB_BOX_KEY] === number!.data![WKB_QUESTION_KEY])
+      expect(boxes).toHaveLength(number!.data![WKB_SHEET_KEY] === 'answers' ? 0 : 1)
+      expect(parts.filter((o) => o.type === 'rect' && o.height === 1).length).toBeGreaterThan(0)
+    }
+
+    const names = groups.filter((g) => firstText(g) === PLAYER_LABEL)
+    const scores = groups.filter((g) => firstText(g) === SCORE_LABEL)
+    expect(names).toHaveLength(players)
+    expect(scores).toHaveLength(players)
+    for (const group of [...names, ...scores]) expect(group.objects!.some((o) => o.height === 1)).toBe(true)
+
+    const boards = groups.filter((g) => g.objects?.some((o) => textOf(o) === SCOREBOARD_TITLE))
+    expect(boards).toHaveLength(1)
+    // A row per player plus the winner's row, each whole.
+    expect(boards[0]!.objects!.filter((o) => o.type === 'group')).toHaveLength(players + 1)
   })
 })
 

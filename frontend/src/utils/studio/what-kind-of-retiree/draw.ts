@@ -5,8 +5,15 @@ import {
   STUDIO_RULE_MEDIUM,
   STUDIO_STROKE_NORMAL,
 } from '@/constants/studio.constants'
-import { toNonBreakingSpaces, type Box } from '../studio-layout'
-import { buildCircle, buildPolygon, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import { toNonBreakingSpaces, unionObjectBounds, type Box } from '../studio-layout'
+import {
+  buildCircle,
+  buildGroup,
+  buildPolygon,
+  buildRect,
+  buildText,
+  type StudioTag,
+} from '../studio-fabric-builders'
 import { FABRIC_FONT_SIZE_MULT, fabricTextHeight, hugTextBoxWidth } from '../studio-text-metrics'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import {
@@ -95,6 +102,23 @@ function centredBlock(
   })
 }
 
+/**
+ * Draws into a fresh list and wraps what landed there in one group hugging it,
+ * so a seller drags or deletes a whole question, step, grid or write-up in the
+ * editor instead of chasing its loose parts. A single part is pushed as it is
+ * — a group of one is only an extra click.
+ */
+function grouped(ctx: DrawContext, draw: (inner: DrawContext) => void): void {
+  const parts: StudioFabricObject[] = []
+  draw({ ...ctx, objects: parts })
+  if (parts.length === 1) {
+    ctx.objects.push(parts[0]!)
+    return
+  }
+  const bounds = unionObjectBounds(parts)
+  if (bounds) ctx.objects.push(buildGroup(parts, bounds, ctx.tag, 'structure'))
+}
+
 function hairline(ctx: DrawContext, left: number, top: number, width: number, height: number, fill = STUDIO_RULE_MEDIUM) {
   ctx.objects.push(
     buildRect(
@@ -146,6 +170,12 @@ export function drawSymbol(
  * Quiz pages
  * ------------------------------------------------------------------ */
 
+/**
+ * One question: its number, the question, then each lettered answer as a
+ * group of its own, so ungrouping a question hands back whole answers and a
+ * letter never drifts from the answer it names. The caller wraps the lot in
+ * one group.
+ */
 function drawQuestion(
   ctx: DrawContext,
   plan: RqQuizPlan,
@@ -184,23 +214,25 @@ function drawQuestion(
   question.answers.forEach((_, i) => {
     const lines = question.answerLines[i]!
     const rowTop = Math.round(y)
-    text(ctx, {
-      left: letterLeft,
-      top: rowTop,
-      text: RQ_LETTERS[i]!,
-      width: metrics.letterW,
-      fontSize: size,
-      fontWeight: 700,
-      lineHeight: 1,
-      textAlign: 'center',
-    })
-    text(ctx, {
-      left: letterLeft + metrics.letterW,
-      top: rowTop,
-      text: lines.join('\n'),
-      width: answerWidth,
-      fontSize: size,
-      lineHeight: LINE_HEIGHT,
+    grouped(ctx, (answer) => {
+      text(answer, {
+        left: letterLeft,
+        top: rowTop,
+        text: RQ_LETTERS[i]!,
+        width: metrics.letterW,
+        fontSize: size,
+        fontWeight: 700,
+        lineHeight: 1,
+        textAlign: 'center',
+      })
+      text(answer, {
+        left: letterLeft + metrics.letterW,
+        top: rowTop,
+        text: lines.join('\n'),
+        width: answerWidth,
+        fontSize: size,
+        lineHeight: LINE_HEIGHT,
+      })
     })
     y += textHeight(lines.length, size) + metrics.rowGap
   })
@@ -246,7 +278,8 @@ export function drawRqQuizPage(
   let top = Math.round(field.top + Math.min(Math.max(0, usable - stack), metrics.font * 0.8))
 
   questions.forEach((question, index) => {
-    drawQuestion(ctx, plan, question, firstNumber + index, left, top)
+    const blockTop = top
+    grouped(ctx, (block) => drawQuestion(block, plan, question, firstNumber + index, left, blockTop))
     top += heights[index]!
     if (index < gaps) {
       hairline(ctx, left, Math.round(top + gap / 2), plan.blockWidth, 1)
@@ -280,6 +313,10 @@ function heading(ctx: DrawContext, plan: RqResultsPlan, run: string, left: numbe
  * Every row is read from the placed question itself — `styles[i]` is the
  * style of the answer printed beside `RQ_LETTERS[i]` — so the grid cannot
  * disagree with the question page.
+ *
+ * The caller wraps it in one group: dozens of rules, letters and boxes that
+ * only mean anything together. Each column's heading — symbol and name — is
+ * grouped again inside it.
  */
 function drawGrid(
   ctx: DrawContext,
@@ -303,20 +340,22 @@ function drawGrid(
   // Header: each style's symbol, and its name when the column can hold it whole.
   const pad = Math.round(m.font * 0.45)
   RQ_STYLES.forEach((style, column) => {
-    drawSymbol(ctx, style, cellCentre(column), top + pad + m.symbolSize / 2, m.symbolSize)
-    const lines = m.labels?.[style]
-    if (lines) {
-      text(ctx, {
-        left: cellLeft(column) + 2,
-        top: Math.round(top + pad + m.symbolSize + m.font * 0.3),
-        text: lines.map(toNonBreakingSpaces).join('\n'),
-        width: m.cellW - 4,
-        fontSize: m.labelFont,
-        fontWeight: 700,
-        lineHeight: LINE_HEIGHT,
-        textAlign: 'center',
-      })
-    }
+    grouped(ctx, (label) => {
+      drawSymbol(label, style, cellCentre(column), top + pad + m.symbolSize / 2, m.symbolSize)
+      const lines = m.labels?.[style]
+      if (lines) {
+        text(label, {
+          left: cellLeft(column) + 2,
+          top: Math.round(top + pad + m.symbolSize + m.font * 0.3),
+          text: lines.map(toNonBreakingSpaces).join('\n'),
+          width: m.cellW - 4,
+          fontSize: m.labelFont,
+          fontWeight: 700,
+          lineHeight: LINE_HEIGHT,
+          textAlign: 'center',
+        })
+      }
+    })
   })
   hairline(ctx, gridLeft, top + m.headerH - 1, m.gridW, 2, STUDIO_INK)
 
@@ -370,7 +409,10 @@ function drawGrid(
   )
 }
 
-/** Heading, the three steps, the grid and the tie rule. Returns the bottom edge. */
+/**
+ * Heading, the three steps, the grid and the tie rule. Returns the bottom edge.
+ * Each step (number and text) is one group, and so is the grid.
+ */
 export function drawRqScoring(
   objects: StudioFabricObject[],
   options: {
@@ -388,20 +430,24 @@ export function drawRqScoring(
   let y = heading(ctx, plan, RQ_SCORING_HEADING, left, options.top)
 
   plan.scoring.steps.forEach((lines, index) => {
-    text(ctx, { left, top: Math.round(y), text: `${index + 1}.`, width: m.stepNumberW, fontSize: m.font, fontWeight: 700, lineHeight: 1 })
-    text(ctx, {
-      left: left + m.stepNumberW,
-      top: Math.round(y),
-      text: lines.join('\n'),
-      width: plan.blockWidth - m.stepNumberW,
-      fontSize: m.font,
-      lineHeight: LINE_HEIGHT,
+    const stepTop = Math.round(y)
+    grouped(ctx, (step) => {
+      text(step, { left, top: stepTop, text: `${index + 1}.`, width: m.stepNumberW, fontSize: m.font, fontWeight: 700, lineHeight: 1 })
+      text(step, {
+        left: left + m.stepNumberW,
+        top: stepTop,
+        text: lines.join('\n'),
+        width: plan.blockWidth - m.stepNumberW,
+        fontSize: m.font,
+        lineHeight: LINE_HEIGHT,
+      })
     })
     y += textHeight(lines.length, m.font) + (index < plan.scoring.steps.length - 1 ? m.stepGap : 0)
   })
 
   y += m.gridGap
-  drawGrid(ctx, plan, questions, left, Math.round(y))
+  const gridTop = Math.round(y)
+  grouped(ctx, (grid) => drawGrid(grid, plan, questions, left, gridTop))
   y += gridHeight(m, questions.length) + m.tieGap
   centredBlock(ctx, plan.scoring.tie, left, Math.round(y), plan.blockWidth, m.font, true)
   return y + textHeight(plan.scoring.tie.length, m.font)
@@ -411,6 +457,9 @@ export function drawRqScoring(
  * Heading, each style's symbol, name and write-up, and the just-for-fun line.
  * `extraGap` is added after every write-up, to spread a page's leftover white
  * between them rather than pool it at the foot.
+ *
+ * Each style's write-up is one group, its symbol and name grouped again
+ * inside it so the mark stays beside the name it stands for.
  */
 export function drawRqWriteUps(
   objects: StudioFabricObject[],
@@ -425,28 +474,35 @@ export function drawRqWriteUps(
 
   RQ_STYLES.forEach((style) => {
     const nameH = fabricTextHeight(1, m.nameFont)
-    drawSymbol(ctx, style, left + m.symbolColW / 2 - m.font * 0.2, Math.round(y + nameH / 2), m.symbolSize)
-    const name = toNonBreakingSpaces(RQ_STYLE_NAMES[style])
-    text(ctx, {
-      left: nameLeft,
-      top: Math.round(y),
-      text: name,
-      width: hugTextBoxWidth(name, m.nameFont, nameWidth, boldSpec(font)),
-      fontSize: m.nameFont,
-      fontWeight: 700,
-      lineHeight: 1,
-    })
-    y += nameH + m.descriptionGap
+    const nameTop = Math.round(y)
+    const symbolCentreY = Math.round(y + nameH / 2)
     const lines = plan.writeUps.descriptions[style]
-    text(ctx, {
-      left,
-      top: Math.round(y),
-      text: lines.join('\n'),
-      width: plan.blockWidth,
-      fontSize: m.font,
-      lineHeight: LINE_HEIGHT,
+    // One running sum, as the page was measured, so no top rounds a pixel off.
+    const descriptionY = y + (nameH + m.descriptionGap)
+    grouped(ctx, (writeUp) => {
+      grouped(writeUp, (nameplate) => {
+        drawSymbol(nameplate, style, left + m.symbolColW / 2 - m.font * 0.2, symbolCentreY, m.symbolSize)
+        const name = toNonBreakingSpaces(RQ_STYLE_NAMES[style])
+        text(nameplate, {
+          left: nameLeft,
+          top: nameTop,
+          text: name,
+          width: hugTextBoxWidth(name, m.nameFont, nameWidth, boldSpec(font)),
+          fontSize: m.nameFont,
+          fontWeight: 700,
+          lineHeight: 1,
+        })
+      })
+      text(writeUp, {
+        left,
+        top: Math.round(descriptionY),
+        text: lines.join('\n'),
+        width: plan.blockWidth,
+        fontSize: m.font,
+        lineHeight: LINE_HEIGHT,
+      })
     })
-    y += textHeight(lines.length, m.font) + m.styleGap + extraGap
+    y = descriptionY + (textHeight(lines.length, m.font) + m.styleGap + extraGap)
   })
 
   centredBlock(ctx, plan.writeUps.fun, left, Math.round(y), plan.blockWidth, m.funFont, true)

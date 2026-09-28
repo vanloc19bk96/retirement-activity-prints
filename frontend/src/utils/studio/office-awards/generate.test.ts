@@ -83,11 +83,14 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext) {
 }
 
 const textOf = (o: StudioFabricObject) => String(o.text ?? '').replace(/ /g, ' ')
-const texts = (pages: StudioPageOutput[]) => pages.flatMap((p) => p.objects.map(textOf))
+/** Every mark on the page, the card groups opened up. */
+const flatten = (objects: readonly StudioFabricObject[]): StudioFabricObject[] =>
+  objects.flatMap((o) => (o.objects ? [o, ...flatten(o.objects)] : [o]))
+const texts = (pages: StudioPageOutput[]) => pages.flatMap((p) => flatten(p.objects).map(textOf))
 const titlesOn = (objects: StudioFabricObject[]) =>
-  objects.filter((o) => typeof o.data?.[OA_AWARD_KEY] === 'number')
+  flatten(objects).filter((o) => typeof o.data?.[OA_AWARD_KEY] === 'number')
 const linesOn = (objects: StudioFabricObject[], kind: 'winner' | 'why') =>
-  objects.filter((o) => o.data?.[OA_LINE_KEY] === kind)
+  flatten(objects).filter((o) => o.data?.[OA_LINE_KEY] === kind)
 const numbersOf = (pages: StudioPageOutput[]) =>
   pages.flatMap((p) => titlesOn(p.objects).map((o) => o.data![OA_AWARD_KEY] as number))
 const headingOf = (page: StudioPageOutput) =>
@@ -161,7 +164,7 @@ describe.each(TRIMS)('on a %s x %s trim', (w, h) => {
   it('stamps every printed award so later runs can avoid it', () => {
     const pages = generate(base, ctx)
     const labels = pages.flatMap((p) =>
-      p.objects.filter((o) => typeof o.data?.[STUDIO_CONTENT_LABEL_KEY] === 'string').map((o) => o.data![STUDIO_CONTENT_LABEL_KEY]),
+      flatten(p.objects).filter((o) => typeof o.data?.[STUDIO_CONTENT_LABEL_KEY] === 'string').map((o) => o.data![STUDIO_CONTENT_LABEL_KEY]),
     )
     expect(labels).toHaveLength(OA_DEFAULT_COUNT)
     expect(new Set(labels).size).toBe(OA_DEFAULT_COUNT)
@@ -193,11 +196,30 @@ describe('the page', () => {
 
   it('prints in black ink with grey writing lines only: no fills that print as blocks', () => {
     const pages = generate({ ...base, reasonLine: true }, kdpCtx(6, 9))
-    for (const o of pages.flatMap((p) => p.objects)) {
+    for (const o of pages.flatMap((p) => flatten(p.objects))) {
       // The shared how-to line is the Studio's muted ink; everything else is black.
       if (o.type === 'textbox') expect([STUDIO_INK, STUDIO_INK_MUTED]).toContain(o.fill)
       else if (o.data?.[OA_LINE_KEY]) expect(o.height).toBe(1)
       else expect(['transparent', '#FFFFFF', undefined]).toContain(o.fill)
+    }
+  })
+
+  it('groups each card, with its rosette and each label on its line', () => {
+    for (const reasonLine of [false, true]) {
+      const pages = generate({ ...base, reasonLine }, kdpCtx(6, 9))
+      const cards = pages.flatMap((p) => p.objects.filter((o) => o.type === 'group'))
+      expect(cards).toHaveLength(OA_DEFAULT_COUNT)
+      cards.forEach((card, i) => {
+        const [frame, badge, title, ...rows] = card.objects ?? []
+        expect(frame?.type).toBe('rect')
+        expect(badge?.type).toBe('group')
+        expect(badge?.objects?.map((o) => o.type)).toEqual(['polygon', 'polygon', 'circle', 'circle', 'textbox'])
+        expect(textOf(badge!.objects!.at(-1)!)).toBe(String(i + 1))
+        expect(title?.data?.[OA_AWARD_KEY]).toBe(i + 1)
+        expect(rows.map((row) => row.objects?.map((o) => o.data?.[OA_LINE_KEY] ?? textOf(o)))).toEqual(
+          reasonLine ? [['Winner:', 'winner'], ['Why:', 'why']] : [['Winner:', 'winner']],
+        )
+      })
     }
   })
 

@@ -1,7 +1,7 @@
-import type { StudioFabricObject } from '@/types/studio-template.types'
+import type { StudioFabricObject, StudioRole } from '@/types/studio-template.types'
 import { STUDIO_INK, STUDIO_STROKE_NORMAL } from '@/constants/studio.constants'
-import { buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
-import type { Box } from '../studio-layout'
+import { buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import { unionObjectBounds, type Box } from '../studio-layout'
 import { FABRIC_FONT_SIZE_MULT, fabricTextHeight, hugTextBoxWidth } from '../studio-text-metrics'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import {
@@ -25,6 +25,19 @@ interface DrawContext {
   font: string
   tag: StudioTag
   left: number
+}
+
+/**
+ * Draw one block into its own group, so a seller drags or deletes a whole idea,
+ * heading or write-in line in the editor instead of chasing its box, number and
+ * text as loose pieces that drift apart.
+ */
+function drawGrouped<T>(ctx: DrawContext, role: StudioRole, draw: (local: DrawContext) => T): T {
+  const parts: StudioFabricObject[] = []
+  const result = draw({ ...ctx, objects: parts })
+  const bounds = unionObjectBounds(parts)
+  if (bounds) ctx.objects.push(buildGroup(parts, bounds, ctx.tag, role))
+  return result
 }
 
 /** Middle of the first line's letters, not of its line box. */
@@ -207,11 +220,11 @@ export function drawBlPage(
   for (const block of page.blocks) {
     if (block.kind === 'heading') {
       if (top > field.top) top += plan.metrics.headingGapAbove
-      top = drawHeading(ctx, block.title, block.continued, top)
+      top = drawGrouped(ctx, 'decoration', (local) => drawHeading(local, block.title, block.continued, top))
     } else if (block.kind === 'row') {
-      top = drawRow(ctx, block.item, top)
+      top = drawGrouped(ctx, 'structure', (local) => drawRow(local, block.item, top))
     } else {
-      top = drawWriteIn(ctx, top)
+      top = drawGrouped(ctx, 'structure', (local) => drawWriteIn(local, top))
     }
   }
 }

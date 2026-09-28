@@ -131,14 +131,22 @@ interface ReadRiddle {
   numbers: string[]
 }
 
-/** Read back the riddle. The question is loose; the boxes and numbers are one group. */
+/** The riddle band: the question and the answer strip, grouped together. */
+function riddleBand(objects: StudioFabricObject[]): StudioFabricObject | undefined {
+  return objects.find((obj) => obj.type === 'group' && !isWordRowGroup(obj))
+}
+
+/**
+ * Read back the riddle. The band groups the question with the answer strip, and
+ * the boxes, letters and numbers are that strip's own group inside it.
+ */
 function readRiddle(objects: StudioFabricObject[]): ReadRiddle {
-  const loose = objects.filter((obj) => obj.type !== 'group')
-  const texts = loose.filter((obj) => obj.type === 'textbox')
-  const question = texts.find(
-    (obj) => obj.originY !== 'center' && String(obj.text ?? '').includes('?'),
+  const band = riddleBand(objects)?.objects ?? []
+  const question = band.find(
+    (obj) =>
+      obj.type === 'textbox' && obj.originY !== 'center' && String(obj.text ?? '').includes('?'),
   )
-  const fill = objects.find((obj) => obj.type === 'group' && !isWordRowGroup(obj))
+  const fill = band.find((obj) => obj.type === 'group')
   const children = fill?.objects ?? []
   const letters = children.filter(
     (obj) => obj.type === 'textbox' && obj.originY === 'center',
@@ -316,9 +324,23 @@ describe('riddle-scramble page', () => {
     }
   })
 
-  it('groups the answer boxes with the numbers under them', () => {
+  it('groups the riddle with its answer strip, and the boxes with their numbers', () => {
     const built = generatePage()
-    const fills = built.objects.filter(
+    const bands = built.objects.filter((obj) => obj.type === 'group' && !isWordRowGroup(obj))
+    expect(bands).toHaveLength(1)
+    const [question, strip, ...rest] = bands[0]!.objects ?? []
+    expect(rest).toEqual([])
+    expect(question?.type).toBe('textbox')
+    expect(String(question?.text ?? '')).toContain('?')
+    expect(strip?.type).toBe('group')
+    // Nothing of the riddle is left loose beside the band.
+    expect(
+      built.objects.some(
+        (obj) => obj.type === 'textbox' && String(obj.text ?? '') === String(question?.text ?? ''),
+      ),
+    ).toBe(false)
+
+    const fills = (bands[0]!.objects ?? []).filter(
       (obj) =>
         obj.type === 'group' &&
         (obj.objects ?? []).some((child) => /^\d+$/.test(String(child.text ?? ''))),

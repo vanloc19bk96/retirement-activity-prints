@@ -1,7 +1,7 @@
 import type { StudioFabricObject } from '@/types/studio-template.types'
 import { STUDIO_INK, STUDIO_RULE_MEDIUM, STUDIO_STROKE_NORMAL } from '@/constants/studio.constants'
-import { buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
-import { toNonBreakingSpaces, type Box } from '../studio-layout'
+import { buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import { toNonBreakingSpaces, unionObjectBounds, type Box } from '../studio-layout'
 import { fabricTextHeight, hugTextBoxWidth } from '../studio-text-metrics'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import {
@@ -45,6 +45,23 @@ interface DrawContext {
   sheet: string
   kind: WkbSheetKind
   who: string
+}
+
+/**
+ * Draws whatever `draw` adds into a group of its own, pushed onto `ctx.objects`,
+ * so a seller drags or deletes a question, a name line or the scoreboard whole
+ * in the editor. A lone part is pushed as it is: a group of one only adds a
+ * click. Nothing drawn, nothing pushed.
+ */
+function grouped(ctx: DrawContext, draw: (inner: DrawContext) => void) {
+  const parts: StudioFabricObject[] = []
+  draw({ ...ctx, objects: parts })
+  if (parts.length === 1) {
+    ctx.objects.push(parts[0]!)
+    return
+  }
+  const bounds = unionObjectBounds(parts)
+  if (bounds) ctx.objects.push(buildGroup(parts, bounds, ctx.tag, 'structure'))
 }
 
 /** A writing line: mid grey, so handwriting stands out on it. */
@@ -102,27 +119,31 @@ function label(
 const labelWidth = (ctx: DrawContext, text: string, bold = false) =>
   hugTextBoxWidth(toNonBreakingSpaces(text), ctx.plan.metrics.font, Infinity, bold ? boldSpec(ctx.font) : plainSpec(ctx.font))
 
-/** "Player: ____________" */
+/** "Player: ____________", as one group: the label moves with its line. */
 function drawName(ctx: DrawContext, top: number) {
   const { metrics, nameLineW, blockWidth } = ctx.plan
-  const width = label(ctx, PLAYER_LABEL, ctx.left, rowBaseline(top, metrics), {
-    size: metrics.font,
-    bold: true,
-    maxWidth: blockWidth,
+  grouped(ctx, (inner) => {
+    const width = label(inner, PLAYER_LABEL, inner.left, rowBaseline(top, metrics), {
+      size: metrics.font,
+      bold: true,
+      maxWidth: blockWidth,
+    })
+    rule(inner, inner.left + width + metrics.labelGap, rowLineY(top, metrics), nameLineW)
   })
-  rule(ctx, ctx.left + width + metrics.labelGap, rowLineY(top, metrics), nameLineW)
 }
 
-/** "Score: ______ out of 12", where the player adds up their ticks. */
+/** "Score: ______ out of 12", where the player adds up their ticks; one group. */
 function drawScore(ctx: DrawContext, top: number) {
   const { metrics, blockWidth } = ctx.plan
   const baseline = rowBaseline(top, metrics)
-  const width = label(ctx, SCORE_LABEL, ctx.left, baseline, { size: metrics.font, bold: true, maxWidth: blockWidth })
-  const lineLeft = ctx.left + width + metrics.labelGap
-  rule(ctx, lineLeft, rowLineY(top, metrics), SCORE_LINE_MIN)
-  label(ctx, SCORE_TAIL, lineLeft + SCORE_LINE_MIN + metrics.labelGap, baseline, {
-    size: metrics.font,
-    maxWidth: blockWidth,
+  grouped(ctx, (inner) => {
+    const width = label(inner, SCORE_LABEL, inner.left, baseline, { size: metrics.font, bold: true, maxWidth: blockWidth })
+    const lineLeft = inner.left + width + metrics.labelGap
+    rule(inner, lineLeft, rowLineY(top, metrics), SCORE_LINE_MIN)
+    label(inner, SCORE_TAIL, lineLeft + SCORE_LINE_MIN + metrics.labelGap, baseline, {
+      size: metrics.font,
+      maxWidth: blockWidth,
+    })
   })
 }
 
@@ -131,125 +152,143 @@ function drawScore(ctx: DrawContext, top: number) {
  * it), then the room its answer needs, and on a player's sheet a box to tick
  * beside the first answer line. Everything is set from the block's own top,
  * so no part of a question can land on another page.
+ *
+ * The question is one group, so it drags and deletes whole in the editor;
+ * inside it the answer lines and the tick box are a group of their own, the
+ * part a player writes and marks, so ungrouping a question never scatters them.
  */
 function drawQuestion(ctx: DrawContext, question: FittedWkbQuestion, top: number) {
   const { metrics, numW, textWidth, boxLineRoom, lineRoom, shortLine } = ctx.plan
   const textLeft = ctx.left + numW
-  ctx.objects.push({
-    ...buildText(
-      {
-        left: ctx.left,
-        top: Math.round(top),
-        text: `${question.number}.`,
-        width: numW - metrics.numGap,
-        fontFamily: ctx.font,
-        fontSize: metrics.font,
-        fontWeight: 700,
-        lineHeight: QUESTION_LINE_HEIGHT,
-        textAlign: 'right',
-      },
-      ctx.tag,
-      'decoration',
-    ),
-    data: { [WKB_QUESTION_KEY]: question.number, [WKB_SHEET_KEY]: ctx.sheet },
-  })
-  // Pre-broken and set in a box exactly the measure it was broken to, so
-  // Fabric has no reason to re-wrap it into a line the block did not reserve.
-  ctx.objects.push({
-    ...buildText(
-      {
-        left: textLeft,
-        top: Math.round(top),
-        text: question.lines.join('\n'),
-        width: textWidth,
-        fontFamily: ctx.font,
-        fontSize: metrics.font,
-        lineHeight: QUESTION_LINE_HEIGHT,
-      },
-      ctx.tag,
-      'prompt',
-    ),
-    data: { [STUDIO_CONTENT_LABEL_KEY]: question.question },
-  })
+  grouped(ctx, (block) => {
+    block.objects.push({
+      ...buildText(
+        {
+          left: block.left,
+          top: Math.round(top),
+          text: `${question.number}.`,
+          width: numW - metrics.numGap,
+          fontFamily: block.font,
+          fontSize: metrics.font,
+          fontWeight: 700,
+          lineHeight: QUESTION_LINE_HEIGHT,
+          textAlign: 'right',
+        },
+        block.tag,
+        'decoration',
+      ),
+      data: { [WKB_QUESTION_KEY]: question.number, [WKB_SHEET_KEY]: block.sheet },
+    })
+    // Pre-broken and set in a box exactly the measure it was broken to, so
+    // Fabric has no reason to re-wrap it into a line the block did not reserve.
+    block.objects.push({
+      ...buildText(
+        {
+          left: textLeft,
+          top: Math.round(top),
+          text: question.lines.join('\n'),
+          width: textWidth,
+          fontFamily: block.font,
+          fontSize: metrics.font,
+          lineHeight: QUESTION_LINE_HEIGHT,
+        },
+        block.tag,
+        'prompt',
+      ),
+      data: { [STUDIO_CONTENT_LABEL_KEY]: question.question },
+    })
 
-  const withBox = ctx.kind === 'player'
-  const full = withBox ? boxLineRoom : lineRoom
-  const firstLine = top + questionTextHeight(ctx.plan, question.lines.length) + metrics.pitch
-  const count = answerLines(question.answer)
-  for (let line = 0; line < count; line++) {
-    const width = question.answer === 'word' ? shortLine : full
-    rule(ctx, textLeft, firstLine + line * metrics.pitch, width)
-  }
-  if (withBox) {
-    const box = buildRect(
-      {
-        left: Math.round(textLeft + textWidth - metrics.box),
-        top: Math.round(firstLine - metrics.box),
-        width: metrics.box,
-        height: metrics.box,
-        rx: 2,
-        ry: 2,
-        stroke: STUDIO_INK,
-        strokeWidth: STUDIO_STROKE_NORMAL,
-      },
-      ctx.tag,
-      'structure',
-    )
-    ctx.objects.push({ ...box, data: { [WKB_BOX_KEY]: question.number } })
-  }
+    grouped(block, (answer) => {
+      const withBox = answer.kind === 'player'
+      const full = withBox ? boxLineRoom : lineRoom
+      const firstLine = top + questionTextHeight(answer.plan, question.lines.length) + metrics.pitch
+      const count = answerLines(question.answer)
+      for (let line = 0; line < count; line++) {
+        const width = question.answer === 'word' ? shortLine : full
+        rule(answer, textLeft, firstLine + line * metrics.pitch, width)
+      }
+      if (withBox) {
+        const box = buildRect(
+          {
+            left: Math.round(textLeft + textWidth - metrics.box),
+            top: Math.round(firstLine - metrics.box),
+            width: metrics.box,
+            height: metrics.box,
+            rx: 2,
+            ry: 2,
+            stroke: STUDIO_INK,
+            strokeWidth: STUDIO_STROKE_NORMAL,
+          },
+          answer.tag,
+          'structure',
+        )
+        answer.objects.push({ ...box, data: { [WKB_BOX_KEY]: question.number } })
+      }
+    })
+  })
 }
 
 /**
  * The scoreboard: a framed box with a row per player (a line for the name,
  * then "Score: ___") and a last row naming the winner — "Who knows Linda best? ____",
  * shortened to "Top scorer:" where the long form would crowd its line.
+ *
+ * The whole board is one group, and each row inside it a group of its own, so
+ * a seller can drop a player's row without picking its three pieces apart.
  */
 function drawScoreboard(ctx: DrawContext, top: number, height: number, players: number) {
   const { metrics, blockWidth } = ctx.plan
-  ctx.objects.push(
-    buildRect(
-      {
-        left: ctx.left,
-        top: Math.round(top),
-        width: blockWidth,
-        height: Math.round(height),
-        rx: metrics.radius,
-        ry: metrics.radius,
-        stroke: STUDIO_INK,
-        strokeWidth: STUDIO_STROKE_NORMAL,
-      },
-      ctx.tag,
-      'structure',
-    ),
-  )
-  const inner = ctx.left + metrics.pad
-  const innerWidth = blockWidth - 2 * metrics.pad
-  const titleTop = top + metrics.pad
-  label(ctx, SCOREBOARD_TITLE, inner, titleTop + metrics.headFont * BASELINE, {
-    size: metrics.headFont,
-    bold: true,
-    maxWidth: innerWidth,
-  })
+  grouped(ctx, (board) => {
+    board.objects.push(
+      buildRect(
+        {
+          left: board.left,
+          top: Math.round(top),
+          width: blockWidth,
+          height: Math.round(height),
+          rx: metrics.radius,
+          ry: metrics.radius,
+          stroke: STUDIO_INK,
+          strokeWidth: STUDIO_STROKE_NORMAL,
+        },
+        board.tag,
+        'structure',
+      ),
+    )
+    const inner = board.left + metrics.pad
+    const innerWidth = blockWidth - 2 * metrics.pad
+    const titleTop = top + metrics.pad
+    label(board, SCOREBOARD_TITLE, inner, titleTop + metrics.headFont * BASELINE, {
+      size: metrics.headFont,
+      bold: true,
+      maxWidth: innerWidth,
+    })
 
-  const scoreW = labelWidth(ctx, SCOREBOARD_SCORE)
-  const scoreLeft = inner + innerWidth - SCORE_LINE_MIN - metrics.labelGap - scoreW
-  let rowTop = titleTop + fabricTextHeight(1, metrics.headFont)
-  for (let player = 0; player < players; player++) {
-    const baseline = rowBaseline(rowTop, metrics)
-    rule(ctx, inner, rowLineY(rowTop, metrics), scoreLeft - metrics.font - inner)
-    label(ctx, SCOREBOARD_SCORE, scoreLeft, baseline, { size: metrics.font, maxWidth: innerWidth })
-    rule(ctx, scoreLeft + scoreW + metrics.labelGap, rowLineY(rowTop, metrics), SCORE_LINE_MIN)
-    rowTop += metrics.rowH
-  }
-  const long = winnerLabel(ctx.who)
-  const text = innerWidth - labelWidth(ctx, long, true) - metrics.labelGap >= WINNER_LINE_MIN ? long : WINNER_SHORT
-  const width = label(ctx, text, inner, rowBaseline(rowTop, metrics), {
-    size: metrics.font,
-    bold: true,
-    maxWidth: innerWidth,
+    const scoreW = labelWidth(board, SCOREBOARD_SCORE)
+    const scoreLeft = inner + innerWidth - SCORE_LINE_MIN - metrics.labelGap - scoreW
+    let rowTop = titleTop + fabricTextHeight(1, metrics.headFont)
+    for (let player = 0; player < players; player++) {
+      const baseline = rowBaseline(rowTop, metrics)
+      const lineY = rowLineY(rowTop, metrics)
+      grouped(board, (row) => {
+        rule(row, inner, lineY, scoreLeft - metrics.font - inner)
+        label(row, SCOREBOARD_SCORE, scoreLeft, baseline, { size: metrics.font, maxWidth: innerWidth })
+        rule(row, scoreLeft + scoreW + metrics.labelGap, lineY, SCORE_LINE_MIN)
+      })
+      rowTop += metrics.rowH
+    }
+    const long = winnerLabel(board.who)
+    const text = innerWidth - labelWidth(board, long, true) - metrics.labelGap >= WINNER_LINE_MIN ? long : WINNER_SHORT
+    grouped(board, (row) => {
+      const width = label(row, text, inner, rowBaseline(rowTop, metrics), {
+        size: metrics.font,
+        bold: true,
+        maxWidth: innerWidth,
+      })
+      const lineLeft = inner + width + metrics.labelGap
+      rule(row, lineLeft, rowLineY(rowTop, metrics), inner + innerWidth - lineLeft)
+    })
   })
-  const lineLeft = inner + width + metrics.labelGap
-  rule(ctx, lineLeft, rowLineY(rowTop, metrics), inner + innerWidth - lineLeft)
 }
 
 /**

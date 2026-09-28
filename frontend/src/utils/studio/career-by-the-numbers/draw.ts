@@ -1,4 +1,4 @@
-import type { StudioFabricObject } from '@/types/studio-template.types'
+import type { StudioFabricObject, StudioRole } from '@/types/studio-template.types'
 import {
   STUDIO_INK,
   STUDIO_PAPER,
@@ -6,9 +6,9 @@ import {
   STUDIO_STROKE_HAIRLINE,
   STUDIO_STROKE_NORMAL,
 } from '@/constants/studio.constants'
-import { buildCircle, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import { buildCircle, buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
 import { buildIconPath } from '../studio-icon'
-import { toNonBreakingSpaces, type Box } from '../studio-layout'
+import { toNonBreakingSpaces, unionObjectBounds, type Box } from '../studio-layout'
 import { fabricTextHeight, hugTextBoxWidth } from '../studio-text-metrics'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import { createRng } from '../studio-rng'
@@ -58,6 +58,14 @@ interface DrawContext {
   tag: StudioTag
   left: number
   lineW: number
+}
+
+/** Draw into a group of its own; see drawRow for why the rows are grouped. */
+function drawGrouped(ctx: DrawContext, role: StudioRole, draw: (local: DrawContext) => void): void {
+  const parts: StudioFabricObject[] = []
+  draw({ ...ctx, objects: parts })
+  const bounds = unionObjectBounds(parts)
+  if (bounds) ctx.objects.push(buildGroup(parts, bounds, ctx.tag, role))
 }
 
 /** Text on a row's baseline. Spaces locked so Fabric never breaks it. */
@@ -133,11 +141,22 @@ function drawBadge(ctx: DrawContext, cx: number, cy: number, number: number) {
  * One row: the ring, the question (stamped so later runs can avoid it), then
  * "About", the writing line and the unit on one baseline. Everything is set
  * from the row's own top, so no part of a row can land on another page.
+ *
+ * The row is one group, so a seller drags or deletes a whole question in the
+ * editor rather than its ring, words and line one at a time. Inside it the ring
+ * and its number are one piece, and "About", the line and the unit another, so
+ * ungrouping a row never leaves the unit adrift from the line it measures.
  */
 function drawRow(ctx: DrawContext, q: FittedCbnQuestion, top: number) {
+  drawGrouped(ctx, 'structure', (row) => drawRowParts(row, q, top))
+}
+
+function drawRowParts(ctx: DrawContext, q: FittedCbnQuestion, top: number) {
   const { metrics, textOffset, textWidth, lineOffset } = ctx.plan
   const textTop = top + textInset(metrics)
-  drawBadge(ctx, ctx.left + metrics.badgeR, Math.round(textTop + firstLineHeight(metrics) / 2), q.number)
+  drawGrouped(ctx, 'structure', (badge) =>
+    drawBadge(badge, ctx.left + metrics.badgeR, Math.round(textTop + firstLineHeight(metrics) / 2), q.number),
+  )
 
   // Pre-broken and set in a box exactly the measure it was broken to, so
   // Fabric has no reason to re-wrap it into a line the row did not reserve.
@@ -160,14 +179,16 @@ function drawRow(ctx: DrawContext, q: FittedCbnQuestion, top: number) {
 
   const rowTop = textTop + questionTextHeight(ctx.plan, q.lines.length)
   const baseline = rowBaseline(rowTop, metrics)
-  word(ctx, ABOUT_LABEL, ctx.left + textOffset, baseline)
-  rule(ctx, ctx.left + lineOffset, rowLineY(rowTop, metrics), q.number)
-  word(ctx, q.unit, ctx.left + lineOffset + ctx.lineW + metrics.labelGap, baseline, {
-    [CBN_UNIT_KEY]: q.number,
+  drawGrouped(ctx, 'structure', (answer) => {
+    word(answer, ABOUT_LABEL, ctx.left + textOffset, baseline)
+    rule(answer, ctx.left + lineOffset, rowLineY(rowTop, metrics), q.number)
+    word(answer, q.unit, ctx.left + lineOffset + ctx.lineW + metrics.labelGap, baseline, {
+      [CBN_UNIT_KEY]: q.number,
+    })
   })
 }
 
-/** A small centred row of work motifs: a quiet full stop to the activity. */
+/** A small centred row of work motifs: a quiet full stop to the activity, moved as one. */
 function drawMotif(ctx: DrawContext, top: number, icons: readonly string[], columnWidth: number) {
   const { motif } = ctx.plan.metrics
   const step = motif * 2.2
@@ -211,5 +232,8 @@ export function drawCbnPage(
     left: Math.round(field.left + (field.width - plan.columnWidth) / 2),
   }
   for (const block of page.blocks) drawRow(ctx, block.question, field.top + block.top)
-  if (page.motifTop !== null) drawMotif(ctx, field.top + page.motifTop, motifIcons, plan.columnWidth)
+  const motifTop = page.motifTop
+  if (motifTop !== null) {
+    drawGrouped(ctx, 'decoration', (motif) => drawMotif(motif, field.top + motifTop, motifIcons, plan.columnWidth))
+  }
 }

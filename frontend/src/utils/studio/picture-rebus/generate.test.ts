@@ -143,8 +143,22 @@ function answerText(objects: StudioFabricObject[]): string[] {
   return harvestAnswers(objects).map((obj) => String(obj.text ?? ''))
 }
 
+/**
+ * Every mark on the page, with the row groups opened up.
+ *
+ * A picture is itself a group of Lucide paths but reads as one object here, the
+ * way a seller sees it on the page.
+ */
+function flatten(objects: StudioFabricObject[]): StudioFabricObject[] {
+  return objects.flatMap((obj) =>
+    obj.objects && obj.data?.source !== 'lucide-icon'
+      ? [obj, ...flatten(obj.objects)]
+      : [obj],
+  )
+}
+
 function iconNames(objects: StudioFabricObject[]): string[] {
-  return objects
+  return flatten(objects)
     .filter((obj) => obj.data?.source === 'lucide-icon')
     .map((obj) => String(obj.data?.iconName ?? ''))
 }
@@ -415,12 +429,36 @@ describe('picture rebus page', () => {
     const ctx = kdpCtx(8.5, 11)
     const objects = generate(base, ctx)
     const plan = planFor(headed(base), ctx)!
-    const labels = objects
+    const labels = flatten(objects)
       .filter((obj) => /^\d+\.$/.test(String(obj.text ?? '')))
       .map((obj) => String(obj.text))
     expect(labels).toEqual(
       Array.from({ length: plan.itemCount }, (_, i) => `${i + 1}.`),
     )
+  })
+
+  it('groups each puzzle, with its letters kept on their rules', () => {
+    const ctx = kdpCtx(6, 9)
+    const config = headed({ ...base, level: 'gentle' })
+    const plan = planFor(config, ctx)!
+    const rows = generate(config, ctx).filter(
+      (obj) => obj.type === 'group' && obj.data?.source !== 'lucide-icon',
+    )
+    expect(rows).toHaveLength(plan.itemCount)
+
+    rows.forEach((row, index) => {
+      const [label, pictures, answer, ...rest] = row.objects ?? []
+      expect(rest).toEqual([])
+      expect(label?.text).toBe(`${index + 1}.`)
+      expect(pictures?.type).toBe('group')
+      expect(iconNames(pictures?.objects ?? []).length).toBeGreaterThan(1)
+      expect(answer?.type).toBe('group')
+      const answerParts = answer?.objects ?? []
+      expect(answerParts.some((obj) => obj.type === 'rect')).toBe(true)
+      expect(answerParts.some((obj) => obj.studioRole === 'answer')).toBe(true)
+      // The hint reads with the slots it is a hint for.
+      expect(answerParts.some((obj) => obj.studioRole === 'prompt')).toBe(true)
+    })
   })
 
   it('hides every answer letter on the puzzle page', () => {
@@ -434,7 +472,7 @@ describe('picture rebus page', () => {
     const ctx = kdpCtx(6, 9)
     const gentleHints = loadPictureRebusBank().map((p) => p.hint)
     const hasHint = (config: StudioConfig) =>
-      generate(config, ctx).some((obj) =>
+      flatten(generate(config, ctx)).some((obj) =>
         gentleHints.includes(String(obj.text ?? '').replace(/\n/g, ' ')),
       )
     expect(hasHint({ ...base, level: 'gentle' })).toBe(true)
@@ -457,7 +495,7 @@ describe('picture rebus solution page', () => {
     const puzzlePage = generate(base, ctx)
     const solution = buildAnswerPage(puzzlePage, STUDIO_ANSWER_INK_MONO)
 
-    const revealed = solution.filter((obj) => obj.studioRole === 'answer')
+    const revealed = flatten(solution).filter((obj) => obj.studioRole === 'answer')
     expect(revealed).toHaveLength(harvestAnswers(puzzlePage).length)
     expect(revealed.every((obj) => obj.visible === true)).toBe(true)
     expect(revealed.every((obj) => obj.fill === STUDIO_ANSWER_INK_MONO)).toBe(true)
@@ -475,7 +513,7 @@ describe('picture rebus solution page', () => {
 
     expect(iconNames(solution)).toEqual(iconNames(puzzlePage))
     const anchor = (objects: StudioFabricObject[]) =>
-      objects
+      flatten(objects)
         .filter((obj) => obj.studioRole !== 'decoration')
         .map((obj) => `${obj.type}@${Math.round(obj.left)},${Math.round(obj.top)}`)
     expect(anchor(solution)).toEqual(anchor(puzzlePage))
@@ -492,7 +530,7 @@ describe('picture rebus solution page', () => {
     })
     const solution = buildAnswerPage(generate(config, ctx), STUDIO_ANSWER_INK_MONO)
 
-    const letters = solution
+    const letters = flatten(solution)
       .filter((obj) => obj.studioRole === 'answer')
       .map((obj) => String(obj.text ?? ''))
     let cursor = 0
@@ -507,10 +545,10 @@ describe('picture rebus solution page', () => {
   it('drops the how-to line but keeps the "+" between the pictures', () => {
     const ctx = kdpCtx(6, 9)
     const solution = buildAnswerPage(generate(base, ctx), STUDIO_ANSWER_INK_MONO)
-    expect(solution.some((obj) => String(obj.text ?? '').includes('Each picture'))).toBe(
+    expect(flatten(solution).some((obj) => String(obj.text ?? '').includes('Each picture'))).toBe(
       false,
     )
-    expect(solution.filter((obj) => String(obj.text ?? '') === '+').length).toBeGreaterThan(
+    expect(flatten(solution).filter((obj) => String(obj.text ?? '') === '+').length).toBeGreaterThan(
       0,
     )
   })

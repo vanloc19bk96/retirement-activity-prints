@@ -81,11 +81,24 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext) {
 const planFor = (w: number, h: number, config: StudioConfig = base) =>
   rdWorstCasePlan({ page: kdpCtx(w, h), config, instruction: instructionFor(config), font: FONT })
 
+/**
+ * Every drawn mark on the page, with the groups opened up and each child moved
+ * back to page coordinates — a group stores its children relative to its
+ * centre, and these tests measure where things land on the paper.
+ */
+function leaves(objects: StudioFabricObject[], dx = 0, dy = 0): StudioFabricObject[] {
+  return objects.flatMap((o) => {
+    const placed = { ...o, left: o.left + dx, top: o.top + dy }
+    if (!o.objects) return [placed]
+    return leaves(o.objects, placed.left + (o.width ?? 0) / 2, placed.top + (o.height ?? 0) / 2)
+  })
+}
+
 const texts = (objects: StudioFabricObject[]) =>
-  objects.map((o) => String(o.text ?? '').replace(/ /g, ' ')).filter(Boolean)
+  leaves(objects).map((o) => String(o.text ?? '').replace(/ /g, ' ')).filter(Boolean)
 
 const activities = (objects: StudioFabricObject[]) =>
-  objects.filter((o) => typeof o.data?.[STUDIO_CONTENT_LABEL_KEY] === 'string')
+  leaves(objects).filter((o) => typeof o.data?.[STUDIO_CONTENT_LABEL_KEY] === 'string')
 
 function extent(o: StudioFabricObject) {
   const w = o.width ?? (o.radius ?? 0) * 2
@@ -103,8 +116,8 @@ const overlaps = (a: ReturnType<typeof extent>, b: ReturnType<typeof extent>) =>
 
 /** Each drawn die, in page order, with the pips inside its outline. */
 function dice(objects: StudioFabricObject[]) {
-  const outlines = objects.filter((o) => typeof o.data?.[RD_DIE_FACE_KEY] === 'number')
-  const pips = objects.filter((o) => o.type === 'circle')
+  const outlines = leaves(objects).filter((o) => typeof o.data?.[RD_DIE_FACE_KEY] === 'number')
+  const pips = leaves(objects).filter((o) => o.type === 'circle')
   return outlines.map((outline) => {
     const box = extent(outline)
     const inside = pips.filter((pip) => {
@@ -177,13 +190,50 @@ describe('roll-a-day page', () => {
     for (const die of drawn) expect(die.pips).toBe(die.face)
     // Each idea sits on the same row as its die.
     const stamped = activities(page!.objects).map(extent)
-    const outlines = page!.objects.filter((o) => typeof o.data?.[RD_DIE_FACE_KEY] === 'number').map(extent)
+    const outlines = leaves(page!.objects).filter((o) => typeof o.data?.[RD_DIE_FACE_KEY] === 'number').map(extent)
     stamped.forEach((text, i) => {
       const die = outlines[i]!
       expect(text.top).toBeLessThan(die.bottom)
       expect(text.bottom).toBeGreaterThan(die.top)
       expect(text.left).toBeGreaterThan(die.right)
     })
+  })
+
+  it('groups each table, each row with its die, and the write-in line', () => {
+    const [page] = generate(base, kdpCtx(8.5, 11))
+    const groups = page!.objects.filter((o) => o.type === 'group')
+    expect(groups).toHaveLength(3)
+    const [morning, afternoon, writeIn] = groups
+    for (const [table, side] of [[morning, 'morning'], [afternoon, 'afternoon']] as const) {
+      expect(table!.studioRole).toBe('structure')
+      const [heading, ...rows] = table!.objects ?? []
+      // The heading keeps its heavy rule.
+      expect(heading?.type).toBe('group')
+      expect(texts([heading!])).toEqual([RD_HEADINGS[side]])
+      expect(heading!.objects!.some((o) => o.type === 'rect')).toBe(true)
+
+      expect(rows).toHaveLength(6)
+      rows.forEach((row, index) => {
+        const [die, activity, rule, ...rest] = row.objects ?? []
+        expect(rest).toEqual([])
+        expect(die?.type).toBe('group')
+        expect(die!.objects![0]!.data?.[RD_DIE_FACE_KEY]).toBe(index + 1)
+        expect(die!.objects!.filter((o) => o.type === 'circle')).toHaveLength(index + 1)
+        expect(activity?.data?.[STUDIO_CONTENT_LABEL_KEY]).toBeTypeOf('string')
+        expect(rule?.type).toBe('rect')
+      })
+    }
+
+    // "I rolled:" then each word with the box it labels.
+    const [label, ...parts] = writeIn!.objects ?? []
+    expect(label?.text).toBe(WRITE_IN_LABEL)
+    expect(parts.map((part) => part.objects?.map((o) => o.type))).toEqual([
+      ['textbox', 'rect'],
+      ['textbox', 'rect'],
+    ])
+    // No die, idea or box is left loose on the page.
+    expect(page!.objects.some((o) => o.type === 'rect' || o.type === 'circle')).toBe(false)
+    expect(page!.objects.some((o) => o.data?.[STUDIO_CONTENT_LABEL_KEY])).toBe(false)
   })
 
   it('closes with a place to note both rolls', () => {
@@ -204,7 +254,7 @@ describe('roll-a-day page', () => {
   it('prints only black, white and grey', () => {
     const [page] = generate(base, kdpCtx(8.5, 11))
     const colours = new Set(
-      page!.objects.flatMap((o) => [o.fill, o.stroke]).filter((c): c is string => !!c && c !== 'transparent'),
+      leaves(page!.objects).flatMap((o) => [o.fill, o.stroke]).filter((c): c is string => !!c && c !== 'transparent'),
     )
     for (const colour of colours) {
       const hex = colour.replace('#', '')
@@ -222,14 +272,14 @@ describe('roll-a-day page', () => {
         expect(activities(page!.objects)).toHaveLength(12)
         assertObjectsInSafeMargin(page!.objects, ctx)
 
-        const solid = page!.objects.filter((o) => o.type === 'textbox')
+        const solid = leaves(page!.objects).filter((o) => o.type === 'textbox')
         const boxes = solid.map(extent)
         for (let i = 0; i < boxes.length; i++) {
           for (let j = i + 1; j < boxes.length; j++) {
             expect(overlaps(boxes[i]!, boxes[j]!), `${solid[i]!.text} / ${solid[j]!.text}`).toBe(false)
           }
         }
-        const outlines = page!.objects.filter((o) => typeof o.data?.[RD_DIE_FACE_KEY] === 'number').map(extent)
+        const outlines = leaves(page!.objects).filter((o) => typeof o.data?.[RD_DIE_FACE_KEY] === 'number').map(extent)
         for (const die of outlines) for (const box of boxes) expect(overlaps(die, box)).toBe(false)
       }
     }

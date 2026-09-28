@@ -4,8 +4,8 @@ import {
   STUDIO_INK_MUTED,
   STUDIO_RULE_MEDIUM,
 } from '@/constants/studio.constants'
-import { buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
-import type { Box } from '../studio-layout'
+import { buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import { unionObjectBounds, type Box } from '../studio-layout'
 import { fabricTextHeight, hugTextBoxWidth } from '../studio-text-metrics'
 import { TOP_FIVE_ANSWER_COUNT, TOP_FIVE_POINTS } from './content'
 import { ANSWER_INSET, answerLineText, type FittedTopFiveSet } from './fit'
@@ -41,6 +41,17 @@ interface DrawContext {
   font: string
   tag: StudioTag
   mode: TopFiveDrawMode
+}
+
+/**
+ * Draws with `ctx` pointed at a fresh list and pushes what it drew as one
+ * group. Nothing drawn, nothing pushed.
+ */
+function grouped(ctx: DrawContext, draw: (inner: DrawContext) => void): void {
+  const parts: StudioFabricObject[] = []
+  draw({ ...ctx, objects: parts })
+  const bounds = unionObjectBounds(parts)
+  if (bounds) ctx.objects.push(buildGroup(parts, bounds, ctx.tag, 'structure'))
 }
 
 function rule(ctx: DrawContext, left: number, top: number, width: number, fill = STUDIO_INK) {
@@ -138,51 +149,67 @@ function drawQuestion(ctx: DrawContext, set: FittedTopFiveSet, index: number, at
  * Five lines. The ranked answers are drawn on both pages — hidden on the
  * puzzle, so the editor can reveal a sheet in place, and written in on the
  * answer page, where the points replace the score blanks.
+ *
+ * Each line is its own group — the guess rule, the answer written on it, and
+ * its score blank or points — so the answer never drifts off its line.
  */
-function drawAnswerRows(ctx: DrawContext, set: FittedTopFiveSet, at: BlockGeometry, rowsTop: number) {
-  const { metrics, answerLineW, answerFont, scoreColumnW } = ctx.plan
-  const lift = Math.round(metrics.pitch * 0.12)
-
+function drawAnswerRows(block: DrawContext, set: FittedTopFiveSet, at: BlockGeometry, rowsTop: number) {
   for (let rank = 0; rank < TOP_FIVE_ANSWER_COUNT; rank++) {
-    const ruleY = rowsTop + (rank + 1) * metrics.pitch - RULE_HEIGHT
-    rule(ctx, at.bandLeft, ruleY, answerLineW)
-    label(ctx, {
-      text: answerLineText(rank, set.answers[rank]!),
-      left: at.bandLeft + ANSWER_INSET,
-      bottom: ruleY - lift,
-      size: answerFont,
-      maxWidth: answerLineW - ANSWER_INSET,
-      role: 'answer',
-    })
-
-    if (ctx.mode === 'answers') {
-      label(ctx, {
-        text: pointsText(TOP_FIVE_POINTS[rank]!),
-        left: at.scoreLeft + scoreColumnW,
-        bottom: ruleY - lift,
-        size: metrics.textFont,
-        bold: true,
-        alignRight: true,
-        maxWidth: scoreColumnW,
-        role: 'answer',
-      })
-      continue
-    }
-    rule(ctx, at.scoreLeft, ruleY, metrics.scoreRuleW)
-    label(ctx, {
-      text: POINTS_LABEL,
-      left: at.scoreLeft + metrics.scoreRuleW + metrics.labelGap,
-      bottom: ruleY - lift,
-      size: metrics.textFont,
-      muted: true,
-      maxWidth: scoreColumnW,
-      role: 'decoration',
-    })
+    grouped(block, (ctx) => drawAnswerRow(ctx, set, at, rowsTop, rank))
   }
 }
 
+function drawAnswerRow(
+  ctx: DrawContext,
+  set: FittedTopFiveSet,
+  at: BlockGeometry,
+  rowsTop: number,
+  rank: number,
+) {
+  const { metrics, answerLineW, answerFont, scoreColumnW } = ctx.plan
+  const lift = Math.round(metrics.pitch * 0.12)
+  const ruleY = rowsTop + (rank + 1) * metrics.pitch - RULE_HEIGHT
+  rule(ctx, at.bandLeft, ruleY, answerLineW)
+  label(ctx, {
+    text: answerLineText(rank, set.answers[rank]!),
+    left: at.bandLeft + ANSWER_INSET,
+    bottom: ruleY - lift,
+    size: answerFont,
+    maxWidth: answerLineW - ANSWER_INSET,
+    role: 'answer',
+  })
+
+  if (ctx.mode === 'answers') {
+    label(ctx, {
+      text: pointsText(TOP_FIVE_POINTS[rank]!),
+      left: at.scoreLeft + scoreColumnW,
+      bottom: ruleY - lift,
+      size: metrics.textFont,
+      bold: true,
+      alignRight: true,
+      maxWidth: scoreColumnW,
+      role: 'answer',
+    })
+    return
+  }
+  rule(ctx, at.scoreLeft, ruleY, metrics.scoreRuleW)
+  label(ctx, {
+    text: POINTS_LABEL,
+    left: at.scoreLeft + metrics.scoreRuleW + metrics.labelGap,
+    bottom: ruleY - lift,
+    size: metrics.textFont,
+    muted: true,
+    maxWidth: scoreColumnW,
+    role: 'decoration',
+  })
+}
+
 /** "Total ___ / 15" under the score blanks — the reader's running tally. */
-function drawTotal(ctx: DrawContext, at: BlockGeometry, top: number) {
+function drawTotal(block: DrawContext, at: BlockGeometry, top: number) {
+  grouped(block, (ctx) => drawTotalParts(ctx, at, top))
+}
+
+function drawTotalParts(ctx: DrawContext, at: BlockGeometry, top: number) {
   const { metrics, scoreColumnW } = ctx.plan
   const baseline = top + fabricTextHeight(1, metrics.textFont)
   label(ctx, {
@@ -216,6 +243,10 @@ function drawTotal(ctx: DrawContext, at: BlockGeometry, top: number) {
  * instruction and the first question, which reads as a missing block. Blocks
  * are capped in width and centred, so a letter-size page does not run guess
  * lines six inches across.
+ *
+ * Each question is one group — number, question, its five lines and the total
+ * — so a seller drags or deletes a whole question in the editor. The rule
+ * between two questions belongs to neither, so it stays loose.
  */
 export function drawTopFivePage(
   objects: StudioFabricObject[],
@@ -251,12 +282,14 @@ export function drawTopFivePage(
       scoreLeft: bandLeft + plan.bandWidth - plan.scoreColumnW,
       top,
     }
-    drawQuestion(ctx, set, index, at)
     const rowsTop = top + questionHeight(set.questionLines.length, metrics) + metrics.questionGap
-    drawAnswerRows(ctx, set, at, rowsTop)
-    if (mode === 'puzzle') {
-      drawTotal(ctx, at, rowsTop + TOP_FIVE_ANSWER_COUNT * metrics.pitch + metrics.totalGap)
-    }
+    grouped(ctx, (block) => {
+      drawQuestion(block, set, index, at)
+      drawAnswerRows(block, set, at, rowsTop)
+      if (mode === 'puzzle') {
+        drawTotal(block, at, rowsTop + TOP_FIVE_ANSWER_COUNT * metrics.pitch + metrics.totalGap)
+      }
+    })
 
     top += heights[index]!
     if (index < gaps) {

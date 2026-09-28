@@ -1,7 +1,7 @@
 import type { StudioFabricObject } from '@/types/studio-template.types'
 import { STUDIO_INK, STUDIO_RULE_MEDIUM, STUDIO_STROKE_NORMAL } from '@/constants/studio.constants'
-import { buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
-import { toNonBreakingSpaces, type Box } from '../studio-layout'
+import { buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import { toNonBreakingSpaces, unionObjectBounds, type Box } from '../studio-layout'
 import { FABRIC_FONT_SIZE_MULT, fabricTextHeight, hugTextBoxWidth } from '../studio-text-metrics'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import { WHY_LABEL } from './content'
@@ -34,6 +34,19 @@ interface DrawContext {
 
 /** Middle of the first line's letters, not of its line box. */
 const letterMid = (top: number, fontSize: number) => top + (fontSize * FABRIC_FONT_SIZE_MULT) / 2
+
+/**
+ * Draws with `ctx` pointed at a fresh list and pushes what it drew as one
+ * group, so a seller drags or deletes the block whole in the editor. Returns
+ * what `draw` returned.
+ */
+function grouped<T>(ctx: DrawContext, draw: (inner: DrawContext) => T): T {
+  const parts: StudioFabricObject[] = []
+  const result = draw({ ...ctx, objects: parts })
+  const bounds = unionObjectBounds(parts)
+  if (bounds) ctx.objects.push(buildGroup(parts, bounds, ctx.tag, 'structure'))
+  return result
+}
 
 function rule(ctx: DrawContext, left: number, top: number, width: number, data?: Record<string, unknown>) {
   const rect = buildRect(
@@ -80,8 +93,12 @@ function headingText(ctx: DrawContext, title: string, continued: boolean): strin
   return fits ? long : `${title}${CONTINUED_SHORT}`
 }
 
-/** The heading, bold, with a rule under it across the list. Returns its bottom. */
-function drawHeading(ctx: DrawContext, title: string, continued: boolean, top: number): number {
+/** The heading, bold, with a rule under it across the list, as one group. Returns its bottom. */
+function drawHeading(outer: DrawContext, title: string, continued: boolean, top: number): number {
+  return grouped(outer, (ctx) => drawHeadingParts(ctx, title, continued, top))
+}
+
+function drawHeadingParts(ctx: DrawContext, title: string, continued: boolean, top: number): number {
   const { metrics, blockWidth } = ctx.plan
   const text = toNonBreakingSpaces(headingText(ctx, title, continued))
   ctx.objects.push(
@@ -122,9 +139,14 @@ function drawHeading(ctx: DrawContext, title: string, continued: boolean, top: n
 /**
  * The writing lines under a destination, the first opening with "Why I want
  * to go:" set on the line as handwriting would be. `firstLineY` is the first
- * line's own y.
+ * line's own y. The label and its lines are one group, so the label cannot be
+ * moved off the line it sits on.
  */
-function drawWhyLines(ctx: DrawContext, firstLineY: number, data?: Record<string, unknown>) {
+function drawWhyLines(outer: DrawContext, firstLineY: number, data?: Record<string, unknown>) {
+  grouped(outer, (ctx) => drawWhyLineParts(ctx, firstLineY, data))
+}
+
+function drawWhyLineParts(ctx: DrawContext, firstLineY: number, data?: Record<string, unknown>) {
   const { metrics, textLeft, textWidth, labelWidth, lines } = ctx.plan
   const left = ctx.left + textLeft
   const baseline = firstLineY - Math.round(metrics.labelFont * 0.14)
@@ -152,8 +174,15 @@ function drawWhyLines(ctx: DrawContext, firstLineY: number, data?: Record<string
  * One destination: the box beside the name's letters, the name in bold on one
  * line (stamped so later lists in the book can avoid it), then its lines.
  * Returns the entry's bottom.
+ *
+ * The entry is one group, so a seller drags or deletes a whole destination in
+ * the editor rather than leaving its box or lines behind.
  */
-function drawEntry(ctx: DrawContext, name: string, group: string, entryTop: number): number {
+function drawEntry(outer: DrawContext, name: string, group: string, entryTop: number): number {
+  return grouped(outer, (ctx) => drawEntryParts(ctx, name, group, entryTop))
+}
+
+function drawEntryParts(ctx: DrawContext, name: string, group: string, entryTop: number): number {
   const { metrics, textLeft, textWidth } = ctx.plan
   const top = Math.round(entryTop)
   checkbox(ctx, letterMid(top, metrics.font) - metrics.check / 2)
@@ -182,8 +211,15 @@ function drawEntry(ctx: DrawContext, name: string, group: string, entryTop: numb
   return entryTop + entryHeight(ctx.plan)
 }
 
-/** A box and a line for a place of the reader's own, then the same lines. Returns its bottom. */
-function drawWriteIn(ctx: DrawContext, entryTop: number): number {
+/**
+ * A box and a line for a place of the reader's own, then the same lines, as
+ * one group like a printed destination. Returns its bottom.
+ */
+function drawWriteIn(outer: DrawContext, entryTop: number): number {
+  return grouped(outer, (ctx) => drawWriteInParts(ctx, entryTop))
+}
+
+function drawWriteInParts(ctx: DrawContext, entryTop: number): number {
   const { metrics, textLeft, textWidth } = ctx.plan
   const data = { [TWM_WRITE_IN_KEY]: true }
   const nameLineY = Math.round(entryTop + metrics.pitch)

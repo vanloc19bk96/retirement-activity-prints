@@ -1,7 +1,7 @@
-import type { StudioFabricObject } from '@/types/studio-template.types'
+import type { StudioFabricObject, StudioRole } from '@/types/studio-template.types'
 import { STUDIO_INK } from '@/constants/studio.constants'
-import { buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
-import { toNonBreakingSpaces, type Box } from '../studio-layout'
+import { buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import { toNonBreakingSpaces, unionObjectBounds, type Box } from '../studio-layout'
 import {
   FABRIC_FONT_SIZE_MULT,
   fabricLinePitch,
@@ -33,6 +33,26 @@ const TITLE_LINE_HEIGHT = 1.1
  * true centre reads as sagging — without leaving the foot of the page bare.
  */
 const OPTICAL_TOP_SHARE = 0.42
+
+/**
+ * Push `parts` as one group, so a seller drags or deletes the block they read as
+ * one thing — a numbered row, a blank, a paragraph — instead of chasing its
+ * pieces one at a time. A lone part goes in as it is: a group of one is only
+ * an extra click in the editor.
+ */
+function pushBlock(
+  objects: StudioFabricObject[],
+  parts: StudioFabricObject[],
+  tag: StudioTag,
+  role: StudioRole = 'structure',
+): void {
+  if (parts.length === 1) {
+    objects.push(parts[0]!)
+    return
+  }
+  const bounds = unionObjectBounds(parts)
+  if (bounds) objects.push(buildGroup(parts, bounds, tag, role))
+}
 
 function rule(objects: StudioFabricObject[], tag: StudioTag, left: number, top: number, width: number) {
   objects.push(
@@ -130,8 +150,12 @@ export function drawWordPage(
     const colLeft = left + col * (plan.colWidth + m.gutter) + rowInset
     const rowTop = Math.round(top + row * rowH + extra / 2 + m.padY)
     const { label, hint } = FIF_BLANK_KINDS[kind]
+    // One group per numbered row; inside it the label and its hint are one
+    // piece, the way a reader takes them in before writing on the line.
+    const item: StudioFabricObject[] = []
+    const prompt: StudioFabricObject[] = []
 
-    objects.push(
+    item.push(
       buildText(
         {
           left: colLeft,
@@ -148,7 +172,7 @@ export function drawWordPage(
         'decoration',
       ),
     )
-    objects.push(
+    prompt.push(
       buildText(
         {
           left: colLeft + labelLeft,
@@ -165,7 +189,7 @@ export function drawWordPage(
       ),
     )
     const hintTop = rowTop + fabricTextHeight(1, m.font) + m.hintGap
-    objects.push(
+    prompt.push(
       buildText(
         {
           left: colLeft + labelLeft,
@@ -181,20 +205,23 @@ export function drawWordPage(
         'decoration',
       ),
     )
+    pushBlock(item, prompt, tag)
     // The writing line sits level with the foot of the hint, so a word
     // written on it has the label and the hint's height to itself.
     rule(
-      objects,
+      item,
       tag,
       colLeft + labelLeft + m.labelW + m.ruleGap,
       Math.round(hintTop + m.hint * FABRIC_FONT_SIZE_MULT) - 1,
       plan.ruleW,
     )
+    pushBlock(objects, item, tag)
   })
 
   let footerTop = top + plan.rowsPerCol * rowH + m.footerGap
+  const footer: StudioFabricObject[] = []
   for (const line of plan.footerLines) {
-    centredText(objects, tag, {
+    centredText(footer, tag, {
       text: line,
       centre,
       top: footerTop,
@@ -205,6 +232,7 @@ export function drawWordPage(
     })
     footerTop += fabricLinePitch(m.font)
   }
+  pushBlock(objects, footer, tag, 'decoration')
 }
 
 function storyPageHeight(plan: StoryPagePlan, page: StoryPageLayout): number {
@@ -283,8 +311,9 @@ export function drawStoryPage(
 
   if (page.titleLines.length) {
     const titleTop = top
+    const title: StudioFabricObject[] = []
     page.titleLines.forEach((line, index) => {
-      const object = centredText(objects, tag, {
+      const object = centredText(title, tag, {
         text: line,
         centre,
         top: titleTop + index * fabricTextHeight(1, m.title) * TITLE_LINE_HEIGHT,
@@ -295,18 +324,27 @@ export function drawStoryPage(
       })
       if (index === 0 && label) object.data = { [STUDIO_CONTENT_LABEL_KEY]: label }
     })
+    pushBlock(objects, title, tag)
     top += titleHeight(page.titleLines.length, m) + extra
   }
 
+  // One group per paragraph (or the part of it on this page), so a seller moves
+  // the story a paragraph at a time with its blanks in place; each blank is its
+  // own piece inside, the number kept on the line it labels.
   const ruleDrop = Math.round(m.font * FABRIC_FONT_SIZE_MULT) - 2
+  let paragraph: StudioFabricObject[] = []
   page.lines.forEach((line, index) => {
+    if (index > 0 && line.paragraphStart) {
+      pushBlock(objects, paragraph, tag)
+      paragraph = []
+    }
     if (index > 0) top += m.pitch + extra + (line.paragraphStart ? m.paraGap : 0)
     const lineTop = Math.round(top)
     const ruleY = lineTop + ruleDrop
     for (const piece of placeLine(line.atoms, m, font).pieces) {
       const x = Math.round(left + piece.left)
       if (piece.kind === 'text') {
-        objects.push(
+        paragraph.push(
           buildText(
             {
               left: x,
@@ -325,7 +363,8 @@ export function drawStoryPage(
       }
       // The blank's number sits on the line, just before it, so the reader
       // copies word 3 onto the line marked 3.
-      objects.push(
+      const blank: StudioFabricObject[] = []
+      blank.push(
         buildText(
           {
             left: x,
@@ -342,13 +381,16 @@ export function drawStoryPage(
           'decoration',
         ),
       )
-      rule(objects, tag, x + m.numberW + m.numberGap, ruleY, m.blankW)
+      rule(blank, tag, x + m.numberW + m.numberGap, ruleY, m.blankW)
+      pushBlock(paragraph, blank, tag)
     }
   })
+  pushBlock(objects, paragraph, tag)
 
   let footerTop = top + fabricTextHeight(1, m.font) + m.footerGap + extra
+  const footer: StudioFabricObject[] = []
   for (const line of page.footer) {
-    centredText(objects, tag, {
+    centredText(footer, tag, {
       text: line,
       centre,
       top: footerTop,
@@ -359,4 +401,5 @@ export function drawStoryPage(
     })
     footerTop += fabricLinePitch(m.font)
   }
+  pushBlock(objects, footer, tag, 'decoration')
 }

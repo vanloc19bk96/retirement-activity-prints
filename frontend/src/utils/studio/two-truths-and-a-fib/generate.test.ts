@@ -81,10 +81,23 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext) {
   return twoTruthsFibTemplate.generate(config, ctx)
 }
 
+/**
+ * Every drawn mark, with the set and row groups opened up and each child moved
+ * back to page coordinates (Fabric stores group children centre-relative).
+ */
+function leaves(objects: readonly StudioFabricObject[]): StudioFabricObject[] {
+  return objects.flatMap((obj) => {
+    if (obj.type !== 'group' || !obj.objects) return [obj]
+    const cx = obj.left + obj.width! / 2
+    const cy = obj.top + obj.height! / 2
+    return leaves(obj.objects.map((child) => ({ ...child, left: child.left + cx, top: child.top + cy })))
+  })
+}
+
 const clean = (text: unknown) => String(text ?? '').replace(/ /g, ' ')
-const texts = (objects: StudioFabricObject[]) => objects.map((o) => clean(o.text)).filter(Boolean)
+const texts = (objects: StudioFabricObject[]) => leaves(objects).map((o) => clean(o.text)).filter(Boolean)
 const oneLine = (text: string) => text.replace(/\n/g, ' ')
-const visible = (objects: StudioFabricObject[]) => objects.filter((o) => o.visible !== false)
+const visible = (objects: StudioFabricObject[]) => leaves(objects).filter((o) => o.visible !== false)
 
 const fixtureSets = () => selectTtfSets(TTF_FIXTURE_ITEMS, { cap: 10 })
 const allStatements = TTF_FIXTURE_ITEMS.flatMap((item) => [...item.truths, item.fib])
@@ -277,9 +290,46 @@ describe('two-truths-and-a-fib page', () => {
     expect(answers.every((o) => o.type === 'circle' && o.visible === false)).toBe(true)
   })
 
+  it('groups each set, with every letter kept beside its statement and the ring on the fib', () => {
+    const [page] = generate(base, kdpCtx(8.5, 11))
+    for (const [objects, answers] of [
+      [page!.objects, false],
+      [page!.answerSourceObjects!, true],
+    ] as const) {
+      const blocks = objects.filter((o) => o.type === 'group')
+      expect(blocks).toHaveLength(3)
+      blocks.forEach((block, index) => {
+        const [heading, ...rest] = block.objects ?? []
+        expect(clean(heading!.text).startsWith(`${index + 1}. `)).toBe(true)
+        const rows = rest.slice(0, 3)
+        rows.forEach((row, r) => {
+          expect(row.type).toBe('group')
+          const [letter, statement, ring, ...extra] = row.objects ?? []
+          expect(extra).toEqual([])
+          expect(clean(letter!.text)).toBe(TTF_LETTERS[r])
+          expect(allStatements).toContain(oneLine(clean(statement!.text)))
+          // The ring travels with the fib's row, and only that row.
+          const isFib = fibs.has(oneLine(clean(statement!.text)))
+          expect(ring?.type === 'circle' && ring.studioRole === 'answer').toBe(isFib)
+          if (!isFib) expect(ring).toBeUndefined()
+        })
+        const tail = rest.slice(3)
+        if (answers) {
+          expect(tail).toHaveLength(1)
+          expect(tail[0]!.studioRole).toBe('answer')
+          expect(oneLine(clean(tail[0]!.text))).toMatch(/ is the fib\. /)
+        } else {
+          expect(tail).toEqual([])
+        }
+        // The wrappers are structure, never answers, so the key reveals only the marks inside.
+        expect(block.studioRole).toBe('structure')
+      })
+    }
+  })
+
   it('stamps titles and statements so later pages can avoid them', () => {
     const [page] = generate(base, kdpCtx(6, 9))
-    const labels = page!.objects
+    const labels = leaves(page!.objects)
       .map((o) => o.data?.[STUDIO_CONTENT_LABEL_KEY])
       .filter((label): label is string => typeof label === 'string')
     const titles = TTF_FIXTURE_ITEMS.map((item) => item.title)
@@ -292,7 +342,7 @@ describe('two-truths-and-a-fib page', () => {
   it('rings the letter of the fib on the answer page and explains it', () => {
     for (const seed of [42, 7, 1234]) {
       const [page] = generate({ ...base, seed }, kdpCtx(8.5, 11, TTF_FIXTURE, seed))
-      const key = buildAnswerPage(page!.answerSourceObjects!, STUDIO_ANSWER_INK_MONO)
+      const key = leaves(buildAnswerPage(page!.answerSourceObjects!, STUDIO_ANSWER_INK_MONO))
       const rings = key.filter((o) => o.type === 'circle')
       expect(rings.length).toBe(3)
       expect(rings.every((o) => o.visible === true && o.stroke === STUDIO_ANSWER_INK_MONO)).toBe(true)

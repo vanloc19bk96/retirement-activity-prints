@@ -479,6 +479,34 @@ describe('hidden-message-word-search page', () => {
     expect(texts.some((text) => text.startsWith('Words to find'))).toBe(true)
   })
 
+  it('groups the write-in strip, with its letters kept on their rules', () => {
+    const ctx = kdpCtx(7.5, 9.25)
+    const config = { ...base, showTitle: true, title: 'Game 1' }
+    resetObjectCounter()
+    const [page] = hiddenMessageWordSearchTemplate.generate(config, ctx)
+    const letters = FIXTURE_MESSAGE.replace(/[^A-Z]/g, '').length
+    const strips = page!.objects.filter(
+      (obj) =>
+        obj.type === 'group' &&
+        (obj.objects ?? []).some((child) => child.type === 'textbox' && child.studioRole === 'answer'),
+    )
+    expect(strips).toHaveLength(1)
+    const parts = strips[0]!.objects ?? []
+    expect(strips[0]!.studioRole).toBe('structure')
+    // Flat: caption, one rule and one hidden letter per letter of the saying.
+    expect(parts.every((child) => child.type !== 'group')).toBe(true)
+    expect(parts[0]?.text).toBe(MESSAGE_LABEL)
+    expect(parts.filter((child) => child.type === 'rect')).toHaveLength(letters)
+    expect(
+      parts.filter((child) => child.studioRole === 'answer' && child.visible === false),
+    ).toHaveLength(letters)
+    // Nothing from the strip is left loose on the page.
+    expect(page!.objects.some((obj) => obj.studioRole === 'answer' && obj.type === 'textbox')).toBe(
+      false,
+    )
+    expect(page!.objects.some((obj) => obj.text === MESSAGE_LABEL)).toBe(false)
+  })
+
   it('answers both halves of the puzzle on the solution page', () => {
     const ctx = kdpCtx(8.5, 11)
     resetObjectCounter()

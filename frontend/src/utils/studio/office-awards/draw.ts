@@ -6,8 +6,15 @@ import {
   STUDIO_STROKE_HAIRLINE,
   STUDIO_STROKE_NORMAL,
 } from '@/constants/studio.constants'
-import { buildCircle, buildPolygon, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
-import { toNonBreakingSpaces, type Box } from '../studio-layout'
+import {
+  buildCircle,
+  buildGroup,
+  buildPolygon,
+  buildRect,
+  buildText,
+  type StudioTag,
+} from '../studio-fabric-builders'
+import { toNonBreakingSpaces, unionObjectBounds, type Box } from '../studio-layout'
 import { fabricTextHeight, hugTextBoxWidth } from '../studio-text-metrics'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import {
@@ -35,6 +42,12 @@ interface DrawContext {
   font: string
   tag: StudioTag
   left: number
+}
+
+/** Wraps `parts` in a group hugging their drawn extent; nothing to wrap, nothing pushed. */
+function pushGroup(objects: StudioFabricObject[], parts: StudioFabricObject[], tag: StudioTag): void {
+  const bounds = unionObjectBounds(parts)
+  if (bounds) objects.push(buildGroup(parts, bounds, tag, 'structure'))
 }
 
 /** A writing line: mid grey, so handwriting stands out on it. */
@@ -146,9 +159,15 @@ function drawBadge(ctx: DrawContext, cx: number, cy: number, number: number) {
  * One award card: the frame, the rosette, the title (stamped so later runs
  * can avoid it) and its writing rows. Everything is set from the card's own
  * top, so no part of a card can land on another page.
+ *
+ * The card is drawn as one group, so a seller drags or deletes a whole award
+ * in the editor instead of its frame, ribbons and lines one by one. Inside it
+ * the rosette is one group, and each "Winner:" / "Why:" label is grouped with
+ * the line it sits on, so a hand edit cannot part a label from its line.
  */
-function drawCard(ctx: DrawContext, award: FittedOaAward, top: number, height: number) {
-  const { metrics, cardWidth, textOffset, textWidth, lineOffset, lineW, rows } = ctx.plan
+function drawCard(outer: DrawContext, award: FittedOaAward, top: number, height: number) {
+  const { metrics, cardWidth, textOffset, textWidth, lineOffset, lineW, rows } = outer.plan
+  const ctx: DrawContext = { ...outer, objects: [] }
   ctx.objects.push(
     buildRect(
       {
@@ -165,7 +184,9 @@ function drawCard(ctx: DrawContext, award: FittedOaAward, top: number, height: n
       'structure',
     ),
   )
-  drawBadge(ctx, ctx.left + metrics.padX + metrics.badgeR, top + metrics.padY + metrics.badgeR, award.number)
+  const badge: DrawContext = { ...ctx, objects: [] }
+  drawBadge(badge, ctx.left + metrics.padX + metrics.badgeR, top + metrics.padY + metrics.badgeR, award.number)
+  pushGroup(ctx.objects, badge.objects, ctx.tag)
 
   const textTop = top + metrics.padY
   // Pre-broken and set in a box exactly the measure it was broken to, so
@@ -191,9 +212,12 @@ function drawCard(ctx: DrawContext, award: FittedOaAward, top: number, height: n
   const labels = rows === 2 ? [WINNER_LABEL, WHY_LABEL] : [WINNER_LABEL]
   labels.forEach((text, index) => {
     const rowTop = textTop + awardTextHeight(ctx.plan, award.lines.length) + index * metrics.rowH
-    label(ctx, text, ctx.left + textOffset, rowBaseline(rowTop, metrics))
-    rule(ctx, ctx.left + lineOffset, rowLineY(rowTop, metrics), lineW, index === 0 ? 'winner' : 'why')
+    const row: DrawContext = { ...ctx, objects: [] }
+    label(row, text, ctx.left + textOffset, rowBaseline(rowTop, metrics))
+    rule(row, ctx.left + lineOffset, rowLineY(rowTop, metrics), lineW, index === 0 ? 'winner' : 'why')
+    pushGroup(ctx.objects, row.objects, ctx.tag)
   })
+  pushGroup(outer.objects, ctx.objects, ctx.tag)
 }
 
 /** Lay one page out in its body field, top down, exactly as the pagination measured it. */

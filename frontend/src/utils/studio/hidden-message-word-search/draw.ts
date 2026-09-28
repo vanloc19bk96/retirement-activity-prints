@@ -102,9 +102,11 @@ function lineWidth(words: readonly string[], slot: number, wordGap: number): num
 /**
  * One writing rule per letter, with visible breaks between words.
  *
- * The rules are grouped and the answer letters are not: the group is a single
- * object a seller can nudge, while each hidden answer glyph has to stay
- * individually harvestable for the solution page.
+ * The caption, the rules and the hidden answer letters come back as one group,
+ * so a seller drags the whole write-in strip as a block and a letter can never
+ * be left behind beside a rule it no longer sits on. The answer glyphs keep
+ * their own role inside the group; the answer key walks into groups to find
+ * them, so nothing has to stay loose to be revealed.
  */
 export function drawMessageWritingLines(options: {
   area: Box
@@ -115,14 +117,14 @@ export function drawMessageWritingLines(options: {
 }): StudioFabricObject[] {
   const { area, strip, letters, font, tag } = options
   const stripTop = area.top + Math.max(0, Math.round((area.height - strip.height) / 2))
-  const objects: StudioFabricObject[] = []
+  const caption: StudioFabricObject[] = []
   const labelHeight = messageLabelHeight(strip.labelled)
 
   if (strip.labelled) {
     // Left-aligned, not centred: it labels the rules under it rather than
     // announcing itself, and a centred caption over a centred run of rules
     // reads as a second heading.
-    objects.push(
+    caption.push(
       buildText(
         {
           left: area.left,
@@ -198,9 +200,9 @@ export function drawMessageWritingLines(options: {
     }
   })
 
-  const bounds = unionObjectBounds(rules)
-  if (bounds) objects.push(buildGroup(rules, bounds, tag, 'structure'))
-  return [...objects, ...answers]
+  const parts = [...caption, ...rules, ...answers]
+  const bounds = unionObjectBounds(parts)
+  return bounds ? [buildGroup(parts, bounds, tag, 'structure')] : []
 }
 
 /**

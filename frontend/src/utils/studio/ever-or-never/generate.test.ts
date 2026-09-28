@@ -93,14 +93,26 @@ const planFor = (w: number, h: number, config: StudioConfig = base) =>
     storyLine: config.storyLine === true,
   })
 
+/**
+ * Every mark on the page with the groups opened up, each moved to where it
+ * prints: a group keeps its children relative to its own centre.
+ */
+function marksOf(objects: StudioFabricObject[], dx = 0, dy = 0): StudioFabricObject[] {
+  return objects.flatMap((o) => {
+    const placed = { ...o, left: o.left + dx, top: o.top + dy }
+    if (!o.objects) return [placed]
+    return marksOf(o.objects, placed.left + (o.width ?? 0) / 2, placed.top + (o.height ?? 0) / 2)
+  })
+}
+
 const texts = (objects: StudioFabricObject[]) =>
-  objects.map((o) => String(o.text ?? '').replace(/ /g, ' ')).filter(Boolean)
+  marksOf(objects).map((o) => String(o.text ?? '').replace(/ /g, ' ')).filter(Boolean)
 
 const statements = (objects: StudioFabricObject[]) =>
-  objects.filter((o) => typeof o.data?.[STUDIO_CONTENT_LABEL_KEY] === 'string')
+  marksOf(objects).filter((o) => typeof o.data?.[STUDIO_CONTENT_LABEL_KEY] === 'string')
 
 const checkboxes = (objects: StudioFabricObject[]) =>
-  objects.filter((o) => o.type === 'rect' && o.studioRole === 'structure')
+  marksOf(objects).filter((o) => o.type === 'rect' && o.studioRole === 'structure')
 
 function extent(o: StudioFabricObject) {
   const w = o.width ?? (o.radius ?? 0) * 2
@@ -180,6 +192,31 @@ describe('ever-or-never page', () => {
     }
   })
 
+  it('groups each row, its answers and its story line, and the tally', () => {
+    const [page] = generate({ ...base, storyLine: true }, kdpCtx(8.5, 11))
+    const groups = page!.objects.filter((o) => o.type === 'group')
+    const rows = groups.filter((g) => statements(g.objects!).length === 1)
+    expect(rows).toHaveLength(statements(page!.objects).length)
+    rows.forEach((row, i) => {
+      const [number, statement, answers, story, ...rest] = row.objects!
+      expect(rest).toEqual([])
+      expect(number!.text).toBe(`${i + 1}.`)
+      expect(statement!.studioRole).toBe('prompt')
+      // Each box travels with the word it ticks.
+      expect(answers!.objects!.map((pair) => texts(pair.objects!))).toEqual([[EON_EVER], [EON_NEVER]])
+      for (const pair of answers!.objects!) expect(pair.objects![0]!.type).toBe('rect')
+      expect(texts(story!.objects!)).toEqual([STORY_LABEL])
+      expect(story!.objects![1]!.type).toBe('rect')
+    })
+    const tally = groups.filter((g) => !rows.includes(g))
+    expect(tally).toHaveLength(1)
+    expect(texts(tally[0]!.objects!)).toEqual([TALLY_LABEL, `out of ${rows.length}`])
+    // Only the header text and the rules between rows stay loose.
+    const loose = page!.objects.filter((o) => o.type !== 'group')
+    expect(loose.every((o) => o.type === 'textbox' || o.studioRole === 'decoration')).toBe(true)
+    expect(checkboxes(loose)).toHaveLength(0)
+  })
+
   it('has no hidden answers and no answer page', () => {
     const pages = generate(base, kdpCtx(6, 9))
     expect(pages).toHaveLength(1)
@@ -190,7 +227,7 @@ describe('ever-or-never page', () => {
   it('prints only black, white and grey', () => {
     const [page] = generate(base, kdpCtx(8.5, 11))
     const colours = new Set(
-      page!.objects.flatMap((o) => [o.fill, o.stroke]).filter((c): c is string => !!c && c !== 'transparent'),
+      marksOf(page!.objects).flatMap((o) => [o.fill, o.stroke]).filter((c): c is string => !!c && c !== 'transparent'),
     )
     for (const colour of colours) {
       const hex = colour.replace('#', '')
@@ -216,7 +253,7 @@ describe('ever-or-never page', () => {
 
         // No two text boxes or checkboxes collide — statements, numbers,
         // answer labels, boxes, story labels and the tally alike.
-        const solid = page!.objects.filter(
+        const solid = marksOf(page!.objects).filter(
           (o) => o.type === 'textbox' || (o.type === 'rect' && o.studioRole === 'structure'),
         )
         const boxes = solid.map(extent)

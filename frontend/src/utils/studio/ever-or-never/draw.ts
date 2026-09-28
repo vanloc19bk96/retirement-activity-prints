@@ -1,11 +1,11 @@
-import type { StudioFabricObject } from '@/types/studio-template.types'
+import type { StudioFabricObject, StudioRole } from '@/types/studio-template.types'
 import {
   STUDIO_INK,
   STUDIO_RULE_MEDIUM,
   STUDIO_STROKE_NORMAL,
 } from '@/constants/studio.constants'
-import { buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
-import type { Box } from '../studio-layout'
+import { buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import { unionObjectBounds, type Box } from '../studio-layout'
 import { FABRIC_FONT_SIZE_MULT, hugTextBoxWidth } from '../studio-text-metrics'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import { EON_EVER, EON_NEVER } from './content'
@@ -34,6 +34,14 @@ interface DrawContext {
   tag: StudioTag
 }
 
+/** Draw into a group of its own; see drawRow for why the rows are grouped. */
+function drawGrouped(ctx: DrawContext, role: StudioRole, draw: (local: DrawContext) => void): void {
+  const parts: StudioFabricObject[] = []
+  draw({ ...ctx, objects: parts })
+  const bounds = unionObjectBounds(parts)
+  if (bounds) ctx.objects.push(buildGroup(parts, bounds, ctx.tag, role))
+}
+
 function rule(ctx: DrawContext, left: number, top: number, width: number, fill = STUDIO_INK) {
   ctx.objects.push(
     buildRect(
@@ -47,54 +55,70 @@ function rule(ctx: DrawContext, left: number, top: number, width: number, fill =
 /** Middle of the first line's letters, not of its line box. */
 const letterMid = (top: number, fontSize: number) => top + (fontSize * FABRIC_FONT_SIZE_MULT) / 2
 
-/** "☐ Ever   ☐ Never", starting at `left` with the labels' tops at `top`. */
-function drawAnswers(ctx: DrawContext, left: number, top: number) {
-  const { metrics } = ctx.plan
+/**
+ * "☐ Ever   ☐ Never", starting at `left` with the labels' tops at `top`: one
+ * group of the two choices, each box grouped with the word it ticks, so a hand
+ * edit cannot slide a box under the other answer's label.
+ */
+function drawAnswers(row: DrawContext, left: number, top: number) {
+  drawGrouped(row, 'structure', (answers) => drawAnswerPairs(answers, left, top))
+}
+
+function drawAnswerPairs(answers: DrawContext, left: number, top: number) {
+  const { metrics } = answers.plan
   const mid = letterMid(top, metrics.font)
   let x = left
   for (const [label, width] of [
     [EON_EVER, metrics.everW],
     [EON_NEVER, metrics.neverW],
   ] as const) {
-    ctx.objects.push(
-      buildRect(
-        {
-          left: x,
-          top: Math.round(mid - metrics.check / 2),
-          width: metrics.check,
-          height: metrics.check,
-          rx: 2,
-          ry: 2,
-          stroke: STUDIO_INK,
-          strokeWidth: STUDIO_STROKE_NORMAL,
-        },
-        ctx.tag,
-        'structure',
+    const boxLeft = x
+    const labelLeft = x + metrics.check + metrics.checkGap
+    drawGrouped(answers, 'structure', (pair) =>
+      pair.objects.push(
+        buildRect(
+          {
+            left: boxLeft,
+            top: Math.round(mid - metrics.check / 2),
+            width: metrics.check,
+            height: metrics.check,
+            rx: 2,
+            ry: 2,
+            stroke: STUDIO_INK,
+            strokeWidth: STUDIO_STROKE_NORMAL,
+          },
+          pair.tag,
+          'structure',
+        ),
+        buildText(
+          {
+            left: labelLeft,
+            top,
+            text: label,
+            width,
+            fontFamily: pair.font,
+            fontSize: metrics.font,
+            fontWeight: 700,
+            lineHeight: 1,
+          },
+          pair.tag,
+          'decoration',
+        ),
       ),
     )
-    x += metrics.check + metrics.checkGap
-    ctx.objects.push(
-      buildText(
-        {
-          left: x,
-          top,
-          text: label,
-          width,
-          fontFamily: ctx.font,
-          fontSize: metrics.font,
-          fontWeight: 700,
-          lineHeight: 1,
-        },
-        ctx.tag,
-        'decoration',
-      ),
-    )
-    x += width + metrics.answerGap
+    x = labelLeft + width + metrics.answerGap
   }
 }
 
-/** "The story: ______" across the statement column, tall enough to write on. */
-function drawStory(ctx: DrawContext, left: number, top: number, right: number) {
+/**
+ * "The story: ______" across the statement column, tall enough to write on:
+ * the label and its line as one piece.
+ */
+function drawStory(row: DrawContext, left: number, top: number, right: number) {
+  drawGrouped(row, 'structure', (story) => drawStoryParts(story, left, top, right))
+}
+
+function drawStoryParts(ctx: DrawContext, left: number, top: number, right: number) {
   const { metrics } = ctx.plan
   const baseline = top + metrics.storyH
   const spec = boldSpec(ctx.font)
@@ -123,8 +147,26 @@ function drawStory(ctx: DrawContext, left: number, top: number, right: number) {
 /**
  * One row: the number, the statement (stamped so later runs can avoid it),
  * the two answers, and the story line. Returns the row's bottom.
+ *
+ * The row is one group, so a seller drags or deletes a whole statement in the
+ * editor instead of its number, words, boxes and line one at a time.
  */
 function drawRow(
+  page: DrawContext,
+  item: FittedEonStatement,
+  index: number,
+  left: number,
+  top: number,
+  padY: number,
+): number {
+  let bottom = top
+  drawGrouped(page, 'structure', (row) => {
+    bottom = drawRowParts(row, item, index, left, top, padY)
+  })
+  return bottom
+}
+
+function drawRowParts(
   ctx: DrawContext,
   item: FittedEonStatement,
   index: number,
@@ -194,8 +236,12 @@ function drawRow(
   return top + rowHeight(lines, plan) + 2 * (padY - metrics.padY)
 }
 
-/** "Total Evers: ____ out of 8", right-aligned under the list. */
-function drawTally(ctx: DrawContext, right: number, top: number) {
+/** "Total Evers: ____ out of 8", right-aligned under the list, moved as one piece. */
+function drawTally(page: DrawContext, right: number, top: number) {
+  drawGrouped(page, 'structure', (tally) => drawTallyParts(tally, right, top))
+}
+
+function drawTallyParts(ctx: DrawContext, right: number, top: number) {
   const { metrics, count } = ctx.plan
   const bold = boldSpec(ctx.font)
   const plain = statementSpec(ctx.font)

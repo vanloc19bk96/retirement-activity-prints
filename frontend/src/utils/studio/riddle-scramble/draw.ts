@@ -319,9 +319,11 @@ function buildAnswerFillGroup(options: {
 }
 
 /**
- * The riddle, and the numbered boxes its answer is written into.
+ * The riddle, and the numbered boxes its answer is written into, as one group.
  *
- * The boxes themselves are one group.
+ * The question and the boxes that answer it are one thing to the eye, so they
+ * move as one block; inside it the boxes keep their own group, so ungrouping
+ * the band hands back the question and the answer strip rather than every box.
  */
 function drawRiddleBand(options: {
   area: Box
@@ -329,11 +331,11 @@ function drawRiddleBand(options: {
   answer: string
   font: string
   tag: StudioTag
-}): StudioFabricObject[] {
+}): StudioFabricObject | null {
   const { area, plan, answer, font, tag } = options
   const { metrics } = plan
   const band = plan.riddle
-  const objects: StudioFabricObject[] = []
+  const parts: StudioFabricObject[] = []
   const centerX = area.left + area.width / 2
 
   let cursor = area.top + band.leadGap
@@ -342,7 +344,7 @@ function drawRiddleBand(options: {
   // the glyph run, which throws away the wrap pad and lets Fabric re-break the
   // last word onto a third line the band never reserved.
   const text = band.lines.map(toNonBreakingSpaces).join('\n')
-  objects.push(
+  parts.push(
     buildText(
       {
         left: centerX,
@@ -370,9 +372,11 @@ function drawRiddleBand(options: {
     font,
     tag,
   })
-  if (fill) objects.push(fill)
+  if (fill) parts.push(fill)
 
-  return objects
+  const bounds = unionObjectBounds(parts)
+  if (!bounds) return null
+  return buildGroup(parts, bounds, tag, 'structure')
 }
 
 export interface DrawRiddleScrambleOptions {
@@ -437,17 +441,16 @@ export function drawRiddleScramblePage(
     if (group) objects.push(group)
   }
 
-  objects.push(
-    ...drawRiddleBand({
-      area: {
-        ...field,
-        top: stackTop + rowCount * rowHeight + gutter * gaps,
-        height: plan.riddle.height,
-      },
-      plan,
-      answer,
-      font,
-      tag,
-    }),
-  )
+  const riddle = drawRiddleBand({
+    area: {
+      ...field,
+      top: stackTop + rowCount * rowHeight + gutter * gaps,
+      height: plan.riddle.height,
+    },
+    plan,
+    answer,
+    font,
+    tag,
+  })
+  if (riddle) objects.push(riddle)
 }

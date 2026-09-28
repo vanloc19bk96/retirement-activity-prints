@@ -94,10 +94,14 @@ const cfg = (mode: TwmMode, space: TwmSpace = 'standard'): StudioConfig => ({
 
 const clean = (text: unknown) => String(text ?? '').replace(/ /g, ' ')
 /** Destination names as printed, in order across the pages. */
+/** Every drawn mark on a page, with the entry groups opened up. */
+const flatten = (objects: StudioFabricObject[]): StudioFabricObject[] =>
+  objects.flatMap((o) => (o.objects ? flatten(o.objects) : [o]))
+
 const printedNames = (pages: { objects: StudioFabricObject[] }[]) =>
-  pages.flatMap((p) => p.objects.filter((o) => o.data?.[TWM_GROUP_KEY] !== undefined).map((o) => clean(o.text)))
+  pages.flatMap((p) => flatten(p.objects).filter((o) => o.data?.[TWM_GROUP_KEY] !== undefined).map((o) => clean(o.text)))
 const allTexts = (pages: { objects: StudioFabricObject[] }[]) =>
-  pages.flatMap((p) => p.objects.map((o) => clean(o.text)).filter(Boolean))
+  pages.flatMap((p) => flatten(p.objects).map((o) => clean(o.text)).filter(Boolean))
 
 beforeEach(() => clearStudioRecentContent())
 
@@ -267,7 +271,7 @@ describe('pages', () => {
     expect(pages.length).toBeGreaterThan(4)
     const instruction = instructionFor(base)
     pages.forEach((page, i) => {
-      const texts = page.objects.map((o) => clean(o.text))
+      const texts = flatten(page.objects).map((o) => clean(o.text))
       expect(texts).toContain(TWM_DEFAULT_TITLE)
       expect(texts.includes(instruction)).toBe(i === 0)
     })
@@ -322,13 +326,13 @@ describe('pages', () => {
       for (const mode of MODES) {
         const pages = generate(cfg(mode), kdpCtx(w, h))
         pages.forEach((page, i) => {
-          const hasWriteIn = page.objects.some((o) => o.data?.[TWM_WRITE_IN_KEY])
-          const hasHeading = page.objects.some((o) => clean(o.text) === OWN_PLACES_TITLE)
+          const hasWriteIn = flatten(page.objects).some((o) => o.data?.[TWM_WRITE_IN_KEY])
+          const hasHeading = flatten(page.objects).some((o) => clean(o.text) === OWN_PLACES_TITLE)
           expect(hasWriteIn).toBe(hasHeading)
           if (hasWriteIn) {
             seen = true
             expect(i).toBe(pages.length - 1)
-            expect(page.objects.some((o) => o.data?.[TWM_GROUP_KEY] !== undefined)).toBe(true)
+            expect(flatten(page.objects).some((o) => o.data?.[TWM_GROUP_KEY] !== undefined)).toBe(true)
           }
         })
       }
@@ -336,9 +340,47 @@ describe('pages', () => {
     expect(seen).toBe(true)
   })
 
+  it('groups each destination with its box and lines, each heading with its rule', () => {
+    for (const mode of MODES) {
+      const pages = generate(cfg(mode, 'roomy'), kdpCtx(6, 9))
+      const last = pages.at(-1)!
+      let entries = 0
+      for (const page of pages) {
+        // Nothing but header text sits loose beside the groups.
+        expect(page.objects.filter((o) => o.type !== 'group').every((o) => o.type === 'textbox')).toBe(true)
+        expect(page.objects.some((o) => o.data?.[TWM_GROUP_KEY] || o.data?.[TWM_WRITE_IN_KEY])).toBe(false)
+        for (const group of page.objects.filter((o) => o.type === 'group')) {
+          expect(group.studioRole).toBe('structure')
+          const parts = group.objects ?? []
+          if (parts.length === 2) {
+            // A heading and the rule under it.
+            expect(parts.map((o) => o.type)).toEqual(['textbox', 'rect'])
+            continue
+          }
+          const [box, name, why, ...rest] = parts
+          expect(rest).toEqual([])
+          expect(box!.type).toBe('rect')
+          const writeIn = page === last && name!.type === 'rect'
+          if (writeIn) {
+            expect(box!.data?.[TWM_WRITE_IN_KEY]).toBe(true)
+          } else {
+            expect(name!.data?.[TWM_GROUP_KEY]).toBeTypeOf('string')
+            entries++
+          }
+          // "Why I want to go:" kept on the lines it opens.
+          const [label, ...lines] = why!.objects ?? []
+          expect(clean(label!.text)).toBe(WHY_LABEL)
+          expect(lines.length).toBeGreaterThan(0)
+          expect(lines.every((o) => o.type === 'rect')).toBe(true)
+        }
+      }
+      expect(entries).toBe(twmEntryCount(mode))
+    }
+  })
+
   it('stamps sampled destinations for the book, and fixed ones not at all', () => {
     const labelsOf = (pages: { objects: StudioFabricObject[] }[]) =>
-      pages.flatMap((p) => p.objects.map((o) => o.data?.[STUDIO_CONTENT_LABEL_KEY]).filter(Boolean))
+      pages.flatMap((p) => flatten(p.objects).map((o) => o.data?.[STUDIO_CONTENT_LABEL_KEY]).filter(Boolean))
     expect(labelsOf(generate(cfg('states'), kdpCtx(6, 9)))).toEqual([])
     const countries = generate(cfg('countries'), kdpCtx(6, 9))
     expect(labelsOf(countries)).toEqual(printedNames(countries).map((n) => twmBookLabel('countries', n)))

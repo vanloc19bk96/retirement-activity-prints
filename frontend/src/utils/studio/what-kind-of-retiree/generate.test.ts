@@ -90,10 +90,29 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext) {
   return retireeQuizTemplate.generate(config, ctx)
 }
 
+/**
+ * Every drawn mark, with the question, step, grid and write-up groups opened
+ * up and each child moved back to page coordinates (Fabric stores group
+ * children centre-relative).
+ */
+function leaves(objects: readonly StudioFabricObject[]): StudioFabricObject[] {
+  return objects.flatMap((obj) => {
+    if (obj.type !== 'group' || !obj.objects) return [obj]
+    const cx = obj.left + obj.width! / 2
+    const cy = obj.top + obj.height! / 2
+    return leaves(obj.objects.map((child) => ({ ...child, left: child.left + cx, top: child.top + cy })))
+  })
+}
+
+/** Every object on the page, groups included, in drawing order. */
+function everyObject(objects: readonly StudioFabricObject[]): StudioFabricObject[] {
+  return objects.flatMap((obj) => [obj, ...everyObject(obj.objects ?? [])])
+}
+
 const clean = (text: unknown) => String(text ?? '').replace(/ /g, ' ')
-const texts = (objects: StudioFabricObject[]) => objects.map((o) => clean(o.text)).filter(Boolean)
+const texts = (objects: StudioFabricObject[]) => leaves(objects).map((o) => clean(o.text)).filter(Boolean)
 const labels = (objects: StudioFabricObject[]) =>
-  objects.map((o) => o.data?.[STUDIO_CONTENT_LABEL_KEY]).filter((v): v is string => typeof v === 'string')
+  leaves(objects).map((o) => o.data?.[STUDIO_CONTENT_LABEL_KEY]).filter((v): v is string => typeof v === 'string')
 
 const fixtureQuestions = () => selectRqQuestions(RQ_FIXTURE_QUESTIONS, { cap: 20 })
 
@@ -324,7 +343,7 @@ describe('what-kind-of-retiree on real KDP trims', () => {
 
     // Questions and answers stay large print.
     for (const page of quizPages) {
-      for (const o of page.objects) {
+      for (const o of leaves(page.objects)) {
         if (o.type === 'textbox' && o.fontWeight !== 700 && o.fontStyle !== 'italic' && o.fill !== '#6B7280') {
           expect(o.fontSize!).toBeGreaterThanOrEqual(QUIZ_FONT_MIN)
         }
@@ -371,7 +390,7 @@ describe('what-kind-of-retiree on real KDP trims', () => {
   it('never depends on colour: ink is black, white or grey only', () => {
     const allowed = new Set(['#000000', '#6B7280', '#111827', '#9CA3AF', '#D1D5DB', '#FFFFFF', 'transparent'])
     for (const page of generate(base, kdpCtx(6, 9))) {
-      for (const o of page.objects) {
+      for (const o of everyObject(page.objects)) {
         if (o.fill) expect(allowed).toContain(o.fill)
         if (o.stroke) expect(allowed).toContain(o.stroke)
       }
@@ -380,13 +399,69 @@ describe('what-kind-of-retiree on real KDP trims', () => {
 
   it('prints no hidden answer objects — there is no answer page', () => {
     for (const page of generate(base, kdpCtx(6, 9))) {
-      expect(page.objects.some((o) => o.studioRole === 'answer')).toBe(false)
+      expect(everyObject(page.objects).some((o) => o.studioRole === 'answer')).toBe(false)
     }
   })
 
   it('keeps the first quiz page instruction off when the seller turns it off', () => {
     const pages = generate({ ...base, showInstructions: false }, kdpCtx(6, 9))
     expect(texts(pages[0]!.objects)).not.toContain(instructionFor(base))
+  })
+})
+
+describe('what-kind-of-retiree structure', () => {
+  const groupsOn = (objects: readonly StudioFabricObject[]) => objects.filter((o) => o.type === 'group')
+
+  it('groups each question, with every letter kept beside its answer', () => {
+    const ctx = kdpCtx(6, 9)
+    const plan = rqWorstCasePlan({ page: ctx, config: base, instruction: instructionFor(base), font: FONT })!
+    const quizPages = generate(base, ctx).slice(0, plan.quiz.pages)
+    const questions = quizPages.flatMap((page) => groupsOn(page.objects))
+    expect(questions).toHaveLength(plan.quiz.count)
+    questions.forEach((question, index) => {
+      expect(question.studioRole).toBe('structure')
+      const [number, prompt, ...answers] = question.objects ?? []
+      expect(clean(number!.text)).toBe(`${index + 1}.`)
+      expect(typeof prompt!.data?.[STUDIO_CONTENT_LABEL_KEY]).toBe('string')
+      expect(answers).toHaveLength(RQ_LETTERS.length)
+      answers.forEach((answer, i) => {
+        expect(answer.type).toBe('group')
+        const [letter, words, ...rest] = answer.objects ?? []
+        expect(rest).toEqual([])
+        expect(clean(letter!.text)).toBe(RQ_LETTERS[i])
+        expect(clean(words!.text)).not.toBe('')
+      })
+    })
+    // Nothing of a question is left loose on the page.
+    for (const page of quizPages) expect(labels(page.objects.filter((o) => o.type !== 'group'))).toEqual([])
+  })
+
+  it('groups the scoring grid, each step and each style write-up', () => {
+    const ctx = kdpCtx(6, 9)
+    const plan = rqWorstCasePlan({ page: ctx, config: base, instruction: instructionFor(base), font: FONT })!
+    const results = generate(base, ctx).slice(plan.quiz.pages).flatMap((page) => page.objects)
+    const groups = groupsOn(results)
+
+    const steps = groups.filter((g) => /^\d\.$/.test(clean(g.objects?.[0]?.text)))
+    expect(steps.map((g) => clean(g.objects![0]!.text))).toEqual(['1.', '2.', '3.'])
+    for (const step of steps) expect(step.objects).toHaveLength(2)
+
+    // The grid is one piece, holding every scoring letter and a heading per style column.
+    const grids = groups.filter((g) => texts([g]).includes('Total'))
+    expect(grids).toHaveLength(1)
+    expect(groupsOn(grids[0]!.objects!)).toHaveLength(RQ_STYLES.length)
+    expect(texts(results.filter((o) => o.type !== 'group')).filter((t) => (RQ_LETTERS as readonly string[]).includes(t))).toEqual([])
+
+    // Each write-up: the symbol and name together, then the description.
+    const names = ['The Explorer', 'The Tinkerer', 'The Social Butterfly', 'The Professional Napper']
+    const writeUps = groups.filter((g) => g.objects?.[0]?.type === 'group' && names.includes(texts([g.objects[0]])[0]!))
+    expect(writeUps.map((g) => texts([g.objects![0]!])[0])).toEqual(names)
+    for (const writeUp of writeUps) {
+      const [nameplate, description, ...rest] = writeUp.objects!
+      expect(rest).toEqual([])
+      expect(nameplate!.objects).toHaveLength(2)
+      expect(description!.type).toBe('textbox')
+    }
   })
 })
 

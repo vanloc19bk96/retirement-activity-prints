@@ -4,8 +4,8 @@ import {
   STUDIO_RULE_MEDIUM,
   STUDIO_STROKE_NORMAL,
 } from '@/constants/studio.constants'
-import { buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
-import type { Box } from '../studio-layout'
+import { buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import { unionObjectBounds, type Box } from '../studio-layout'
 import { FABRIC_FONT_SIZE_MULT, fabricTextHeight, hugTextBoxWidth } from '../studio-text-metrics'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import type { RnEntry, RnExample, RnTable } from './content'
@@ -64,6 +64,18 @@ export function spacedHeight(plan: RnPagePlan, spacing: RnSpacing): number {
   return blockHeight(plan, spacing.rowH) + gapCount(plan) * spacing.extraGap
 }
 
+/**
+ * Draws with `ctx` pointed at a fresh list and pushes what it drew as one
+ * group, so a seller drags or deletes the block whole in the editor. Nothing
+ * drawn, nothing pushed.
+ */
+function grouped(ctx: DrawContext, draw: (inner: DrawContext) => void): void {
+  const parts: StudioFabricObject[] = []
+  draw({ ...ctx, objects: parts })
+  const bounds = unionObjectBounds(parts)
+  if (bounds) ctx.objects.push(buildGroup(parts, bounds, ctx.tag, 'structure'))
+}
+
 function rule(ctx: DrawContext, left: number, top: number, width: number, height: number, fill: string) {
   ctx.objects.push(
     buildRect(
@@ -79,39 +91,27 @@ function rule(ctx: DrawContext, left: number, top: number, width: number, height
  * down each column in turn (A–I, J–R, S–Z), a hairline under every row so the
  * eye tracks from key to name. Each name is stamped so later runs can avoid
  * it. Returns the table's bottom.
+ *
+ * The table is one group, so a seller moves it whole. Inside it the heading
+ * keeps its heavy rule, and each printed row is a group of its entries — every
+ * key held to its name — with the hairline they sit on; the hairline spans the
+ * columns, so it belongs to the row rather than to any one entry.
  */
 function drawSection(
-  ctx: DrawContext,
+  outer: DrawContext,
   section: RnSection,
   entries: readonly RnEntry[],
   keyLabels: readonly string[],
   options: { left: number; top: number; spacing: RnSpacing; centerKeys: boolean },
 ): number {
-  const { metrics } = ctx.plan
+  const { metrics } = outer.plan
   const { left, top, spacing, centerKeys } = options
-  const bold = boldSpec(ctx.font)
-
-  ctx.objects.push(
-    buildText(
-      {
-        left,
-        top: top + Math.round((metrics.headH - fabricTextHeight(1, section.headFont)) / 2),
-        text: section.heading,
-        width: hugTextBoxWidth(section.heading, section.headFont, section.width, bold),
-        fontFamily: ctx.font,
-        fontSize: section.headFont,
-        fontWeight: 700,
-        lineHeight: 1,
-      },
-      ctx.tag,
-      'decoration',
-    ),
-  )
+  const bold = boldSpec(outer.font)
   const ruleTop = Math.round(top + metrics.headH + metrics.headGap)
-  rule(ctx, left, ruleTop, section.width, HEADING_RULE, STUDIO_INK)
   const rowsTop = ruleTop + HEADING_RULE
 
-  entries.forEach((entry, index) => {
+  const drawEntry = (ctx: DrawContext, index: number) => {
+    const entry = entries[index]!
     const col = Math.floor(index / section.rows)
     const row = index % section.rows
     const cellLeft = Math.round(left + col * (section.colWidth + metrics.gutter))
@@ -149,16 +149,50 @@ function drawSection(
       ),
       data: { [STUDIO_CONTENT_LABEL_KEY]: entry.name },
     })
-  })
-
-  for (let row = 1; row <= section.rows; row++) {
-    rule(ctx, left, Math.round(rowsTop + row * spacing.rowH) - 1, section.width, 1, STUDIO_RULE_MEDIUM)
   }
+
+  grouped(outer, (table) => {
+    grouped(table, (ctx) => {
+      ctx.objects.push(
+        buildText(
+          {
+            left,
+            top: top + Math.round((metrics.headH - fabricTextHeight(1, section.headFont)) / 2),
+            text: section.heading,
+            width: hugTextBoxWidth(section.heading, section.headFont, section.width, bold),
+            fontFamily: ctx.font,
+            fontSize: section.headFont,
+            fontWeight: 700,
+            lineHeight: 1,
+          },
+          ctx.tag,
+          'decoration',
+        ),
+      )
+      rule(ctx, left, ruleTop, section.width, HEADING_RULE, STUDIO_INK)
+    })
+
+    for (let row = 0; row < section.rows; row++) {
+      grouped(table, (line) => {
+        for (let index = row; index < entries.length; index += section.rows) {
+          grouped(line, (cell) => drawEntry(cell, index))
+        }
+        rule(line, left, Math.round(rowsTop + (row + 1) * spacing.rowH) - 1, section.width, 1, STUDIO_RULE_MEDIUM)
+      })
+    }
+  })
   return rowsTop + section.rows * spacing.rowH
 }
 
-/** The worked example, framed: the reader sees the lookup done once. */
-function drawExample(ctx: DrawContext, example: RnExample, left: number, top: number) {
+/**
+ * The worked example, framed: the reader sees the lookup done once. The frame
+ * and its two lines are one group, so moving it cannot leave a line outside it.
+ */
+function drawExample(outer: DrawContext, example: RnExample, left: number, top: number) {
+  grouped(outer, (ctx) => drawExampleParts(ctx, example, left, top))
+}
+
+function drawExampleParts(ctx: DrawContext, example: RnExample, left: number, top: number) {
   const { plan } = ctx
   const box = plan.example!
   const { metrics } = plan
@@ -222,8 +256,15 @@ function drawExample(ctx: DrawContext, example: RnExample, left: number, top: nu
   }
 }
 
-/** "My retired name: ______________" across the block. */
-function drawWriteIn(ctx: DrawContext, left: number, top: number) {
+/**
+ * "My retired name: ______________" across the block, grouped so the label
+ * stays on its line.
+ */
+function drawWriteIn(outer: DrawContext, left: number, top: number) {
+  grouped(outer, (ctx) => drawWriteInParts(ctx, left, top))
+}
+
+function drawWriteInParts(ctx: DrawContext, left: number, top: number) {
   const { metrics, blockWidth } = ctx.plan
   const labelW = hugTextBoxWidth(WRITE_IN_LABEL, metrics.font, blockWidth, boldSpec(ctx.font))
   ctx.objects.push(

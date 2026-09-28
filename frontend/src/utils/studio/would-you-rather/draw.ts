@@ -6,8 +6,8 @@ import {
   STUDIO_STROKE_HAIRLINE,
   STUDIO_STROKE_NORMAL,
 } from '@/constants/studio.constants'
-import { buildCircle, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
-import { toNonBreakingSpaces, type Box } from '../studio-layout'
+import { buildCircle, buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import { toNonBreakingSpaces, unionObjectBounds, type Box } from '../studio-layout'
 import { FABRIC_FONT_SIZE_MULT, hugTextBoxWidth } from '../studio-text-metrics'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import { WYR_LEAD, WYR_OR, pairLabel } from './content'
@@ -30,6 +30,18 @@ interface DrawContext {
   plan: WyrPagePlan
   font: string
   tag: StudioTag
+}
+
+/**
+ * Draws whatever `draw` adds as one group on `ctx.objects`, hugging its drawn
+ * extent, so a seller drags or deletes it whole in the editor. Nothing drawn,
+ * nothing pushed.
+ */
+function grouped(ctx: DrawContext, draw: (inner: DrawContext) => void) {
+  const parts: StudioFabricObject[] = []
+  draw({ ...ctx, objects: parts })
+  const bounds = unionObjectBounds(parts)
+  if (bounds) ctx.objects.push(buildGroup(parts, bounds, ctx.tag, 'structure'))
 }
 
 function rule(ctx: DrawContext, left: number, top: number, width: number, fill = STUDIO_INK) {
@@ -189,12 +201,18 @@ function drawReason(ctx: DrawContext, left: number, top: number) {
   rule(ctx, ruleLeft, baseline - 1, left + blockWidth - ruleLeft)
 }
 
-/** Choice A, the OR divider, choice B — both boxes one size. Returns the bottom. */
+/**
+ * Choice A, the OR divider, choice B — both boxes one size. Returns the bottom.
+ *
+ * Each choice (box, tick box, text) and the divider (hairlines, badge, "OR")
+ * is a group of its own, so ungrouping a question hands back those pieces
+ * rather than every rule and glyph.
+ */
 function drawChoices(ctx: DrawContext, pair: FittedWyrPair, left: number, top: number): number {
   const { metrics, blockWidth } = ctx.plan
   const reserved = pairLines(pair)
   const height = boxHeight(reserved, metrics)
-  drawChoice(ctx, { left, top, width: blockWidth, height }, pair.linesA, reserved)
+  grouped(ctx, (choice) => drawChoice(choice, { left, top, width: blockWidth, height }, pair.linesA, reserved))
 
   const orTop = top + height
   const cx = Math.round(left + blockWidth / 2)
@@ -202,12 +220,14 @@ function drawChoices(ctx: DrawContext, pair: FittedWyrPair, left: number, top: n
   // Hairlines either side of the badge make the OR read as a divider.
   const reach = Math.round(blockWidth * 0.28)
   const gap = Math.round(metrics.orDiameter / 2 + metrics.checkGap)
-  rule(ctx, cx - gap - reach, cy, reach, STUDIO_RULE_MEDIUM)
-  rule(ctx, cx + gap, cy, reach, STUDIO_RULE_MEDIUM)
-  drawOr(ctx, cx, cy)
+  grouped(ctx, (divider) => {
+    rule(divider, cx - gap - reach, cy, reach, STUDIO_RULE_MEDIUM)
+    rule(divider, cx + gap, cy, reach, STUDIO_RULE_MEDIUM)
+    drawOr(divider, cx, cy)
+  })
 
   const secondTop = orTop + metrics.orBand
-  drawChoice(ctx, { left, top: secondTop, width: blockWidth, height }, pair.linesB, reserved)
+  grouped(ctx, (choice) => drawChoice(choice, { left, top: secondTop, width: blockWidth, height }, pair.linesB, reserved))
   return secondTop + height
 }
 
@@ -218,6 +238,9 @@ function drawChoices(ctx: DrawContext, pair: FittedWyrPair, left: number, top: n
  * stack drops at most part of a line below the header and any remaining white
  * goes under it — centring the whole stack reads as a missing question. Blocks
  * are capped in width and centred.
+ *
+ * Each question is one group (lead, both choices, the divider, the "Why?"
+ * line), so a seller drags or deletes a whole question at once.
  */
 export function drawWyrPage(
   objects: StudioFabricObject[],
@@ -245,10 +268,14 @@ export function drawWyrPage(
   let top = Math.round(field.top + Math.min(Math.max(0, usable - stack), metrics.font))
 
   pairs.forEach((pair, index) => {
-    drawLead(ctx, pair, index, left, top)
-    const boxesTop = top + leadHeight(metrics) + metrics.leadGap
-    const boxesBottom = drawChoices(ctx, pair, left, boxesTop)
-    if (plan.reasonLine) drawReason(ctx, left, boxesBottom + metrics.reasonGap)
+    const blockTop = top
+    grouped(ctx, (block) => {
+      drawLead(block, pair, index, left, blockTop)
+      const boxesTop = blockTop + leadHeight(metrics) + metrics.leadGap
+      const boxesBottom = drawChoices(block, pair, left, boxesTop)
+      // The label and the line it heads move as one.
+      if (plan.reasonLine) grouped(block, (reason) => drawReason(reason, left, boxesBottom + metrics.reasonGap))
+    })
     top += heights[index]! + gap
   })
 }

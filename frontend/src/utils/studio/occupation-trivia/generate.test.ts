@@ -68,7 +68,19 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext) {
 
 const clean = (text: unknown) => String(text ?? '').replace(/ /g, ' ')
 const oneLine = (text: string) => text.replace(/\n/g, ' ')
-const textboxes = (objects: StudioFabricObject[]) => objects.filter((o) => o.type === 'textbox')
+/**
+ * Every mark on the page, the question groups opened up and each child moved
+ * back to page coordinates — a group stores its children relative to its
+ * centre, and these tests read where things print.
+ */
+function flatten(objects: readonly StudioFabricObject[], dx = 0, dy = 0): StudioFabricObject[] {
+  return objects.flatMap((obj) => {
+    const placed = { ...obj, left: obj.left + dx, top: obj.top + dy }
+    if (obj.type !== 'group' || !obj.objects) return [placed]
+    return [placed, ...flatten(obj.objects, placed.left + (obj.width ?? 0) / 2, placed.top + (obj.height ?? 0) / 2)]
+  })
+}
+const textboxes = (objects: StudioFabricObject[]) => flatten(objects).filter((o) => o.type === 'textbox')
 const numbers = (objects: StudioFabricObject[]) =>
   textboxes(objects).filter((o) => /^\d+\.$/.test(clean(o.text))).map((o) => clean(o.text))
 const questionBoxes = (objects: StudioFabricObject[]) =>
@@ -215,7 +227,7 @@ describe('occupation-trivia pages', () => {
       // The notes are the fixture's own, word for word.
       const italic = keyBoxes.filter((o) => o.fontStyle === 'italic').map((o) => oneLine(clean(o.text)))
       for (const note of italic) expect(OT_FIXTURE_QUESTIONS.map((q) => q.explanation)).toContain(note)
-      expect(key.every((o) => o.visible !== false)).toBe(true)
+      expect(flatten(key).every((o) => o.visible !== false)).toBe(true)
     }
   })
 
@@ -225,6 +237,43 @@ describe('occupation-trivia pages', () => {
     expect(labels).toHaveLength(OT_TARGET_QUESTIONS)
     for (const label of labels) expect(label).toMatch(/^teacher: .+ = .+$/)
     expect(labels).toContain(otLabel('teacher', OT_FIXTURE_QUESTIONS[0]!))
+  })
+
+  it('groups each question, each choice kept with its ring, and each answer entry', () => {
+    const pages = generate(base, kdpCtx(6, 9))
+    const groups = pages.flatMap((p) => p.objects.filter((o) => o.type === 'group'))
+    expect(groups).toHaveLength(OT_TARGET_QUESTIONS)
+    groups.forEach((group, i) => {
+      const [number, wording, ...choices] = group.objects ?? []
+      expect(clean(number?.text)).toBe(`${i + 1}.`)
+      expect(typeof wording?.data?.[STUDIO_CONTENT_LABEL_KEY]).toBe('string')
+      expect(choices).toHaveLength(OT_LETTERS.length)
+      choices.forEach((choice, c) => {
+        expect(choice.type).toBe('group')
+        const [ring, letter, words, ...rest] = choice.objects ?? []
+        expect(rest).toEqual([])
+        expect(ring?.type).toBe('circle')
+        expect(clean(letter?.text)).toBe(OT_LETTERS[c])
+        expect(words?.type).toBe('textbox')
+      })
+    })
+
+    const key = pages.at(-1)!.answerSourceObjects!
+    const entries = key.filter((o) => o.type === 'group')
+    expect(entries).toHaveLength(OT_TARGET_QUESTIONS)
+    entries.forEach((entry, i) => {
+      const [number, ring, answer, note, ...rest] = entry.objects ?? []
+      expect(rest).toEqual([])
+      expect(clean(number?.text)).toBe(`${i + 1}.`)
+      expect(ring?.type).toBe('group')
+      expect(ring?.objects?.map((o) => o.type)).toEqual(['circle', 'textbox'])
+      expect(answer?.studioRole).toBe('answer')
+      expect(note?.fontStyle).toBe('italic')
+    })
+    // Nothing of a question or an answer is left loose on the page.
+    for (const objects of [...pages.map((p) => p.objects), key]) {
+      expect(objects.filter((o) => o.type !== 'group' && /^(\d+\.|[A-D])$/.test(clean(o.text)))).toEqual([])
+    }
   })
 
   it('spreads right answers across the letters', () => {

@@ -18,6 +18,7 @@ import {
 import { retirementCertificateTemplate } from './generate'
 import {
   CR_CITATIONS,
+  CR_DATE_LABELS,
   CR_DEFAULT_TITLE,
   CR_HEADINGS,
   CR_LEADS,
@@ -87,16 +88,19 @@ function run(config: StudioConfig, ctx: StudioGenerateContext): StudioPageOutput
 }
 
 const plain = (o: StudioFabricObject) => (o.text ?? '').replace(NBSP, ' ').replace(/\n/g, ' ')
-const texts = (page: StudioPageOutput) => page.objects.filter((o) => o.type === 'textbox').map(plain)
+/** Every object on the page, group children included (their coords stay group-relative). */
+const walk = (objects: StudioFabricObject[]): StudioFabricObject[] =>
+  objects.flatMap((o) => [o, ...(o.objects ? walk(o.objects) : [])])
+const texts = (page: StudioPageOutput) => walk(page.objects).filter((o) => o.type === 'textbox').map(plain)
 const labels = (pages: StudioPageOutput[]) =>
   pages.flatMap((p) =>
-    p.objects.flatMap((o) => {
+    walk(p.objects).flatMap((o) => {
       const label = o.data?.[STUDIO_CONTENT_LABEL_KEY]
       return typeof label === 'string' ? [label] : []
     }),
   )
 const labelled = (page: StudioPageOutput, prefix: string) =>
-  page.objects.find((o) => String(o.data?.[STUDIO_CONTENT_LABEL_KEY] ?? '').startsWith(prefix))
+  walk(page.objects).find((o) => String(o.data?.[STUDIO_CONTENT_LABEL_KEY] ?? '').startsWith(prefix))
 const isErrorPage = (pages: StudioPageOutput[]) =>
   pages.length === 1 && !pages[0]!.objects.some((o) => o.studioRole === 'structure')
 
@@ -156,7 +160,7 @@ describe('retirement-certificate on every KDP trim', () => {
             assertObjectsInSafeMargin(page.objects, ctx)
 
             // Black ink only; no fills beyond hairlines and tiny dots.
-            for (const o of page.objects) {
+            for (const o of walk(page.objects)) {
               for (const paint of [o.fill, o.stroke]) {
                 if (!paint || paint === 'transparent') continue
                 expect(['#000000', '#111827']).toContain(paint)
@@ -166,7 +170,7 @@ describe('retirement-certificate on every KDP trim', () => {
             }
 
             // Every word printed is at reading size and well formed.
-            for (const o of page.objects.filter((x) => x.type === 'textbox')) {
+            for (const o of walk(page.objects).filter((x) => x.type === 'textbox')) {
               expect(o.fontSize!).toBeGreaterThanOrEqual(SIZES.signLabel.min)
               expect(plain(o)).not.toMatch(/[{}]|undefined|NaN| {2}/)
             }
@@ -177,7 +181,7 @@ describe('retirement-certificate on every KDP trim', () => {
             if (config === full) {
               const name = page.objects.find((o) => plain(o) === 'Linda Moore')!
               expect(name).toBeDefined()
-              const sizes = page.objects.filter((o) => o.type === 'textbox').map((o) => o.fontSize!)
+              const sizes = walk(page.objects).filter((o) => o.type === 'textbox').map((o) => o.fontSize!)
               expect(name.fontSize).toBe(Math.max(...sizes))
               expect(texts(page).join(' ')).toContain('32 years of')
               expect(texts(page).join(' ')).toContain('at Riverside Library')
@@ -224,7 +228,7 @@ describe('retirement-certificate personalization', () => {
     expect(all).not.toMatch(/\bat\s*[.,—]/)
     expect(texts(out[0]!)).toContain('Date')
     // The long name line is drawn.
-    const lines = out[0]!.objects.filter((o) => o.type === 'rect' && o.height === 2)
+    const lines = walk(out[0]!.objects).filter((o) => o.type === 'rect' && o.height === 2)
     expect(lines.length).toBe(1)
     expect(lines[0]!.width!).toBeGreaterThanOrEqual(DPI * 2.2)
   })
@@ -245,6 +249,62 @@ describe('retirement-certificate personalization', () => {
     const out = run({ ...full, showTitle: false, title: '' }, kdpCtx(6, 9))
     expect(isErrorPage(out)).toBe(false)
     expect(labels(out).some((l) => l.startsWith('h:'))).toBe(false)
+  })
+
+  it('groups the frame, emblem, seal and each signature slot, and leaves the main texts loose', () => {
+    const signLabels = new Set([...CR_SIGN_LABELS, ...CR_DATE_LABELS].map((s) => s.text))
+    let sawEmblem = false
+    let sawSeal = false
+    for (let seed = 1; seed <= 20; seed++) {
+      clearStudioRecentContent()
+      const page = run(full, kdpCtx(8.5, 11, seed))[0]!
+      const hasLabel = (o: StudioFabricObject, prefix: string) =>
+        walk(o.objects ?? []).some((c) => String(c.data?.[STUDIO_CONTENT_LABEL_KEY] ?? '').startsWith(prefix))
+
+      // The frame: its rules and corner dressing, one group, the design label inside.
+      const frame = page.objects[0]!
+      expect(frame.type).toBe('group')
+      expect(frame.studioRole).toBe('structure')
+      expect(hasLabel(frame, 'd:')).toBe(true)
+
+      // The emblem, when printed, is one group carrying its label.
+      const emblem = page.objects.filter((o) => o.type === 'group' && hasLabel(o, 'e:'))
+      if (labels([{ pageRole: 'single', objects: page.objects }]).some((l) => l.startsWith('e:'))) {
+        expect(emblem).toHaveLength(1)
+        expect(emblem[0]!.objects!.length).toBeGreaterThan(1)
+        sawEmblem = true
+      }
+
+      // Each signature slot: its line, its label and any date, one group.
+      const slots = page.objects.filter(
+        (o) => o.type === 'group' && (o.objects ?? []).some((c) => c.type === 'textbox' && signLabels.has(plain(c))),
+      )
+      expect(slots.length).toBeGreaterThanOrEqual(1)
+      for (const slot of slots) {
+        const children = slot.objects ?? []
+        expect(children.filter((c) => c.type === 'rect')).toHaveLength(1)
+        expect(children.every((c) => c.type === 'rect' || c.type === 'textbox')).toBe(true)
+      }
+      expect(page.objects.some((o) => o.type === 'textbox' && signLabels.has(plain(o)))).toBe(false)
+      expect(page.objects.some((o) => plain(o) === 'June 30, 2026')).toBe(false)
+      expect(walk(slots).some((o) => plain(o) === 'June 30, 2026')).toBe(true)
+
+      // The seal, year and all, is one group.
+      const seal = page.objects.find(
+        (o) => o.type === 'group' && (o.objects ?? []).some((c) => plain(c) === '2026'),
+      )
+      if (seal) {
+        expect(seal.objects!.some((c) => c.type === 'circle')).toBe(true)
+        sawSeal = true
+      }
+      expect(page.objects.some((o) => plain(o) === '2026')).toBe(false)
+
+      // The recipient's name and the title stay loose, editable in place.
+      expect(page.objects.some((o) => plain(o) === 'Linda Moore')).toBe(true)
+      expect(page.objects.some((o) => String(o.data?.[STUDIO_CONTENT_LABEL_KEY] ?? '').startsWith('t:'))).toBe(true)
+    }
+    expect(sawEmblem).toBe(true)
+    expect(sawSeal).toBe(true)
   })
 
   it('puts the retirement year on the seal when a date is given', () => {

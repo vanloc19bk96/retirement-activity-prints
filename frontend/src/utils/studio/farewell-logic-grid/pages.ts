@@ -13,6 +13,7 @@ import {
   drawSolution,
   drawStory,
   hugWidth,
+  pushBlock,
   planSolution,
   puzzleGridLabels,
   type LgSetClue,
@@ -225,8 +226,12 @@ export function layoutLgPuzzle(options: {
     }
     objects.push(drawLgGrid({ puzzle, geometry: placed, left: box.left, top: box.top, font, tag, answers: false }))
     if (withChart) {
+      // The heading and the blank chart under it are one block: the heading
+      // names nothing else, so it should never be left behind when the chart
+      // is moved.
+      const chartParts: StudioFabricObject[] = []
       const headingTop = Math.round(box.top + placed.height + text.font * 1.4)
-      objects.push(
+      chartParts.push(
         buildText(
           {
             left,
@@ -242,7 +247,7 @@ export function layoutLgPuzzle(options: {
           'prompt',
         ),
       )
-      drawSolution(objects, {
+      drawSolution(chartParts, {
         puzzle,
         layout: solution,
         left,
@@ -251,6 +256,7 @@ export function layoutLgPuzzle(options: {
         tag,
         blank: true,
       })
+      pushBlock(objects, chartParts, tag)
     }
     grid = placed
     chart = Boolean(withChart)

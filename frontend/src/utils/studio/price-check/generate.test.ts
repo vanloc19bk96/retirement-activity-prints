@@ -92,7 +92,19 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext) {
 
 const clean = (text: unknown) => String(text ?? '').replace(/ /g, ' ')
 const oneLine = (text: string) => text.replace(/\n/g, ' ')
-const texts = (objects: StudioFabricObject[]) => objects.map((o) => oneLine(clean(o.text))).filter(Boolean)
+/**
+ * Every mark on the page as printed: the question and choice groups opened up,
+ * each child moved back to page coordinates (a group stores its children
+ * relative to its centre), in drawing order.
+ */
+function marks(objects: readonly StudioFabricObject[], dx = 0, dy = 0): StudioFabricObject[] {
+  return objects.flatMap((o) => {
+    const placed = { ...o, left: o.left + dx, top: o.top + dy }
+    if (o.type !== 'group' || !o.objects) return [placed]
+    return marks(o.objects, placed.left + (o.width ?? 0) / 2, placed.top + (o.height ?? 0) / 2)
+  })
+}
+const texts = (objects: StudioFabricObject[]) => marks(objects).map((o) => oneLine(clean(o.text))).filter(Boolean)
 const isNumber = (o: StudioFabricObject) => /^\d\.$/.test(clean(o.text))
 const isRing = (o: StudioFabricObject) => o.type === 'circle' && o.studioRole === 'answer'
 /** A choice letter whose glyph sits inside `ring` (a centre-origin circle). */
@@ -107,10 +119,12 @@ const ringedLetter = (o: StudioFabricObject, ring: StudioFabricObject) =>
 /** Each printed question: its fact key, and its four lettered prices as drawn. */
 function readPuzzle(objects: StudioFabricObject[]) {
   const out: { key: string; letters: string[]; prices: string[] }[] = []
-  objects.forEach((o, i) => {
+  // Text only: on the answer page the ring is drawn inside the choice it marks.
+  const boxes = marks(objects).filter((o) => o.type === 'textbox')
+  boxes.forEach((o, i) => {
     const key = o.data?.[STUDIO_CONTENT_LABEL_KEY]
     if (typeof key !== 'string') return
-    const options = objects.slice(i + 1, i + 9).map((x) => clean(x.text))
+    const options = boxes.slice(i + 1, i + 9).map((x) => clean(x.text))
     out.push({
       key,
       letters: options.filter((_, j) => j % 2 === 0),
@@ -121,7 +135,7 @@ function readPuzzle(objects: StudioFabricObject[]) {
 }
 
 const labelsOf = (objects: StudioFabricObject[]) =>
-  objects.map((o) => o.data?.[STUDIO_CONTENT_LABEL_KEY]).filter((l): l is string => typeof l === 'string')
+  marks(objects).map((o) => o.data?.[STUDIO_CONTENT_LABEL_KEY]).filter((l): l is string => typeof l === 'string')
 
 // The key is built from `answerSourceObjects` (asserted below); the puzzle page
 // deliberately carries no answer at all, hidden or not.
@@ -333,7 +347,7 @@ describe('price-check page', () => {
           expect(plan.metrics.font).toBeGreaterThanOrEqual(TEXT_FONT_MIN)
 
           const [page] = generate(config, ctx)
-          expect(page!.objects.filter(isNumber), `${w}x${h}`).toHaveLength(plan.count)
+          expect(marks(page!.objects).filter(isNumber), `${w}x${h}`).toHaveLength(plan.count)
           const note = pcPrintNote({ page: ctx, config, instruction: instructionFor(config), font: FONT })
           expect(note).toContain(`${plan.count} questions a page`)
           expect(note).toContain(`${pxToPt(plan.metrics.font)} pt`)
@@ -357,10 +371,10 @@ describe('price-check page', () => {
     const [page] = generate(base, kdpCtx(8.5, 11))
     expect(harvestAnswers(page!.objects)).toHaveLength(0)
     expect(texts(page!.objects).some((t) => /U\.S\. (average|rate)\)/.test(t))).toBe(false)
-    expect(page!.objects.some(isRing)).toBe(false)
+    expect(marks(page!.objects).some(isRing)).toBe(false)
     // The answer page adds a ring and a fact line to every question, both hidden until revealed.
     const hidden = harvestAnswers(page!.answerSourceObjects!)
-    expect(hidden).toHaveLength(page!.objects.filter(isNumber).length * 2)
+    expect(hidden).toHaveLength(marks(page!.objects).filter(isNumber).length * 2)
     expect(hidden.every((o) => o.visible === false)).toBe(true)
   })
 
@@ -370,9 +384,9 @@ describe('price-check page', () => {
         for (const [w, h] of TRIMS) {
           const [page] = generate({ ...base, seed, level }, kdpCtx(w, h, seed))
           const puzzle = readPuzzle(page!.objects)
-          const key = buildAnswerPage(page!.answerSourceObjects!, STUDIO_ANSWER_INK_MONO)
+          const key = marks(buildAnswerPage(page!.answerSourceObjects!, STUDIO_ANSWER_INK_MONO))
           const keyNumbers = key.filter(isNumber).map((o) => clean(o.text))
-          expect(keyNumbers).toEqual(page!.objects.filter(isNumber).map((o) => clean(o.text)))
+          expect(keyNumbers).toEqual(marks(page!.objects).filter(isNumber).map((o) => clean(o.text)))
           // The same questions, in the same order, with the same four prices.
           expect(readPuzzle(key)).toEqual(puzzle)
 
@@ -407,6 +421,34 @@ describe('price-check page', () => {
         }
       }
     }
+  })
+
+  it('groups each question, each price with its letter and the ring with the choice it marks', () => {
+    const ctx = kdpCtx(8.5, 11)
+    const plan = pcWorstCasePlan({ page: ctx, config: base, instruction: instructionFor(base), font: FONT })!
+    const [page] = generate(base, ctx)
+    const read = (objects: StudioFabricObject[], answers: boolean) => {
+      const items = objects.filter((o) => o.type === 'group')
+      expect(items).toHaveLength(plan.count)
+      items.forEach((item, i) => {
+        const [number, wording, ...rest] = item.objects ?? []
+        expect(clean(number?.text)).toBe(`${i + 1}.`)
+        expect(typeof wording?.data?.[STUDIO_CONTENT_LABEL_KEY]).toBe('string')
+        const choices = rest.slice(0, PC_LETTERS.length)
+        expect(rest.slice(PC_LETTERS.length).map((o) => o.studioRole)).toEqual(answers ? ['answer'] : [])
+        choices.forEach((choice, c) => {
+          expect(choice.type).toBe('group')
+          const [letter, price, ...ring] = choice.objects ?? []
+          expect(clean(letter?.text)).toBe(PC_LETTERS[c])
+          expect(price?.type).toBe('textbox')
+          expect(ring.every(isRing)).toBe(true)
+        })
+        // Exactly one choice carries the ring, and only on the answer page.
+        expect(choices.filter((choice) => choice.objects!.some(isRing))).toHaveLength(answers ? 1 : 0)
+      })
+    }
+    read(page!.objects, false)
+    read(page!.answerSourceObjects!, true)
   })
 
   it('breaks a fact line only between its two halves', () => {

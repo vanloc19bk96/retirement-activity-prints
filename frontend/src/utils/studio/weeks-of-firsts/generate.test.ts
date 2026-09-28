@@ -84,11 +84,25 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext) {
   return weeksOfFirstsTemplate.generate(config, ctx)
 }
 
+/**
+ * Every drawn mark, with the block groups opened up and each child moved back
+ * to page coordinates (Fabric stores group children centre-relative).
+ */
+function leaves(objects: readonly StudioFabricObject[]): StudioFabricObject[] {
+  return objects.flatMap((obj) => {
+    if (obj.type !== 'group' || !obj.objects) return [obj]
+    const cx = obj.left + obj.width! / 2
+    const cy = obj.top + obj.height! / 2
+    return leaves(obj.objects.map((child) => ({ ...child, left: child.left + cx, top: child.top + cy })))
+  })
+}
+
 const ideasOn = (objects: StudioFabricObject[]) =>
-  objects.filter((o) => typeof o.data?.[STUDIO_CONTENT_LABEL_KEY] === 'string')
+  leaves(objects).filter((o) => typeof o.data?.[STUDIO_CONTENT_LABEL_KEY] === 'string')
 const framesOn = (objects: StudioFabricObject[]) =>
-  objects.filter((o) => typeof o.data?.[WF_WEEK_KEY] === 'number')
+  leaves(objects).filter((o) => typeof o.data?.[WF_WEEK_KEY] === 'number')
 const textOf = (o: StudioFabricObject) => String(o.text ?? '').replace(/ /g, ' ')
+const textsOn = (objects: StudioFabricObject[]) => leaves(objects).map(textOf)
 
 function extent(o: StudioFabricObject) {
   const w = o.width ?? 0
@@ -160,13 +174,55 @@ describe.each(SPACES)('a %s year', (space) => {
   it('keeps every week’s heading, date line and idea on the same page as its card', () => {
     const pages = generate({ ...base, writingSpace: space }, kdpCtx(6, 9))
     for (const page of pages) {
-      const labels = page.objects.filter((o) => /^Week \d+$/.test(textOf(o))).map((o) => textOf(o))
+      const labels = textsOn(page.objects).filter((t) => /^Week \d+$/.test(t))
       const frames = framesOn(page.objects).map((f) => `Week ${f.data![WF_WEEK_KEY]}`)
       expect(labels).toEqual(frames)
-      const dates = page.objects.filter((o) => textOf(o) === 'Date:')
+      const dates = textsOn(page.objects).filter((t) => t === 'Date:')
       expect(dates).toHaveLength(frames.length)
       expect(ideasOn(page.objects)).toHaveLength(frames.length)
     }
+  })
+})
+
+describe('weeks-of-firsts structure', () => {
+  const groupsOn = (objects: StudioFabricObject[]) => objects.filter((o) => o.type === 'group')
+  const types = (group: StudioFabricObject) => (group.objects ?? []).map((o) => o.type)
+
+  it('groups each week, with the date label kept on its line', () => {
+    const pages = generate(base, kdpCtx(6, 9))
+    const cards = pages.flatMap((page) =>
+      groupsOn(page.objects).filter((o) => typeof o.objects?.[0]?.data?.[WF_WEEK_KEY] === 'number'),
+    )
+    expect(cards).toHaveLength(WF_WEEKS)
+    cards.forEach((card, index) => {
+      const [frame, week, date, idea, ...notes] = card.objects ?? []
+      expect(frame?.data?.[WF_WEEK_KEY]).toBe(index + 1)
+      expect(textOf(week!)).toBe(`Week ${index + 1}`)
+      expect(date?.type).toBe('group')
+      expect(types(date!)).toEqual(['textbox', 'rect'])
+      expect(textOf(date!.objects![0]!)).toBe('Date:')
+      expect(typeof idea?.data?.[STUDIO_CONTENT_LABEL_KEY]).toBe('string')
+      expect(notes.length).toBeGreaterThan(0)
+      expect(notes.every((o) => o.type === 'rect')).toBe(true)
+    })
+    // Nothing of a week is left loose on the page.
+    for (const page of pages) {
+      expect(page.objects.filter((o) => o.data?.[WF_WEEK_KEY] != null || textOf(o) === 'Date:')).toEqual([])
+    }
+  })
+
+  it('keeps the start line and each reflection prompt with the line it is written on', () => {
+    const pages = generate(base, kdpCtx(6, 9))
+    const start = groupsOn(pages[0]!.objects).find((o) => textOf(o.objects![0]!).startsWith('I began'))!
+    expect(types(start)).toEqual(['textbox', 'rect'])
+
+    const back = groupsOn(pages.at(-1)!.objects).find((o) =>
+      (o.objects ?? []).some((c) => textOf(c).startsWith('Looking Back')),
+    )!
+    expect(back.objects![0]!.type).toBe('rect')
+    const prompted = groupsOn(back.objects!)
+    expect(prompted.length).toBeGreaterThan(0)
+    for (const line of prompted) expect(types(line)).toEqual(['textbox', 'rect'])
   })
 })
 
@@ -197,9 +253,9 @@ describe('layout', () => {
   it('opens with a start-date line and closes the year where the last page has room', () => {
     const ctx = kdpCtx(6, 9)
     const pages = generate(base, ctx)
-    const first = pages[0]!.objects.map(textOf)
+    const first = textsOn(pages[0]!.objects)
     expect(first.some((t) => t.startsWith('I began'))).toBe(true)
-    const last = pages.at(-1)!.objects.map(textOf)
+    const last = textsOn(pages.at(-1)!.objects)
     expect(last.some((t) => t.startsWith('Looking Back'))).toBe(true)
   })
 
@@ -271,19 +327,19 @@ describe('weeks-of-firsts errors', () => {
   it('says so plainly when no ideas arrived', () => {
     const pages = generate(base, kdpCtx(6, 9, { areas: [] }))
     expect(pages).toHaveLength(1)
-    expect(pages[0]!.objects.map(textOf)).toContain(WF_AI_EMPTY_MESSAGE)
+    expect(textsOn(pages[0]!.objects)).toContain(WF_AI_EMPTY_MESSAGE)
   })
 
   it('never prints a short year', () => {
     const short = { areas: WF_FIXTURE.areas.map((a) => ({ ...a, items: a.items.slice(0, 2) })) }
     const pages = generate(base, kdpCtx(6, 9, short))
     expect(pages).toHaveLength(1)
-    expect(pages[0]!.objects.map(textOf)).toContain(WF_SHORT_MESSAGE)
+    expect(textsOn(pages[0]!.objects)).toContain(WF_SHORT_MESSAGE)
   })
 
   it('refuses a page too small for large print', () => {
     const pages = generate(base, kdpCtx(3, 4))
-    expect(pages[0]!.objects.map(textOf)).toContain(WF_PAGE_TOO_SMALL_MESSAGE)
+    expect(textsOn(pages[0]!.objects)).toContain(WF_PAGE_TOO_SMALL_MESSAGE)
   })
 
   it('drops malformed remote data rather than printing it', () => {

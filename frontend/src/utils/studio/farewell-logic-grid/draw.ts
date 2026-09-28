@@ -6,7 +6,7 @@ import {
   STUDIO_STROKE_BOLD,
   STUDIO_STROKE_HAIRLINE,
 } from '@/constants/studio.constants'
-import { toNonBreakingSpaces } from '../studio-layout'
+import { toNonBreakingSpaces, unionObjectBounds } from '../studio-layout'
 import { buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
 import { buildCheckMark } from '../studio-check-mark'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
@@ -253,14 +253,34 @@ export function drawLgGrid(options: {
   return buildGroup(parts, { left, top, width: g.width, height: g.height }, tag, 'structure')
 }
 
+/**
+ * `parts` as one group hugging their drawn extent, so a seller moves a block
+ * that reads as one thing — a clue, the story — instead of chasing its loose
+ * texts. A single part is pushed as it is: a group of one is only a wrapper.
+ */
+export function pushBlock(
+  objects: StudioFabricObject[],
+  parts: StudioFabricObject[],
+  tag: StudioTag,
+): void {
+  if (parts.length <= 1) {
+    objects.push(...parts)
+    return
+  }
+  const bounds = unionObjectBounds(parts)
+  if (bounds) objects.push(buildGroup(parts, bounds, tag, 'structure'))
+  else objects.push(...parts)
+}
+
 /** Checks the answer grid carries: one per person in every block. */
 export const expectedCheckCount = (puzzle: LgPuzzle) =>
   (puzzle.shape.n * puzzle.shape.K * (puzzle.shape.K + 1)) / 2
 
 /**
- * The scene name in bold and the story under it. The name carries the
- * puzzle's content label, so a later page in the book can refuse the same
- * scene or deduction pattern.
+ * The scene name in bold and the story under it, grouped as one block. The
+ * name carries the puzzle's content label, so a later page in the book can
+ * refuse the same scene or deduction pattern. The answer page prints the name
+ * alone, which stays a loose text.
  */
 export function drawStory(
   objects: StudioFabricObject[],
@@ -276,7 +296,8 @@ export function drawStory(
   },
 ): void {
   const { puzzle, lines, left, top, width, text, font, tag } = options
-  objects.push({
+  const parts: StudioFabricObject[] = []
+  parts.push({
     ...buildText(
       {
         left,
@@ -294,22 +315,24 @@ export function drawStory(
     ),
     data: { [STUDIO_CONTENT_LABEL_KEY]: lgContentLabel(puzzle) },
   })
-  if (lines.scenario.length === 0) return
-  objects.push(
-    buildText(
-      {
-        left,
-        top: Math.round(top + textBlockHeight(lines.subtitle.length, text.subtitleFont) + text.gap),
-        text: lines.scenario.join('\n'),
-        width,
-        fontFamily: font,
-        fontSize: text.font,
-        lineHeight: TEXT_LINE_HEIGHT,
-      },
-      tag,
-      'prompt',
-    ),
-  )
+  if (lines.scenario.length > 0) {
+    parts.push(
+      buildText(
+        {
+          left,
+          top: Math.round(top + textBlockHeight(lines.subtitle.length, text.subtitleFont) + text.gap),
+          text: lines.scenario.join('\n'),
+          width,
+          fontFamily: font,
+          fontSize: text.font,
+          lineHeight: TEXT_LINE_HEIGHT,
+        },
+        tag,
+        'prompt',
+      ),
+    )
+  }
+  pushBlock(objects, parts, tag)
 }
 
 /** One clue as set: its number and its pre-broken lines. */
@@ -318,7 +341,14 @@ export interface LgSetClue {
   lines: string[]
 }
 
-/** Numbered clues from `top`, each gap `gap` tall. Returns where the last one ends. */
+/**
+ * Numbered clues from `top`, each gap `gap` tall. Returns where the last one ends.
+ *
+ * Each clue is one group — its number and its text — so a seller moves or
+ * re-spaces a clue without the number drifting off it. The list itself is not
+ * wrapped: like the other list games, a group per item is what the editor
+ * needs, and a second level would only stand between the seller and a clue.
+ */
 export function drawClues(
   objects: StudioFabricObject[],
   options: {
@@ -336,7 +366,7 @@ export function drawClues(
   let top = options.top
   clues.forEach((clue, i) => {
     const y = Math.round(top)
-    objects.push(
+    const parts = [
       buildText(
         {
           left,
@@ -364,7 +394,8 @@ export function drawClues(
         tag,
         'prompt',
       ),
-    )
+    ]
+    pushBlock(objects, parts, tag)
     top += textBlockHeight(clue.lines.length, text.font) + (i < clues.length - 1 ? gap : 0)
   })
   return Math.round(top)

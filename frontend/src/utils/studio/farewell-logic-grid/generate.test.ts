@@ -30,7 +30,7 @@ import {
 import { clueText } from './clues'
 import { LG_LEVELS, parseLgLevel } from './levels'
 import { CELL_MIN, CLUE_FONT_MIN, lgPrintNote, planLgPage } from './layout'
-import { NOTE_CLUES_CONTINUE, NOTE_GRID_NEXT } from './pages'
+import { CHART_HEADING, NOTE_CLUES_CONTINUE, NOTE_GRID_NEXT } from './pages'
 import { farewellLogicGridPrefetch, parseLgRemoteData } from './prefetch'
 import { buildLgPuzzle, lgAvoidFromLabels, lgContentLabel } from './puzzle'
 
@@ -175,7 +175,7 @@ describe('farewell-logic-grid pages', () => {
         expect(all.some((t) => /could not be built|too small/.test(t))).toBe(false)
 
         // Clues are numbered 1..m with no gaps across pages.
-        const numbers = pages.flatMap((p) => texts(p.objects).filter((t) => /^\d+\.$/.test(t)))
+        const numbers = pages.flatMap((p) => texts(walk(p.objects)).filter((t) => /^\d+\.$/.test(t)))
         expect(numbers).toEqual(numbers.map((_, i) => `${i + 1}.`))
         expect(numbers.length).toBeGreaterThanOrEqual(4)
 
@@ -185,13 +185,20 @@ describe('farewell-logic-grid pages', () => {
         }
 
         // One grid, as one group, on the last puzzle page; the write-in chart,
-        // when there is one, is a second group sharing the grid's left edge.
+        // when there is one, is a second group — heading and chart together —
+        // sharing the grid's left edge. Every other group is a clue or the story.
         const isGrid = (o: StudioFabricObject) => o.type === 'group' && Boolean(o.objects?.some((c) => c.angle === -90))
+        const isChart = (o: StudioFabricObject) =>
+          o.type === 'group' && Boolean(o.objects?.some((c) => clean(c.text) === CHART_HEADING))
         const grids = pages.map((p) => p.objects.filter(isGrid).length)
         expect(grids[grids.length - 1]).toBe(1)
-        const lastGroups = pages[pages.length - 1]!.objects.filter((o) => o.type === 'group')
+        const lastObjects = pages[pages.length - 1]!.objects
+        const lastGroups = lastObjects.filter((o) => isGrid(o) || isChart(o))
         expect(lastGroups.length).toBeLessThanOrEqual(2)
         expect(new Set(lastGroups.map((o) => o.left)).size).toBe(1)
+        expect(texts(lastObjects)).not.toContain(CHART_HEADING)
+        const blocks = pages.flatMap((p) => p.objects.filter((o) => o.type === 'group' && !isGrid(o) && !isChart(o)))
+        expect(blocks.length).toBe(numbers.length + 1)
 
         // The key hangs off the last page only, and prints the stored answer.
         expect(pages.slice(0, -1).every((p) => !p.answerSourceObjects)).toBe(true)
@@ -215,7 +222,7 @@ describe('farewell-logic-grid pages', () => {
     const ctx = kdpCtx(6, 9)
     for (const level of LEVELS) {
       const pages = generate({ ...base, level }, ctx)
-      const grid = pages[pages.length - 1]!.objects.find((o) => o.type === 'group')!
+      const grid = pages[pages.length - 1]!.objects.find((o) => o.type === 'group' && o.objects?.some((c) => c.angle === -90))!
       const gridBox = objectExtent(grid)
       const cx = grid.left + grid.width! / 2
       const cy = grid.top + grid.height! / 2
@@ -228,6 +235,50 @@ describe('farewell-logic-grid pages', () => {
       }
       expect(grid.objects!.some((o) => o.angle === -90)).toBe(true)
     }
+  })
+
+  it('groups the story, each numbered clue, and the chart with its heading', () => {
+    let sawChart = false
+    for (const [w, h] of [[6, 9], [8.5, 11]] as const) {
+      for (const level of LEVELS) {
+        const pages = generate({ ...base, level }, kdpCtx(w, h))
+        const first = pages[0]!.objects
+        // The story: the labelled scene name over the scenario, one block.
+        const story = first.filter((o) => o.type === 'group' && o.objects?.some((c) => c.data?.[STUDIO_CONTENT_LABEL_KEY]))
+        expect(story, `${w} x ${h} ${level}`).toHaveLength(1)
+        expect(story[0]!.objects).toHaveLength(2)
+        expect(story[0]!.objects!.every((c) => c.type === 'textbox' && c.studioRole === 'prompt')).toBe(true)
+
+        // Each clue: its number and its text, nothing else, numbered in order.
+        const clues = pages.flatMap((p) =>
+          p.objects.filter((o) => o.type === 'group' && /^\d+\.$/.test(clean(o.objects?.[0]?.text))),
+        )
+        expect(clues.length).toBeGreaterThanOrEqual(4)
+        clues.forEach((clue, i) => {
+          const [number, text, ...rest] = clue.objects ?? []
+          expect(rest).toEqual([])
+          expect(clean(number?.text)).toBe(`${i + 1}.`)
+          expect(clean(text?.text).length).toBeGreaterThan(number!.text!.length)
+        })
+        // No clue number or clue text is left loose on any page.
+        for (const page of pages) {
+          expect(texts(page.objects).some((t) => /^\d+\.$/.test(t))).toBe(false)
+        }
+
+        // The write-in chart, when printed, travels with its heading.
+        const chart = pages[pages.length - 1]!.objects.find(
+          (o) => o.type === 'group' && o.objects?.some((c) => clean(c.text) === CHART_HEADING),
+        )
+        if (chart) {
+          const [heading, table, ...rest] = chart.objects ?? []
+          expect(rest).toEqual([])
+          expect(clean(heading?.text)).toBe(CHART_HEADING)
+          expect(table?.type).toBe('group')
+          sawChart = true
+        }
+      }
+    }
+    expect(sawChart).toBe(true)
   })
 
   it('reports what the trim prints, and refuses a page too small', () => {
@@ -251,13 +302,13 @@ describe('farewell-logic-grid book uniqueness', () => {
   it('stamps its scene and pattern, and a later puzzle avoids both', async () => {
     const ctx = kdpCtx(8.5, 11, 7)
     const first = generate(base, ctx)
-    const labels = labelsOf(first.flatMap((p) => p.objects))
+    const labels = labelsOf(walk(first.flatMap((p) => p.objects)))
     expect(labels).toHaveLength(1)
     const avoid = lgAvoidFromLabels(labels)
     expect(avoid.structures.size).toBe(1)
 
     const next = generate(base, { ...ctx, seed: 8, remoteData: { bookLabels: labels } })
-    const nextLabel = labelsOf(next.flatMap((p) => p.objects))[0]!
+    const nextLabel = labelsOf(walk(next.flatMap((p) => p.objects)))[0]!
     const [, theme, cats, structure] = nextLabel.split('|')
     expect(avoid.structures.has(structure!)).toBe(false)
     expect(avoid.combos.has(`${theme}|${cats}`)).toBe(false)

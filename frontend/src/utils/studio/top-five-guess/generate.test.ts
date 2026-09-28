@@ -78,8 +78,12 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext) {
   return topFiveGuessTemplate.generate(config, ctx)
 }
 
+/** Every drawn mark on the page, with the question groups opened up. */
+const flatten = (objects: StudioFabricObject[]): StudioFabricObject[] =>
+  objects.flatMap((o) => (o.objects ? flatten(o.objects) : [o]))
+
 const texts = (objects: StudioFabricObject[]) =>
-  objects.map((o) => String(o.text ?? '').replace(/ /g, ' ')).filter(Boolean)
+  flatten(objects).map((o) => String(o.text ?? '').replace(/ /g, ' ')).filter(Boolean)
 
 // Content comes from the prefetch; with one fixed reply the page is the same
 // for every seed, and freshness is the prefetch's job (see prefetch.test.ts).
@@ -217,10 +221,51 @@ describe('top-five-guess page', () => {
     const answers = harvestAnswers(page!.objects)
     expect(answers.length).toBeGreaterThan(0)
     expect(answers.every((o) => o.visible === false)).toBe(true)
-    const visible = texts(page!.objects.filter((o) => o.visible !== false))
+    const visible = texts(flatten(page!.objects).filter((o) => o.visible !== false))
     const count = visible.filter((t) => /^(\d\.\s+)?Name /.test(t)).length
     expect(visible.filter((t) => t === 'pts')).toHaveLength(5 * count)
     expect(visible.filter((t) => t === `/ ${TOP_FIVE_MAX_SCORE}`)).toHaveLength(count)
+  })
+
+  it('groups each question, each guess line with its answer and score blank', () => {
+    const [page] = generate(base, kdpCtx(6, 9))
+    for (const mode of ['puzzle', 'answers'] as const) {
+      const objects = mode === 'puzzle' ? page!.objects : page!.answerSourceObjects!
+      const blocks = objects.filter((o) => o.type === 'group')
+      expect(blocks.length).toBeGreaterThan(0)
+      blocks.forEach((block, index) => {
+        expect(block.studioRole).toBe('structure')
+        const parts = block.objects ?? []
+        const loose = parts.filter((o) => o.type !== 'group')
+        // The number (when the page prints one) and the question.
+        expect(texts(loose).at(-1)).toMatch(/^Name /)
+        if (loose.length === 2) expect(loose[0]!.text).toBe(`${index + 1}.`)
+        const groups = parts.filter((o) => o.type === 'group')
+        const rows = groups.slice(0, 5)
+        rows.forEach((row) => {
+          const [line, answer, ...score] = row.objects ?? []
+          expect(line!.type).toBe('rect')
+          expect(answer!.studioRole).toBe('answer')
+          if (mode === 'puzzle') {
+            expect(score.map((o) => o.type)).toEqual(['rect', 'textbox'])
+            expect(score[1]!.text).toBe('pts')
+          } else {
+            expect(score).toHaveLength(1)
+            expect(score[0]!.studioRole).toBe('answer')
+          }
+        })
+        // The tally closes the puzzle block; the key has none.
+        const total = groups.slice(5)
+        if (mode === 'puzzle') {
+          expect(total).toHaveLength(1)
+          expect(texts(total)).toEqual(['Total', `/ ${TOP_FIVE_MAX_SCORE}`])
+        } else {
+          expect(total).toHaveLength(0)
+        }
+      })
+      // No answer is left loose beside the groups.
+      expect(objects.some((o) => o.studioRole === 'answer')).toBe(false)
+    }
   })
 
   it('draws the answer page from the same sets, ranked and scored', () => {

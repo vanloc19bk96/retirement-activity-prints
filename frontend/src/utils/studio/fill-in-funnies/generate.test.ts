@@ -92,11 +92,23 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext) {
 const only = (index: number) => ({ stories: [{ ...FIF_FIXTURE_STORIES[index]! }] })
 const story = (index: number): FifStory => normalizeFifStory(FIF_FIXTURE_STORIES[index])!
 
+/**
+ * Every mark on the page with the groups opened up, each moved to where it
+ * prints: a group keeps its children relative to its own centre.
+ */
+function marksOf(objects: StudioFabricObject[], dx = 0, dy = 0): StudioFabricObject[] {
+  return objects.flatMap((o) => {
+    const placed = { ...o, left: o.left + dx, top: o.top + dy }
+    if (!o.objects) return [placed]
+    return marksOf(o.objects, placed.left + (o.width ?? 0) / 2, placed.top + (o.height ?? 0) / 2)
+  })
+}
+
 const texts = (objects: StudioFabricObject[]) =>
-  objects.map((o) => String(o.text ?? '').replace(/ /g, ' ')).filter(Boolean)
+  marksOf(objects).map((o) => String(o.text ?? '').replace(/ /g, ' ')).filter(Boolean)
 
 const rules = (objects: StudioFabricObject[]) =>
-  objects.filter((o) => o.type === 'rect' && o.studioRole === 'structure')
+  marksOf(objects).filter((o) => o.type === 'rect' && o.studioRole === 'structure')
 
 function extent(o: StudioFabricObject) {
   const w = o.width ?? 0
@@ -286,14 +298,43 @@ describe('fill-in-funnies activity', () => {
     const blanks = story0.paragraphs.join(' ').match(/\[\d+\]/g)!
     expect(rules(objects)).toHaveLength(blanks.length)
     for (const token of blanks) expect(all).toContain(token.slice(1, -1))
-    const labelled = objects.filter((o) => typeof o.data?.[STUDIO_CONTENT_LABEL_KEY] === 'string')
+    const labelled = marksOf(objects).filter((o) => typeof o.data?.[STUDIO_CONTENT_LABEL_KEY] === 'string')
     expect(labelled).toHaveLength(1)
     expect(labelled[0]!.data![STUDIO_CONTENT_LABEL_KEY]).toBe(bookStoryLabel(story0))
   })
 
+  it('groups each word row, and each blank inside its paragraph', () => {
+    const [words, storyPage] = generate(base, kdpCtx(6, 9))
+    const s = story(0)
+    const rows = words!.objects.filter((o) => o.type === 'group' && o.studioRole === 'structure')
+    expect(rows).toHaveLength(s.blanks.length)
+    rows.forEach((row, i) => {
+      const [number, prompt, line, ...rest] = row.objects!
+      expect(rest).toEqual([])
+      expect(number!.text).toBe(`${i + 1}.`)
+      // The label reads with its hint.
+      expect(texts(prompt!.objects!)).toEqual([FIF_BLANK_KINDS[s.blanks[i]!].label, FIF_BLANK_KINDS[s.blanks[i]!].hint])
+      expect(line!.type).toBe('rect')
+    })
+    expect(rules(words!.objects.filter((o) => !rows.includes(o)))).toHaveLength(0)
+
+    // One group per paragraph, each blank a number kept on its own line.
+    const paragraphs = storyPage!.objects.filter(
+      (o) => o.type === 'group' && o.objects!.some((part) => part.type === 'group'),
+    )
+    expect(paragraphs).toHaveLength(s.paragraphs.length)
+    const blanks = paragraphs.flatMap((p) => p.objects!.filter((part) => part.type === 'group'))
+    expect(blanks).toHaveLength(rules(storyPage!.objects).length)
+    for (const blank of blanks) expect(blank.objects!.map((o) => o.type)).toEqual(['textbox', 'rect'])
+    // Nothing of the story is left loose beside the headings and the title.
+    const loose = storyPage!.objects.filter((o) => o.type !== 'group')
+    expect(rules(loose)).toHaveLength(0)
+    expect(texts(loose).join(' ')).not.toContain('garage')
+  })
+
   it('prints a callback blank twice under the same number', () => {
     const pages = generate(base, kdpCtx(8.5, 11, only(2)))
-    const objects = pages.slice(1).flatMap((p) => p.objects)
+    const objects = pages.slice(1).flatMap((p) => marksOf(p.objects))
     const twos = objects.filter((o) => o.text === '2' && o.fontWeight === 700)
     expect(twos).toHaveLength(2)
     expect(rules(pages[0]!.objects)).toHaveLength(9)
@@ -301,7 +342,7 @@ describe('fill-in-funnies activity', () => {
 
   it('sets the story words exactly as written', () => {
     const pages = generate(base, kdpCtx(6, 9))
-    const printed = pages[1]!.objects
+    const printed = marksOf(pages[1]!.objects)
       .filter((o) => o.type === 'textbox' && o.studioRole === 'prompt')
       .map((o) => String(o.text).replace(/ /g, ' '))
       .join(' ')
@@ -312,7 +353,7 @@ describe('fill-in-funnies activity', () => {
     for (const [w, h] of TRIMS) {
       const ctx = kdpCtx(w, h)
       const [words] = generate(base, ctx)
-      const numbers = words!.objects.filter((o) => /^\d+\.$/.test(String(o.text)))
+      const numbers = marksOf(words!.objects).filter((o) => /^\d+\.$/.test(String(o.text)))
       const lines = rules(words!.objects)
       const inkLeft = Math.min(...numbers.map((o) => o.left))
       const inkRight = Math.max(...lines.map((o) => o.left + (o.width ?? 0)))
@@ -325,7 +366,7 @@ describe('fill-in-funnies activity', () => {
     for (const index of [0, 1, 2]) {
       const ctx = kdpCtx(8.5, 11, only(index))
       const pages = generate(base, ctx)
-      const lowest = Math.max(...pages.at(-1)!.objects.map((o) => extent(o).bottom))
+      const lowest = Math.max(...marksOf(pages.at(-1)!.objects).map((o) => extent(o).bottom))
       expect(lowest).toBeGreaterThan(ctx.pageHeight * 0.78)
       expect(lowest).toBeLessThanOrEqual(ctx.pageHeight - ctx.margin.bottom)
     }
@@ -344,7 +385,7 @@ describe('fill-in-funnies activity', () => {
     const pages = generate(base, kdpCtx(8.5, 11))
     const colours = new Set(
       pages
-        .flatMap((p) => p.objects)
+        .flatMap((p) => marksOf(p.objects))
         .flatMap((o) => [o.fill, o.stroke])
         .filter((c): c is string => !!c && c !== 'transparent'),
     )
@@ -392,9 +433,9 @@ describe.each(TRIMS)('fill-in-funnies on a %s x %s trim', (w, h) => {
     expect(pages.length).toBeLessThanOrEqual(3)
     for (const page of pages) {
       assertObjectsInSafeMargin(page.objects, ctx)
-      const inks = page.objects.filter((o) => o.type === 'textbox').map(extent)
+      const inks = marksOf(page.objects).filter((o) => o.type === 'textbox').map(extent)
       inks.forEach((a, i) => inks.slice(i + 1).forEach((b) => expect(overlaps(a, b)).toBe(false)))
-      for (const o of page.objects.filter((x) => x.type === 'textbox')) {
+      for (const o of marksOf(page.objects).filter((x) => x.type === 'textbox')) {
         expect(o.fontSize!).toBeGreaterThanOrEqual(HELPER_FONT_MIN)
       }
     }

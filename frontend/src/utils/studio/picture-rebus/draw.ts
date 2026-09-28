@@ -1,7 +1,8 @@
 import type { StudioFabricObject } from '@/types/studio-template.types'
 import { STUDIO_INK, STUDIO_INK_MUTED } from '@/constants/studio.constants'
-import { buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import { buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
 import { buildIconPath } from '../studio-icon'
+import { unionObjectBounds } from '../studio-layout'
 import { hugTextBoxWidth, wrapSafeWidth, wrapTextToWidth } from '../studio-text-metrics'
 import { answerSlotOffsets, type PictureRebusPuzzle } from './content'
 import {
@@ -200,6 +201,26 @@ export interface DrawPictureRebusRowOptions {
   tag: StudioTag
 }
 
+/** Wraps `parts` in a group hugging their drawn extent; nothing to wrap, nothing pushed. */
+function pushGroup(
+  objects: StudioFabricObject[],
+  parts: StudioFabricObject[],
+  tag: StudioTag,
+): void {
+  const bounds = unionObjectBounds(parts)
+  if (bounds) objects.push(buildGroup(parts, bounds, tag, 'structure'))
+}
+
+/**
+ * One puzzle as one group, so a seller drags, deletes or re-spaces a whole
+ * puzzle in the editor instead of chasing a dozen loose paths and rules.
+ *
+ * Inside it the row splits along the line a reader solves it: the number, the
+ * pictures, and the answer block — hint, rules and the hidden letters written
+ * on them. Ungrouping a row hands back those three pieces rather than every
+ * glyph, and the letters stay with the rules they sit on, so the solution page
+ * cannot print a letter beside its slot after a hand edit.
+ */
 export function drawPictureRebusRow(
   objects: StudioFabricObject[],
   options: DrawPictureRebusRowOptions,
@@ -212,8 +233,12 @@ export function drawPictureRebusRow(
   const bandCenterX = bandLeft + plan.bandWidth / 2
   const iconCenterY = box.top + metrics.iconPad + metrics.iconSize / 2
 
+  const row: StudioFabricObject[] = []
+  const pictures: StudioFabricObject[] = []
+  const answer: StudioFabricObject[] = []
+
   const label = `${index + 1}.`
-  objects.push(
+  row.push(
     buildText(
       {
         left: box.left,
@@ -231,7 +256,8 @@ export function drawPictureRebusRow(
     ),
   )
 
-  drawIconBand(objects, { puzzle, plan, bandCenterX, centerY: iconCenterY, font, tag })
+  drawIconBand(pictures, { puzzle, plan, bandCenterX, centerY: iconCenterY, font, tag })
+  pushGroup(row, pictures, tag)
 
   if (plan.showHint) {
     // Pre-broken to the band and set in a box as wide as the band, so Fabric has
@@ -242,7 +268,7 @@ export function drawPictureRebusRow(
       wrapSafeWidth(plan.bandWidth, spec),
       spec,
     ).slice(0, plan.hintLineCount)
-    objects.push(
+    answer.push(
       buildText(
         {
           left: bandCenterX,
@@ -262,7 +288,7 @@ export function drawPictureRebusRow(
     )
   }
 
-  drawAnswerSlots(objects, {
+  drawAnswerSlots(answer, {
     puzzle,
     plan,
     bandCenterX,
@@ -270,4 +296,7 @@ export function drawPictureRebusRow(
     font,
     tag,
   })
+  pushGroup(row, answer, tag)
+
+  pushGroup(objects, row, tag)
 }

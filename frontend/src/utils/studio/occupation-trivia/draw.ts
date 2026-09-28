@@ -5,8 +5,8 @@ import {
   STUDIO_STROKE_BOLD,
   STUDIO_STROKE_HAIRLINE,
 } from '@/constants/studio.constants'
-import type { Box } from '../studio-layout'
-import { buildCircle, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import { unionObjectBounds, type Box } from '../studio-layout'
+import { buildCircle, buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
 import { FABRIC_FONT_SIZE_MULT } from '../studio-text-metrics'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import { OT_LETTERS } from './content'
@@ -56,6 +56,12 @@ function text(
     ctx.tag,
     role,
   )
+}
+
+/** Wraps `parts` in a group hugging their drawn extent; nothing to wrap, nothing pushed. */
+function pushGroup(objects: StudioFabricObject[], parts: StudioFabricObject[], tag: StudioTag): void {
+  const bounds = unionObjectBounds(parts)
+  if (bounds) objects.push(buildGroup(parts, bounds, tag, 'structure'))
 }
 
 /** A thin rule between two questions or answers; structure without colour. */
@@ -142,10 +148,16 @@ function firstTop(field: Box, usable: number, stack: number, font: number): numb
  * One question: its number, its wording, and its four ringed choices — two by
  * two or one under another, as it was fitted. The wording carries the
  * question's label so a later pack in the book can refuse the same fact.
+ *
+ * The question is drawn as one group, so a seller drags or deletes a whole
+ * question in the editor rather than chasing its rings and lines one by one.
+ * Each choice — ring, letter and wording — is a group inside it, so ungrouping
+ * a question hands back four choices, not twelve loose marks.
  */
-function question(ctx: DrawContext, plan: OtQuizPlan, q: FittedOtQuestion, left: number, top: number) {
+function question(outer: DrawContext, plan: OtQuizPlan, q: FittedOtQuestion, left: number, top: number) {
   const m = plan.metrics
   const textLeft = left + m.numberW
+  const ctx: DrawContext = { ...outer, objects: [] }
   // `prompt`, not `decoration`: nothing on a quiz page is dropped by accident.
   ctx.objects.push(
     text(ctx, { left, top, text: itemNumber(q.index), width: m.numberW, fontSize: m.font, fontWeight: 700 }),
@@ -167,7 +179,8 @@ function question(ctx: DrawContext, plan: OtQuizPlan, q: FittedOtQuestion, left:
     const grid = q.arrangement === 'grid'
     const x = grid ? textLeft + (i % 2) * (plan.cellWidth + m.gutter) : textLeft
     const y = rowTops[grid ? Math.floor(i / 2) : i]!
-    ringedLetter(ctx, {
+    const choice: DrawContext = { ...ctx, objects: [] }
+    ringedLetter(choice, {
       letter: OT_LETTERS[i]!,
       left: x,
       top: y,
@@ -176,7 +189,7 @@ function question(ctx: DrawContext, plan: OtQuizPlan, q: FittedOtQuestion, left:
       stroke: STUDIO_STROKE_HAIRLINE,
       role: 'prompt',
     })
-    ctx.objects.push(
+    choice.objects.push(
       text(ctx, {
         left: x + m.ringW,
         top: y + choiceTextOffset(m),
@@ -185,7 +198,9 @@ function question(ctx: DrawContext, plan: OtQuizPlan, q: FittedOtQuestion, left:
         fontSize: m.font,
       }),
     )
+    pushGroup(ctx.objects, choice.objects, ctx.tag)
   })
+  pushGroup(outer.objects, ctx.objects, ctx.tag)
 }
 
 /**
@@ -254,6 +269,10 @@ export function drawOtQuizPage(
  * answer exactly as the quiz printed it, and the note in italic beneath. All
  * of it is drawn from the fitted records the quiz pages were drawn from, so the
  * key can only ever show the pack's own answers.
+ *
+ * Each entry is one group — number, ringed letter, answer and note — so a
+ * seller moves a whole answer as one piece; the ring and its letter are a group
+ * inside it, one mark the way the reader sees it.
  */
 export function drawOtKeyPage(
   objects: StudioFabricObject[],
@@ -281,8 +300,10 @@ export function drawOtKeyPage(
   questions.forEach((q, i) => {
     const entry = key.entries[i]!
     const lineTop = top + keyTextOffset(m)
-    objects.push(text(ctx, { left, top: lineTop, text: itemNumber(q.index), width: m.numberW, fontSize: m.font, fontWeight: 700 }))
-    ringedLetter(ctx, {
+    const parts: StudioFabricObject[] = []
+    parts.push(text(ctx, { left, top: lineTop, text: itemNumber(q.index), width: m.numberW, fontSize: m.font, fontWeight: 700 }))
+    const ring: DrawContext = { ...ctx, objects: [] }
+    ringedLetter(ring, {
       letter: q.letter,
       left: left + m.numberW,
       top,
@@ -291,7 +312,8 @@ export function drawOtKeyPage(
       stroke: STUDIO_STROKE_BOLD,
       role: 'answer',
     })
-    objects.push(
+    pushGroup(parts, ring.objects, tag)
+    parts.push(
       text(
         ctx,
         { left: answerLeft, top: lineTop, text: entry.answerLines.join('\n'), width: key.answerWidth, fontSize: m.font, fontWeight: 700 },
@@ -299,7 +321,7 @@ export function drawOtKeyPage(
       ),
     )
     if (entry.noteLines.length > 0) {
-      objects.push(
+      parts.push(
         text(
           ctx,
           {
@@ -314,6 +336,7 @@ export function drawOtKeyPage(
         ),
       )
     }
+    pushGroup(objects, parts, tag)
     top += heights[i]!
     if (i < gaps) {
       rule(ctx, left, key.blockWidth, top + gap / 2)

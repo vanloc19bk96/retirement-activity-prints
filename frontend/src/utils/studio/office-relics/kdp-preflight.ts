@@ -133,11 +133,29 @@ function pictureExtent(o: StudioFabricObject): Extent {
 const overlaps = (a: Extent, b: Extent) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom
 
 /**
+ * The marks inside every card and bank group, moved back to page coordinates.
+ *
+ * A group stores its children relative to its own centre, and the checks below
+ * are about where things print. A picture is itself a group, but it is one
+ * mark here — its extent is what may not collide — so it is not opened.
+ */
+export function placedMarks(objects: readonly StudioFabricObject[], dx = 0, dy = 0): StudioFabricObject[] {
+  return objects.flatMap((o) => {
+    const placed = { ...o, left: o.left + dx, top: o.top + dy }
+    if (o.type !== 'group' || !o.objects || o.data?.source === 'office-relic') return [placed]
+    const centerX = o.originX === 'center' ? placed.left : placed.left + (o.width ?? 0) / 2
+    const centerY = o.originY === 'center' ? placed.top : placed.top + (o.height ?? 0) / 2
+    return placedMarks(o.objects, centerX, centerY)
+  })
+}
+
+/**
  * The drawn page, checked as drawn: every picture present, inside the body
  * field, clear of every other picture and of every writing line.
  */
-export function checkOrDrawnPage(objects: readonly StudioFabricObject[], field: Box, expected: number): string[] {
+export function checkOrDrawnPage(page: readonly StudioFabricObject[], field: Box, expected: number): string[] {
   const errors: string[] = []
+  const objects = placedMarks(page)
   const pictures = objects.filter((o) => o.data?.source === 'office-relic')
   if (pictures.length !== expected) errors.push('A picture is missing from the page.')
   const extents = pictures.map(pictureExtent)

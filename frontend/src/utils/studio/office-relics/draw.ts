@@ -1,7 +1,7 @@
 import type { StudioFabricObject } from '@/types/studio-template.types'
 import { STUDIO_INK, STUDIO_INK_MUTED, STUDIO_RULE_MEDIUM, STUDIO_STROKE_HAIRLINE } from '@/constants/studio.constants'
-import type { Box } from '../studio-layout'
-import { buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import { unionObjectBounds, type Box } from '../studio-layout'
+import { buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
 import { fabricTextHeight, hugTextBoxWidth } from '../studio-text-metrics'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import { OR_TEMPLATE_KEY, type PlacedRelic } from './content'
@@ -94,8 +94,24 @@ export function orCardBoxes(
 export const cardRuleY = (card: OrCardBox, plan: OrPagePlan) =>
   card.top + CARD_PAD + plan.pictureHeight + PICTURE_TO_LINE + plan.writeRoom
 
+/** Wraps `parts` in a group hugging their drawn extent; nothing to wrap, nothing pushed. */
+function pushGroup(objects: StudioFabricObject[], parts: StudioFabricObject[], tag: StudioTag): void {
+  const bounds = unionObjectBounds(parts)
+  if (bounds) objects.push(buildGroup(parts, bounds, tag, 'structure'))
+}
+
+/**
+ * One card: its frame, the picture, the number and the writing line — and, on
+ * the answer page, the name written on that line with its other names beneath.
+ *
+ * The card is drawn as one group, so a seller drags or deletes a whole relic in
+ * the editor instead of its frame, picture and line one by one. On the answer
+ * page the line, the name on it and the other names are a group inside it, so
+ * the answer cannot drift off the line it was written on after a hand edit.
+ * The picture stays the one group it always was, label and all.
+ */
 function drawCard(
-  objects: StudioFabricObject[],
+  out: StudioFabricObject[],
   options: {
     item: PlacedRelic
     index: number
@@ -112,6 +128,7 @@ function drawCard(
   const version = variantKey(drawing, variant)
   const radius = style.frame === 'square' ? 0 : CARD_RADIUS
 
+  const objects: StudioFabricObject[] = []
   objects.push(
     buildRect(
       {
@@ -175,6 +192,10 @@ function drawCard(
       // Not `decoration`: the numbers must survive onto the answer page.
       'prompt',
     ),
+  )
+
+  // The writing line, with (on the answer page) the name written on it.
+  const line: StudioFabricObject[] = [
     buildRect(
       {
         left: ruleLeft,
@@ -188,9 +209,29 @@ function drawCard(
       tag,
       'structure',
     ),
-  )
+  ]
 
-  if (mode !== 'answers') return
+  if (mode === 'answers') drawAnswer(line, { relic, ruleLeft, ruleY, width, plan, font, tag })
+  // A lone writing line is not wrapped: a group of one is only a detour.
+  if (line.length > 1) pushGroup(objects, line, tag)
+  else objects.push(...line)
+  pushGroup(out, objects, tag)
+}
+
+/** The name written on a card's line, and its other accepted names beneath it — all hidden. */
+function drawAnswer(
+  objects: StudioFabricObject[],
+  options: {
+    relic: PlacedRelic['relic']
+    ruleLeft: number
+    ruleY: number
+    width: number
+    plan: OrPagePlan
+    font: string
+    tag: StudioTag
+  },
+): void {
+  const { relic, ruleLeft, ruleY, width, plan, font, tag } = options
 
   objects.push(
     buildText(
@@ -254,7 +295,8 @@ function drawWordBank(
   const centerX = left + width / 2
   const lines = packBank(bankNames(items), width - BANK_PAD * 2, font)
 
-  objects.push(
+  // One group — frame, label and words — so the bank moves as the one block it reads as.
+  const parts: StudioFabricObject[] = [
     buildRect(
       {
         left,
@@ -304,7 +346,8 @@ function drawWordBank(
       tag,
       'prompt',
     ),
-  )
+  ]
+  pushGroup(objects, parts, tag)
 }
 
 /**

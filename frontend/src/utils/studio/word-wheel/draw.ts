@@ -277,12 +277,16 @@ export function planWordWheelSlots(bandWidth: number): WordWheelSlotPlan | null 
 }
 
 /**
- * Draw the nine slots at `area`, centred.
+ * Draw the nine slots at `area`, centred, as one group.
  *
- * `revealed` decides whether the letters print as ink the reader sees. The
- * puzzle page passes false, which tags every letter as an answer and leaves it
- * hidden; the solution page passes true for the same nine glyphs in the same
- * nine places.
+ * Both pages draw the same nine glyphs in the same nine places; each letter the
+ * level does not give away is tagged as an answer, so the puzzle page prints it
+ * hidden and the key reveals it in place.
+ *
+ * The caption, the rules and the letters are one block, so a seller moves the
+ * slots as a whole and the word cannot be pulled off the lines it is written
+ * on. The answer glyphs keep their role inside the group; the answer key walks
+ * into groups to find them, so nothing has to stay loose to be revealed.
  */
 export function drawWordWheelSlots(options: {
   area: Box
@@ -292,14 +296,8 @@ export function drawWordWheelSlots(options: {
   tag: StudioTag
   /** Level gives the first letter away — printed on both pages. */
   firstLetterGiven: boolean
-  /**
-   * Solution page: the revealed word travels with the rules under it.
-   * The puzzle page leaves the letters beside the rule group so each one
-   * stays a hidden answer the key can reveal in place.
-   */
-  groupLettersWithRules?: boolean
-}): StudioFabricObject[] {
-  const { area, plan, target, font, tag, firstLetterGiven, groupLettersWithRules } = options
+}): StudioFabricObject {
+  const { area, plan, target, font, tag, firstLetterGiven } = options
   const { slotWidth, letterFont } = plan
   const ruleWidth = Math.round(slotWidth * SLOT_RULE_RATIO)
   const lift = Math.round(slotWidth * SLOT_LETTER_LIFT)
@@ -370,19 +368,14 @@ export function drawWordWheelSlots(options: {
     )
   }
 
-  // One block: nudging a slot rule takes the other eight with it. On the
-  // solution the letters go in the same block, so the word cannot be pulled
-  // off the lines it is written on.
-  const slotParts = groupLettersWithRules ? [...rules, ...letters] : rules
+  const slotParts = [label, ...rules, ...letters]
   const slotBounds = unionObjectBounds(slotParts) ?? {
     left,
-    top: ruleY,
+    top: area.top,
     width: plan.blockWidth,
-    height: SLOT_RULE_HEIGHT,
+    height: plan.height,
   }
-  const slotGroup = buildGroup(slotParts, slotBounds, tag, 'structure')
-
-  return groupLettersWithRules ? [label, slotGroup] : [label, slotGroup, ...letters]
+  return buildGroup(slotParts, slotBounds, tag, 'structure')
 }
 
 /* ------------------------------------------------------------------ *

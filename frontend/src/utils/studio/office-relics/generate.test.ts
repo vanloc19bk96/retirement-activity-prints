@@ -47,7 +47,7 @@ import {
   orWorstCasePlan,
   pxToIn,
 } from './layout'
-import { checkOrDrawnPage, runOrKdpPreflight } from './kdp-preflight'
+import { checkOrDrawnPage, placedMarks, runOrKdpPreflight } from './kdp-preflight'
 import { buildRelicPicture, elementPathData, mergedRuns, relicInkBox } from './picture'
 import { parseOrRemoteData } from './prefetch'
 import { OR_BANK_LABELS, OR_FRAME_STYLES, OR_NUMBER_STYLES, orHouseStyle } from './style'
@@ -121,9 +121,14 @@ const STYLE_SALTS = (() => {
   }
   return [...new Set(wanted.values())]
 })()
+/**
+ * Every mark on the page as printed: the card and bank groups opened up, each
+ * child back in page coordinates. A picture stays one mark, as a reader sees it.
+ */
+const marks = (objects: readonly StudioFabricObject[]) => placedMarks(objects)
 const pictureIds = (objects: StudioFabricObject[]) =>
-  objects.filter(isPicture).map((o) => String(o.data?.[STUDIO_CONTENT_LABEL_KEY]))
-const texts = (objects: StudioFabricObject[]) => objects.map((o) => clean(o.text)).filter(Boolean)
+  marks(objects).filter(isPicture).map((o) => String(o.data?.[STUDIO_CONTENT_LABEL_KEY]))
+const texts = (objects: StudioFabricObject[]) => marks(objects).map((o) => clean(o.text)).filter(Boolean)
 
 beforeEach(() => clearStudioRecentContent())
 
@@ -391,8 +396,8 @@ describe('office-relics page', () => {
           expect(plan!.answerFont).toBeGreaterThanOrEqual(ANSWER_FONT_MIN)
 
           const [page] = generate(config, ctx)
-          expect(page!.objects.filter(isPicture), `${w}x${h} ${level}`).toHaveLength(plan!.count)
-          expect(page!.objects.filter(isNumber)).toHaveLength(plan!.count)
+          expect(marks(page!.objects).filter(isPicture), `${w}x${h} ${level}`).toHaveLength(plan!.count)
+          expect(marks(page!.objects).filter(isNumber)).toHaveLength(plan!.count)
           const note = orPrintNote({ page: ctx, config, level, instructions: orInstructionOptions(config), font: FONT })
           expect(note).toContain(`${plan!.count} pictures a page`)
           expect(note).toContain(`${pxToIn(plan!.pictureWidth)} x ${pxToIn(plan!.pictureHeight)} in`)
@@ -410,7 +415,7 @@ describe('office-relics page', () => {
         const grids = STYLE_SALTS.map((salt) => {
           const ctx = kdpCtx(w, h, 42, [], salt)
           const [page] = generate({ ...base, level }, ctx)
-          const pictures = page!.objects.filter(isPicture)
+          const pictures = marks(page!.objects).filter(isPicture)
           assertObjectsInSafeMargin(page!.objects, ctx)
           assertObjectsInSafeMargin(page!.answerSourceObjects!, ctx)
           const field = { left: 0, top: 0, width: ctx.pageWidth, height: ctx.pageHeight }
@@ -427,7 +432,7 @@ describe('office-relics page', () => {
   it('keeps every card frame, stroke included, clear of the bottom safe edge on both pages', () => {
     const frameBottom = (objects: StudioFabricObject[]) =>
       Math.max(
-        ...objects
+        ...marks(objects)
           .filter((o) => o.type?.toLowerCase() === 'rect' && o.studioRole === 'structure' && (!o.fill || o.fill === 'transparent'))
           .map((o) => o.top + (o.height ?? 0) + (o.strokeWidth ?? 0) / 2),
       )
@@ -487,9 +492,10 @@ describe('office-relics page', () => {
           // Same pictures, same order.
           expect(pictureIds(source)).toEqual(puzzleIds)
 
-          const key = buildAnswerPage(source, STUDIO_ANSWER_INK_MONO)
+          const built = buildAnswerPage(source, STUDIO_ANSWER_INK_MONO)
+          const key = marks(built)
           expect(key.filter(isNumber).map((o) => clean(o.text))).toEqual(
-            page!.objects.filter(isNumber).map((o) => clean(o.text)),
+            marks(page!.objects).filter(isNumber).map((o) => clean(o.text)),
           )
           const pictures = key.filter(isPicture)
           const answers = key.filter((o) => o.studioRole === 'answer' && o.fontWeight === 700)
@@ -515,7 +521,7 @@ describe('office-relics page', () => {
           // The how-to line and the word bank stay on the puzzle page.
           for (const phrasing of orInstructionOptions({ ...base, level })) expect(texts(key)).not.toContain(phrasing)
           expect(texts(key).some(isBankLabel)).toBe(false)
-          assertObjectsInSafeMargin(key, kdpCtx(w, h))
+          assertObjectsInSafeMargin(built, kdpCtx(w, h))
         }
       }
     }
@@ -525,7 +531,7 @@ describe('office-relics page', () => {
     for (const [w, h] of TRIMS) {
       const [page] = generate({ ...base, level: 'gentle' }, kdpCtx(w, h))
       const names = pictureIds(page!.objects).map((id) => relicById(id)!.name).sort((a, b) => a.localeCompare(b))
-      const bank = page!.objects.find((_o, i, all) => isBankLabel(clean(all[i - 1]?.text)))!
+      const bank = marks(page!.objects).find((_o, i, all) => isBankLabel(clean(all[i - 1]?.text)))!
       expect(clean(bank.text).split(/\s+•\s+|\n/)).toEqual(names)
     }
   })
@@ -549,16 +555,52 @@ describe('office-relics page', () => {
         const ctx = kdpCtx(w, h)
         const [page] = generate({ ...base, level }, ctx)
         const field = { left: 0, top: 0, width: ctx.pageWidth, height: ctx.pageHeight }
-        const count = page!.objects.filter(isPicture).length
+        const count = marks(page!.objects).filter(isPicture).length
         expect(checkOrDrawnPage(page!.objects, field, count)).toEqual([])
         expect(checkOrDrawnPage(page!.answerSourceObjects!, field, count)).toEqual([])
       }
     }
   })
 
+  it('groups each card, with the answer kept on its line, and the word bank as one block', () => {
+    for (const level of LEVELS) {
+      const ctx = kdpCtx(8.5, 11)
+      const [page] = generate({ ...base, level }, ctx)
+      const plan = orWorstCasePlan({ page: ctx, config: base, level, instructions: orInstructionOptions(base), font: FONT })!
+      const groups = page!.objects.filter((o) => o.type === 'group' && !isPicture(o))
+      const bank = level === 'gentle' ? groups.pop() : undefined
+      expect(groups).toHaveLength(plan.count)
+      groups.forEach((card, i) => {
+        const [frame, picture, number, line, ...rest] = card.objects ?? []
+        expect(rest).toEqual([])
+        expect(frame?.type).toBe('rect')
+        expect(picture && isPicture(picture)).toBe(true)
+        expect(clean(number?.text)).toMatch(new RegExp(`^${i + 1}[.)]$`))
+        // A bare writing line on the puzzle page: nothing written on it yet.
+        expect(line?.type).toBe('rect')
+      })
+      if (bank) {
+        expect(bank.objects!.map((o) => o.type)).toEqual(['rect', 'textbox', 'textbox'])
+        expect(isBankLabel(clean(bank.objects![1]!.text))).toBe(true)
+      }
+
+      const cards = page!.answerSourceObjects!.filter((o) => o.type === 'group' && !isPicture(o))
+      expect(cards).toHaveLength(plan.count)
+      for (const card of cards) {
+        const [, , , line, ...rest] = card.objects ?? []
+        expect(rest).toEqual([])
+        expect(line?.type).toBe('group')
+        const [rule, answer, ...aliases] = line!.objects!
+        expect(rule?.type).toBe('rect')
+        expect(answer?.studioRole).toBe('answer')
+        expect(aliases.every((o) => o.studioRole === 'answer' && o.fontStyle === 'italic')).toBe(true)
+      }
+    }
+  })
+
   it('stamps each picture with its object, so a later page can refuse it', () => {
     const [page] = generate(base, kdpCtx(6, 9))
-    for (const picture of page!.objects.filter(isPicture)) {
+    for (const picture of marks(page!.objects).filter(isPicture)) {
       expect(relicById(String(picture.data?.[STUDIO_CONTENT_LABEL_KEY]))).toBeDefined()
       // The fingerprint names the drawing and its version, so two versions are two pictures.
       const id = String(picture.data?.relicDrawing) as RelicDrawingId
@@ -617,9 +659,24 @@ describe('office-relics preflight', () => {
 
   it('catches overlapping pictures on a drawn page', () => {
     const [page] = generate(base, ctx)
-    const pictures = page!.objects.filter(isPicture)
-    const moved = page!.objects.map((o) => (o === pictures[1] ? { ...o, left: pictures[0]!.left, top: pictures[0]!.top } : o))
+    const pictures = marks(page!.objects).filter(isPicture)
+    // Slide the second card's picture, inside its card, onto the first card's picture.
+    const cards = page!.objects.filter((o) => o.objects?.some(isPicture))
+    const second = cards[1]!
+    const centerX = second.left + (second.width ?? 0) / 2
+    const centerY = second.top + (second.height ?? 0) / 2
+    const moved = page!.objects.map((o) =>
+      o === second
+        ? {
+            ...o,
+            objects: o.objects!.map((child) =>
+              isPicture(child) ? { ...child, left: pictures[0]!.left - centerX, top: pictures[0]!.top - centerY } : child,
+            ),
+          }
+        : o,
+    )
     const field = { left: 0, top: 0, width: ctx.pageWidth, height: ctx.pageHeight }
+    expect(checkOrDrawnPage(page!.objects, field, pictures.length)).toEqual([])
     expect(checkOrDrawnPage(moved, field, pictures.length).join(' ')).toMatch(/overlap/)
   })
 })
@@ -705,7 +762,7 @@ describe('office-relics uniqueness across sellers', () => {
     expect(looks.size).toBe(36)
     expect(orHouseStyle(saltOf(9))).toEqual(orHouseStyle(saltOf(9)))
     const pages = [42, 43, 44].map((seed) => generate({ ...base, seed }, kdpCtx(6, 9, seed, [], saltOf(9)))[0]!)
-    const numbering = pages.map((page) => clean(page.objects.find(isNumber)?.text).slice(1))
+    const numbering = pages.map((page) => clean(marks(page.objects).find(isNumber)?.text).slice(1))
     expect(new Set(numbering).size).toBe(1)
   })
 

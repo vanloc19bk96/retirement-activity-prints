@@ -1,4 +1,4 @@
-import type { StudioFabricObject } from '@/types/studio-template.types'
+import type { StudioFabricObject, StudioRole } from '@/types/studio-template.types'
 import {
   STUDIO_INK,
   STUDIO_PAPER,
@@ -8,13 +8,14 @@ import {
 } from '@/constants/studio.constants'
 import {
   buildCircle,
+  buildGroup,
   buildPolygon,
   buildPolyline,
   buildRect,
   buildText,
   type StudioTag,
 } from '../studio-fabric-builders'
-import { boxCenterX, boxRight, toNonBreakingSpaces, type Box } from '../studio-layout'
+import { boxCenterX, boxRight, toNonBreakingSpaces, unionObjectBounds, type Box } from '../studio-layout'
 import { hugTextBoxWidth } from '../studio-text-metrics'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import type { WwMotif } from './content'
@@ -51,6 +52,23 @@ interface DrawContext {
 
 const withLabel = (obj: StudioFabricObject, label?: string): StudioFabricObject =>
   label ? { ...obj, data: { ...obj.data, [STUDIO_CONTENT_LABEL_KEY]: label } } : obj
+
+/**
+ * Draws into a fresh list and wraps what landed there in one group hugging it,
+ * so a seller drags or deletes a whole box, sign-off or ornament in the editor
+ * instead of chasing its loose parts. A single part is pushed as it is — a
+ * group of one is only an extra click.
+ */
+function grouped(ctx: DrawContext, role: StudioRole, draw: (inner: DrawContext) => void) {
+  const parts: StudioFabricObject[] = []
+  draw({ ...ctx, objects: parts })
+  if (parts.length === 1) {
+    ctx.objects.push(parts[0]!)
+    return
+  }
+  const bounds = unionObjectBounds(parts)
+  if (bounds) ctx.objects.push(buildGroup(parts, bounds, ctx.tag, role))
+}
 
 /** A hairline or writing line, drawn as a filled strip so it prints crisp at any zoom. */
 function rule(ctx: DrawContext, left: number, top: number, width: number, fill: string, label?: string) {
@@ -202,6 +220,12 @@ function drawFrame(ctx: DrawContext, box: WwBox, style: WwStyle, label?: string)
 /**
  * One box: frame, prompt (inside, or set into the top edge with a white break
  * behind it), writing lines, then the sign-off and its line on the same rhythm.
+ *
+ * The whole box is one group. Inside it the parts that only make sense
+ * together are grouped again: a frame drawn in several strokes (double rule,
+ * corner brackets), the prompt with the white break that lets it sit in the
+ * frame's edge, and the sign-off with the line it is signed on — so
+ * ungrouping a box never strands a label from its line.
  */
 export function drawBox(
   ctx: DrawContext,
@@ -216,72 +240,80 @@ export function drawBox(
     promptLabel: string
   },
 ) {
+  grouped(ctx, 'structure', (card) => drawBoxParts(card, options))
+}
+
+function drawBoxParts(ctx: DrawContext, options: Parameters<typeof drawBox>[1]) {
   const { box, style, labelFont, prompt, signoff, designLabel, promptLabel } = options
-  drawFrame(ctx, box, style, designLabel)
+  grouped(ctx, 'structure', (frame) => drawFrame(frame, box, style, designLabel))
 
   const room = promptRoom(box.innerWidth, style)
   const text = toNonBreakingSpaces(prompt)
   const width = hugTextBoxWidth(text, labelFont, room, italicSpec(ctx.font))
   const textLeft = style.placement === 'tab' ? box.innerLeft + TAB_BREAK : box.innerLeft
-  if (style.placement === 'tab') {
-    ctx.objects.push(
-      buildRect(
+  grouped(ctx, 'structure', (label) => {
+    if (style.placement === 'tab') {
+      label.objects.push(
+        buildRect(
+          {
+            left: box.innerLeft,
+            top: box.promptTop,
+            width: width + 2 * TAB_BREAK,
+            height: Math.ceil(labelHeight(labelFont)),
+            fill: STUDIO_PAPER,
+            stroke: 'transparent',
+            strokeWidth: 0,
+          },
+          ctx.tag,
+          'decoration',
+        ),
+      )
+    }
+    label.objects.push(
+      withLabel(
+        buildText(
+          {
+            left: textLeft,
+            top: box.promptTop,
+            text,
+            width,
+            fontFamily: ctx.font,
+            fontSize: labelFont,
+            fontStyle: 'italic',
+            lineHeight: 1,
+          },
+          ctx.tag,
+          'prompt',
+        ),
+        promptLabel,
+      ),
+    )
+  })
+
+  for (const y of box.lines) rule(ctx, box.innerLeft, y, box.innerWidth, STUDIO_RULE_MEDIUM)
+
+  grouped(ctx, 'structure', (line) => {
+    const sign = toNonBreakingSpaces(signoff)
+    const signWidth = hugTextBoxWidth(sign, labelFont, box.innerWidth, plainSpec(ctx.font))
+    const baseline = box.signY - Math.round(labelFont * 0.14)
+    line.objects.push(
+      buildText(
         {
           left: box.innerLeft,
-          top: box.promptTop,
-          width: width + 2 * TAB_BREAK,
-          height: Math.ceil(labelHeight(labelFont)),
-          fill: STUDIO_PAPER,
-          stroke: 'transparent',
-          strokeWidth: 0,
+          top: Math.round(baseline - labelFont * BASELINE),
+          text: sign,
+          width: signWidth,
+          fontFamily: ctx.font,
+          fontSize: labelFont,
+          lineHeight: 1,
         },
         ctx.tag,
         'decoration',
       ),
     )
-  }
-  ctx.objects.push(
-    withLabel(
-      buildText(
-        {
-          left: textLeft,
-          top: box.promptTop,
-          text,
-          width,
-          fontFamily: ctx.font,
-          fontSize: labelFont,
-          fontStyle: 'italic',
-          lineHeight: 1,
-        },
-        ctx.tag,
-        'prompt',
-      ),
-      promptLabel,
-    ),
-  )
-
-  for (const y of box.lines) rule(ctx, box.innerLeft, y, box.innerWidth, STUDIO_RULE_MEDIUM)
-
-  const sign = toNonBreakingSpaces(signoff)
-  const signWidth = hugTextBoxWidth(sign, labelFont, box.innerWidth, plainSpec(ctx.font))
-  const baseline = box.signY - Math.round(labelFont * 0.14)
-  ctx.objects.push(
-    buildText(
-      {
-        left: box.innerLeft,
-        top: Math.round(baseline - labelFont * BASELINE),
-        text: sign,
-        width: signWidth,
-        fontFamily: ctx.font,
-        fontSize: labelFont,
-        lineHeight: 1,
-      },
-      ctx.tag,
-      'decoration',
-    ),
-  )
-  const lineLeft = box.innerLeft + signWidth + signGap
-  rule(ctx, lineLeft, box.signY, box.innerLeft + box.innerWidth - lineLeft, STUDIO_RULE)
+    const lineLeft = box.innerLeft + signWidth + signGap
+    rule(line, lineLeft, box.signY, box.innerLeft + box.innerWidth - lineLeft, STUDIO_RULE)
+  })
 }
 
 /* ---------------------------------------------------------------- motifs */
@@ -470,6 +502,9 @@ export const motifWidth = (motif: WwMotif) => MOTIFS[motif].width
  * The quiet rule under the heading: a hairline either side of a small
  * line-art motif. It separates the header from the boxes without taking
  * writing room — its height is reserved by the layout.
+ *
+ * Drawn as one decoration group, the motif nested inside it, so the whole
+ * flourish moves or deletes in one click.
  */
 export function drawOrnament(
   ctx: DrawContext,
@@ -482,9 +517,11 @@ export function drawOrnament(
   const arm = Math.min(Math.round(column.width * 0.22), 110)
   const y = top + S / 2
   const motifLeft = Math.round(cx - spec.width / 2)
-  rule(ctx, motifLeft - gap - arm, y, arm, STUDIO_RULE, label)
-  spec.draw(ctx, motifLeft, top)
-  rule(ctx, motifLeft + spec.width + gap, y, arm, STUDIO_RULE)
+  grouped(ctx, 'decoration', (ornament) => {
+    rule(ornament, motifLeft - gap - arm, y, arm, STUDIO_RULE, label)
+    grouped(ornament, 'decoration', (picture) => spec.draw(picture, motifLeft, top))
+    rule(ornament, motifLeft + spec.width + gap, y, arm, STUDIO_RULE)
+  })
 }
 
 export type { DrawContext }

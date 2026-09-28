@@ -90,13 +90,25 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext) {
   return bucketListTemplate.generate(config, ctx)
 }
 
+/**
+ * Every mark on the page with the groups opened up, each moved to where it
+ * prints: a group keeps its children relative to its own centre.
+ */
+function marksOf(objects: StudioFabricObject[], dx = 0, dy = 0): StudioFabricObject[] {
+  return objects.flatMap((o) => {
+    const placed = { ...o, left: o.left + dx, top: o.top + dy }
+    if (!o.objects) return [placed]
+    return marksOf(o.objects, placed.left + (o.width ?? 0) / 2, placed.top + (o.height ?? 0) / 2)
+  })
+}
+
 const ideasOn = (objects: StudioFabricObject[]) =>
-  objects.filter((o) => typeof o.data?.[STUDIO_CONTENT_LABEL_KEY] === 'string')
+  marksOf(objects).filter((o) => typeof o.data?.[STUDIO_CONTENT_LABEL_KEY] === 'string')
 const isWriteIn = (o: StudioFabricObject) => o.data?.[BL_WRITE_IN_KEY] === true
 const boxesOn = (objects: StudioFabricObject[]) =>
-  objects.filter((o) => o.type === 'rect' && o.studioRole === 'structure' && !isWriteIn(o))
+  marksOf(objects).filter((o) => o.type === 'rect' && o.studioRole === 'structure' && !isWriteIn(o))
 const numbersOn = (objects: StudioFabricObject[]) =>
-  objects.filter((o) => o.type === 'textbox' && /^\d+\.$/.test(String(o.text)))
+  marksOf(objects).filter((o) => o.type === 'textbox' && /^\d+\.$/.test(String(o.text)))
 const textOf = (o: StudioFabricObject) => String(o.text ?? '').replace(/ /g, ' ')
 
 function extent(o: StudioFabricObject) {
@@ -207,7 +219,7 @@ describe('bucket-list pages', () => {
   it('groups the ideas under headings, carrying a heading over a page break', () => {
     const pages = generate(base, kdpCtx(6, 9))
     const headings = pages.flatMap((p) =>
-      p.objects
+      marksOf(p.objects)
         .filter((o) => o.type === 'textbox' && o.fontWeight === 700 && !/^\d+\.$/.test(String(o.text)))
         .filter((o) => !isStudioHeaderTitle(o))
         .map(textOf),
@@ -222,8 +234,8 @@ describe('bucket-list pages', () => {
   it.each(TRIMS)('closes with write-in lines only where the last page has room, on %s x %s', (w, h) => {
     const ctx = kdpCtx(w, h)
     const pages = generate(base, ctx)
-    pages.slice(0, -1).forEach((page) => expect(page.objects.some(isWriteIn)).toBe(false))
-    const last = pages.at(-1)!.objects
+    pages.slice(0, -1).forEach((page) => expect(marksOf(page.objects).some(isWriteIn)).toBe(false))
+    const last = marksOf(pages.at(-1)!.objects)
     const lines = last.filter((o) => isWriteIn(o) && o.studioRole === 'decoration')
     const boxes = last.filter((o) => isWriteIn(o) && o.studioRole === 'structure')
     expect(lines).toHaveLength(boxes.length)
@@ -239,6 +251,36 @@ describe('bucket-list pages', () => {
       })
     } else {
       expect(last.map(textOf)).not.toContain(OWN_IDEAS_TITLE)
+    }
+  })
+
+  it('groups each idea, heading and write-in line as one piece', () => {
+    const pages = generate(base, kdpCtx(8.5, 11))
+    const groups = pages.flatMap((p) => p.objects.filter((o) => o.type === 'group'))
+    const ideas = groups.filter((g) => g.objects?.some((o) => STUDIO_CONTENT_LABEL_KEY in (o.data ?? {})))
+    expect(ideas).toHaveLength(100)
+    ideas.forEach((group, i) => {
+      expect(group.studioRole).toBe('structure')
+      const [box, number, idea, ...rest] = group.objects!
+      expect(rest).toEqual([])
+      expect(box!.type).toBe('rect')
+      expect(textOf(number!)).toBe(`${i + 1}.`)
+      expect(idea!.studioRole).toBe('prompt')
+    })
+    const headings = groups.filter((g) => g.studioRole === 'decoration')
+    expect(headings.length).toBeGreaterThanOrEqual(BL_FIXTURE_SECTIONS.length)
+    for (const heading of headings) {
+      expect(heading.objects!.map((o) => o.type)).toEqual(['textbox', 'rect'])
+    }
+    const writeIns = groups.filter((g) => g.objects!.every(isWriteIn))
+    expect(writeIns.length).toBeGreaterThan(0)
+    for (const line of writeIns) expect(line.objects).toHaveLength(2)
+    expect(groups).toHaveLength(ideas.length + headings.length + writeIns.length)
+    // Nothing of the list is left loose beside the page header.
+    for (const page of pages) {
+      const loose = page.objects.filter((o) => o.type !== 'group')
+      expect(loose.every((o) => o.type === 'textbox' && !/^\d+\.$/.test(textOf(o)))).toBe(true)
+      expect(loose.some((o) => STUDIO_CONTENT_LABEL_KEY in (o.data ?? {}))).toBe(false)
     }
   })
 
@@ -273,7 +315,7 @@ describe('bucket-list pages', () => {
   })
 
   it('prints only black, white and grey', () => {
-    const objects = generate(base, kdpCtx(8.5, 11)).flatMap((p) => p.objects)
+    const objects = generate(base, kdpCtx(8.5, 11)).flatMap((p) => marksOf(p.objects))
     const colours = new Set(
       objects.flatMap((o) => [o.fill, o.stroke]).filter((c): c is string => !!c && c !== 'transparent'),
     )
@@ -300,7 +342,7 @@ describe('bucket-list pages', () => {
   it('says so plainly when the list cannot be made', () => {
     const message = (remote: unknown, ctx = kdpCtx(6, 9, remote)) =>
       generate(base, ctx)
-        .flatMap((p) => p.objects)
+        .flatMap((p) => marksOf(p.objects))
         .map(textOf)
     expect(message(null)).toContain(BL_AI_EMPTY_MESSAGE)
     const thin = { sections: BL_FIXTURE.sections.slice(0, 4) }

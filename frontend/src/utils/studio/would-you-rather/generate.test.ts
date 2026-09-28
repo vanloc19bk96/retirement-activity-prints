@@ -83,14 +83,28 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext) {
   return wouldYouRatherTemplate.generate(config, ctx)
 }
 
+/**
+ * Every drawn object with the question groups opened up, placed where it
+ * prints: a group's children sit relative to its centre, so each is moved back
+ * by the group's centre before the boxes and text are measured against each other.
+ */
+function leaves(objects: readonly StudioFabricObject[], dx = 0, dy = 0): StudioFabricObject[] {
+  const at = (n: number) => Math.round(n * 1e6) / 1e6
+  return objects.flatMap((o) =>
+    o.type === 'group'
+      ? leaves(o.objects ?? [], dx + o.left + (o.width ?? 0) / 2, dy + o.top + (o.height ?? 0) / 2)
+      : [{ ...o, left: at(o.left + dx), top: at(o.top + dy) }],
+  )
+}
+
 const texts = (objects: StudioFabricObject[]) =>
-  objects.map((o) => String(o.text ?? '').replace(/ /g, ' ')).filter(Boolean)
+  leaves(objects).map((o) => String(o.text ?? '').replace(/ /g, ' ')).filter(Boolean)
 
 const leads = (objects: StudioFabricObject[]) =>
-  objects.filter((o) => typeof o.data?.[STUDIO_CONTENT_LABEL_KEY] === 'string')
+  leaves(objects).filter((o) => typeof o.data?.[STUDIO_CONTENT_LABEL_KEY] === 'string')
 
 const choiceBoxes = (objects: StudioFabricObject[]) =>
-  objects.filter((o) => o.type === 'rect' && (o.rx ?? 0) > 2)
+  leaves(objects).filter((o) => o.type === 'rect' && (o.rx ?? 0) > 2)
 
 function extent(o: StudioFabricObject) {
   const w = o.width ?? (o.radius ?? 0) * 2
@@ -175,7 +189,7 @@ describe('would-you-rather page', () => {
   it('prints only black, white and grey', () => {
     const [page] = generate(base, kdpCtx(8.5, 11))
     const colours = new Set(
-      page!.objects.flatMap((o) => [o.fill, o.stroke]).filter((c): c is string => !!c && c !== 'transparent'),
+      leaves(page!.objects).flatMap((o) => [o.fill, o.stroke]).filter((c): c is string => !!c && c !== 'transparent'),
     )
     for (const colour of colours) {
       const hex = colour.replace('#', '')
@@ -216,7 +230,7 @@ describe('would-you-rather page', () => {
             expect(overlap).toBe(false)
           }
         }
-        const choiceTexts = page!.objects.filter(
+        const choiceTexts = leaves(page!.objects).filter(
           (o) => o.type === 'textbox' && o.studioRole === 'prompt' && !o.data,
         )
         for (const text of choiceTexts) {
@@ -229,6 +243,37 @@ describe('would-you-rather page', () => {
           expect(inside, String(text.text)).toBe(true)
         }
       }
+    }
+  })
+
+  it('groups each question, with each choice, the OR divider and the Why? line whole inside it', () => {
+    const kids = (o: StudioFabricObject | undefined) => o?.objects ?? []
+    for (const reasonLine of [false, true]) {
+      const [page] = generate({ ...base, reasonLine }, kdpCtx(6, 9))
+      const questions = page!.objects.filter((o) => o.type === 'group')
+      expect(questions.length).toBeGreaterThan(0)
+      expect(questions).toHaveLength(leads(page!.objects).length)
+      // Nothing of a question is left loose on the page.
+      expect(page!.objects.filter((o) => o.type !== 'group' && (o.rx ?? 0) > 0)).toEqual([])
+      expect(page!.objects.some((o) => o.type === 'circle')).toBe(false)
+
+      questions.forEach((question, i) => {
+        const [lead, choiceA, divider, choiceB, ...rest] = kids(question)
+        expect(String(lead!.text).replace(/\u00a0/g, ' ')).toBe(`${i + 1}.  ${WYR_LEAD}`)
+        for (const choice of [choiceA, choiceB]) {
+          // The rounded box, its tick box and the text written in it.
+          expect(kids(choice).map((o) => o.type)).toEqual(['rect', 'rect', 'textbox'])
+        }
+        expect(kids(divider).map((o) => o.type)).toEqual(['rect', 'rect', 'circle', 'textbox'])
+        expect(kids(divider)[3]!.text).toBe(WYR_OR)
+        if (!reasonLine) {
+          expect(rest).toEqual([])
+          return
+        }
+        const [reason, ...none] = rest
+        expect(none).toEqual([])
+        expect(kids(reason).map((o) => o.text ?? o.type)).toEqual(['Why?', 'rect'])
+      })
     }
   })
 

@@ -1,7 +1,7 @@
 import type { StudioFabricObject } from '@/types/studio-template.types'
 import { STUDIO_INK, STUDIO_RULE_MEDIUM, STUDIO_STROKE_BOLD } from '@/constants/studio.constants'
-import type { Box } from '../studio-layout'
-import { buildCircle, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import { unionObjectBounds, type Box } from '../studio-layout'
+import { buildCircle, buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
 import { FABRIC_FONT_SIZE_MULT, measureRunWidth } from '../studio-text-metrics'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import { PC_LETTERS, formatPrice } from './content'
@@ -29,6 +29,12 @@ interface DrawContext {
   plan: PcPagePlan
   font: string
   tag: StudioTag
+}
+
+/** Wraps `parts` in a group hugging their drawn extent; nothing to wrap, nothing pushed. */
+function pushGroup(objects: StudioFabricObject[], parts: StudioFabricObject[], tag: StudioTag): void {
+  const bounds = unionObjectBounds(parts)
+  if (bounds) objects.push(buildGroup(parts, bounds, tag, 'structure'))
 }
 
 function number(ctx: DrawContext, index: number, left: number, top: number) {
@@ -94,12 +100,17 @@ function choiceAt(plan: PcPagePlan, i: number, left: number, top: number) {
  * Four lettered prices, cheapest first — four across, or two by two on a
  * narrow column. The letter is bold so a reader can ring it; the puzzle page
  * marks none of them, not even hidden.
+ *
+ * Each choice is its own group — letter and price, and on the answer page the
+ * ring round the right letter — so a hand edit cannot part a price from its
+ * letter, nor the ring from the choice it marks.
  */
-function choices(ctx: DrawContext, q: FittedPcQuestion, left: number, top: number) {
+function choices(ctx: DrawContext, q: FittedPcQuestion, left: number, top: number, ringed: boolean) {
   const { metrics } = ctx.plan
   q.options.forEach((cents, i) => {
     const { x, y, cellW } = choiceAt(ctx.plan, i, left, top)
-    ctx.objects.push(
+    const choice: DrawContext = { ...ctx, objects: [] }
+    choice.objects.push(
       buildText(
         {
           left: x,
@@ -128,6 +139,8 @@ function choices(ctx: DrawContext, q: FittedPcQuestion, left: number, top: numbe
         'prompt',
       ),
     )
+    if (ringed && i === q.correct) ring(choice, q, left, top)
+    pushGroup(ctx.objects, choice.objects, ctx.tag)
   })
 }
 
@@ -207,6 +220,11 @@ function rule(ctx: DrawContext, left: number, top: number) {
  *
  * The answer page sets each question exactly as the puzzle did, so a reader
  * checks the ring against the very choice they marked.
+ *
+ * Each question is one group — number, wording, choices and (on the answer
+ * page) the note beneath — so a seller drags or deletes a whole question in
+ * the editor as one piece. The rules between questions stay loose: they belong
+ * to the gap, not to either question.
  */
 export function drawPcPage(
   objects: StudioFabricObject[],
@@ -242,15 +260,16 @@ export function drawPcPage(
   let top = Math.round(field.top + Math.min(Math.max(0, usable - stack), metrics.font * 0.8))
 
   questions.forEach((q, index) => {
-    number(ctx, index, left, top)
-    question(ctx, q, textLeft, top)
+    const item: DrawContext = { ...ctx, objects: [] }
+    number(item, index, left, top)
+    question(item, q, textLeft, top)
     const optionsTop = top + textHeight(q.questionLines.length, metrics) + metrics.optionGap
-    choices(ctx, q, textLeft, optionsTop)
+    choices(item, q, textLeft, optionsTop, answers)
     if (answers) {
-      ring(ctx, q, textLeft, optionsTop)
       const explanationTop = optionsTop + optionsHeight(plan.columns, metrics) + metrics.explanationGap
-      explanation(ctx, q, textLeft, Math.round(explanationTop))
+      explanation(item, q, textLeft, Math.round(explanationTop))
     }
+    pushGroup(objects, item.objects, tag)
     top += heights[index]!
     if (index < gaps) {
       rule(ctx, left, top + gap / 2)
