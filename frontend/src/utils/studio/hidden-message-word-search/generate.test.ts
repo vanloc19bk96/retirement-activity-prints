@@ -50,6 +50,7 @@ import {
 } from './levels'
 import { tryBuildHiddenMessagePuzzle, type HiddenMessagePuzzle } from './place'
 import { runHiddenMessageKdpPreflight } from './kdp-preflight'
+import { spellsBlockedWord } from '../retirement-word-search/place'
 import { FIXTURE_MESSAGE, FIXTURE_WORDS, HIDDEN_MESSAGE_FIXTURE } from './fixture'
 
 const remote = HIDDEN_MESSAGE_FIXTURE
@@ -625,6 +626,47 @@ describe('hidden-message-word-search content', () => {
     const parsed = normalizeMessage('Every day is Saturday now!', gentle)!
     expect(parsed.letters).toBe('EVERYDAYISSATURDAYNOW')
     expect(parsed.boxWords).toEqual(['EVERY', 'DAY', 'IS', 'SATURDAY', 'NOW'])
+  })
+
+  it('refuses a saying the grid could only hide by dropping characters', () => {
+    const classic = parseHiddenMessageLevel(base)
+    // Digits, symbols and emoji leave the grid but stay on the answer page, so
+    // the leftover run would read HAPPY TH BIRTHDAY BOB against a key that
+    // says "Happy 65th birthday Bob".
+    for (const typed of [
+      'Happy 65th birthday Bob',
+      'Happy retirement Bob & Sue',
+      `Happy retirement ${String.fromCodePoint(0x1f389)} Margaret`,
+    ]) {
+      expect(normalizeMessage(typed, classic), typed).toBeNull()
+      expect(validateHiddenMessageConfig({ ...base, customMessage: typed }), typed).toMatchObject({
+        field: 'customMessage',
+      })
+    }
+    // Accents fold to the letter a reader writes, rather than vanishing.
+    const accented = `Happy retirement, Ren${String.fromCharCode(0xe9)}e!`
+    const renee = normalizeMessage(accented, classic)!
+    expect(renee.letters).toBe('HAPPYRETIREMENTRENEE')
+    expect(renee.boxWords).toEqual(['HAPPY', 'RETIREMENT', 'RENEE'])
+    expect(validateHiddenMessageConfig({ ...base, customMessage: accented })).toBeNull()
+  })
+
+  it('keeps blocked words out of the grid, with the saying itself exempt', () => {
+    // Words and saying are packed with no filler, but a word's tail beside a
+    // run of the saying used to spell one of these in about one grid in four.
+    for (const level of HIDDEN_MESSAGE_LEVELS) {
+      for (let i = 0; i < 12; i++) {
+        const { puzzle } = buildPuzzle({
+          levelId: level.id,
+          ctx: kdpCtx(8.5, 11),
+          seed: 5 + i * 7_919,
+        })
+        expect(
+          spellsBlockedWord(puzzle.grid, [...puzzle.words, puzzle.messageLetters]),
+          `${level.id} seed ${i}`,
+        ).toBe(false)
+      }
+    }
   })
 
   it('over-requests the pool so the packer has something else to try', () => {

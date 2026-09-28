@@ -107,6 +107,29 @@ export function isPalindrome(token: string): boolean {
   return token === [...token].reverse().join('')
 }
 
+/**
+ * Runs the random filler letters must never spell, in any of eight headings.
+ *
+ * A grid is read in every direction by someone hunting for words, so a
+ * profanity that turns up by chance is found as surely as a listed word. Left
+ * to the frequency-weighted bag in `place.ts`, roughly one grid in eleven
+ * spelled something here, and a hundred-page book with nine of those in it is
+ * a book returned by the grandchild who bought it.
+ *
+ * Short entries are the ones common enough by chance to matter; the milder
+ * three-letter words (DIE, FAT, POO) are left out because blocking them costs
+ * refills without buying a reader anything.
+ */
+export const FILLER_BLOCKLIST: readonly string[] = [
+  'ASS', 'CUM', 'FAG', 'KKK', 'SEX',
+  'ANAL', 'ANUS', 'ARSE', 'BOOB', 'BUTT', 'CLIT', 'COCK', 'COON', 'CRAP',
+  'CUNT', 'DAMN', 'DICK', 'DYKE', 'FUCK', 'HOMO', 'JIZZ', 'KIKE', 'NAZI',
+  'NUDE', 'PISS', 'PORN', 'RAPE', 'SHAG', 'SHIT', 'SLUT', 'SPIC', 'TITS',
+  'TURD', 'TWAT', 'WANK',
+  'BITCH', 'BONER', 'DILDO', 'HORNY', 'NIGGA', 'PENIS', 'PUSSY', 'SEMEN',
+  'SPERM', 'WHORE', 'NIGGER', 'VAGINA',
+]
+
 /** Soft IP warning for the Studio form (does not block generate). */
 export function themeIpWarning(theme: string): string | null {
   if (!hasTrademarkHint(theme)) return null

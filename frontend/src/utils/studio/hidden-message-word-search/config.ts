@@ -15,6 +15,7 @@ import {
 import { themeIpWarning } from '../retirement-word-search/content-quality'
 import {
   CUSTOM_MESSAGE_MAX_LENGTH,
+  hasUnhideableCharacters,
   letterToken,
   parseCustomMessage,
   resolveTypedMessage,
@@ -132,6 +133,13 @@ export function validateHiddenMessageConfig(
     return {
       field: 'customMessage',
       message: `Keep the message under ${CUSTOM_MESSAGE_MAX_LENGTH} characters.`,
+    }
+  }
+  if (hasUnhideableCharacters(typedMessage)) {
+    return {
+      field: 'customMessage',
+      message:
+        'Only letters can hide in the grid. Spell out numbers and leave out symbols or emoji.',
     }
   }
   if (!parseCustomMessage(typedMessage, level)) {

@@ -115,3 +115,18 @@ def test_generate_uses_final_error_after_three_failures(
     with pytest.raises(WordSearchGenerationError, match="broader theme") as exc:
         asyncio.run(generate_word_search(WordSearchRequest(seed=1), user_id="user-1"))
     assert str(exc.value) == FINAL_ERROR
+
+
+def test_smallest_schema_count_can_still_succeed(monkeypatch: pytest.MonkeyPatch) -> None:
+    # A request the schema accepts must be one a good reply can satisfy.
+    async def fake_gemini(_prompt: str) -> str:
+        return json.dumps({"words": VALID_WORDS[:4]})
+
+    monkeypatch.setattr("app.services.studio_word_search_service._call_gemini", fake_gemini)
+    monkeypatch.setattr(
+        "app.services.studio_word_search_service._check_rate_limit", lambda _uid: None
+    )
+    result = asyncio.run(
+        generate_word_search(WordSearchRequest(count=4, seed=1), user_id="user-1")
+    )
+    assert len(result.words) == 4

@@ -9,10 +9,12 @@ import {
   isSlashDir,
   meetsMix,
   mixTargets,
+  reverseWord,
   type WordEntry,
   type WordSearchPuzzle,
 } from '@/utils/puzzles/word-search-core'
 import { sortForBank } from './content'
+import { FILLER_BLOCKLIST } from './content-quality'
 import type { WordSearchLevel } from './levels'
 
 /**
@@ -67,6 +69,34 @@ function placementCellKeys(puzzle: Pick<WordSearchPuzzle, 'placements'>): Set<st
   return keys
 }
 
+function occurrences(haystack: string, needle: string): number {
+  let count = 0
+  for (let i = haystack.indexOf(needle); i >= 0; i = haystack.indexOf(needle, i + 1)) {
+    count += 1
+  }
+  return count
+}
+
+/**
+ * Whether the grid spells a blocked word anywhere the listed words do not.
+ *
+ * A listed word is allowed to carry one inside it (GRAPES holds RAPE): that
+ * run is the word the reader was asked to find, and re-drawing the filler
+ * cannot move it anyway. So each blocked word may read exactly as often as the
+ * placed tokens spell it, forwards or backwards along their own path, and any
+ * reading past that count involves filler.
+ */
+export function spellsBlockedWord(grid: string[][], tokens: readonly string[]): boolean {
+  return FILLER_BLOCKLIST.some((blocked) => {
+    const allowed = tokens.reduce(
+      (sum, token) =>
+        sum + occurrences(token, blocked) + occurrences(reverseWord(token), blocked),
+      0,
+    )
+    return countTokenReadings(grid, blocked) > allowed
+  })
+}
+
 /**
  * Re-draw the filler until every listed word reads in exactly one place.
  *
@@ -74,6 +104,8 @@ function placementCellKeys(puzzle: Pick<WordSearchPuzzle, 'placements'>): Set<st
  * second time in random letters often enough to matter across a hundred-page
  * book, and when it does the key circles one of the two — so a reader who
  * found the other one is told they were wrong.
+ *
+ * The same pass keeps the filler from spelling anything on `FILLER_BLOCKLIST`.
  *
  * Only the cells no placement owns are re-drawn, so the puzzle itself never
  * changes between attempts; null means this placement could not be made
@@ -94,7 +126,10 @@ function refillUntilUnique(options: {
         return FILLER_BAG[rng.int(0, FILLER_BAG.length - 1)]!
       }),
     )
-    if (puzzle.words.every((token) => countTokenReadings(grid, token) === 1)) {
+    if (
+      puzzle.words.every((token) => countTokenReadings(grid, token) === 1) &&
+      !spellsBlockedWord(grid, puzzle.words)
+    ) {
       return grid
     }
   }

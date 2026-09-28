@@ -69,8 +69,28 @@ export interface NormalizedMessage {
   boxWords: string[]
 }
 
+/** Accents folded to their base letter, so "Renée" hides as RENEE rather than RENE. */
+function foldAccents(raw: string): string {
+  return raw.normalize('NFD').replace(/\p{M}+/gu, '')
+}
+
 export function letterToken(raw: string): string {
-  return raw.toUpperCase().replace(/[^A-Z]/g, '')
+  return foldAccents(raw).toUpperCase().replace(/[^A-Z]/g, '')
+}
+
+/**
+ * Anything in a saying that the grid cannot hide and the reader would miss.
+ *
+ * Only letters go into the grid, so a digit, symbol or emoji is dropped from
+ * the leftover run while the answer page still prints it: "Happy 65th birthday
+ * Bob" hides HAPPY TH BIRTHDAY BOB, and the solver's answer never matches the
+ * key. Spaces and ordinary punctuation are fine, because no reader expects to
+ * find a comma in a letter grid.
+ */
+const SAYING_EXTRA_RE = /[^A-Za-z\s.,!?'"():;\-\u2018\u2019\u201c\u201d\u2013\u2014\u2026]/
+
+export function hasUnhideableCharacters(raw: string): boolean {
+  return SAYING_EXTRA_RE.test(foldAccents(raw))
 }
 
 /**
@@ -88,6 +108,9 @@ export function normalizeMessage(
     .trim()
     .replace(/\s+/g, ' ')
   if (!display) return null
+  // Longer than the seller may type is longer than the answer page reserves.
+  if (display.length > CUSTOM_MESSAGE_MAX_LENGTH) return null
+  if (hasUnhideableCharacters(display)) return null
 
   const letters = letterToken(display)
   if (letters.length < level.minMessageLetters) return null

@@ -2,6 +2,7 @@ import type { WordSearchPuzzle } from '@/utils/puzzles/word-search-core'
 import { countTokenReadings, placementsIntact } from '@/utils/puzzles/word-search-core'
 import { isUnsafeCopy } from './content-quality'
 import { LETTER_MIN, type WordSearchPagePlan } from './layout'
+import { spellsBlockedWord } from './place'
 
 export interface KdpPreflightResult {
   ok: boolean
@@ -75,6 +76,9 @@ export function runWordSearchKdpPreflight(options: {
   const unsafe = puzzle.displays.filter((display) => isUnsafeCopy(display))
   if (unsafe.length > 0) {
     errors.push('A listed word is not suitable for a published activity book.')
+  }
+  if (spellsBlockedWord(puzzle.grid, puzzle.words)) {
+    errors.push('The filler letters spell a word not suitable for a published activity book.')
   }
 
   if (puzzle.words.length < plan.wordCount) {

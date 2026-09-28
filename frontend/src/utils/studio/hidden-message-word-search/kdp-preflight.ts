@@ -1,6 +1,7 @@
 import { countTokenReadings, placementsIntact } from '@/utils/puzzles/word-search-core'
 import type { Box } from '../studio-layout'
 import { isUnsafeCopy } from '../retirement-word-search/content-quality'
+import { spellsBlockedWord } from '../retirement-word-search/place'
 import { fitMessageStrip } from './draw'
 import {
   hiddenMessagePageBands,
@@ -128,6 +129,9 @@ export function runHiddenMessageKdpPreflight(options: {
   }
   if (isUnsafeCopy(puzzle.messageDisplay)) {
     errors.push('The hidden message is not suitable for a published activity book.')
+  }
+  if (spellsBlockedWord(puzzle.grid, [...puzzle.words, puzzle.messageLetters])) {
+    errors.push('The grid spells a word not suitable for a published activity book.')
   }
 
   if (puzzle.words.length < level.minWords + 2) {

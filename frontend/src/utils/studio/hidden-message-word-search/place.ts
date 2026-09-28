@@ -13,6 +13,7 @@ import {
   type WordSearchPuzzle,
 } from '@/utils/puzzles/word-search-core'
 import { createRng, type StudioRng } from '../studio-rng'
+import { spellsBlockedWord } from '../retirement-word-search/place'
 import { sortForBank, type NormalizedMessage } from './content'
 import type { HiddenMessageLevel } from './levels'
 import { allStarts, sampleStarts } from './starts'
@@ -312,6 +313,13 @@ function greedyFill(options: {
  * word reads in exactly one place, the leftover cells spell the saying, and the
  * placements the answer key will circle still say what they were written to say.
  *
+ * And one the reader should never have to make: that the grid spells nothing
+ * on the blocklist the plain word search keeps out of its filler. There is no
+ * filler here, but a word's tail beside a run of the saying spells ASS or SPIC
+ * in about one grid in four, so a fill that does is simply tried again. The
+ * saying itself is exempt, the same way a listed word is: it is what the page
+ * was asked to print.
+ *
  * The reading count is deliberately blind to the level's directions. A solver
  * scans with their eyes, not with the direction set the generator used, so a
  * second reading of a listed word is a second correct answer even on a gentle
@@ -328,7 +336,8 @@ function verifyPuzzle(
     const cell = leftover[i]!
     if (grid[cell.r]![cell.c] !== letters[i]) return false
   }
-  return tokens.every((token) => countTokenReadings(grid, token) === 1)
+  if (!tokens.every((token) => countTokenReadings(grid, token) === 1)) return false
+  return !spellsBlockedWord(grid, [...tokens, letters])
 }
 
 /**

@@ -176,8 +176,11 @@ def _min_pool(req: WordSearchRequest) -> int:
     The client already over-requests: ``count`` is the candidate budget, not the
     number of words that print. Two thirds of it is what the page needs once its
     own gates — grid width, bank column width — have run.
+
+    Never more than ``count`` itself: a request the schema accepts must be one
+    a single good reply can satisfy, not three paid calls that cannot succeed.
     """
-    return max(8, (req.count * 2) // 3)
+    return min(req.count, max(8, (req.count * 2) // 3))
 
 
 def _parse_payload(raw: str) -> list[Any]:

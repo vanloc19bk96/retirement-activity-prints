@@ -30,7 +30,7 @@ import { WORD_SEARCH_FIXTURE_POOL } from './fixture'
 import { WORD_SEARCH_THEME_SALT } from './theme'
 import { drawWordList } from './draw'
 import { wordSearchTemplate } from './generate'
-import { tryBuildWordSearch } from './place'
+import { spellsBlockedWord, tryBuildWordSearch } from './place'
 import {
   CELL_MAX,
   CELL_MIN,
@@ -343,6 +343,41 @@ describe('word-search puzzle validity', () => {
         expect(backslash.length, `${where} \\`).toBeGreaterThan(0)
       }
     }
+  })
+
+  it('never lets the random filler spell a blocked word', () => {
+    // Before the filler was screened, about one grid in eleven spelled one of
+    // these in some heading; sweep enough seeds that a regression shows.
+    for (const level of WORD_SEARCH_LEVELS) {
+      const entries = selectWordEntries(WORD_SEARCH_FIXTURE_POOL, {
+        minLetters: level.minLetters,
+        maxLetters: level.maxLetters,
+      })
+      for (let i = 0; i < 40; i++) {
+        const puzzle = tryBuildWordSearch({
+          entries,
+          wordCount: level.targetWords,
+          gridSide: 13,
+          level,
+          seed: 1 + i * 7_919,
+        })
+        expect(puzzle, `${level.id} seed ${i}`).not.toBeNull()
+        expect(spellsBlockedWord(puzzle!.grid, puzzle!.words), `${level.id} seed ${i}`).toBe(
+          false,
+        )
+      }
+    }
+  })
+
+  it('screens the filler without refusing a listed word that holds a blocked run', () => {
+    // Square grids, the shape the scanner reads: the named rows, then filler.
+    const grid = (...rows: string[]) =>
+      [...rows, ...Array(6 - rows.length).fill('OOOOOO')].map((text: string) => [...text])
+    // GRAPES carries RAPE; that is the listed word itself, not filler.
+    expect(spellsBlockedWord(grid('GRAPES'), ['GRAPES'])).toBe(false)
+    // The same run in the filler, read backwards, is not allowed.
+    expect(spellsBlockedWord(grid('GRAPES', 'EPAROO'), ['GRAPES'])).toBe(true)
+    expect(spellsBlockedWord(grid('GARDEN', 'XSSAXX'), ['GARDEN'])).toBe(true)
   })
 
   it('keeps the word bank alphabetical and free of nested or unsafe entries', () => {
