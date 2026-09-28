@@ -89,6 +89,17 @@ const BRAND_WORDS = new Set([
   'WALKMAN',
 ])
 
+/**
+ * Entries the curated lists carry that are not one English word on their own.
+ *
+ * A word search prints its bank beside the grid, so "Papier" (half of papier
+ * mache), "Smores" (s'mores without its apostrophe) and "Timezone" (time zone)
+ * are fine there. A codeword prints no words: the solver has to recognise each
+ * answer from its letter pattern, and none of these is a spelling they could
+ * be expected to reach.
+ */
+const NOT_STANDALONE_WORDS = new Set(['PAPIER', 'SMORES', 'TIMEZONE'])
+
 /** Themes this game offers, in the shared picker's order. */
 export const CODEWORD_THEMES = RETIREMENT_THEMES.filter(
   (theme) => !EXCLUDED_THEME_IDS.has(theme.id),
@@ -96,7 +107,7 @@ export const CODEWORD_THEMES = RETIREMENT_THEMES.filter(
 
 /** True when a word is barred from every codeword grid, whatever the theme. */
 export function isExcludedCodewordWord(token: string): boolean {
-  return BRAND_WORDS.has(token) || isUnsafeCopy(token)
+  return BRAND_WORDS.has(token) || NOT_STANDALONE_WORDS.has(token) || isUnsafeCopy(token)
 }
 
 export interface CodewordWord {

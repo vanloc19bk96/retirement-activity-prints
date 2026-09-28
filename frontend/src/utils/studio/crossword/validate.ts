@@ -99,6 +99,39 @@ export function numberEntries(
   }))
 }
 
+/**
+ * True when every run of two or more letters on the grid is exactly one entry,
+ * and every entry is exactly one such run. Catches an entry buried inside a
+ * longer word and any accidental letter run a solver would find unclued.
+ */
+export function slotsMatchEntries(
+  entries: Pick<CrosswordEntry, 'r' | 'c' | 'dir' | 'word'>[],
+  grid: (string | null)[][],
+  size: number,
+): boolean {
+  const slots: string[] = []
+  const filled = (r: number, c: number): boolean =>
+    r >= 0 && r < size && c >= 0 && c < size && grid[r]![c] != null
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (!filled(r, c)) continue
+      for (const dir of ['across', 'down'] as const) {
+        const { dr, dc } = delta(dir)
+        if (filled(r - dr, c - dc) || !filled(r + dr, c + dc)) continue
+        let word = ''
+        for (let k = 0; filled(r + dr * k, c + dc * k); k++) {
+          word += grid[r + dr * k]![c + dc * k]
+        }
+        slots.push(`${r},${c},${dir},${word}`)
+      }
+    }
+  }
+  const clued = entries.map((e) => `${e.r},${e.c},${e.dir},${e.word}`)
+  if (new Set(clued).size !== clued.length || clued.length !== slots.length) return false
+  const slotSet = new Set(slots)
+  return clued.every((key) => slotSet.has(key))
+}
+
 export function numberingValid(
   entries: CrosswordEntry[],
   grid: (string | null)[][],

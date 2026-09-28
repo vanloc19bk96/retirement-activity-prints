@@ -93,6 +93,29 @@ function answersForGridSide(side: number): number {
   return Math.max(6, Math.min(14, side - 2))
 }
 
+/** Cells a side the packer is offered for `answers` answers at this level. */
+function gridSideFor(answers: number, level: CrosswordLevel): number {
+  return Math.max(
+    GRID_MIN_SIDE,
+    Math.min(GRID_MAX_SIDE, answers + 2, level.maxLetters + 4),
+  )
+}
+
+/**
+ * The most answers this level can print on any page.
+ *
+ * A level's longest answer caps its grid side, and the side caps how many
+ * answers interlock, so a target above that is never printed. Counting from
+ * the target instead would report every page, even 8.5 x 11, as trimmed.
+ */
+export function reachableAnswers(level: CrosswordLevel): number {
+  let answers = level.targetAnswers
+  while (answers > 6 && answersForGridSide(gridSideFor(answers, level)) < answers) {
+    answers -= 1
+  }
+  return answers
+}
+
 /** The safe printable column every crossword page lays out inside. */
 export function crosswordContentBox(page: StudioConfigLayoutContext): Box {
   return insetHorizontal(contentBox(page), STUDIO_CONTENT_SAFE_INSET_X)
@@ -186,15 +209,13 @@ export function crosswordPagePlan(options: {
 }): CrosswordPagePlan {
   const { page, config, instruction, level } = options
   const field = crosswordBodyField(page, config, instruction)
-  const floor = Math.max(6, Math.min(level.minAnswers, level.targetAnswers))
+  const reachable = reachableAnswers(level)
+  const floor = Math.max(6, Math.min(level.minAnswers, reachable))
 
   let fallback: CrosswordPagePlan | null = null
 
-  for (let answers = level.targetAnswers; answers >= floor; answers--) {
-    const side = Math.max(
-      GRID_MIN_SIDE,
-      Math.min(GRID_MAX_SIDE, answers + 2, level.maxLetters + 4),
-    )
+  for (let answers = reachable; answers >= floor; answers--) {
+    const side = gridSideFor(answers, level)
     if (answersForGridSide(side) < answers) continue
 
     for (let fontSize = CLUE_MAX_SIZE; fontSize >= CLUE_MIN_SIZE; fontSize--) {
@@ -206,7 +227,7 @@ export function crosswordPagePlan(options: {
         maxGridSide: side,
         clueFontSize: fontSize,
         gridCell: cell,
-        reducedByPage: answers < level.targetAnswers,
+        reducedByPage: answers < reachable,
       }
       if (cell >= GRID_MIN_CELL) return candidate
       // Remember the roomiest near-miss in case no count fits at all.
@@ -221,7 +242,7 @@ export function crosswordPagePlan(options: {
       maxGridSide: GRID_MIN_SIDE,
       clueFontSize: CLUE_MIN_SIZE,
       gridCell: GRID_MIN_CELL,
-      reducedByPage: floor < level.targetAnswers,
+      reducedByPage: floor < reachable,
     }
   )
 }
@@ -234,7 +255,7 @@ export function crosswordPrintNote(
   instruction: string,
 ): string {
   if (!page) {
-    return `About ${level.targetAnswers} answers with across and down clues, plus a matching answer page.`
+    return `About ${reachableAnswers(level)} answers with across and down clues, plus a matching answer page.`
   }
 
   const plan = crosswordPagePlan({ page, config, instruction, level })

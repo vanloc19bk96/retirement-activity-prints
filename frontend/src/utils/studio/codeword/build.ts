@@ -22,6 +22,7 @@ import { buildCrossword } from '../crossword/construct'
 import {
   allCrossingsConsistent,
   readEntry,
+  slotsMatchEntries,
   whiteConnected,
 } from '../crossword/validate'
 import type { CrosswordEntry, CrosswordPair } from '../crossword/types'
@@ -294,6 +295,9 @@ function gridIsSound(
   if (entries.some((entry) => readEntry(grid, entry) !== entry.word)) return false
   if (!allCrossingsConsistent(grid, entries)) return false
   if (!whiteConnected(grid, size)) return false
+  // Every run of letters is exactly one placed word: nothing buried inside a
+  // longer word, and no stray run that spells something nobody chose.
+  if (!slotsMatchEntries(entries, grid, size)) return false
   // Both headings, or the page is a word list with boxes round it.
   return new Set(entries.map((entry) => entry.dir)).size >= 2
 }

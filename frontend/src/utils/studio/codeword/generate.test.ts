@@ -233,6 +233,21 @@ describe('codeword vocabulary', () => {
     for (const token of branded) expect(everything.has(token)).toBe(false)
   })
 
+  it('never offers a fragment the solver could not spell from its pattern', () => {
+    // Papier (mache), Smores (s'mores), Timezone (time zone): fine in a word
+    // search bank, undeducible in a grid that prints no words.
+    const fragments = ['PAPIER', 'SMORES', 'TIMEZONE']
+    const everything = new Set(
+      codewordWordPool(CODEWORD_THEMES[0]!.id, { minLetters: 4, maxLetters: 9 }).map(
+        (word) => word.token,
+      ),
+    )
+    for (const token of fragments) {
+      expect(isExcludedCodewordWord(token)).toBe(true)
+      expect(everything.has(token)).toBe(false)
+    }
+  })
+
   it('never offers a place name — a codeword answer has to be deducible', () => {
     const places = ['PARIS', 'TOKYO', 'SANTORINI', 'BUDAPEST', 'HAWAII', 'ICELAND']
     const everything = new Set(

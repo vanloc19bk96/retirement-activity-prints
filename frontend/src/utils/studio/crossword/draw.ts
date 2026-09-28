@@ -210,49 +210,37 @@ export interface CrosswordDrawnPuzzle {
   objects: StudioFabricObject[]
   /** Null on the solution page, which prints the filled grid alone. */
   clues: ClueListsPlan | null
+  /** Cell the grid printed at, so the caller can tell a squeezed page. */
+  gridCell: number
+}
+
+interface CrosswordStack {
+  cluePlan: ClueListsPlan | null
+  clueHeight: number
+  gap: number
+  gridField: Box
+  geometry: CrosswordGridGeometry
 }
 
 /**
- * Grid over clues, as one optically centred stack.
+ * Size the grid-over-clues stack without drawing it.
  *
- * The clue list is measured first because it is the block with a hard floor —
- * it may not set below large print — and the grid then takes what is left.
+ * The clue list is measured first because it is the block with a hard floor:
+ * it may not set below large print, and the grid then takes what is left.
  * Sizing the grid first and letting the clues have the remainder is what used
  * to push clue type down to nine point on a full page.
  */
-export function drawCrosswordPuzzle(options: {
+function planCrosswordStack(options: {
   field: Box
   built: CrosswordBuild
   entries: CrosswordEntry[]
   font: string
-  tag: StudioTag
   plan: CrosswordPagePlan
-  /** Solution page: the filled grid alone, centred in the body. */
-  forAnswerKey?: boolean
-}): CrosswordDrawnPuzzle {
-  const { field, built, entries, font, tag, plan, forAnswerKey = false } = options
-
-  if (forAnswerKey) {
-    // Nothing shares the page, so the solution grid may use the whole column.
-    return {
-      objects: [
-        drawLetterGrid({
-          built,
-          entries,
-          field,
-          font,
-          tag,
-          maxCell: Math.max(GRID_MIN_CELL, Math.floor(field.width / 6)),
-          vAlign: 'center',
-        }),
-      ],
-      clues: null,
-    }
-  }
-
+}): CrosswordStack {
+  const { field, built, entries, font, plan } = options
   const region = occupiedLattice(built.grid, built.size)
   // Reserve what the grid needs *before* offering the rest to the clue lists,
-  // inset included — the two pixels the lattice gives up to the field edge are
+  // inset included: the two pixels the lattice gives up to the field edge are
   // what put a cell a hair under the writable floor.
   const clueBudget = Math.max(
     0,
@@ -275,6 +263,65 @@ export function drawCrosswordPuzzle(options: {
     height: Math.max(GRID_MIN_CELL + GRID_FIELD_INSET * 2, field.height - clueHeight - gap),
   }
   const geometry = crosswordGridGeometry(built, gridField, plan.gridCell, 'top')
+  return { cluePlan, clueHeight, gap, gridField, geometry }
+}
+
+/**
+ * Cell the puzzle page's grid will print at, measured the way it is drawn.
+ *
+ * Below GRID_MIN_CELL the clue lists have taken the room the grid needed:
+ * real clues ran to more lines than the page plan budgeted for.
+ */
+export function crosswordPuzzleGridCell(options: {
+  field: Box
+  built: CrosswordBuild
+  entries: CrosswordEntry[]
+  font: string
+  plan: CrosswordPagePlan
+}): number {
+  return planCrosswordStack(options).geometry.cell
+}
+
+/** Grid over clues, as one optically centred stack. */
+export function drawCrosswordPuzzle(options: {
+  field: Box
+  built: CrosswordBuild
+  entries: CrosswordEntry[]
+  font: string
+  tag: StudioTag
+  plan: CrosswordPagePlan
+  /** Solution page: the filled grid alone, centred in the body. */
+  forAnswerKey?: boolean
+}): CrosswordDrawnPuzzle {
+  const { field, built, entries, font, tag, plan, forAnswerKey = false } = options
+
+  if (forAnswerKey) {
+    // Nothing shares the page, so the solution grid may use the whole column.
+    const maxCell = Math.max(GRID_MIN_CELL, Math.floor(field.width / 6))
+    return {
+      objects: [
+        drawLetterGrid({
+          built,
+          entries,
+          field,
+          font,
+          tag,
+          maxCell,
+          vAlign: 'center',
+        }),
+      ],
+      clues: null,
+      gridCell: crosswordGridGeometry(built, field, maxCell, 'center').cell,
+    }
+  }
+
+  const { cluePlan, clueHeight, gap, gridField, geometry } = planCrosswordStack({
+    field,
+    built,
+    entries,
+    font,
+    plan,
+  })
 
   // Centre the whole stack, so a compact grid does not leave the page bottom-heavy.
   const stackHeight = geometry.bounds.height + gap + clueHeight
@@ -290,7 +337,7 @@ export function drawCrosswordPuzzle(options: {
     vAlign: 'top',
   })
 
-  if (!cluePlan) return { objects: [grid], clues: null }
+  if (!cluePlan) return { objects: [grid], clues: null, gridCell: geometry.cell }
 
   const clues = drawClueLists(
     cluePlan,
@@ -303,5 +350,5 @@ export function drawCrosswordPuzzle(options: {
     font,
     tag,
   )
-  return { objects: [grid, ...clues], clues: cluePlan }
+  return { objects: [grid, ...clues], clues: cluePlan, gridCell: geometry.cell }
 }

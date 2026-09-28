@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from typing import List, Literal
+from typing import Any, List, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.schemas.studio_variety import StudioVarietyRequest
+
+
+WORD_MAX_CHARS = 40
 
 
 class CrosswordCluesRequest(StudioVarietyRequest):
@@ -23,6 +26,18 @@ class CrosswordCluesRequest(StudioVarietyRequest):
     max_clue_chars: int = Field(default=60, ge=24, le=120, alias="maxClueChars")
     seed: int = Field(default=1, ge=0)
     locale: str = Field(default="en", max_length=8)
+
+    @field_validator("words", mode="before")
+    @classmethod
+    def drop_oversized_words(cls, value: Any) -> Any:
+        """An answer is at most twelve letters once spaces are dropped.
+
+        Anything far past that is not an answer, and would only cost regex and
+        prompt work, so it is dropped before the list is validated.
+        """
+        if not isinstance(value, (list, tuple)):
+            return value
+        return [w for w in value if not isinstance(w, str) or len(w) <= WORD_MAX_CHARS]
 
     @model_validator(mode="after")
     def check_mode_and_letters(self) -> "CrosswordCluesRequest":

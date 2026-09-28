@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest'
 import { createRng } from '../studio-rng'
 import {
   buildCrossword,
+  canPlace,
   numberEntries,
+  slotsMatchEntries,
   readEntry,
   allCrossingsConsistent,
   whiteConnected,
@@ -100,4 +102,50 @@ describe('crossword construction', () => {
       expect(numberingValid(numbered, built!.grid)).toBe(true)
     }
   }, 60_000)
+
+  it('never buries a word inside a longer one running the same way', () => {
+    // START across, crossed by one down word; STAR and TART both fit its letters.
+    const grid: (string | null)[][] = Array.from({ length: 36 }, () =>
+      Array.from({ length: 36 }, () => null),
+    )
+    for (const [i, letter] of [...'START'].entries()) grid[10]![10 + i] = letter
+    for (const [i, letter] of [...'RAT'].entries()) grid[10 + i]![13] = letter
+    expect(canPlace(grid, 'TART', 10, 11, 'across')).toBe(false)
+    expect(canPlace(grid, 'STAR', 10, 10, 'across')).toBe(false)
+    expect(canPlace(grid, 'STARTED', 10, 10, 'across')).toBe(false)
+  })
+
+  it('prints exactly one clued entry for every run of letters on the grid', () => {
+    const tangled: CrosswordPair[] = 'STAR START TART PART PARTY ART RATE TRADE SETTLE SUNSET TEAPOT'
+      .split(' ')
+      .map((word) => ({ word, clue: 'A plain clue' }))
+    for (let seed = 1; seed <= 12; seed++) {
+      for (const pool of [FIXTURE_PAIRS, [...tangled, ...SAMPLE_PAIRS]]) {
+        const built = buildCrossword(pool, 11, createRng(seed), 9)
+        if (!built) continue
+        expect(slotsMatchEntries(built.entries, built.grid, built.size), `seed ${seed}`).toBe(
+          true,
+        )
+      }
+    }
+  }, 60_000)
+
+  it('spots an entry that has no slot of its own', () => {
+    const grid: (string | null)[][] = [
+      ['S', 'T', 'A', 'R', 'T'],
+      [null, null, null, 'A', null],
+      [null, null, null, 'T', null],
+      [null, null, null, null, null],
+      [null, null, null, null, null],
+    ]
+    const entries = [
+      { word: 'START', r: 0, c: 0, dir: 'across' as const },
+      { word: 'RAT', r: 0, c: 3, dir: 'down' as const },
+    ]
+    expect(slotsMatchEntries(entries, grid, 5)).toBe(true)
+    expect(
+      slotsMatchEntries([...entries, { word: 'TART', r: 0, c: 1, dir: 'across' }], grid, 5),
+    ).toBe(false)
+    expect(slotsMatchEntries(entries.slice(0, 1), grid, 5)).toBe(false)
+  })
 })

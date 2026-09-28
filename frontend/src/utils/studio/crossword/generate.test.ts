@@ -326,6 +326,24 @@ describe('retirement crossword form', () => {
     )
   })
 
+  it('does not call a full-size page trimmed', () => {
+    const layout = trimContext(8.5, 11)
+    const config = { title: 'Game 1', showTitle: true, showInstructions: true }
+    for (const level of CROSSWORD_LEVELS) {
+      const plan = crosswordPagePlan({
+        page: layout,
+        config,
+        instruction: instructionFor(config),
+        level,
+      })
+      expect(plan.reducedByPage, level.id).toBe(false)
+      expect(
+        crosswordPrintNote(level, layout, config, instructionFor(config)),
+        level.id,
+      ).not.toMatch(/trimmed/)
+    }
+  })
+
   it('tells the seller what the chosen page size will print', () => {
     const layout: StudioConfigLayoutContext = {
       pageWidth: Math.round(8.5 * DPI),
@@ -494,6 +512,35 @@ describe('retirement crossword page', () => {
         expect(grid.width! / cell, `${label} ${level.id}`).toBeLessThanOrEqual(
           GRID_MAX_SIDE + 0.5,
         )
+      }
+    }
+  })
+
+  it('keeps grid cells writable when the clues run long on a small trim', () => {
+    // Every clue near the classic budget: two or three printed lines each,
+    // far past the line and a half the page plan budgets for.
+    const wordy = FIXTURE_PAIRS.map((pair) => ({
+      word: pair.word,
+      clue: `${pair.clue} when everyone gathers round together`.slice(0, 44),
+    }))
+    for (const [width, height] of [
+      [5.5, 8.5],
+      [6, 9],
+    ] as const) {
+      for (const level of CROSSWORD_LEVELS) {
+        for (const seed of [1, 2, 3]) {
+          resetObjectCounter()
+          const ctx = { ...trimContext(width, height), seed, remoteData: wordy }
+          const [page] = crosswordTemplate.generate({ ...base, seed, level: level.id }, ctx)
+          const label = `${width} x ${height} ${level.id} seed ${seed}`
+          const cells = flatten(gridGroup(page!.objects).objects ?? []).filter(
+            (o) => o.type === 'rect' && o.fill === STUDIO_PAPER,
+          )
+          const cell = Math.min(...cells.map((c) => c.width ?? 0))
+          expect(cell, label).toBeGreaterThanOrEqual(GRID_MIN_CELL - 1)
+          expect(clueObjects(page!.objects).length, label).toBeGreaterThanOrEqual(6)
+          assertObjectsInSafeMargin(page!.objects, ctx)
+        }
       }
     }
   })

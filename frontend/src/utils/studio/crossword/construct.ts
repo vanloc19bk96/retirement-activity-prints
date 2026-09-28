@@ -16,6 +16,7 @@ export {
   whiteConnected,
   numberEntries,
   numberingValid,
+  slotsMatchEntries,
 } from './validate'
 
 interface Placed {
@@ -118,6 +119,7 @@ export function canPlace(
   }
 
   let crosses = 0
+  let previousExisting = false
   for (let i = 0; i < len; i++) {
     const nr = r + dr * i
     const nc = c + dc * i
@@ -125,9 +127,15 @@ export function canPlace(
     const letter = word[i]!
     if (existing !== null) {
       if (existing !== letter) return false
+      // Two filled cells in a row along this line are a word already running
+      // this way (STAR over START): the new entry would have no slot of its
+      // own, just an unnumbered stretch of a longer word.
+      if (previousExisting) return false
+      previousExisting = true
       crosses += 1
       continue
     }
+    previousExisting = false
     // New letter: perpendicular neighbors must be empty (no parallel touch).
     if (cell(grid, nr + pr, nc + pc) !== null) return false
     if (cell(grid, nr - pr, nc - pc) !== null) return false

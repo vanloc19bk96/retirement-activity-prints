@@ -124,6 +124,21 @@ function answerFamilyVariants(token: string): string[] {
   return [...out]
 }
 
+/**
+ * True when a clue names one word of a two-word answer ("Trip by road" for
+ * ROAD TRIP). The grid token ROADTRIP never appears in such a clue, so the
+ * whole-token check alone lets it through, and the solver is handed half the
+ * answer.
+ */
+export function clueContainsAnswerPart(display: string, clue: string): boolean {
+  const parts = display
+    .split(/[^A-Za-z]+/)
+    .map((part) => part.toUpperCase())
+    .filter((part) => part.length >= 3)
+  if (parts.length < 2) return false
+  return parts.some((part) => new RegExp(`\\b${part}`, 'i').test(clue))
+}
+
 export function isValidClueText(
   clue: string,
   answerToken: string,

@@ -106,4 +106,21 @@ describe('crosswordPrefetch', () => {
     expect(words).not.toContain('HAMMOCK')
     expect(pairs.every((pair) => pair.clue.length <= 52)).toBe(true)
   })
+
+  it('drops a clue that names one word of a two-word answer', async () => {
+    generateMock.mockResolvedValue({
+      clues: [
+        ...FIXTURE_PAIRS,
+        { word: 'Road Trip', clue: 'A long drive down the open road' },
+        { word: 'Tea Party', clue: 'An afternoon gathering with cups' },
+      ],
+    })
+    const pairs = await crosswordPrefetch(
+      { ...defaults, level: 'challenging', seed: 9 },
+      new AbortController().signal,
+    )
+    const words = pairs.map((pair) => pair.word)
+    expect(words).not.toContain('ROADTRIP')
+    expect(words).toContain('TEAPARTY')
+  })
 })

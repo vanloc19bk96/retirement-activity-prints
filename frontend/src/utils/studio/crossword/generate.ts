@@ -11,7 +11,7 @@ import { buildText, type StudioTag } from '../studio-fabric-builders'
 import { STUDIO_BODY_SIZE, STUDIO_DIGIT_FONT } from '@/constants/studio.constants'
 import { kickOffFontFamilyLoading } from '@/utils/font-loader'
 import { buildCrossword, numberEntries } from './construct'
-import { numberingValid, readEntry } from './validate'
+import { numberingValid, readEntry, slotsMatchEntries } from './validate'
 import {
   CROSSWORD_CONFIG_SCHEMA,
   instructionFor,
@@ -19,9 +19,14 @@ import {
 } from './config'
 import { parseCrosswordLevel } from './levels'
 import { resolveCrosswordTheme } from './theme'
-import { crosswordContentBox, crosswordPagePlan, type CrosswordPagePlan } from './layout'
+import {
+  GRID_MIN_CELL,
+  crosswordContentBox,
+  crosswordPagePlan,
+  type CrosswordPagePlan,
+} from './layout'
 import { selectCrosswordCandidates } from './candidate-selector'
-import { drawCrosswordPuzzle } from './draw'
+import { crosswordPuzzleGridCell, drawCrosswordPuzzle } from './draw'
 import { crosswordPrefetch, CROSSWORD_AI_EMPTY_MESSAGE } from './prefetch'
 import type { CrosswordBuild, CrosswordEntry, CrosswordPair } from './types'
 
@@ -42,6 +47,7 @@ function withThemeTitle(config: StudioConfig, themeLabel: string): StudioConfig 
  */
 function buildIsSound(built: CrosswordBuild, entries: CrosswordEntry[]): boolean {
   if (entries.some((entry) => readEntry(built.grid, entry) !== entry.word)) return false
+  if (!slotsMatchEntries(entries, built.grid, built.size)) return false
   return numberingValid(entries, built.grid)
 }
 
@@ -85,6 +91,67 @@ function buildSoundCrossword(options: {
 
   const final = bestSoFar()
   return final && final.entries.length >= minAcceptable ? final : null
+}
+
+/**
+ * The candidate pool with its wordiest clues set aside.
+ *
+ * The page plan budgets each clue at about a line and a half. A pool whose
+ * clues all run to the length cap sets two or three lines each on a narrow
+ * trim, and the clue lists then take the room the grid was promised: cells
+ * shrink below anything a pen can write in. Keeping the shorter clues (with
+ * enough substitutes left for the packer) is the cheapest way back.
+ */
+function shortClueCandidates(pairs: CrosswordPair[], target: number): CrosswordPair[] {
+  const keep = Math.max(target + 4, Math.ceil(target * 1.5))
+  if (pairs.length <= keep) return pairs
+  return pairs
+    .map((pair, index) => ({ pair, index }))
+    .sort((a, b) => a.pair.clue.length - b.pair.clue.length || a.index - b.index)
+    .slice(0, keep)
+    .sort((a, b) => a.index - b.index)
+    .map(({ pair }) => pair)
+}
+
+/** Fewest answers a squeezed page may drop to before it keeps the tight grid. */
+const ROOMIER_MIN_ANSWERS = 6
+
+/**
+ * A build whose grid still prints at a writable cell, or the roomiest tried.
+ *
+ * Tries shorter clues first, then one answer fewer at a time: a page that loses an answer is a smaller puzzle, a page whose
+ * cells are a sixth of an inch is not a puzzle at all.
+ */
+function roomierBuild(options: {
+  first: SoundBuild
+  pairs: CrosswordPair[]
+  rng: StudioRng
+  plan: CrosswordPagePlan
+  minAcceptable: number
+  cellOf: (build: SoundBuild) => number
+}): SoundBuild {
+  const { first, pairs, rng, plan, minAcceptable, cellOf } = options
+  let best = { build: first, cell: cellOf(first) }
+  if (best.cell >= GRID_MIN_CELL) return first
+
+  // Two answers under the level's floor is still a puzzle; a grid of cells a
+  // pen cannot write in is not, so a squeezed page may go that far.
+  const floor = Math.max(ROOMIER_MIN_ANSWERS, minAcceptable - 2)
+  const shorter = shortClueCandidates(pairs, plan.answerCount)
+  for (let target = plan.answerCount; target >= floor; target--) {
+    const candidate = buildSoundCrossword({
+      pairs: shorter,
+      rng,
+      maxSize: plan.maxGridSide,
+      target,
+      minAcceptable: target,
+    })
+    if (!candidate) continue
+    const cell = cellOf(candidate)
+    if (cell > best.cell) best = { build: candidate, cell }
+    if (cell >= GRID_MIN_CELL) break
+  }
+  return best.build
 }
 
 function errorPage(
@@ -178,16 +245,32 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
     4,
     Math.min(plan.answerCount, level.minAnswers, plan.answerCount - 1),
   )
-  const build = buildSoundCrossword({
+  const firstBuild = buildSoundCrossword({
     pairs,
     rng,
     maxSize: plan.maxGridSide,
     target: plan.answerCount,
     minAcceptable,
   })
-  if (!build) {
+  if (!firstBuild) {
     return [errorPage(ctx, pageConfig, tag, BUILD_ERROR_MESSAGE)]
   }
+  const field = drawHeader(crosswordContentBox(ctx), pageConfig, tag, instruction).body
+  const build = roomierBuild({
+    first: firstBuild,
+    pairs,
+    rng,
+    plan,
+    minAcceptable,
+    cellOf: (candidate) =>
+      crosswordPuzzleGridCell({
+        field,
+        built: candidate.built,
+        entries: candidate.entries,
+        font,
+        plan,
+      }),
+  })
 
   const layout = { config: pageConfig, ctx, tag, plan, build, font }
   return [

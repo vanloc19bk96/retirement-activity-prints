@@ -8,6 +8,7 @@ import type { StudioConfig } from '@/types/studio-template.types'
 import { parseCrosswordLevel, type CrosswordLevel } from './levels'
 import { resolveCrosswordTheme } from './theme'
 import {
+  clueContainsAnswerPart,
   filterUnsafeThemeCopy,
   isValidClueText,
   normalizeAnswerDisplay,
@@ -45,6 +46,7 @@ function pairsFromAiClues(
     if (seen.has(token)) continue
     const clue = String(item.clue ?? '').trim()
     if (!isValidClueText(clue, token, level.clueMaxChars)) continue
+    if (clueContainsAnswerPart(normalized.display, clue)) continue
     seen.add(token)
     out.push({ word: token, clue })
   }
