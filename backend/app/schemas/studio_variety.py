@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List
+from typing import Any, List
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -21,6 +21,22 @@ class StudioVarietyRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     avoid: List[str] = Field(default_factory=list)
+
+    @field_validator("avoid", mode="before")
+    @classmethod
+    def bound_raw_avoid(cls, value: Any) -> List[str]:
+        """Cap the raw list before item validation, and drop non-text entries.
+
+        A client can post thousands of entries or a stray number; neither may
+        cost per-item validation work or 422 the page.
+        """
+        if not isinstance(value, (list, tuple)):
+            return []
+        return [
+            item[: AVOID_MAX_CHARS * 4]
+            for item in value[: AVOID_MAX_ITEMS * 2]
+            if isinstance(item, str)
+        ]
 
     @field_validator("avoid")
     @classmethod

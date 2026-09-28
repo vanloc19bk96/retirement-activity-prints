@@ -6,7 +6,11 @@ import {
   harvestAnswers,
 } from '@/utils/studio/studio-answer-key'
 import { resetObjectCounter } from '@/utils/studio/studio-fabric-builders'
-import { resolveStudioMarginForPage } from '@/utils/studio/studio-margin'
+import {
+  resolveStudioMarginForPage,
+  studioMarginGuideForPageCount,
+} from '@/utils/studio/studio-margin'
+import { estimateStudioInstancePageCount } from '@/utils/studio/studio-bulk-allocate'
 import {
   findStudioInstanceEndPageIndex,
   findStudioInstanceStartPageIndex,
@@ -138,6 +142,11 @@ export async function runStudioGenerateOnce(options: {
   reservedPageCount?: number
   /** Single-run progress (prefetch → layout). Bulk owns its own counters. */
   setProgress?: (progress: StudioGenerateProgress) => void
+  /**
+   * Page count the book will reach when the whole run is done (book / bulk).
+   * Sizes the KDP gutter; a single sheet estimates its own.
+   */
+  projectedPageCount?: number
 }): Promise<StudioGenerateResult | null> {
   const {
     req,
@@ -156,6 +165,7 @@ export async function runStudioGenerateOnce(options: {
     skipPageAllocation = false,
     reservedPageCount = 0,
     setProgress,
+    projectedPageCount = 0,
   } = options
   const writeOpts: StudioWritePageOptions | undefined = deferLiveSync
     ? { syncLive: false }
@@ -170,12 +180,20 @@ export async function runStudioGenerateOnce(options: {
   await primeStudioTextMetrics(String(req.config.fontFamily ?? STUDIO_DEFAULT_FONT))
   if (signal.aborted) return null
 
-  const firstMargin = resolveStudioMarginForPage({
-    pageIndex: req.startPageIndex,
-    pageWidth,
-    pageHeight,
+  // The gutter the finished book needs, not the one its current page count
+  // allows: pages written now stay where they are when the book grows.
+  const pageGuide = studioMarginGuideForPageCount(
     marginGuide,
-  })
+    Math.max(projectedPageCount, req.interiorPageCount + estimateStudioInstancePageCount(def)),
+  )
+  const marginFor = (pageIndex: number) =>
+    resolveStudioMarginForPage({ pageIndex, pageWidth, pageHeight, marginGuide: pageGuide })
+
+  // Lay out on a recto, then shift each page onto its real side. Verso and
+  // recto share a content width, so the sheet is the same either way, and the
+  // content fingerprint no longer depends on which side the sheet starts on:
+  // it used to read a repeat that began on a left page as new content.
+  const firstMargin = marginFor(0)
 
   // Read lazily and afresh per attempt: a bulk run writes pages between calls.
   const prefetchContext: StudioPrefetchContext = {
@@ -300,12 +318,7 @@ export async function runStudioGenerateOnce(options: {
   let cursor = req.startPageIndex
   outputs.forEach((out, i) => {
     const pageIndex = cursor++
-    const pageMargin = resolveStudioMarginForPage({
-      pageIndex,
-      pageWidth,
-      pageHeight,
-      marginGuide,
-    })
+    const pageMargin = marginFor(pageIndex)
     const dx = pageMargin.left - firstMargin.left
     const objects = withStudioContentHash(shiftStudioObjects(out.objects, dx), contentHash)
     // Always replace: insert mode already added blank pages. Append onto a live
@@ -318,12 +331,7 @@ export async function runStudioGenerateOnce(options: {
 
     if (!keyAfter[i]) return
     const keyPageIndex = cursor++
-    const keyMargin = resolveStudioMarginForPage({
-      pageIndex: keyPageIndex,
-      pageWidth,
-      pageHeight,
-      marginGuide,
-    })
+    const keyMargin = marginFor(keyPageIndex)
     const answerObjects = withStudioContentHash(
       shiftStudioObjects(
         buildAnswerPage(out.answerSourceObjects ?? out.objects, answerInk, {

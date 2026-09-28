@@ -67,6 +67,19 @@ describe('rememberStudioContent', () => {
     expect(avoid[0]).toBe(`Word ${STUDIO_AVOID_LIMIT + 19}`)
   })
 
+  it('keeps a theme in active use when older buckets are evicted', () => {
+    const favourite = studioVarietyKey('word-search', 'garden')
+    rememberStudioContent(favourite, ['Rose'])
+    for (let i = 0; i < 199; i++) {
+      rememberStudioContent(studioVarietyKey('word-search', `theme ${i}`), ['Word'])
+    }
+    // Printing the favourite again makes it the newest bucket, not the oldest.
+    rememberStudioContent(favourite, ['Tulip'])
+    rememberStudioContent(studioVarietyKey('word-search', 'one more'), ['Word'])
+    expect(studioAvoidList(favourite)).toEqual(['Tulip', 'Rose'])
+    expect(studioAvoidList(studioVarietyKey('word-search', 'theme 0'))).toEqual([])
+  })
+
   it('honours a caller-supplied limit', () => {
     const key = studioVarietyKey('word-search', 'kitchen')
     rememberStudioContent(key, ['A', 'B', 'C'])

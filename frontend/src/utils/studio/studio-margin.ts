@@ -1,4 +1,4 @@
-import type { MarginGuide } from '@/types/canvas-settings.types'
+import { DPI, getInsideMarginInches, type MarginGuide } from '@/types/canvas-settings.types'
 import type { StudioMargin } from '@/types/studio-template.types'
 import {
   resolveInteriorIsLeftPage,
@@ -45,4 +45,22 @@ export function resolveStudioMarginForPage(options: {
   })
   if (!safe) return STUDIO_FALLBACK_MARGIN
   return toStudioMargin(safe, pageWidth, pageHeight)
+}
+
+/**
+ * The margin guide a run must lay out with once the book reaches `pageCount`.
+ *
+ * KDP sizes the inside (gutter) margin by the final page count: 0.375in up to
+ * 150 pages, 0.5in to 300, and so on. The editor's guide is computed from the
+ * page count before a run, so a book builder that takes 40 pages to 200 laid
+ * every new sheet against the 0.375in gutter the finished book is not allowed
+ * to use. Only ever widens: a guide already sized for a larger book stays.
+ */
+export function studioMarginGuideForPageCount(
+  marginGuide: MarginGuide,
+  pageCount: number,
+): MarginGuide {
+  if (!Number.isFinite(pageCount) || pageCount <= 0) return marginGuide
+  const insidePixels = Math.round(getInsideMarginInches(pageCount) * DPI)
+  return insidePixels > marginGuide.insidePixels ? { ...marginGuide, insidePixels } : marginGuide
 }

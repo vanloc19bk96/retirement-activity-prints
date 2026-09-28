@@ -143,6 +143,8 @@ export async function runStudioBookGenerate(options: {
       usedSeeds,
       usedFingerprints,
       deferLiveSync: true,
+      // Every sheet gets the gutter of the finished book, not of the book so far.
+      projectedPageCount: req.interiorPageCount + estimatedInsert,
     })
 
     if (signal.aborted) return finish()

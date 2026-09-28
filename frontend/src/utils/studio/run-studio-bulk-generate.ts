@@ -190,6 +190,8 @@ export async function runStudioBulkGenerate(options: {
       deferLiveSync: true,
       skipPageAllocation: !isFirst,
       reservedPageCount: reservedForSheet,
+      // Every sheet gets the gutter of the finished book, not of the book so far.
+      projectedPageCount: req.interiorPageCount + estimatedInsert,
     })
 
     if (!result || signal.aborted) return finish()

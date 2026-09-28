@@ -145,3 +145,37 @@ def test_thinking_config_explicit_2x_uses_budget() -> None:
 
 def test_thinking_config_unknown_model_omits_thinking() -> None:
     assert _thinking_config(_TypesStub, "gemini-pro", "minimal") is None
+
+
+def test_rate_limiter_forgets_idle_users(monkeypatch) -> None:
+    from app.services import studio_gemini
+
+    clock = [1000.0]
+    monkeypatch.setattr(studio_gemini.time, "monotonic", lambda: clock[0])
+    limiter = studio_gemini.RateLimiter(
+        label="test", max_per_window=2, window_seconds=60, sweep_threshold=8
+    )
+    for i in range(8):
+        limiter.check(f"user-{i}")
+    clock[0] += 61
+    limiter.check("fresh-user")
+    # The eight idle ids were swept; only the new caller is tracked.
+    assert limiter.tracked_users() == 1
+
+
+def test_rate_limiter_still_limits_an_active_user_after_a_sweep(monkeypatch) -> None:
+    import pytest as _pytest
+
+    from app.services import studio_gemini
+
+    clock = [1000.0]
+    monkeypatch.setattr(studio_gemini.time, "monotonic", lambda: clock[0])
+    limiter = studio_gemini.RateLimiter(
+        label="test", max_per_window=2, window_seconds=60, sweep_threshold=4
+    )
+    limiter.check("busy")
+    limiter.check("busy")
+    for i in range(6):
+        limiter.check(f"other-{i}")
+    with _pytest.raises(studio_gemini.StudioRateLimitError):
+        limiter.check("busy")

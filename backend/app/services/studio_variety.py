@@ -26,6 +26,7 @@ they already build, and :func:`remember` once the output is parsed.
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 from collections import OrderedDict, deque
 from dataclasses import dataclass, replace
@@ -175,6 +176,16 @@ def _merge_avoid(scope: VarietyScope, client_avoid: Sequence[str], limit: int) -
     return merged
 
 
+def quote_labels(labels: Sequence[str]) -> str:
+    """Render labels as a list of quoted strings, so they read as data.
+
+    The client's ``avoid`` list is free text straight from the request. Quoted
+    and escaped (and already collapsed to one line by :func:`normalize_label`),
+    a label cannot close the list and pass itself off as a prompt instruction.
+    """
+    return ", ".join(json.dumps(label, ensure_ascii=False) for label in labels)
+
+
 def variety_angle(seed: int) -> str:
     """The lens this seed asks the model to look through."""
     return rotate(_angles(), seed)
@@ -206,7 +217,7 @@ def variety_lines(
         str(lines["nonce"]).format(nonce=variety_nonce(scope)),
     ]
     if avoided:
-        body.insert(0, str(lines["avoid"]).format(avoided=", ".join(avoided)))
+        body.insert(0, str(lines["avoid"]).format(avoided=quote_labels(avoided)))
         body.insert(1, str(lines["avoidTail"]))
 
     return f"{lines['header']}\n{bullet_lines(body)}"

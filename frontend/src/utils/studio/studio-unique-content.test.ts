@@ -9,6 +9,8 @@ import {
   hashStudioFingerprint,
   pagesContentFingerprint,
 } from './studio-content-fingerprint'
+import { drawHeader, type Box } from './studio-layout'
+import type { StudioTag } from './studio-fabric-builders'
 
 /** The digest `claimUniqueStudioOutputs` stores for an un-namespaced build. */
 function claimedHash(pages: StudioPageOutput[]): string {
@@ -64,6 +66,35 @@ describe('contentFingerprint', () => {
     expect(pagesContentFingerprint(pages)).toBe(
       `${contentFingerprint(pages[0]!.objects)}#${contentFingerprint(pages[1]!.objects)}`,
     )
+  })
+})
+
+describe('contentFingerprint with a run-numbered header', () => {
+  const tag: StudioTag = { templateKey: 'word-search', instanceId: 'run', pageRole: 'single' }
+  const box: Box = { left: 36, top: 36, width: 504, height: 792 }
+
+  function sheet(title: string): StudioFabricObject[] {
+    const header = drawHeader(box, { title, fontFamily: 'PT Serif' }, tag, 'Find every word.')
+    const body: StudioFabricObject = {
+      type: 'textbox',
+      left: header.body.left,
+      top: header.body.top,
+      text: 'GARDEN TRAVEL FREE TIME',
+      studioRole: 'prompt',
+    }
+    return [...header.objects, body]
+  }
+
+  it('reads the same puzzle as a repeat when only "Game N" differs', () => {
+    // Book runs bump the title every sheet; if it counted, no repeat would ever match.
+    expect(contentFingerprint(sheet('Game 3'))).toBe(contentFingerprint(sheet('Game 14')))
+  })
+
+  it('still tells two different puzzles apart under the same title', () => {
+    const other = sheet('Game 3').map((obj) =>
+      obj.studioRole === 'prompt' ? { ...obj, text: 'KITCHEN BREAD' } : obj,
+    )
+    expect(contentFingerprint(other)).not.toBe(contentFingerprint(sheet('Game 3')))
   })
 })
 

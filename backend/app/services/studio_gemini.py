@@ -67,7 +67,12 @@ class StudioBlockedError(StudioGenerationError):
 
 
 class RateLimiter:
-    """Per-user sliding window. Process-local, so it scales with worker count."""
+    """Per-user sliding window. Process-local, so it scales with worker count.
+
+    Idle users are swept once the table grows past ``sweep_threshold`` keys: the
+    key is whatever user id the request carried, so without the sweep every id
+    ever seen stayed in memory for the life of the worker.
+    """
 
     def __init__(
         self,
@@ -75,14 +80,30 @@ class RateLimiter:
         label: str,
         max_per_window: int,
         window_seconds: float = _DEFAULT_WINDOW_SECONDS,
+        sweep_threshold: int = 1024,
     ) -> None:
         self._label = label
         self._max_per_window = max_per_window
         self._window_seconds = window_seconds
+        self._sweep_threshold = max(1, sweep_threshold)
         self._hits: dict[str, deque[float]] = defaultdict(deque)
+
+    def _sweep(self, now: float) -> None:
+        stale = [
+            user_id
+            for user_id, hits in self._hits.items()
+            if not hits or now - hits[-1] > self._window_seconds
+        ]
+        for user_id in stale:
+            del self._hits[user_id]
 
     def check(self, user_id: str) -> None:
         now = time.monotonic()
+        if len(self._hits) >= self._sweep_threshold and user_id not in self._hits:
+            self._sweep(now)
+            # Everyone still in the table is active; let the next sweep wait
+            # until the table has doubled so a busy worker is not swept per call.
+            self._sweep_threshold = max(self._sweep_threshold, len(self._hits) * 2)
         hits = self._hits[user_id]
         while hits and now - hits[0] > self._window_seconds:
             hits.popleft()
@@ -91,6 +112,10 @@ class RateLimiter:
                 f"Too many {self._label} requests. Please wait a minute and try again."
             )
         hits.append(now)
+
+    def tracked_users(self) -> int:
+        """Keys held right now (for tests and diagnostics)."""
+        return len(self._hits)
 
 
 # ---------------------------------------------------------------- JSON parsing

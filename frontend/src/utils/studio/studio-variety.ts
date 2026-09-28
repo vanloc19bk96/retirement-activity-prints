@@ -129,7 +129,11 @@ export function rememberStudioContent(key: string, values: Iterable<unknown>): v
     merged.push(label)
   }
 
-  const next: RecentStore = { ...store, [key]: merged.slice(-MEMORY_PER_KEY) }
+  // Re-insert the key so it moves to the end: spreading kept an existing
+  // bucket in its first-seen slot, and the theme in use was evicted first.
+  const next: RecentStore = { ...store }
+  delete next[key]
+  next[key] = merged.slice(-MEMORY_PER_KEY)
 
   // Object key order is insertion order, so the oldest bucket is the first one.
   const keys = Object.keys(next)

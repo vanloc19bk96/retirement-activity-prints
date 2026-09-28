@@ -26,6 +26,9 @@ import type {
 } from '@/types/studio-template.types'
 import type { CanvasStateStore } from '@/utils/canvas-state-store'
 
+export const STUDIO_DUPLICATE_SHEET_MESSAGE =
+  'This sheet repeats one already in your book. Generate it again before publishing.'
+
 export function useStudioGenerate(canvasStateStore: CanvasStateStore) {
   const { pageDimensions, marginGuide } = useCanvasSettings()
   const { user } = useAuthContext()
@@ -106,6 +109,9 @@ export function useStudioGenerate(canvasStateStore: CanvasStateStore) {
           instanceId: result.instanceId,
           pageIndices: result.pageIndices,
         })
+        // Every redraw collided, so the repeat was kept to honour the request.
+        // The book builder reports this in its note; a single sheet must too.
+        if (result.isDuplicate) setError(STUDIO_DUPLICATE_SHEET_MESSAGE)
         return result
       } catch (e) {
         if (abortRef.current?.signal.aborted) return null
