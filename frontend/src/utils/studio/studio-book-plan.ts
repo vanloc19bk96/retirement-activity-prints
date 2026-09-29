@@ -4,6 +4,7 @@ import {
   getStudioTemplate,
 } from '@/constants/studio-templates'
 import { createRng } from '@/utils/studio/studio-rng'
+import { WF_TEMPLATE_KEY } from '@/utils/studio/weeks-of-firsts/content'
 import { estimateStudioInstancePageCount } from '@/utils/studio/studio-bulk-allocate'
 import { clampStudioBulkQuantity } from '@/utils/studio/studio-bulk'
 import type {
@@ -20,13 +21,28 @@ export const STUDIO_BOOK_MAX_GAMES = 100
 export const STUDIO_BOOK_DEFAULT_GAME_COUNT = 12
 
 /**
+ * Templates that stand alone as a whole book (e.g. a 52-week journal) and so
+ * never mix into a book build — neither random draws nor chosen rows.
+ */
+const STUDIO_BOOK_EXCLUDED_TEMPLATE_KEYS: ReadonlySet<string> = new Set([WF_TEMPLATE_KEY])
+
+export function isBookEligibleTemplate(templateKey: string): boolean {
+  return !STUDIO_BOOK_EXCLUDED_TEMPLATE_KEYS.has(templateKey)
+}
+
+/** Every template the book builder may use, in library order. */
+export const STUDIO_BOOK_TEMPLATES = STUDIO_TEMPLATES.filter((def) =>
+  isBookEligibleTemplate(def.key),
+)
+
+/**
  * Templates a random book may draw from.
  * Optional category filter narrows the pool ([] = every category).
- * All templates are eligible, including AI/content games.
+ * AI/content games are eligible; standalone books are not.
  */
 export function getEligibleBookTemplates(options: { categories: StudioCategory[] }) {
   const { categories } = options
-  return STUDIO_TEMPLATES.filter((def) => {
+  return STUDIO_BOOK_TEMPLATES.filter((def) => {
     if (categories.length > 0 && !categories.includes(def.category)) return false
     return true
   })
@@ -83,7 +99,7 @@ export interface StudioBookChosenOptions {
 export function buildChosenBookPlan(options: StudioBookChosenOptions): StudioBookPlanItem[] {
   const plan: StudioBookPlanItem[] = []
   for (const row of options.rows) {
-    if (!getStudioTemplate(row.templateKey)) continue
+    if (!getStudioTemplate(row.templateKey) || !isBookEligibleTemplate(row.templateKey)) continue
     const quantity = clampStudioBulkQuantity(row.quantity)
     for (let i = 0; i < quantity; i++) {
       plan.push({ templateKey: row.templateKey, config: { ...row.config } })
@@ -96,7 +112,11 @@ export function buildChosenBookPlan(options: StudioBookChosenOptions): StudioBoo
 
 /** Total instances in the chosen rows (before the max-games cap). */
 export function countBookRowsTotal(rows: StudioBookGameRow[]): number {
-  return rows.reduce((sum, row) => sum + clampStudioBulkQuantity(row.quantity), 0)
+  return rows.reduce(
+    (sum, row) =>
+      isBookEligibleTemplate(row.templateKey) ? sum + clampStudioBulkQuantity(row.quantity) : sum,
+    0,
+  )
 }
 
 /**

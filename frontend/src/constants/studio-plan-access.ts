@@ -7,7 +7,7 @@
  * - every category is represented, so no tab is ever empty;
  * - the classics that actually sell activity books are in (Word Search,
  *   Crossword, Sudoku, Maze);
- * - one crowd-pleaser per non-puzzle tab (coloring, trivia, party,
+ * - a few crowd-pleasers per non-puzzle tab (coloring, trivia, party,
  *   keepsake), which is enough page variety for a full book.
  *
  * Listed in `STUDIO_TEMPLATES` order (grouped by category) so this file reads
@@ -15,27 +15,49 @@
  * keep at least one entry — both enforced in DEV by `studio-templates.ts`.
  */
 export const STARTER_STUDIO_TEMPLATE_KEYS: readonly string[] = [
-  // Word (2)
+  // Word (7)
   'word-search',
+  'hidden-message-word-search',
+  'a-to-z-word-search',
   'crossword',
+  'cryptogram',
+  'retirement-anagram',
+  'missing-vowels',
 
-  // Logic (1)
+  // Logic (8)
   'sudoku',
+  'wordoku',
+  'picture-logic',
+  'happy-campers',
+  'island-hopping',
+  'cruise-fleet',
+  'skyline-tour',
+  'sun-and-moon',
 
-  // Visual (1)
+  // Visual (3)
   'maze',
+  'dot-to-dot',
+  'spot-the-difference',
 
-  // Coloring (1)
+  // Coloring (2)
   'color-by-number',
+  'quote-coloring',
 
-  // Trivia (1)
+  // Trivia (3)
   'office-relics',
+  'work-lingo-match',
+  'riddles-and-jokes',
 
-  // Party (1)
+  // Party (4)
   'would-you-rather',
+  'fill-in-funnies',
+  'office-awards',
+  'retirement-bingo',
 
-  // Keepsake (1)
+  // Keepsake (3)
   'bucket-list',
+  'well-wishes-signatures',
+  'retirement-certificate',
 ]
 
 /** How many templates Starter can use (marketing copy reads this too). */

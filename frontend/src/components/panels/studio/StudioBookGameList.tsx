@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, Plus, Settings2, Trash2 } from 'lucide-react'
-import { STUDIO_TEMPLATES, getStudioTemplate } from '@/constants/studio-templates'
+import { getStudioTemplate } from '@/constants/studio-templates'
 import { STUDIO_CATEGORIES } from '@/constants/studio-categories'
 import { Button } from '@/components/ui/button'
 import {
@@ -21,7 +21,7 @@ import {
   clampStudioBulkQuantity,
   splitStudioConfigFields,
 } from '@/utils/studio/studio-bulk'
-import { STUDIO_BOOK_MAX_GAMES } from '@/utils/studio/studio-book-plan'
+import { STUDIO_BOOK_MAX_GAMES, STUDIO_BOOK_TEMPLATES } from '@/utils/studio/studio-book-plan'
 import {
   clampStudioConfigToSchema,
   resolveStudioConfigField,
@@ -90,7 +90,7 @@ function useGroupedTemplateOptions() {
     () =>
       STUDIO_CATEGORIES.filter((c) => c.value !== 'all').map((c) => ({
         label: c.label,
-        templates: STUDIO_TEMPLATES.filter((t) => t.category === c.value),
+        templates: STUDIO_BOOK_TEMPLATES.filter((t) => t.category === c.value),
       })),
     [],
   )

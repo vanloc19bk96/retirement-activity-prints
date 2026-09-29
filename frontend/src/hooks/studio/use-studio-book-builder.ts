@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { STUDIO_TEMPLATES, buildDefaultConfig, getStudioTemplate } from '@/constants/studio-templates'
+import { buildDefaultConfig, getStudioTemplate } from '@/constants/studio-templates'
 import { useStudioGenerate } from '@/hooks/studio/use-studio-generate'
 import { useStudioTarget } from '@/context/StudioTargetContext'
 import { useCanvasSettings } from '@/context/CanvasSettingsContext'
@@ -14,11 +14,13 @@ import { clampStudioBulkQuantity, splitStudioConfigFields } from '@/utils/studio
 import {
   STUDIO_BOOK_DEFAULT_GAME_COUNT,
   STUDIO_BOOK_MAX_GAMES,
+  STUDIO_BOOK_TEMPLATES,
   buildChosenBookPlan,
   buildRandomBookPlan,
   countBookRowsTotal,
   estimateBookPlanPages,
   getEligibleBookTemplates,
+  isBookEligibleTemplate,
 } from '@/utils/studio/studio-book-plan'
 import { clampStudioConfigToSchema } from '@/utils/studio/studio-config-fields'
 import {
@@ -50,11 +52,13 @@ function createRowId(): string {
 
 function firstTemplateKey(): string {
   const eligible = getEligibleBookTemplates({ categories: [] })
-  return (eligible[0] ?? STUDIO_TEMPLATES[0]!).key
+  return (eligible[0] ?? STUDIO_BOOK_TEMPLATES[0]!).key
 }
 
 function createRow(templateKey: string): StudioBookGameRow {
-  const def = getStudioTemplate(templateKey) ?? STUDIO_TEMPLATES[0]!
+  const def =
+    (isBookEligibleTemplate(templateKey) ? getStudioTemplate(templateKey) : undefined) ??
+    STUDIO_BOOK_TEMPLATES[0]!
   return { id: createRowId(), templateKey: def.key, quantity: 1, config: buildDefaultConfig(def) }
 }
 
@@ -202,7 +206,7 @@ export function useStudioBookBuilder() {
   const setRowTemplate = (id: string, templateKey: string) => {
     setRows((prev) =>
       prev.map((row) => {
-        if (row.id !== id) return row
+        if (row.id !== id || !isBookEligibleTemplate(templateKey)) return row
         const def = getStudioTemplate(templateKey)
         if (!def) return row
         return withFittedConfig({ ...row, templateKey, config: buildDefaultConfig(def) })

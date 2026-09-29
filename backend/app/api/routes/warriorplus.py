@@ -74,6 +74,15 @@ async def notify_sync_endpoint(body: NotifySyncBody):
         return {"message": str(e), "email": body.email, "status": 500}
 
 
+def plan_from_item_name(item_name: Optional[str]) -> Optional[str]:
+    """Plan is the last word of the WarriorPlus item name.
+
+    "Retirement Activity Prints Starter" -> "Starter", "ABC Pro" -> "Pro".
+    """
+    words = (item_name or "").split()
+    return words[-1] if words else None
+
+
 @router.post('/ipn')
 async def warriorplus_ipn_handler(
     WP_BUYER_EMAIL: Optional[str] = Form(None),
@@ -91,7 +100,7 @@ async def warriorplus_ipn_handler(
         # Extract user info from WarriorPlus IPN (field names are from WP API)
         email = WP_BUYER_EMAIL
         name = WP_BUYER_NAME
-        product_name = WP_ITEM_NAME
+        plan = plan_from_item_name(WP_ITEM_NAME)
 
         if not email:
             logger.warning("WarriorPlus IPN received without email")
@@ -102,7 +111,7 @@ async def warriorplus_ipn_handler(
         status, message = await user_service.upsert_user_on_purchase(
             email=email,
             name=name,
-            product_name=product_name,
+            plan=plan,
         )
         
         logger.info("WarriorPlus IPN processed: %s - %s for email: %s", status, message, email)

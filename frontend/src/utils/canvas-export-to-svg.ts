@@ -48,6 +48,23 @@ function excludeInvisibleObjectsFromVectorExport(canvas: StaticCanvas): void {
   })
 }
 
+/**
+ * Fabric exports `strokeUniform` as `vector-effect="non-scaling-stroke"`, which
+ * svg2pdf ignores: a Lucide icon scaled ×3 in its group prints a stroke 3× the
+ * editor's. Bake the on-screen weight into strokeWidth instead. Non-uniform
+ * scale has no single equivalent width, so the geometric mean splits the error.
+ */
+export function bakeUniformStrokesForVectorExport(objects: FabricObject[]): void {
+  walkNestedFabricObjects(objects, (obj) => {
+    if (!obj.strokeUniform || !obj.stroke || !(obj.strokeWidth > 0)) return
+    const { x, y } = obj.getObjectScaling()
+    const scale = Math.sqrt(Math.abs(x * y))
+    if (!Number.isFinite(scale) || scale <= 0) return
+    obj.strokeWidth = obj.strokeWidth / scale
+    obj.strokeUniform = false
+  })
+}
+
 /** True when the element itself is marked visibility:hidden (attr or style). */
 export function isSvgElementVisibilityHidden(el: Element): boolean {
   const attr = el.getAttribute('visibility')
@@ -69,6 +86,7 @@ export function removeVisibilityHiddenSvgElements(root: Element): void {
 
 async function prepareFabricCanvasForVectorExport(canvas: StaticCanvas): Promise<void> {
   excludeInvisibleObjectsFromVectorExport(canvas)
+  bakeUniformStrokesForVectorExport(canvas.getObjects())
   // Before toSVG: compact bitmaps so svg2pdf does not re-fetch full-res remote PNGs.
   await inlineFabricImagesForVectorExport(canvas)
   remeasureAllFabricEditableTextOnCanvas(canvas)

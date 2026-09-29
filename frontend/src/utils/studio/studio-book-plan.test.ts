@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest'
 import {
   STUDIO_BOOK_MAX_GAMES,
   buildChosenBookPlan,
+  STUDIO_BOOK_TEMPLATES,
   buildRandomBookPlan,
+  countBookRowsTotal,
   getEligibleBookTemplates,
 } from './studio-book-plan'
+import { WF_TEMPLATE_KEY } from './weeks-of-firsts/content'
 import type { StudioBookGameRow } from '@/types/studio-template.types'
 
 const POOL_SIZE = getEligibleBookTemplates({ categories: [] }).length
@@ -69,5 +72,30 @@ describe('buildChosenBookPlan', () => {
     expect(buildChosenBookPlan({ rows, order: 'shuffle', seed: 1 })).toHaveLength(
       STUDIO_BOOK_MAX_GAMES,
     )
+  })
+})
+
+describe('standalone books (52 Weeks of Firsts)', () => {
+  const wfRow: StudioBookGameRow = { id: 'wf', templateKey: WF_TEMPLATE_KEY, quantity: 2, config: {} }
+
+  it('is never offered to the book builder', () => {
+    expect(STUDIO_BOOK_TEMPLATES.some((def) => def.key === WF_TEMPLATE_KEY)).toBe(false)
+    expect(
+      getEligibleBookTemplates({ categories: [] }).some((def) => def.key === WF_TEMPLATE_KEY),
+    ).toBe(false)
+  })
+
+  it('is never drawn into a random book', () => {
+    for (const seed of [1, 42, 1337]) {
+      const keys = keysOf(buildRandomBookPlan({ gameCount: POOL_SIZE * 2, seed, categories: [] }))
+      expect(keys).not.toContain(WF_TEMPLATE_KEY)
+    }
+  })
+
+  it('is dropped from chosen rows and the game count', () => {
+    const other = { ...wfRow, id: 'other', templateKey: STUDIO_BOOK_TEMPLATES[0]!.key, quantity: 1 }
+    const plan = buildChosenBookPlan({ rows: [wfRow, other], order: 'sequential', seed: 1 })
+    expect(keysOf(plan)).toEqual([other.templateKey])
+    expect(countBookRowsTotal([wfRow, other])).toBe(1)
   })
 })

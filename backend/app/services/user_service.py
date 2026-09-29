@@ -48,17 +48,12 @@ class UserService:
         self,
         email: str,
         name: Optional[str] = None,
-        product_name: Optional[str] = None,
+        plan: Optional[str] = None,
     ) -> Tuple[str, str]:
         """
         On purchase (e.g. IPN): create or update user by email. Returns (status, message).
         """
         try:
-            plan = "Starter"
-            if product_name and " - " in product_name:
-                plan = product_name.split(" - ")[-1].strip()
-            elif product_name:
-                plan = product_name
             plan = self._normalize_plan(plan)
 
             stored_user = fetch_user_row_by_email(

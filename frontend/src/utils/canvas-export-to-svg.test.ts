@@ -1,8 +1,10 @@
 /**
  * @vitest-environment jsdom
  */
+import { Group, Path } from 'fabric'
 import { describe, expect, it } from 'vitest'
 import {
+  bakeUniformStrokesForVectorExport,
   isSvgElementVisibilityHidden,
   removeVisibilityHiddenSvgElements,
 } from '@/utils/canvas-export-to-svg'
@@ -42,5 +44,32 @@ describe('removeVisibilityHiddenSvgElements', () => {
     expect(svg.querySelector('#answer')).toBeNull()
     expect(svg.querySelector('#box')).not.toBeNull()
     expect(svg.querySelector('#prompt')).not.toBeNull()
+  })
+})
+
+describe('bakeUniformStrokesForVectorExport', () => {
+  it('keeps a nested scaled icon stroke at its editor weight (svg2pdf ignores non-scaling-stroke)', () => {
+    const path = new Path('M 0 0 L 24 24', {
+      stroke: '#000',
+      strokeWidth: 2,
+      strokeUniform: true,
+    })
+    const icon = new Group([path], { scaleX: 3, scaleY: 3 })
+    const row = new Group([icon], { scaleX: 1.5, scaleY: 1.5 })
+
+    bakeUniformStrokesForVectorExport([row])
+
+    expect(path.strokeUniform).toBe(false)
+    expect(path.strokeWidth).toBeCloseTo(2 / 4.5)
+    expect(path.toSVG()).not.toContain('non-scaling-stroke')
+  })
+
+  it('leaves scaling strokes untouched', () => {
+    const path = new Path('M 0 0 L 24 24', { stroke: '#000', strokeWidth: 2 })
+    const group = new Group([path], { scaleX: 3, scaleY: 3 })
+
+    bakeUniformStrokesForVectorExport([group])
+
+    expect(path.strokeWidth).toBe(2)
   })
 })
