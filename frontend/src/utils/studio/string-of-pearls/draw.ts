@@ -32,25 +32,20 @@ import { PEARL_BLACK, PEARL_WHITE, isPearl, pearlAnswerKey, pearlLoopOrder } fro
  * for the answer page, and the legend.
  *
  * The puzzle page is black on white — nothing in the squares but the
- * pearls, so a pencilled loop reads clearly. Each pearl carries a small
- * shine, so it reads as a pearl and not a dot. On the answer page the loop
- * becomes the necklace itself: a smooth black cord through every square it
- * visits, rounding each turn, with a small white bead strung on every
- * square between the pearls. Black, white and one gray only, so it prints
+ * pearls, plain circles with nothing inside, so a pencilled loop reads
+ * clearly. On the answer page the loop becomes the necklace itself: one
+ * smooth black cord through every square it visits, rounding each turn,
+ * with only the pearls on it. Black, white and one gray only, so it prints
  * the same on any interior.
  */
 
 /** Marks the objects a String of Pearls page draws, for checks and the editor. */
 export const PEARL_PART_KEY = 'pearlPart'
 
-/** The shine on a white pearl: a soft gray. */
-export const PEARL_SHINE_GRAY = STUDIO_RULE_MEDIUM
 /** The cord's weight, as a share of a square (never under 3 px). */
 const CORD_OF_CELL = 0.09
 /** How far before a turn the cord starts to round it, as a share of a square. */
 const BEND_OF_CELL = 0.4
-/** A bead's radius, as a share of a square. */
-const BEAD_OF_CELL = 0.12
 
 const r2 = (n: number) => Math.round(n * 100) / 100
 
@@ -61,37 +56,27 @@ function part(obj: StudioFabricObject, name: string, extra: Record<string, unkno
 }
 
 /**
- * One path of polylines in canvas px: filled closed shapes, or open strokes
- * with no fill. Answer paths start hidden; the answer key reveals them,
- * keeping their fill and inking their stroke.
+ * One closed polyline in canvas px, stroked in black. Answer paths start
+ * hidden; the answer key reveals them, keeping their fill and inking their
+ * stroke.
  */
-function pathOf(options: {
-  lines: readonly (readonly Pt[])[]
-  close: boolean
-  fill: string
-  stroke?: string
-  strokeWidth: number
-  tag: StudioTag
-  role: StudioRole
-}): StudioFabricObject {
-  const { lines, close, fill, stroke = STUDIO_INK, strokeWidth, tag, role } = options
+function pathOf(options: { line: readonly Pt[]; fill: string; strokeWidth: number; tag: StudioTag; role: StudioRole }): StudioFabricObject {
+  const { line, fill, strokeWidth, tag, role } = options
   const path: (string | number)[][] = []
   let minX = Infinity
   let minY = Infinity
   let maxX = -Infinity
   let maxY = -Infinity
-  for (const line of lines) {
-    line.forEach(([px, py], i) => {
-      const x = r2(px)
-      const y = r2(py)
-      path.push([i === 0 ? 'M' : 'L', x, y])
-      minX = Math.min(minX, x)
-      minY = Math.min(minY, y)
-      maxX = Math.max(maxX, x)
-      maxY = Math.max(maxY, y)
-    })
-    if (close) path.push(['Z'])
-  }
+  line.forEach(([px, py], i) => {
+    const x = r2(px)
+    const y = r2(py)
+    path.push([i === 0 ? 'M' : 'L', x, y])
+    minX = Math.min(minX, x)
+    minY = Math.min(minY, y)
+    maxX = Math.max(maxX, x)
+    maxY = Math.max(maxY, y)
+  })
+  path.push(['Z'])
   return {
     type: 'path',
     path,
@@ -103,7 +88,7 @@ function pathOf(options: {
     originX: 'center',
     originY: 'center',
     fill,
-    stroke,
+    stroke: STUDIO_INK,
     strokeWidth,
     strokeUniform: true,
     strokeLineCap: 'round',
@@ -124,23 +109,16 @@ const circle = (cx: number, cy: number, r: number, steps = 28): Pt[] =>
     return [cx + r * Math.cos(a), cy + r * Math.sin(a)] as const
   })
 
-/** An arc of a circle, from one angle to another (degrees, canvas y running down). */
-const arc = (cx: number, cy: number, r: number, fromDeg: number, toDeg: number, steps = 8): Pt[] =>
-  Array.from({ length: steps + 1 }, (_, k) => {
-    const a = ((fromDeg + ((toDeg - fromDeg) * k) / steps) * Math.PI) / 180
-    return [cx + r * Math.cos(a), cy + r * Math.sin(a)] as const
-  })
-
 /* ------------------------------------------------------------------ *
  * A pearl
  * ------------------------------------------------------------------ */
 
 /**
  * A pearl centred at (cx, cy): a white pearl is a white ball in a black
- * ring with a gray shine; a black pearl is a solid black ball with a white
- * shine. The shine sits up and to the left, where the light falls.
+ * ring; a black pearl is a solid black ball. Nothing is drawn inside
+ * either, so the two read apart at a glance.
  */
-export function pearlParts(options: {
+export function pearlPart(options: {
   cx: number
   cy: number
   radius: number
@@ -148,57 +126,31 @@ export function pearlParts(options: {
   tag: StudioTag
   name: string
   extra?: Record<string, unknown>
-}): StudioFabricObject[] {
+}): StudioFabricObject {
   const { cx, cy, radius, color, tag, name, extra = {} } = options
   const ring = radius >= 14 ? STUDIO_STROKE_BOLD : STUDIO_STROKE_NORMAL
   const white = color === PEARL_WHITE
-  const shine = arc(cx, cy, radius * 0.6, 195, 255)
-  return [
-    part(pathOf({ lines: [circle(cx, cy, radius)], close: true, fill: white ? STUDIO_PAPER : STUDIO_INK, strokeWidth: ring, tag, role: 'prompt' }), name, {
-      color: white ? 'white' : 'black',
-      ...extra,
-    }),
-    part(
-      pathOf({
-        lines: [shine],
-        close: false,
-        fill: 'transparent',
-        stroke: white ? PEARL_SHINE_GRAY : STUDIO_PAPER,
-        strokeWidth: Math.max(STUDIO_STROKE_HAIRLINE, Math.round(radius * 0.16 * 2) / 2),
-        tag,
-        role: 'prompt',
-      }),
-      `${name}-shine`,
-      extra,
-    ),
-  ]
+  return part(pathOf({ line: circle(cx, cy, radius), fill: white ? STUDIO_PAPER : STUDIO_INK, strokeWidth: ring, tag, role: 'prompt' }), name, {
+    color: white ? 'white' : 'black',
+    ...extra,
+  })
 }
 
 /* ------------------------------------------------------------------ *
  * The necklace
  * ------------------------------------------------------------------ */
 
-export interface PearlStop {
-  /** The square. */
-  at: number
-  /** Where the cord passes the square: its centre, or the middle of its bend. */
-  x: number
-  y: number
-  turn: boolean
-}
-
 /**
- * The cord's line round the loop, rounding every turn, and where it passes
- * each square. Straight squares are passed through their centre; at a turn
- * the cord leaves the straight `BEND_OF_CELL` of a square before the centre
- * and sweeps round a quarter circle to the next side.
+ * The cord's line round the loop, rounding every turn. Straight squares are
+ * passed through their centre; at a turn the cord leaves the straight
+ * `BEND_OF_CELL` of a square before the centre and sweeps round a quarter
+ * circle to the next side.
  */
-export function pearlCord(plan: PearlPlan, n: number, links: readonly number[]): { line: Pt[]; stops: PearlStop[] } {
+export function pearlCord(plan: PearlPlan, n: number, links: readonly number[]): Pt[] {
   const order = pearlLoopOrder(n, links) ?? []
   const { grid, cell } = plan
   const bend = cell * BEND_OF_CELL
   const line: Pt[] = []
-  const stops: PearlStop[] = []
   const L = order.length
   const centre = (i: number): Pt => [grid.left + ((i % n) + 0.5) * cell, grid.top + (Math.floor(i / n) + 0.5) * cell]
   const dirOf = (a: number, b: number): Pt => {
@@ -213,7 +165,6 @@ export function pearlCord(plan: PearlPlan, n: number, links: readonly number[]):
     const [cx, cy] = centre(at)
     if (dx1 === dx2 && dy1 === dy2) {
       line.push([cx, cy])
-      stops.push({ at, x: cx, y: cy, turn: false })
       continue
     }
     // The bend's circle: centred `bend` back along the way in and `bend` on along the way out.
@@ -229,10 +180,8 @@ export function pearlCord(plan: PearlPlan, n: number, links: readonly number[]):
       const a = start + (sweep * s) / steps
       line.push([ox + bend * Math.cos(a), oy + bend * Math.sin(a)])
     }
-    const mid = start + sweep / 2
-    stops.push({ at, x: ox + bend * Math.cos(mid), y: oy + bend * Math.sin(mid), turn: true })
   }
-  return { line, stops }
+  return line
 }
 
 /* ------------------------------------------------------------------ *
@@ -319,23 +268,12 @@ export function buildPearlPuzzle(options: {
   // The squares, softly ruled.
   for (const bar of drawGridLines(grid, cell, size, size, tag, { fill: STUDIO_RULE_MEDIUM, thickness: STUDIO_STROKE_HAIRLINE })) parts.push(part(bar, 'rule'))
 
-  // The necklace, hidden until the answer page: the cord over the rules, a bead on every square between the pearls.
-  const { line, stops } = pearlCord(plan, n, links)
+  // The necklace, hidden until the answer page: one cord over the rules, and nothing else on it but the pearls.
   parts.push(
-    part(pathOf({ lines: [line], close: true, fill: 'transparent', strokeWidth: Math.max(3, r2(cell * CORD_OF_CELL)), tag, role: 'answer' }), 'cord', {
+    part(pathOf({ line: pearlCord(plan, n, links), fill: 'transparent', strokeWidth: Math.max(3, r2(cell * CORD_OF_CELL)), tag, role: 'answer' }), 'cord', {
       links: pearlAnswerKey(links),
     }),
   )
-  const beadRadius = r2(cell * BEAD_OF_CELL)
-  for (const stop of stops) {
-    if (isPearl(puzzle.cells[stop.at]!)) continue
-    parts.push(
-      part(pathOf({ lines: [circle(stop.x, stop.y, beadRadius, 20)], close: true, fill: STUDIO_PAPER, strokeWidth: STUDIO_STROKE_HAIRLINE, tag, role: 'answer' }), 'bead', {
-        row: Math.floor(stop.at / n),
-        col: stop.at % n,
-      }),
-    )
-  }
 
   // The pearls, over the cord, so on the answer page the necklace runs through them.
   const radius = pearlRadius(plan)
@@ -344,7 +282,7 @@ export function buildPearlPuzzle(options: {
     if (!isPearl(v)) continue
     const row = Math.floor(i / n)
     const col = i % n
-    parts.push(...pearlParts({ cx: grid.left + (col + 0.5) * cell, cy: grid.top + (row + 0.5) * cell, radius, color: v, tag, name: 'pearl', extra: { row, col } }))
+    parts.push(pearlPart({ cx: grid.left + (col + 0.5) * cell, cy: grid.top + (row + 0.5) * cell, radius, color: v, tag, name: 'pearl', extra: { row, col } }))
   }
 
   // The frame, flush inside the board's edge.
@@ -374,11 +312,11 @@ export function buildPearlPuzzle(options: {
   const iconRadius = icon / 2 - 1
   let x = legend.left
   let midY = rowMid(0)
-  parts.push(...pearlParts({ cx: x + icon / 2, cy: midY, radius: iconRadius, color: PEARL_WHITE, tag, name: 'legend-pearl' }))
+  parts.push(pearlPart({ cx: x + icon / 2, cy: midY, radius: iconRadius, color: PEARL_WHITE, tag, name: 'legend-pearl' }))
   parts.push(words(PEARL_WHITE_WORD, x + icon + PEARL_LEGEND_ICON_GAP, midY, 'white'))
   if (plan.legendRows === 1) x += whiteItem + PEARL_LEGEND_ITEM_GAP
   else midY = rowMid(1)
-  parts.push(...pearlParts({ cx: x + icon / 2, cy: midY, radius: iconRadius, color: PEARL_BLACK, tag, name: 'legend-pearl' }))
+  parts.push(pearlPart({ cx: x + icon / 2, cy: midY, radius: iconRadius, color: PEARL_BLACK, tag, name: 'legend-pearl' }))
   parts.push(words(PEARL_BLACK_WORD, x + icon + PEARL_LEGEND_ICON_GAP, midY, 'black'))
 
   const top = plan.block.top

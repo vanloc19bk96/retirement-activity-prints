@@ -112,9 +112,9 @@ const hiddenAnswer = (o: StudioFabricObject) => o.visible === false && o.studioR
  * The drawn page, checked against the field it was drawn from: every post,
  * row by row; every number in its square, and no other; the finished fence
  * waiting, hidden, as one rail running exactly the answer's rails with a
- * post on every post it passes, the pasture washed inside it and a tuft on
- * exactly its squares free of a number; the board naming the pasture; and
- * the legend showing the sample square and the closed fence.
+ * post on every post it passes and the pasture washed inside it; the board
+ * naming the pasture; and the legend showing the sample square and the
+ * closed fence.
  */
 export function checkFenceDrawnPage(options: { puzzle: StudioFabricObject; built: FenceBuilt; pasture: FencePasture }): string[] {
   const { puzzle: group, built, pasture } = options
@@ -122,7 +122,6 @@ export function checkFenceDrawnPage(options: { puzzle: StudioFabricObject; built
   const n = puzzle.size
   const errors: string[] = []
   const numbers = new Map<number, number>()
-  const tufts = new Set<number>()
   const dotRows = new Map<number, number>()
   const fences: string[] = []
   const posts: number[] = []
@@ -140,15 +139,11 @@ export function checkFenceDrawnPage(options: { puzzle: StudioFabricObject; built
     } else if (role === 'dots') {
       dotRows.set(Number(o.data?.row), Number(o.data?.dots))
       if (o.visible === false) errors.push('A post is hidden on the puzzle page.')
-    } else if (role === 'fence' || role === 'posts' || role === 'pasture' || role === 'tuft') {
+    } else if (role === 'fence' || role === 'posts' || role === 'pasture') {
       if (!hiddenAnswer(o)) errors.push('The finished fence shows on the puzzle page.')
       if (role === 'fence') fences.push(String(o.data?.rails))
       else if (role === 'posts') posts.push(Number(o.data?.posts))
-      else if (role === 'pasture') pastures++
-      else {
-        if (tufts.has(at)) errors.push('A tuft is drawn twice.')
-        tufts.add(at)
-      }
+      else pastures++
     } else if (role === 'sign-text') sign = o
     else if (role === 'legend-text') legendWords.push(String(o.data?.entry))
     else if (role === 'legend-number') legendNumber = true
@@ -162,9 +157,6 @@ export function checkFenceDrawnPage(options: { puzzle: StudioFabricObject; built
   const order = fenceLoopOrder(n, rails) ?? []
   if (posts.length !== 1 || posts[0] !== order.length) errors.push('The fence posts do not stand on the fence.')
   if (pastures !== 1) errors.push('The pasture is not washed in.')
-  const land = fenceInside(n, rails)
-  const tuftsWanted = puzzle.clues.flatMap((v, s) => (land[s] && v === FENCE_BLANK ? [s] : []))
-  if (tufts.size !== tuftsWanted.length || tuftsWanted.some((s) => !tufts.has(s))) errors.push('The grass is not on the pasture’s squares.')
 
   const labelled = sign as StudioFabricObject | null
   if (!labelled || String(labelled.text).replace('\n', ' ') !== fenceSignText(pasture)) errors.push('The board does not name the pasture.')

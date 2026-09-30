@@ -1,7 +1,7 @@
 import type { StudioFabricObject } from '@/types/studio-template.types'
 import type { Box } from '../studio-layout'
 import { LAMP_HOMES, lampLevelSpec, lampSignText, type LampBookEntry, type LampHome, type LampLevel } from './content'
-import { LAMP_PART_KEY, lampArms, lampLegendBox, lampSignBox } from './draw'
+import { LAMP_PART_KEY, lampLegendBox, lampSignBox } from './draw'
 import { LAMP_NUMBER_MIN, LAMP_SIGN_GAP_MIN, LAMP_SIGN_MIN, LAMP_SIGN_PAD_X, lampSignSpec, lampTextWidth, type LampPlan } from './layout'
 import { lampFloorConnected, lampSignature, lampWallBlock, type LampBuilt } from './puzzle'
 import { LAMP_FLOOR, isLampNumber, isLampSolution, lampAnswerKey, lampWellFormed, solveLamp } from './solver'
@@ -106,9 +106,9 @@ const hiddenAnswer = (o: StudioFabricObject) => o.visible === false && o.studioR
 /**
  * The drawn page, checked against the house it was drawn from: every wall
  * on its square and no other, every number on its wall, the frame, the lit
- * house waiting, hidden, with a lamp (bulb, base, rays and halo) on exactly
- * every square of the answer and a beam for every stretch of light each
- * lamp throws, the board naming the home, and the legend counting the lamps.
+ * house waiting, hidden, with a lamp (bulb, base and rays) on exactly every
+ * square of the answer and nothing else over the floor, the board naming
+ * the home, and the legend counting the lamps.
  */
 export function checkLampDrawnPage(options: { puzzle: StudioFabricObject; built: LampBuilt; home: LampHome }): string[] {
   const { puzzle: group, built, home } = options
@@ -119,7 +119,6 @@ export function checkLampDrawnPage(options: { puzzle: StudioFabricObject; built:
   const numbers = new Map<number, number>()
   const bulbs = new Set<number>()
   const pieces = new Map<string, number>()
-  const beams: string[] = []
   let frame = 0
   let sign: StudioFabricObject | null = null
   let legendLamps: number | null = null
@@ -135,12 +134,12 @@ export function checkLampDrawnPage(options: { puzzle: StudioFabricObject; built:
       numbers.set(at, Number(o.text))
       if (o.visible === false) errors.push('A number is hidden on the puzzle page.')
     } else if (role === 'frame') frame++
-    else if (role === 'lamp' || role === 'lamp-base' || role === 'lamp-rays' || role === 'halo' || role === 'beam') {
+    else if (role === 'lamp' || role === 'lamp-base' || role === 'lamp-rays') {
       if (!hiddenAnswer(o)) errors.push('The lit house shows on the puzzle page.')
       if (role === 'lamp') bulbs.add(at)
-      if (role === 'beam') beams.push(`${at}:${o.data?.dir}:${o.data?.reach}`)
-      else pieces.set(role, (pieces.get(role) ?? 0) + 1)
-    } else if (role === 'sign-text') sign = o
+      pieces.set(role, (pieces.get(role) ?? 0) + 1)
+    } else if (o.studioRole === 'answer') errors.push('The answer page draws more than the lamps.')
+    else if (role === 'sign-text') sign = o
     else if (role === 'legend-text' && o.data?.lamps !== undefined) legendLamps = Number(o.data.lamps)
     else if (role === 'legend-number') legendSample++
   })
@@ -152,9 +151,7 @@ export function checkLampDrawnPage(options: { puzzle: StudioFabricObject; built:
   if (frame !== 4) errors.push('The house’s frame is not drawn.')
 
   if (bulbs.size !== lamps.length || lamps.some((i) => !bulbs.has(i))) errors.push('The answer’s lamps are not where the answer puts them.')
-  for (const piece of ['lamp', 'lamp-base', 'lamp-rays', 'halo']) if (pieces.get(piece) !== lamps.length) errors.push('A lamp on the answer page is not drawn whole.')
-  const beamsWanted = lampArms(puzzle, lamps).map((a) => `${a.at}:${a.dir}:${a.reach}`)
-  if (beams.sort().join(' ') !== beamsWanted.sort().join(' ')) errors.push('The beams do not follow the lamps’ light.')
+  for (const piece of ['lamp', 'lamp-base', 'lamp-rays']) if (pieces.get(piece) !== lamps.length) errors.push('A lamp on the answer page is not drawn whole.')
 
   const labelled = sign as StudioFabricObject | null
   if (!labelled || String(labelled.text).replace('\n', ' ') !== lampSignText(home)) errors.push('The board does not name the home.')

@@ -60,7 +60,7 @@ function errorPage(ctx: StudioGenerateContext, config: StudioConfig, tag: Studio
 }
 
 /**
- * One Stepping Stones page, and the answer page with the walk traced.
+ * One Stepping Stones page, and the answer page with every number written in.
  *
  * Planned, built, proven, drawn, checked. The trim alone fixes how large
  * the stones print, so the form's help line is what prints. The walk's name
@@ -71,8 +71,7 @@ function errorPage(ctx: StudioGenerateContext, config: StudioConfig, tag: Studio
  * level's own logic on exactly that walk and not by easier steps alone
  * where the level asks for more, large print, on the page, not a repeat)
  * and the drawn check (every stone and printed number in place, every other
- * number waiting on its own stone, the trail along exactly the answer's
- * walk, the start and finish ringed). A path that fails anywhere is set
+ * number waiting on its own stone, the start and finish ringed). A path that fails anywhere is set
  * aside and another built; if none passes, the page says so plainly instead
  * of printing a path a reader cannot finish.
  */
@@ -114,7 +113,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
         pageRole: 'single',
         objects: [...header.objects, puzzle],
         // Drawn afresh for the key, where the puzzle page put it: only the
-        // how-to line goes, and the walk is traced.
+        // how-to line goes, and the missing numbers are written in.
         answerSourceObjects: [...drawHeader(stonesContentBox(ctx), config, tag, '').objects, draw()],
       },
     ]
@@ -127,7 +126,7 @@ export const steppingStonesTemplate: StudioTemplateDefinition = {
   label: 'Stepping Stones: Walk the Path',
   category: 'logic',
   description:
-    'The number-path puzzle loved in the Sunday papers, laid out as a retiree’s favorite stroll: write 1 to the last number on the stepping stones so each number sits next to the one before it, across or down, and the walk visits every stone once. Every path is built fresh, proven to have one answer reached by logic alone, and named for a walk worth taking, such as the Rose Garden Path, a Seaside Boardwalk or the Grandkids’ Nature Walk. Three levels, large print, and an answer page where the numbers become a garden trail winding from the start stone to the finish.',
+    'The number-path puzzle loved in the Sunday papers, laid out as a retiree’s favorite stroll: write 1 to the last number on the stepping stones so each number sits next to the one before it, across or down, and the walk visits every stone once. Every path is built fresh, proven to have one answer reached by logic alone, and named for a walk worth taking, such as the Rose Garden Path, a Seaside Boardwalk or the Grandkids’ Nature Walk. Three levels, large print, and an answer page with every number written in on its stone, clear and easy to check.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: STONES_DEFAULT_TITLE,

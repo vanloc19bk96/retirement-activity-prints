@@ -31,7 +31,7 @@ import {
   stonesSignText,
   type StonesLevel,
 } from './content'
-import { STONES_PART_KEY, STONES_TRAIL_FILL, buildStonesPuzzle, stonesCentre, stonesStoneBox, stonesTrailShapes } from './draw'
+import { STONES_PART_KEY, buildStonesPuzzle, stonesStoneBox } from './draw'
 import { checkStonesDrawnPage, runStonesKdpPreflight } from './kdp-preflight'
 import { STONES_DIGIT_MIN, STONES_SIGN_GAP_MIN, planStonesPage, stonesContentBox, stonesPanelInBody, stonesPrintNote } from './layout'
 import {
@@ -437,7 +437,7 @@ describe('stepping stones pages', () => {
     }
   })
 
-  it('keeps every number inside its stone, and the trail on the stones’ centres', () => {
+  it('keeps every number inside its stone', () => {
     const plan = planStonesPage(panelFor(kdpCtx(5.5, 8.5), 'challenging'), 'challenging', FONT)!
     const built = builtFor('challenging')
     const puzzle = buildStonesPuzzle({ built, plan, walk: STONES_WALKS[0]!, level: 'challenging', label: 'x', tag, font: FONT })
@@ -458,21 +458,6 @@ describe('stepping stones pages', () => {
       }
     }
     expect(checked).toBe(81)
-    // The trail's bands join neighbouring centres; its discs sit on centres.
-    const order = stonesPathOrder(9, built.values)!
-    const shapes = stonesTrailShapes(plan, order)
-    const centres = new Set(order.map((s) => stonesCentre(plan, Math.floor(s / 9), s % 9).join(',')))
-    const discs = shapes.filter((sh) => sh.length > 4)
-    expect(discs.length).toBeGreaterThanOrEqual(2)
-    for (const disc of discs) {
-      const cx = disc.reduce((sum, [x]) => sum + x, 0) / disc.length
-      const cy = disc.reduce((sum, [, y]) => sum + y, 0) / disc.length
-      expect(centres.has([Math.round(cx * 100) / 100, Math.round(cy * 100) / 100].join(',')) || [...centres].some((c) => {
-        const [x, y] = c.split(',').map(Number)
-        return Math.abs(x! - cx) < 0.01 && Math.abs(y! - cy) < 0.01
-      })).toBe(true)
-    }
-    expect(shapes.length - discs.length).toBe(discs.length - 1)
   })
 
   it('stacks the legend rather than shrinking the path on a narrow panel', () => {
@@ -530,10 +515,14 @@ describe('stepping stones pages', () => {
     const answers = partsOf(puzzle, 'answer')
     expect(givens.length + answers.length).toBe(64)
     expect(answers.every((t) => t.visible === false && t.studioRole === 'answer' && Number(t.fontWeight) === 400)).toBe(true)
-    const [trail] = partsOf(puzzle, 'trail')
-    expect(partsOf(puzzle, 'trail')).toHaveLength(1)
-    expect(trail!.visible).toBe(false)
-    expect(trail!.studioRole).toBe('answer')
+    // Nothing but the missing numbers waits for the answer page.
+    const hidden: StudioFabricObject[] = []
+    const visit = (o: StudioFabricObject) => {
+      if (o.studioRole === 'answer') hidden.push(o)
+      o.objects?.forEach(visit)
+    }
+    visit(puzzle)
+    expect(hidden).toEqual(answers)
     // The start and finish stones are ringed twice on the puzzle page.
     const ends = partsOf(puzzle, 'end')
     expect(ends).toHaveLength(4)
@@ -542,16 +531,14 @@ describe('stepping stones pages', () => {
     expect(['legend-stones', 'legend-end', 'legend-number'].flatMap((name) => partsOf(puzzle, name)).every((o) => o.visible !== false)).toBe(true)
   })
 
-  it('traces the walk as a gray trail on the answer page, every number written in, without the how-to line', () => {
+  it('writes every number in on the answer page, with no path drawn over them and without the how-to line', () => {
     const out = generate(base, kdpCtx(8.5, 11))
     const answers = out.flatMap((p) => harvestAnswers(p.objects))
     expect(answers.length).toBeGreaterThan(0)
     const key = buildAnswerKeyFromOutputs(out, STUDIO_INK)
     const puzzle = puzzleOf(key)!
-    const [trail] = partsOf(puzzle, 'trail')
-    expect(trail!.visible).toBe(true)
-    expect(trail!.fill).toBe(STONES_TRAIL_FILL)
-    expect(trail!.strokeWidth).toBe(0)
+    expect(partsOf(puzzle, 'trail')).toHaveLength(0)
+    expect(puzzle.objects!.every((o) => o.type !== 'path' || o.fill === 'transparent')).toBe(true)
     const written = partsOf(puzzle, 'answer')
     expect(written.every((t) => t.visible === true && t.fill === STUDIO_INK)).toBe(true)
     // The numbers on the key make one walk that keeps every printed number.
@@ -559,10 +546,8 @@ describe('stepping stones pages', () => {
     const values = new Array<number>(n * n).fill(0)
     for (const t of [...partsOf(puzzle, 'given'), ...written]) values[Number(t.data?.row) * n + Number(t.data?.col)] = Number(t.text)
     expect(stonesIsPath(n, values)).toBe(true)
-    expect(String(trail!.data?.walk)).toBe(stonesPathOrder(n, values)!.join(','))
-    // The trail under the stones, the numbers on top.
+    // The stones, then their rings, the numbers on top.
     const names = puzzle.objects!.map((o) => String(o.data?.[STONES_PART_KEY]))
-    expect(names.indexOf('trail')).toBeLessThan(names.indexOf('stones'))
     expect(names.lastIndexOf('stones')).toBeLessThan(names.indexOf('end'))
     expect(names.lastIndexOf('end')).toBeLessThan(Math.min(names.indexOf('given'), names.indexOf('answer')))
     const howTo = stonesHowTo('classic')
@@ -647,13 +632,13 @@ describe('stepping stones preflight', () => {
     expect(run({ plan: { ...plan, digitSize: 14 } })).toMatch(/below 16 pt/)
   })
 
-  it('catches a drawn page whose numbers or trail do not match', () => {
+  it('catches a drawn page whose numbers do not match', () => {
     const puzzle = buildStonesPuzzle({ built, plan, walk, level: 'classic', label: 'x', tag, font: FONT })
     expect(checkStonesDrawnPage({ puzzle, built, walk })).toEqual([])
     const other = builtFor('classic', 4)
     const errors = checkStonesDrawnPage({ puzzle, built: other, walk }).join(' ')
     expect(errors).toMatch(/printed numbers/)
-    expect(errors).toMatch(/trail|written-in/)
+    expect(errors).toMatch(/written-in/)
     expect(checkStonesDrawnPage({ puzzle, built, walk: STONES_WALKS[5]! }).join(' ')).toMatch(/name the walk/)
   })
 })

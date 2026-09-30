@@ -108,9 +108,9 @@ function walkTree(obj: StudioFabricObject, visit: (o: StudioFabricObject) => voi
 /**
  * The drawn page, checked against the path it was drawn from: every stone,
  * row by row; every printed number bold on its stone, and no other; every
- * other number waiting, hidden, on its own stone; the trail waiting, hidden,
- * along exactly the answer's walk; the start and finish ringed; the
- * signpost naming the walk; and the legend showing the pair and the start.
+ * other number waiting, hidden, on its own stone; the start and finish
+ * ringed; the signpost naming the walk; and the legend showing the pair and
+ * the start.
  */
 export function checkStonesDrawnPage(options: { puzzle: StudioFabricObject; built: StonesBuilt; walk: StonesWalk }): string[] {
   const { puzzle: group, built, walk } = options
@@ -121,7 +121,6 @@ export function checkStonesDrawnPage(options: { puzzle: StudioFabricObject; buil
   const givens = new Map<number, number>()
   const answers = new Map<number, number>()
   const stoneRows = new Map<number, number>()
-  const trails: string[] = []
   const ends = new Map<number, number>()
   let sign: StudioFabricObject | null = null
   const legendWords: string[] = []
@@ -141,9 +140,6 @@ export function checkStonesDrawnPage(options: { puzzle: StudioFabricObject; buil
     } else if (role === 'stones') {
       stoneRows.set(Number(o.data?.row), Number(o.data?.stones))
       if (o.visible === false) errors.push('A stone is hidden on the puzzle page.')
-    } else if (role === 'trail') {
-      if (o.visible !== false || o.studioRole !== 'answer') errors.push('The trail shows on the puzzle page.')
-      trails.push(String(o.data?.walk))
     } else if (role === 'end') {
       if (o.data?.ring === 'outer') ends.set(Number(o.data?.n), at)
     } else if (role === 'sign-text') sign = o
@@ -158,7 +154,6 @@ export function checkStonesDrawnPage(options: { puzzle: StudioFabricObject; buil
   if (stoneRows.size !== n || [...stoneRows.values()].some((k) => k !== n)) errors.push('The stones are not all drawn.')
 
   const order = stonesPathOrder(n, values) ?? []
-  if (trails.length !== 1 || trails[0] !== order.join(',')) errors.push('The trail does not follow the answer’s walk.')
   if (ends.size !== 2 || ends.get(1) !== order[0] || ends.get(N) !== order[N - 1]) errors.push('The start and finish are not ringed.')
 
   const labelled = sign as StudioFabricObject | null

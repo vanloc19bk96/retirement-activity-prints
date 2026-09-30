@@ -115,7 +115,6 @@ export function checkCfDrawnPage(options: { puzzle: StudioFabricObject; built: C
   let frame = 0
   const shown = new Map<number, string>()
   const hulls: string[] = []
-  let portholes = 0
   let sign: StudioFabricObject | null = null
   const legendWords: string[] = []
   let legendShips = 0
@@ -131,9 +130,6 @@ export function checkCfDrawnPage(options: { puzzle: StudioFabricObject; built: C
       if (o.visible === false || o.studioRole === 'answer') errors.push('A shown square is hidden on the puzzle page.')
     } else if (role === 'ship') {
       hulls.push(String(o.data?.squares))
-      if (o.visible !== false || o.studioRole !== 'answer') errors.push('A ship shows on the puzzle page.')
-    } else if (role === 'ship-portholes') {
-      portholes++
       if (o.visible !== false || o.studioRole !== 'answer') errors.push('A ship shows on the puzzle page.')
     } else if (role === 'sign-text') sign = o
     else if (role === 'legend-text') legendWords.push(String(o.text))
@@ -157,7 +153,6 @@ export function checkCfDrawnPage(options: { puzzle: StudioFabricObject; built: C
 
   const expected = ships.map((s) => cfShipSquares(s, n).join('.')).sort()
   if (hulls.sort().join(' ') !== expected.join(' ')) errors.push('The answer’s ships are off their squares.')
-  if (portholes !== ships.filter((s) => s.length > 1).length) errors.push('A ship on the answer page has no portholes.')
 
   const signed = sign as StudioFabricObject | null
   if (!signed || String(signed.text).replace('\n', ' ') !== cfSignText(harbor)) errors.push('The sign does not name the harbor.')

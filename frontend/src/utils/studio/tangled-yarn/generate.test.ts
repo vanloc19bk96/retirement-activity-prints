@@ -436,7 +436,7 @@ describe('tangled-yarn pages', () => {
     expect(small[0]!.objects.some((o) => /too small/.test(String(o.text ?? '')))).toBe(true)
   })
 
-  it('draws the tag, every ball with its letter and tail, the grid, and a hidden strand for every pair', () => {
+  it('draws the tag, every ball with its letter and no tail, the grid, and a hidden strand for every pair', () => {
     const pages = generate(base, kdpCtx(8.5, 11))
     const puzzle = puzzleOf(pages[0]!.objects)!
     const [id, level, signature] = String(puzzle.data?.[STUDIO_CONTENT_LABEL_KEY]).split('|')
@@ -446,7 +446,8 @@ describe('tangled-yarn pages', () => {
     expect(partsOf(puzzle, 'sign-text')[0]!.text).toBe(tySignText(project))
     const pairs = Number(puzzle.data?.pairs)
     expect(partsOf(puzzle, 'ball')).toHaveLength(pairs * 2)
-    expect(partsOf(puzzle, 'ball-tail')).toHaveLength(pairs * 2)
+    expect(partsOf(puzzle, 'ball-tail')).toHaveLength(0)
+    expect(partsOf(puzzle, 'legend-ball-tail')).toHaveLength(0)
     expect(partsOf(puzzle, 'rule')).toHaveLength(18)
     const letters = partsOf(puzzle, 'ball-letter').map((t) => String(t.text))
     for (let k = 1; k <= pairs; k++) expect(letters.filter((l) => l === tyLetter(k))).toHaveLength(2)

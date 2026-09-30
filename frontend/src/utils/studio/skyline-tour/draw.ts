@@ -1,5 +1,5 @@
 import type { StudioFabricObject, StudioRole } from '@/types/studio-template.types'
-import { STUDIO_DIGIT_FONT, STUDIO_INK, STUDIO_PAPER, STUDIO_RULE_MEDIUM, STUDIO_STROKE_HAIRLINE, STUDIO_STROKE_NORMAL } from '@/constants/studio.constants'
+import { STUDIO_DIGIT_FONT, STUDIO_INK, STUDIO_RULE_MEDIUM, STUDIO_STROKE_HAIRLINE, STUDIO_STROKE_NORMAL } from '@/constants/studio.constants'
 import { STUDIO_CANONICAL_KEY } from '../_shared/uniqueness'
 import { buildGroup, buildRect, buildText, nextObjectId, type StudioTag } from '../studio-fabric-builders'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
@@ -30,34 +30,20 @@ import { skyClueSide } from './solver'
 /**
  * A planned city → one Fabric group: the skyline's name board, the softly
  * ruled plots with their given heights, the clues standing round the city,
- * the heavy frame, the finished skyline hidden for the answer page, and the
+ * the heavy frame, the answer's heights hidden for the answer page, and the
  * legend.
  *
- * The puzzle page is black on white — nothing on the plots but the lines
- * and the few given heights, so pencilled numbers read clearly. On the
- * answer page every plot raises its building: a pale gray tower standing on
- * the plot's foot, as tall as its height (the tallest in every row and
- * column crowned with a spire), windows up both sides and a door where
- * there is room, and its height in bold on the facade under the roof — the
- * city seen at a glance. Grays only, so it prints the same on any interior.
+ * Black on white, nothing on the plots but the lines and the numbers, so
+ * pencilled heights read clearly. On the answer page every open plot shows
+ * its height, a plain digit in the middle of the plot as large as the
+ * givens, which stay bold as on the puzzle page.
  */
 
 /** Marks the objects a Skyline Tour page draws, for checks and the editor. */
 export const SKY_PART_KEY = 'skyPart'
 
-/** The buildings: a pale gray, so the black height on the facade reads clearly. */
-export const SKY_BUILDING_FILL = '#DADADA'
-
-/** Where a building stands in its plot: its foot, its sides, and its roof for the shortest and the tallest. */
-const FOOT = 0.88
-const SIDE_L = 0.2
-const SIDE_R = 0.8
-const SHORTEST = 0.46
-const TALLEST = 0.76
-/** The spire over the tallest building, up to this far from the plot's top. */
-const SPIRE_TOP = 0.04
-/** Air under the roof before the height, as a share of the plot. */
-const ROOF_AIR = 0.05
+/** The legend's little towers: a pale gray under a black outline. */
+const SKY_LEGEND_TOWER_FILL = '#DADADA'
 
 const r2 = (n: number) => Math.round(n * 100) / 100
 
@@ -67,20 +53,9 @@ function part(obj: StudioFabricObject, name: string, extra: Record<string, unkno
   return { ...obj, data: { ...(obj.data ?? {}), [SKY_PART_KEY]: name, ...extra } }
 }
 
-/**
- * One path of polylines in canvas px: filled closed shapes, or open strokes
- * with no fill. Answer paths start hidden; the answer key reveals them,
- * keeping their fill and inking their stroke.
- */
-function pathOf(options: {
-  lines: readonly (readonly Pt[])[]
-  close: boolean
-  fill: string
-  strokeWidth: number
-  tag: StudioTag
-  role: StudioRole
-}): StudioFabricObject {
-  const { lines, close, fill, strokeWidth, tag, role } = options
+/** One path of polylines in canvas px: filled closed shapes, or open strokes with no fill. */
+function pathOf(options: { lines: readonly (readonly Pt[])[]; close: boolean; fill: string; strokeWidth: number; tag: StudioTag }): StudioFabricObject {
+  const { lines, close, fill, strokeWidth, tag } = options
   const path: (string | number)[][] = []
   let minX = Infinity
   let minY = Infinity
@@ -118,9 +93,7 @@ function pathOf(options: {
     studioTemplateKey: tag.templateKey,
     studioInstanceId: tag.instanceId,
     studioPageRole: tag.pageRole,
-    studioRole: role,
-    // The skyline stays hidden on the puzzle page; the answer key reveals it.
-    ...(role === 'answer' ? { visible: false } : {}),
+    studioRole: 'prompt',
   }
 }
 
@@ -130,64 +103,6 @@ const rect = (x0: number, y0: number, x1: number, y1: number): Pt[] => [
   [x1, y1],
   [x0, y1],
 ]
-
-/* ------------------------------------------------------------------ *
- * A building, in a plot
- * ------------------------------------------------------------------ */
-
-export interface SkyBuildingShape {
-  /** The tower, foot to roof. */
-  body: Pt[]
-  /** Windows up both sides, in rows (none when the tower is too short). */
-  windows: Pt[][]
-  /** The door at the foot, when there is room under the height. */
-  door: Pt[] | null
-  /** The spire over the tallest building. */
-  spire: Pt[] | null
-  /** The centre of the height on the facade. */
-  label: readonly [number, number]
-}
-
-/** The roof of a building of `height` in a city of `size`, as a share of its plot from the top. */
-export const skyRoofOf = (height: number, size: number) => FOOT - (SHORTEST + ((TALLEST - SHORTEST) * (height - 1)) / Math.max(1, size - 1))
-
-/** A building of `height` in the plot `box`, its height set `labelSize` px tall under the roof. */
-export function skyBuildingShape(box: Box, height: number, size: number, labelSize: number): SkyBuildingShape {
-  const s = box.width
-  const at = (u: number, v: number): Pt => [box.left + u * s, box.top + v * box.height]
-  const roof = skyRoofOf(height, size)
-  const labelTop = roof + ROOF_AIR
-  const labelBottom = labelTop + labelSize / s
-  const body = [at(SIDE_L, FOOT), at(SIDE_L, roof), at(SIDE_R, roof), at(SIDE_R, FOOT)]
-
-  // Windows up both sides of the height: small panes, a row to a floor where there is room.
-  const windows: Pt[][] = []
-  const pane = 0.07
-  const pitch = 0.11
-  for (let top = roof + 0.08; top + pane <= FOOT - 0.07 + 1e-9; top += pitch) {
-    for (const [left, right] of [
-      [0.26, 0.34],
-      [0.66, 0.74],
-    ] as const) {
-      const [x0, y0] = at(left, top)
-      const [x1, y1] = at(right, top + pane)
-      windows.push(rect(x0, y0, x1, y1))
-    }
-  }
-
-  // A door at the foot, when it clears the height.
-  const doorTop = FOOT - 0.12
-  let door: Pt[] | null = null
-  if (doorTop >= labelBottom + 0.02) {
-    const [x0, y0] = at(0.44, doorTop)
-    const [x1, y1] = at(0.56, FOOT)
-    door = rect(x0, y0, x1, y1)
-  }
-
-  const spire = height === size ? [at(0.5, roof), at(0.5, SPIRE_TOP)] : null
-  const label = [box.left + 0.5 * s, box.top + (labelTop + labelSize / s / 2) * box.height] as const
-  return { body, windows, door, spire, label }
-}
 
 /* ------------------------------------------------------------------ *
  * Placement
@@ -216,14 +131,6 @@ export function skyLegendBox(plan: SkyPlan, font: string): Box {
   return { left: r2(left), top: plan.legendTop, width, height: plan.legendHeight }
 }
 
-/** A plot's box. */
-export const skyPlotBox = (plan: SkyPlan, row: number, col: number): Box => ({
-  left: plan.grid.left + col * plan.cell,
-  top: plan.grid.top + row * plan.cell,
-  width: plan.cell,
-  height: plan.cell,
-})
-
 /** The centre of clue `k`, in the band beside its row or column. */
 export function skyCluePoint(plan: SkyPlan, k: number): readonly [number, number] {
   const { side, along } = skyClueSide(plan.size, k)
@@ -244,8 +151,10 @@ function digitText(options: {
   role: StudioRole
   name: string
   extra: Record<string, unknown>
+  /** Bold for the clues and givens; the answer's heights set plain. */
+  bold?: boolean
 }): StudioFabricObject {
-  const { value, cx, cy, size, tag, role, name, extra } = options
+  const { value, cx, cy, size, tag, role, name, extra, bold = true } = options
   const text = String(value)
   const obj = buildText(
     {
@@ -254,7 +163,7 @@ function digitText(options: {
       text,
       fontFamily: STUDIO_DIGIT_FONT,
       fontSize: size,
-      fontWeight: 700,
+      fontWeight: bold ? 700 : 'normal',
       fill: STUDIO_INK,
       width: Math.max(Math.ceil(size * 1.1), skyTextWidth(text, size, skyDigitSpec())),
       textAlign: 'center',
@@ -280,7 +189,7 @@ function legendSkyline(box: Box, tag: StudioTag): StudioFabricObject[] {
     [0.66, 0.96, 1],
   ]
   const lines = towers.map(([u0, u1, tall]) => rect(box.left + u0 * w, box.top + h, box.left + u1 * w, box.top + (1 - tall) * h + 1))
-  return [part(pathOf({ lines, close: true, fill: SKY_BUILDING_FILL, strokeWidth: STUDIO_STROKE_HAIRLINE, tag, role: 'prompt' }), 'legend-skyline')]
+  return [part(pathOf({ lines, close: true, fill: SKY_LEGEND_TOWER_FILL, strokeWidth: STUDIO_STROKE_HAIRLINE, tag }), 'legend-skyline')]
 }
 
 /** The legend's sample clue: the number, and an arrow looking in. */
@@ -290,7 +199,7 @@ function legendArrow(box: Box, tag: StudioTag): StudioFabricObject[] {
   const x1 = box.left + box.width * 0.96
   const head = box.height * 0.2
   return [
-    part(pathOf({ lines: [[[x0, midY], [x1 - head, midY]]], close: false, fill: 'transparent', strokeWidth: STUDIO_STROKE_NORMAL, tag, role: 'prompt' }), 'legend-arrow'),
+    part(pathOf({ lines: [[[x0, midY], [x1 - head, midY]]], close: false, fill: 'transparent', strokeWidth: STUDIO_STROKE_NORMAL, tag }), 'legend-arrow'),
     part(
       pathOf({
         lines: [
@@ -304,7 +213,6 @@ function legendArrow(box: Box, tag: StudioTag): StudioFabricObject[] {
         fill: STUDIO_INK,
         strokeWidth: STUDIO_STROKE_HAIRLINE,
         tag,
-        role: 'prompt',
       }),
       'legend-arrow',
     ),
@@ -320,12 +228,10 @@ export function buildSkyPuzzle(options: {
   label: string
   tag: StudioTag
   font: string
-  /** The answer page's drawing: the given heights stand on their buildings' facades with the rest. */
-  key?: boolean
 }): StudioFabricObject {
-  const { built, plan, city, level, label, tag, font, key = false } = options
+  const { built, plan, city, level, label, tag, font } = options
   const { puzzle, grid: answer } = built
-  const { grid, cell, size, digitSize, answerSize } = plan
+  const { grid, cell, size, digitSize } = plan
   const n = puzzle.size
   const parts: StudioFabricObject[] = []
 
@@ -367,37 +273,15 @@ export function buildSkyPuzzle(options: {
   // The plots' soft rules.
   for (const bar of drawGridLines(grid, cell, size, size, tag, { fill: STUDIO_RULE_MEDIUM, thickness: STUDIO_STROKE_HAIRLINE })) parts.push(part(bar, 'rule'))
 
-  // The skyline, hidden until the answer page: every plot's building, over the rules.
+  // Every plot's height in its middle: the givens bold, the rest plain and hidden until the answer page.
   for (let i = 0; i < n * n; i++) {
     const row = Math.floor(i / n)
     const col = i % n
-    const height = answer[i]!
-    const shape = skyBuildingShape(skyPlotBox(plan, row, col), height, n, answerSize)
-    const at = { row, col, height }
-    parts.push(part(pathOf({ lines: [shape.body], close: true, fill: SKY_BUILDING_FILL, strokeWidth: STUDIO_STROKE_HAIRLINE, tag, role: 'answer' }), 'building', at))
-    if (shape.windows.length > 0) {
-      parts.push(part(pathOf({ lines: shape.windows, close: true, fill: STUDIO_PAPER, strokeWidth: 0, tag, role: 'answer' }), 'windows', at))
-    }
-    if (shape.door) parts.push(part(pathOf({ lines: [shape.door], close: true, fill: STUDIO_INK, strokeWidth: 0, tag, role: 'answer' }), 'door', at))
-    if (shape.spire) parts.push(part(pathOf({ lines: [shape.spire], close: false, fill: 'transparent', strokeWidth: STUDIO_STROKE_NORMAL, tag, role: 'answer' }), 'spire', at))
-    const given = puzzle.givens[i]! > 0
-    if (!given) {
-      parts.push(digitText({ value: height, cx: shape.label[0], cy: shape.label[1], size: answerSize, tag, role: 'answer', name: 'height', extra: { row, col } }))
-    } else if (key) {
-      // On the answer page a given height stands on its facade like the rest.
-      parts.push(digitText({ value: height, cx: shape.label[0], cy: shape.label[1], size: answerSize, tag, role: 'prompt', name: 'given', extra: { row, col } }))
-    }
-  }
-
-  // The given heights, bold in the middle of their plots.
-  if (!key) {
-    for (let i = 0; i < n * n; i++) {
-      const value = puzzle.givens[i]!
-      if (value === 0) continue
-      const row = Math.floor(i / n)
-      const col = i % n
-      parts.push(digitText({ value, cx: grid.left + (col + 0.5) * cell, cy: grid.top + (row + 0.5) * cell, size: digitSize, tag, role: 'prompt', name: 'given', extra: { row, col } }))
-    }
+    const cx = grid.left + (col + 0.5) * cell
+    const cy = grid.top + (row + 0.5) * cell
+    const given = puzzle.givens[i]!
+    if (given > 0) parts.push(digitText({ value: given, cx, cy, size: digitSize, tag, role: 'prompt', name: 'given', extra: { row, col } }))
+    else parts.push(digitText({ value: answer[i]!, cx, cy, size: digitSize, tag, role: 'answer', name: 'height', extra: { row, col }, bold: false }))
   }
 
   // The clues, standing round the city.

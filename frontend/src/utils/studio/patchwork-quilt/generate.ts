@@ -125,7 +125,7 @@ export const patchworkQuiltTemplate: StudioTemplateDefinition = {
   label: 'Patchwork Quilt: Piece the Patches',
   category: 'logic',
   description:
-    'The classic Shikaku puzzle, pieced for retirement: sew the quilt into rectangular patches so every patch holds exactly one number, and that number is how many squares it covers. Every quilt is pieced fresh, proven to have one answer reached by logic alone, and labelled with a retiree’s quilt, like Sunday Porch Quilt, Log Cabin Quilt or Grandkids’ Nap Quilt. Three levels, large print, and an answer page that turns the solution into a finished patchwork quilt of prints, stitches and buttons.',
+    'The classic Shikaku puzzle, pieced for retirement: sew the quilt into rectangular patches so every patch holds exactly one number, and that number is how many squares it covers. Every quilt is pieced fresh, proven to have one answer reached by logic alone, and labelled with a retiree’s quilt, like Sunday Porch Quilt, Log Cabin Quilt or Grandkids’ Nap Quilt. Three levels, large print, and an answer page that turns the solution into a finished patchwork quilt in plain grays.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: PQ_DEFAULT_TITLE,

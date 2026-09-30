@@ -60,7 +60,7 @@ function errorPage(ctx: StudioGenerateContext, config: StudioConfig, tag: Studio
 }
 
 /**
- * One Skyline Tour page, and the answer page with the skyline raised.
+ * One Skyline Tour page, and the answer page with every height filled in.
  *
  * Planned, built, proven, drawn, checked. The trim alone fixes how large
  * the city prints, so the form's help line is what prints. The skyline's
@@ -70,8 +70,8 @@ function errorPage(ctx: StudioGenerateContext, config: StudioConfig, tag: Studio
  * every row and column, every clue kept, finished by the level's own logic
  * on exactly that answer and not by easier steps alone where the level
  * asks for more, large print, on the page, not a repeat) and the drawn
- * check, on the puzzle page and the answer page alike (every clue and
- * given plot in place, a building of the right height on every plot). A
+ * check (every clue and given plot in place, the answer's height hidden
+ * on every other plot, the same drawing the answer page reveals). A
  * city that fails anywhere is set aside and another built; if none passes,
  * the page says so plainly instead of printing a city a reader cannot
  * finish.
@@ -104,11 +104,9 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
     if (!runSkyKdpPreflight({ built, plan, level, city, panel, font, book }).ok) continue
 
     const label = skyPageLabel(city, level, built.signature)
-    const draw = (key: boolean) => buildSkyPuzzle({ built, plan, city, level, label, tag, font, key })
-    const puzzle = draw(false)
+    const draw = () => buildSkyPuzzle({ built, plan, city, level, label, tag, font })
+    const puzzle = draw()
     if (checkSkyDrawnPage({ puzzle, built, city }).length > 0) continue
-    const answer = draw(true)
-    if (checkSkyDrawnPage({ puzzle: answer, built, city }).length > 0) continue
 
     rememberStudioContent(VARIETY_KEY, [city.id])
     return [
@@ -116,8 +114,8 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
         pageRole: 'single',
         objects: [...header.objects, puzzle],
         // Drawn afresh for the key, where the puzzle page put it: only the
-        // how-to line goes, and every plot raises its building.
-        answerSourceObjects: [...drawHeader(skyContentBox(ctx), config, tag, '').objects, answer],
+        // how-to line goes, and every open plot shows its height.
+        answerSourceObjects: [...drawHeader(skyContentBox(ctx), config, tag, '').objects, draw()],
       },
     ]
   }
@@ -129,7 +127,7 @@ export const skylineTourTemplate: StudioTemplateDefinition = {
   label: 'Skyline Tour: Raise the Towers',
   category: 'logic',
   description:
-    'The classic Skyscrapers puzzle, set in the skylines of a retiree’s travels: fill the city with buildings so every row and column holds each height once, and a number outside says how many buildings you see from there, the taller hiding the shorter behind. Every city is built fresh, proven to have one answer reached by logic alone, and named for a skyline worth touring, such as Chicago Lakefront, Paris Left Bank, Sydney Harbour, the Hometown Main Street. Three levels, large print, and an answer page that raises the whole skyline: a building of the right height on every plot, with windows, a door, and a spire on the tallest.',
+    'The classic Skyscrapers puzzle, set in the skylines of a retiree’s travels: fill the city with buildings so every row and column holds each height once, and a number outside says how many buildings you see from there, the taller hiding the shorter behind. Every city is built fresh, proven to have one answer reached by logic alone, and named for a skyline worth touring, such as Chicago Lakefront, Paris Left Bank, Sydney Harbour, the Hometown Main Street. Three levels, large print, and an answer page that fills in every height in clear, large digits.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: SKY_DEFAULT_TITLE,

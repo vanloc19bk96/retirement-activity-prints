@@ -10,7 +10,7 @@ import { TY_LETTERS, TY_PROJECTS, TY_STRAND_WORD, tyBallWord, tyInstruction, tyL
  *
  * Top to bottom: the project's tag, the grid (softly ruled squares in a
  * heavy frame, with the yarn balls — white balls with a bold letter in the
- * middle and a short tail of yarn), and a legend (the ball the reader
+ * middle), and a legend (the ball the reader
  * is given with how many pairs, and the strand they draw). Squares are as
  * large as the trim allows (up to 0.8 in) and never below the level's
  * floor; the letters grow with them and never print below 16 pt. The page

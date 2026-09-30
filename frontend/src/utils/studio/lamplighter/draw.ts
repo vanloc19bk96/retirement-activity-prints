@@ -24,7 +24,7 @@ import {
   type LampPlan,
 } from './layout'
 import type { LampBuilt } from './puzzle'
-import { LAMP_FLOOR, isLampNumber, type LampPuzzle } from './solver'
+import { LAMP_FLOOR, isLampNumber } from './solver'
 
 /**
  * A planned house → one Fabric group: the home's name board, the softly
@@ -33,21 +33,13 @@ import { LAMP_FLOOR, isLampNumber, type LampPuzzle } from './solver'
  *
  * The puzzle page is black on white — nothing on the floor but the lines,
  * so pencilled lamps and dots read clearly. On the answer page every lamp
- * is a light bulb on a white halo, and its light runs along its row and
- * column as a soft gray beam that fades toward the wall that stops it, so
- * the reader sees at a glance how every square is lit. Grays only, so it
- * prints the same on any interior.
+ * is a light bulb on its square and nothing else is added, so the answer
+ * stays as plain to read as the puzzle. Black and white only, so it prints
+ * the same on any interior.
  */
 
 /** Marks the objects a Lamplighter page draws, for checks and the editor. */
 export const LAMP_PART_KEY = 'lampPart'
-
-/** The beams: a soft gray, wide at the lamp and fading toward the wall. */
-export const LAMP_BEAM_FILL = '#DADADA'
-const BEAM_NEAR = 0.13
-const BEAM_FAR = 0.045
-/** Beams stop this share of a square short of the wall or frame that stops them. */
-const BEAM_INSET = 0.08
 
 const r2 = (n: number) => Math.round(n * 100) / 100
 
@@ -114,12 +106,6 @@ function pathOf(options: {
   }
 }
 
-const circle = (cx: number, cy: number, r: number, steps = 24): Pt[] =>
-  Array.from({ length: steps }, (_, k) => {
-    const a = (k / steps) * Math.PI * 2
-    return [cx + r * Math.cos(a), cy + r * Math.sin(a)] as const
-  })
-
 /* ------------------------------------------------------------------ *
  * The lamp, in a unit square
  * ------------------------------------------------------------------ */
@@ -171,62 +157,6 @@ export function lampIconParts(box: Box, tag: StudioTag, role: StudioRole, name: 
     part(pathOf({ lines: [inBox(box, GLASS)], close: true, fill: STUDIO_PAPER, strokeWidth: weight, tag, role }), name, extra),
     part(pathOf({ lines: [inBox(box, BASE)], close: true, fill: STUDIO_INK, strokeWidth: weight, tag, role }), `${name}-base`, extra),
     part(pathOf({ lines: RAYS.map((ray) => inBox(box, ray)), close: false, fill: 'transparent', strokeWidth: weight, tag, role }), `${name}-rays`, extra),
-  ]
-}
-
-/* ------------------------------------------------------------------ *
- * The light
- * ------------------------------------------------------------------ */
-
-export type LampArmDir = 'left' | 'right' | 'up' | 'down'
-
-export interface LampArm {
-  /** The lamp's square. */
-  at: number
-  dir: LampArmDir
-  /** How many squares past the lamp the light runs before a wall or the edge. */
-  reach: number
-}
-
-const STEP: Record<LampArmDir, readonly [number, number]> = { left: [0, -1], right: [0, 1], up: [-1, 0], down: [1, 0] }
-
-/** Every beam the lamps throw: each lamp's light along its row and column, both ways, up to the walls. */
-export function lampArms(puzzle: LampPuzzle, lamps: readonly number[]): LampArm[] {
-  const n = puzzle.size
-  const out: LampArm[] = []
-  for (const at of lamps) {
-    const r = Math.floor(at / n)
-    const c = at % n
-    for (const dir of ['left', 'right', 'up', 'down'] as const) {
-      const [dr, dc] = STEP[dir]
-      let reach = 0
-      for (let rr = r + dr, cc = c + dc; rr >= 0 && rr < n && cc >= 0 && cc < n && puzzle.cells[rr * n + cc] === LAMP_FLOOR; rr += dr, cc += dc) reach++
-      if (reach > 0) out.push({ at, dir, reach })
-    }
-  }
-  return out
-}
-
-/** One beam as a tapering band, from the lamp's centre to just short of what stops it. */
-function beamShape(plan: LampPlan, arm: LampArm, n: number): Pt[] {
-  const { grid, cell } = plan
-  const r = Math.floor(arm.at / n)
-  const c = arm.at % n
-  const cx = grid.left + (c + 0.5) * cell
-  const cy = grid.top + (r + 0.5) * cell
-  const [dr, dc] = STEP[arm.dir]
-  const length = (arm.reach + 0.5 - BEAM_INSET) * cell
-  const ex = cx + dc * length
-  const ey = cy + dr * length
-  const near = cell * BEAM_NEAR
-  const far = cell * BEAM_FAR
-  // Across the beam: perpendicular to its run.
-  const [px, py] = [Math.abs(dr), Math.abs(dc)]
-  return [
-    [cx + px * near, cy + py * near],
-    [ex + px * far, ey + py * far],
-    [ex - px * far, ey - py * far],
-    [cx - px * near, cy - py * near],
   ]
 }
 
@@ -356,18 +286,6 @@ export function buildLampPuzzle(options: {
   }
   for (const bar of drawGridLines(grid, cell, size, size, tag, { fill: STUDIO_RULE_MEDIUM, thickness: STUDIO_STROKE_HAIRLINE })) parts.push(part(bar, 'rule'))
 
-  // The light, hidden until the answer page: every beam, over the rules and under the lamps.
-  for (const arm of lampArms(puzzle, lamps)) {
-    parts.push(
-      part(pathOf({ lines: [beamShape(plan, arm, n)], close: true, fill: LAMP_BEAM_FILL, strokeWidth: 0, tag, role: 'answer' }), 'beam', {
-        row: Math.floor(arm.at / n),
-        col: arm.at % n,
-        dir: arm.dir,
-        reach: arm.reach,
-      }),
-    )
-  }
-
   // The numbers, bold and white on their walls.
   for (let i = 0; i < n * n; i++) {
     const value = puzzle.cells[i]!
@@ -377,13 +295,10 @@ export function buildLampPuzzle(options: {
     parts.push(numberText(value, grid.left + (col + 0.5) * cell, grid.top + (row + 0.5) * cell, numberSize, STUDIO_PAPER, tag, 'number', { row, col }))
   }
 
-  // The lamps, hidden until the answer page: each bulb on a white halo that clears the beams round it.
+  // The lamps, hidden until the answer page: each bulb on its own square.
   for (const at of lamps) {
     const row = Math.floor(at / n)
     const col = at % n
-    const cx = grid.left + (col + 0.5) * cell
-    const cy = grid.top + (row + 0.5) * cell
-    parts.push(part(pathOf({ lines: [circle(cx, cy, cell * 0.4, 28)], close: true, fill: STUDIO_PAPER, strokeWidth: 0, tag, role: 'answer' }), 'halo', { row, col }))
     parts.push(...lampIconParts(lampBox(plan, row, col), tag, 'answer', 'lamp', { row, col }))
   }
 

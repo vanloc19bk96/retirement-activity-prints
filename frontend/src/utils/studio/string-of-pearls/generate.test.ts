@@ -425,7 +425,7 @@ describe('string of pearls pages', () => {
     expect(small.cell).toBeGreaterThanOrEqual(Math.ceil(pearlLevelSpec('challenging').minCell))
   })
 
-  it('keeps every pearl, its shine and every bead inside its square at the smallest squares', () => {
+  it('keeps every pearl inside its square at the smallest squares', () => {
     const plan = planPearlPage(panelFor(kdpCtx(5.5, 8.5), 'challenging'), 'challenging', FONT)!
     const built = builtFor('challenging')
     const puzzle = buildPearlPuzzle({ built, plan, necklace: PEARL_NECKLACES[0]!, level: 'challenging', label: 'x', tag, font: FONT })
@@ -433,26 +433,23 @@ describe('string of pearls pages', () => {
     const dx = puzzle.left + puzzle.width! / 2
     const dy = puzzle.top + puzzle.height! / 2
     let checked = 0
-    for (const name of ['pearl', 'pearl-shine', 'bead']) {
-      for (const o of partsOf(puzzle, name)) {
-        const cellLeft = plan.grid.left + Number(o.data?.col) * plan.cell
-        const cellTop = plan.grid.top + Number(o.data?.row) * plan.cell
-        expect(o.left + dx - o.width! / 2).toBeGreaterThanOrEqual(cellLeft - 0.5)
-        expect(o.left + dx + o.width! / 2).toBeLessThanOrEqual(cellLeft + plan.cell + 0.5)
-        expect(o.top + dy - o.height! / 2).toBeGreaterThanOrEqual(cellTop - 0.5)
-        expect(o.top + dy + o.height! / 2).toBeLessThanOrEqual(cellTop + plan.cell + 0.5)
-        checked++
-      }
+    for (const o of partsOf(puzzle, 'pearl')) {
+      const cellLeft = plan.grid.left + Number(o.data?.col) * plan.cell
+      const cellTop = plan.grid.top + Number(o.data?.row) * plan.cell
+      expect(o.left + dx - o.width! / 2).toBeGreaterThanOrEqual(cellLeft - 0.5)
+      expect(o.left + dx + o.width! / 2).toBeLessThanOrEqual(cellLeft + plan.cell + 0.5)
+      expect(o.top + dy - o.height! / 2).toBeGreaterThanOrEqual(cellTop - 0.5)
+      expect(o.top + dy + o.height! / 2).toBeLessThanOrEqual(cellTop + plan.cell + 0.5)
+      checked++
     }
-    const pearls = built.puzzle.cells.filter(isPearl).length
-    expect(checked).toBe(pearls * 2 + pearlLoopOrder(10, built.links)!.length - pearls)
+    expect(checked).toBe(built.puzzle.cells.filter(isPearl).length)
   })
 
   it('threads the cord through every square of the loop, rounding each turn inside its square', () => {
     const plan = planPearlPage(panelFor(kdpCtx(8.5, 11), 'gentle'), 'gentle', FONT)!
-    const { line, stops } = pearlCord(plan, 4, TOY.links)
-    expect(stops.map((s) => s.at)).toEqual(pearlLoopOrder(4, TOY.links))
-    expect(stops.filter((s) => s.turn).map((s) => s.at)).toEqual([0, 3, 15, 12])
+    const line = pearlCord(plan, 4, TOY.links)
+    // Eight straight squares through their centre, and four corners rounded in nine points each.
+    expect(line).toHaveLength(8 + 4 * 9)
     const { grid, cell } = plan
     for (const [x, y] of line) {
       expect(x).toBeGreaterThanOrEqual(grid.left + cell * 0.5 - 0.01)
@@ -513,11 +510,12 @@ describe('string of pearls pages', () => {
     expect(pearls.every((p) => p.visible !== false && p.stroke === STUDIO_INK)).toBe(true)
     expect(pearls.filter((p) => p.data?.color === 'white').every((p) => p.fill === STUDIO_PAPER)).toBe(true)
     expect(pearls.filter((p) => p.data?.color === 'black').every((p) => p.fill === STUDIO_INK)).toBe(true)
-    expect(partsOf(puzzle, 'pearl-shine')).toHaveLength(pearls.length)
-    const hidden = ['cord', 'bead'].flatMap((name) => partsOf(puzzle, name))
-    expect(partsOf(puzzle, 'cord')).toHaveLength(1)
-    expect(hidden.length).toBeGreaterThan(10)
-    expect(hidden.every((o) => o.visible === false && o.studioRole === 'answer' && o.type === 'path')).toBe(true)
+    // Plain pearls: nothing drawn inside them, and the cord alone waits for the answer page.
+    expect(partsOf(puzzle, 'pearl-shine')).toHaveLength(0)
+    expect(partsOf(puzzle, 'legend-pearl-shine')).toHaveLength(0)
+    const hidden = puzzle.objects!.filter((o) => o.studioRole === 'answer')
+    expect(hidden.map((o) => o.data?.[PEARL_PART_KEY])).toEqual(['cord'])
+    expect(hidden.every((o) => o.visible === false && o.type === 'path')).toBe(true)
     expect(partsOf(puzzle, 'legend-text').map((t) => t.text)).toEqual([PEARL_WHITE_WORD, PEARL_BLACK_WORD])
     // The legend's pearls are on show; only the necklace waits for the answer page.
     expect(partsOf(puzzle, 'legend-pearl').every((o) => o.visible !== false)).toBe(true)
@@ -533,20 +531,18 @@ describe('string of pearls pages', () => {
     expect(cord!.visible).toBe(true)
     expect(cord!.stroke).toBe(STUDIO_INK)
     expect(cord!.fill).toBe('transparent')
-    const beads = partsOf(puzzle, 'bead')
-    expect(beads.every((b) => b.visible === true && b.fill === STUDIO_PAPER && b.stroke === STUDIO_INK)).toBe(true)
+    // No beads: the answer is the cord and the pearls, nothing else.
+    expect(partsOf(puzzle, 'bead')).toHaveLength(0)
     // The cord on the key threads a finished necklace for the page's pearls.
     const n = 8
     const cells = new Array<number>(n * n).fill(PEARL_NONE)
     for (const p of partsOf(puzzle, 'pearl')) cells[Number(p.data?.row) * n + Number(p.data?.col)] = p.data?.color === 'white' ? PEARL_WHITE : PEARL_BLACK
     const links = String(cord!.data?.links).split(',').map(Number)
     expect(isPearlSolution({ size: n, cells }, links)).toBe(true)
-    expect(beads.length + partsOf(puzzle, 'pearl').length).toBe(pearlLoopOrder(n, links)!.length)
-    // The rules under the cord, the cord under the beads, and every pearl over the cord.
+    // The rules under the cord, and every pearl over the cord.
     const names = puzzle.objects!.map((o) => String(o.data?.[PEARL_PART_KEY]))
     expect(names.lastIndexOf('rule')).toBeLessThan(names.indexOf('cord'))
-    expect(names.indexOf('cord')).toBeLessThan(names.indexOf('bead'))
-    expect(names.lastIndexOf('bead')).toBeLessThan(names.indexOf('pearl'))
+    expect(names.indexOf('cord')).toBeLessThan(names.indexOf('pearl'))
     expect(key.some((o) => o.text === PEARL_INSTRUCTION)).toBe(false)
     expect(out[0]!.objects.some((o) => o.text === PEARL_INSTRUCTION)).toBe(true)
   })
@@ -631,7 +627,10 @@ describe('string of pearls preflight', () => {
     const other = builtFor('classic', 4)
     const errors = checkPearlDrawnPage({ puzzle, built: other, necklace }).join(' ')
     expect(errors).toMatch(/pearls/)
-    expect(errors).toMatch(/cord|beads/)
+    expect(errors).toMatch(/cord/)
+    // Anything strung on the necklace besides the cord, like a bead, is refused.
+    const bead = { ...partsOf(puzzle, 'cord')[0]!, data: { [PEARL_PART_KEY]: 'bead' } }
+    expect(checkPearlDrawnPage({ puzzle: { ...puzzle, objects: [...puzzle.objects!, bead] }, built, necklace }).join(' ')).toMatch(/more than the cord/)
     expect(checkPearlDrawnPage({ puzzle, built, necklace: PEARL_NECKLACES[5]! }).join(' ')).toMatch(/name the necklace/)
   })
 })

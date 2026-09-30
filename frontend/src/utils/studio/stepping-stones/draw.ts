@@ -28,22 +28,17 @@ import { STONES_BLANK, stonesPathOrder } from './solver'
 /**
  * A planned path → one Fabric group: the walk's signpost, the stepping
  * stones with their printed numbers (the start and the finish ringed
- * twice), the finished walk hidden for the answer page, and the legend.
+ * twice), the missing numbers hidden for the answer page, and the legend.
  *
  * The puzzle page is black on white — rounded stones with a strip of lawn
  * between them, bold numbers on a few, so pencilled numbers read clearly. On
- * the answer page the walk appears as a garden trail: a soft gray path
- * winding from the start stone through every stone to the finish, rounded
- * at every turn, with every missing number written in on its stone (the
- * printed ones stay bold, the found ones plain). Black and one gray only,
- * so it prints the same on any interior.
+ * the answer page every missing number is written in on its stone (the
+ * printed ones stay bold, the found ones plain), with nothing drawn across
+ * the numbers. Black only, so it prints the same on any interior.
  */
 
 /** Marks the objects a Stepping Stones page draws, for checks and the editor. */
 export const STONES_PART_KEY = 'stonesPart'
-
-/** The trail: a soft gray, dark enough to print, light enough for black numbers over it. */
-export const STONES_TRAIL_FILL = '#DDDDDD'
 
 /** The start and finish stones: a heavier outer ring, and a fine ring inside it. */
 const END_RING = 2.5
@@ -58,13 +53,9 @@ function part(obj: StudioFabricObject, name: string, extra: Record<string, unkno
   return { ...obj, data: { ...(obj.data ?? {}), [STONES_PART_KEY]: name, ...extra } }
 }
 
-/**
- * One path of drawing commands in canvas px, placed by its own bounds.
- * Answer paths start hidden; the answer key reveals them, keeping their
- * fill and inking their stroke (the trail has none, so it stays gray).
- */
-function pathOf(options: { commands: readonly Cmd[]; bounds: readonly [number, number, number, number]; fill: string; strokeWidth: number; tag: StudioTag; role: StudioRole }): StudioFabricObject {
-  const { commands, bounds, fill, strokeWidth, tag, role } = options
+/** One unfilled outline of drawing commands in canvas px, placed by its own bounds. */
+function pathOf(options: { commands: readonly Cmd[]; bounds: readonly [number, number, number, number]; strokeWidth: number; tag: StudioTag }): StudioFabricObject {
+  const { commands, bounds, strokeWidth, tag } = options
   const [minX, minY, maxX, maxY] = bounds
   return {
     type: 'path',
@@ -76,7 +67,7 @@ function pathOf(options: { commands: readonly Cmd[]; bounds: readonly [number, n
     height: r2(maxY - minY),
     originX: 'center',
     originY: 'center',
-    fill,
+    fill: 'transparent',
     stroke: STUDIO_INK,
     strokeWidth,
     strokeUniform: true,
@@ -86,9 +77,7 @@ function pathOf(options: { commands: readonly Cmd[]; bounds: readonly [number, n
     studioTemplateKey: tag.templateKey,
     studioInstanceId: tag.instanceId,
     studioPageRole: tag.pageRole,
-    studioRole: role,
-    // The walk stays hidden on the puzzle page; the answer key reveals it.
-    ...(role === 'answer' ? { visible: false } : {}),
+    studioRole: 'prompt',
   }
 }
 
@@ -141,45 +130,6 @@ export function stonesCentre(plan: StonesPlan, row: number, col: number): Pt {
 export function stonesStoneBox(plan: StonesPlan, row: number, col: number): Box {
   const half = plan.gap / 2
   return { left: plan.grid.left + col * plan.cell + half, top: plan.grid.top + row * plan.cell + half, width: plan.stone, height: plan.stone }
-}
-
-/**
- * The trail through the stones in walking order, as closed shapes of one
- * winding: a band along every straight run from centre to centre, and a
- * disc at every turn and at both ends, so the trail is rounded wherever it
- * bends. Filled, it reads as one soft path.
- */
-export function stonesTrailShapes(plan: StonesPlan, walk: readonly number[]): Pt[][] {
-  const n = plan.size
-  const half = plan.trail / 2
-  const at = (s: number) => stonesCentre(plan, Math.floor(s / n), s % n)
-  // The walk's corners: its ends and every stone where it turns.
-  const corners: number[] = []
-  walk.forEach((_, k) => {
-    if (k === 0 || k === walk.length - 1) corners.push(k)
-    else if (walk[k]! - walk[k - 1]! !== walk[k + 1]! - walk[k]!) corners.push(k)
-  })
-  const shapes: Pt[][] = []
-  for (let i = 0; i + 1 < corners.length; i++) {
-    const [ax, ay] = at(walk[corners[i]!]!)
-    const [bx, by] = at(walk[corners[i + 1]!]!)
-    const x0 = Math.min(ax, bx) - (ax === bx ? half : 0)
-    const x1 = Math.max(ax, bx) + (ax === bx ? half : 0)
-    const y0 = Math.min(ay, by) - (ay === by ? half : 0)
-    const y1 = Math.max(ay, by) + (ay === by ? half : 0)
-    // Clockwise on the page, like the discs, so the shapes fill as one.
-    shapes.push([
-      [x0, y0],
-      [x1, y0],
-      [x1, y1],
-      [x0, y1],
-    ])
-  }
-  for (const k of corners) {
-    const [cx, cy] = at(walk[k]!)
-    shapes.push(Array.from({ length: 20 }, (_, j) => [cx + half * Math.cos((j / 20) * Math.PI * 2), cy + half * Math.sin((j / 20) * Math.PI * 2)] as const))
-  }
-  return shapes
 }
 
 /* ------------------------------------------------------------------ *
@@ -249,12 +199,8 @@ function numberText(options: {
 function endRings(box: Box, radius: number, tag: StudioTag, name: string, extra: Record<string, unknown>): StudioFabricObject[] {
   const inner: Box = { left: box.left + END_INSET, top: box.top + END_INSET, width: box.width - END_INSET * 2, height: box.height - END_INSET * 2 }
   return [
-    part(pathOf({ commands: roundedBox(box, radius), bounds: boundsOf([box]), fill: 'transparent', strokeWidth: END_RING, tag, role: 'prompt' }), name, { ...extra, ring: 'outer' }),
-    part(
-      pathOf({ commands: roundedBox(inner, Math.max(0, radius - END_INSET)), bounds: boundsOf([inner]), fill: 'transparent', strokeWidth: 1, tag, role: 'prompt' }),
-      name,
-      { ...extra, ring: 'inner' },
-    ),
+    part(pathOf({ commands: roundedBox(box, radius), bounds: boundsOf([box]), strokeWidth: END_RING, tag }), name, { ...extra, ring: 'outer' }),
+    part(pathOf({ commands: roundedBox(inner, Math.max(0, radius - END_INSET)), bounds: boundsOf([inner]), strokeWidth: 1, tag }), name, { ...extra, ring: 'inner' }),
   ]
 }
 
@@ -275,7 +221,7 @@ function legendPair(box: Box, legendSize: number, tag: StudioTag): StudioFabricO
   ]
   return [
     part(
-      pathOf({ commands: stones.flatMap((b) => roundedBox(b, radius)), bounds: boundsOf(stones), fill: 'transparent', strokeWidth: STUDIO_STROKE_HAIRLINE, tag, role: 'prompt' }),
+      pathOf({ commands: stones.flatMap((b) => roundedBox(b, radius)), bounds: boundsOf(stones), strokeWidth: STUDIO_STROKE_HAIRLINE, tag }),
       'legend-stones',
     ),
     ...stones.map((b, k) =>
@@ -347,36 +293,12 @@ export function buildStonesPuzzle(options: {
     ),
   )
 
-  // The trail, hidden until the answer page: under the stones, so it runs through each one.
-  const order = stonesPathOrder(n, values) ?? []
-  const trail = stonesTrailShapes(plan, order)
-  const trailPts = trail.flat()
-  parts.push(
-    part(
-      pathOf({
-        commands: trail.flatMap((shape) => [...shape.map(([x, y], i) => [i === 0 ? 'M' : 'L', x, y]), ['Z']]),
-        bounds: [
-          r2(Math.min(...trailPts.map(([x]) => x))),
-          r2(Math.min(...trailPts.map(([, y]) => y))),
-          r2(Math.max(...trailPts.map(([x]) => x))),
-          r2(Math.max(...trailPts.map(([, y]) => y))),
-        ],
-        fill: STONES_TRAIL_FILL,
-        strokeWidth: 0,
-        tag,
-        role: 'answer',
-      }),
-      'trail',
-      { walk: order.join(',') },
-    ),
-  )
-
   // The stones, a row at a time.
   for (let r = 0; r < n; r++) {
     const boxes = Array.from({ length: n }, (_, c) => stonesStoneBox(plan, r, c))
     parts.push(
       part(
-        pathOf({ commands: boxes.flatMap((b) => roundedBox(b, plan.radius)), bounds: boundsOf(boxes), fill: 'transparent', strokeWidth: STUDIO_STROKE_HAIRLINE, tag, role: 'prompt' }),
+        pathOf({ commands: boxes.flatMap((b) => roundedBox(b, plan.radius)), bounds: boundsOf(boxes), strokeWidth: STUDIO_STROKE_HAIRLINE, tag }),
         'stones',
         { row: r, stones: n },
       ),
@@ -384,6 +306,7 @@ export function buildStonesPuzzle(options: {
   }
 
   // The start and the finish, ringed twice.
+  const order = stonesPathOrder(n, values) ?? []
   for (const v of [1, N]) {
     const s = order[v - 1]!
     const row = Math.floor(s / n)

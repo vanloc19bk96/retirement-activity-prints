@@ -109,10 +109,10 @@ const hiddenAnswer = (o: StudioFabricObject) => o.visible === false && o.studioR
 
 /**
  * The drawn page, checked against the board it was drawn from: every pearl
- * in its square and colour, and no other, each with its shine; the frame;
- * the finished necklace waiting, hidden, as one cord threading exactly the
- * answer's links with a bead on every square it visits between the pearls;
- * the board naming the necklace; and the legend showing both pearls.
+ * in its square and colour, and no other; the frame; the finished necklace
+ * waiting, hidden, as one cord threading exactly the answer's links and
+ * nothing else; the board naming the necklace; and the legend showing both
+ * pearls.
  */
 export function checkPearlDrawnPage(options: { puzzle: StudioFabricObject; built: PearlBuilt; necklace: PearlNecklace }): string[] {
   const { puzzle: group, built, necklace } = options
@@ -120,8 +120,6 @@ export function checkPearlDrawnPage(options: { puzzle: StudioFabricObject; built
   const n = puzzle.size
   const errors: string[] = []
   const pearls = new Map<number, string>()
-  const shines = new Set<number>()
-  const beads = new Set<number>()
   const cords: string[] = []
   let frame = 0
   let sign: StudioFabricObject | null = null
@@ -130,19 +128,15 @@ export function checkPearlDrawnPage(options: { puzzle: StudioFabricObject; built
   walk(group, (o) => {
     const role = String(o.data?.[PEARL_PART_KEY] ?? '')
     const at = Number(o.data?.row) * n + Number(o.data?.col)
+    if (o.studioRole === 'answer' && role !== 'cord') errors.push('The answer page adds more than the cord to the necklace.')
     if (role === 'pearl') {
       if (pearls.has(at)) errors.push('A pearl is drawn twice.')
       pearls.set(at, String(o.data?.color))
       if (o.visible === false) errors.push('A pearl is hidden on the puzzle page.')
-    } else if (role === 'pearl-shine') shines.add(at)
-    else if (role === 'frame') frame++
-    else if (role === 'cord' || role === 'bead') {
+    } else if (role === 'frame') frame++
+    else if (role === 'cord') {
       if (!hiddenAnswer(o)) errors.push('The finished necklace shows on the puzzle page.')
-      if (role === 'cord') cords.push(String(o.data?.links))
-      else {
-        if (beads.has(at)) errors.push('A bead is drawn twice.')
-        beads.add(at)
-      }
+      cords.push(String(o.data?.links))
     } else if (role === 'sign-text') sign = o
     else if (role === 'legend-pearl') legendPearls.push(String(o.data?.color))
     else if (role === 'legend-text') legendWords.push(String(o.data?.color))
@@ -150,13 +144,9 @@ export function checkPearlDrawnPage(options: { puzzle: StudioFabricObject; built
 
   const expected = new Map(puzzle.cells.flatMap((v, i) => (isPearl(v) ? [[i, v === PEARL_WHITE ? 'white' : 'black'] as const] : [])))
   if (pearls.size !== expected.size || [...expected].some(([at, color]) => pearls.get(at) !== color)) errors.push('The pearls do not match the board.')
-  if (shines.size !== expected.size || [...expected.keys()].some((at) => !shines.has(at))) errors.push('A pearl is drawn without its shine.')
   if (frame !== 4) errors.push('The board’s frame is not drawn.')
 
   if (cords.length !== 1 || cords[0] !== pearlAnswerKey(links)) errors.push('The cord does not thread the necklace.')
-  const visited = pearlLoopOrder(n, links) ?? []
-  const beadsWanted = visited.filter((i) => !isPearl(puzzle.cells[i]!))
-  if (beads.size !== beadsWanted.length || beadsWanted.some((i) => !beads.has(i))) errors.push('The beads are not strung on the necklace’s squares.')
 
   const labelled = sign as StudioFabricObject | null
   if (!labelled || String(labelled.text).replace('\n', ' ') !== pearlSignText(necklace)) errors.push('The board does not name the necklace.')

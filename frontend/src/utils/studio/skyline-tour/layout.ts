@@ -31,15 +31,10 @@ export const SKY_MAX_CELL = Math.round(inch(0.8))
 /** The city's frame, px: 3 pt. */
 export const SKY_FRAME = 4
 
-/** The clues and given heights: bold, half a plot, 16–22 pt. */
+/** The clues and heights: half a plot, 16–22 pt (the clues and givens bold, the answer's heights plain). */
 export const SKY_DIGIT_MIN = ptToPx(16)
 const SKY_DIGIT_MAX = ptToPx(22)
 const DIGIT_OF_CELL = 0.5
-
-/** The heights on the answer page's buildings: a third of a plot, 12–18 pt. */
-export const SKY_ANSWER_MIN = ptToPx(12)
-const SKY_ANSWER_MAX = ptToPx(18)
-const ANSWER_OF_CELL = 0.34
 
 /** The band the clues stand in, round the city: most of a plot, and always room for a clue with air. */
 const BAND_OF_CELL = 0.7
@@ -78,10 +73,8 @@ export interface SkyPlan {
   grid: Box
   /** The plots with their clue bands round them. */
   city: Box
-  /** The clues and given heights, px. */
+  /** The clues and heights, px. */
   digitSize: number
-  /** The heights on the answer page's buildings, px. */
-  answerSize: number
   signSize: number
   /** The name on one line, or broken between words when one line is too wide. */
   signLines: 1 | 2
@@ -129,9 +122,6 @@ export const skyTextWidth = (text: string, size: number, spec: FontSpec) => Math
 
 /** The clues' and givens' size for a plot: half the plot, 16–22 pt. */
 export const skyDigitSizeFor = (cell: number) => Math.max(SKY_DIGIT_MIN, Math.min(SKY_DIGIT_MAX, Math.round(cell * DIGIT_OF_CELL)))
-
-/** The answer heights' size for a plot: a third of the plot, 12–18 pt. */
-export const skyAnswerSizeFor = (cell: number) => Math.max(SKY_ANSWER_MIN, Math.min(SKY_ANSWER_MAX, Math.round(cell * ANSWER_OF_CELL)))
 
 /** The clue band's depth for a plot. */
 export const skyBandFor = (cell: number) => Math.max(Math.round(cell * BAND_OF_CELL), skyDigitSizeFor(cell) + BAND_AIR)
@@ -190,7 +180,6 @@ function planAt(panel: Box, level: SkyLevel, cell: number, signSize: number, sig
     grid,
     city,
     digitSize: skyDigitSizeFor(cell),
-    answerSize: skyAnswerSizeFor(cell),
     signSize,
     signLines,
     signGap,

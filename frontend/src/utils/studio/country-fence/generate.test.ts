@@ -31,7 +31,7 @@ import {
   pickFencePasture,
   type FenceLevel,
 } from './content'
-import { FENCE_MEADOW_FILL, FENCE_PART_KEY, buildFencePuzzle, fencePostPoint, fenceRing, fenceTuft } from './draw'
+import { FENCE_MEADOW_FILL, FENCE_PART_KEY, buildFencePuzzle, fencePostPoint, fenceRing } from './draw'
 import { checkFenceDrawnPage, runFenceKdpPreflight } from './kdp-preflight'
 import { FENCE_DIGIT_MIN, FENCE_SIGN_GAP_MIN, fenceContentBox, fencePanelInBody, fencePrintNote, planFencePage } from './layout'
 import { buildFenceField, drawFenceCandidate, drawFencePasture, fenceClueCount, fenceMeetsLevel, fenceOutline, fenceSignature, type FenceBuilt } from './puzzle'
@@ -441,29 +441,25 @@ describe('country fence pages', () => {
     }
   })
 
-  it('keeps every number and tuft inside its square, and the fence on the posts', () => {
+  it('keeps every number inside its square, and the fence on the posts', () => {
     const plan = planFencePage(panelFor(kdpCtx(5.5, 8.5), 'challenging'), 'challenging', FONT)!
     const built = builtFor('challenging')
     const puzzle = buildFencePuzzle({ built, plan, pasture: FENCE_PASTURES[0]!, level: 'challenging', label: 'x', tag, font: FONT })
     // Children sit relative to the group's centre.
     const dx = puzzle.left + puzzle.width! / 2
     const dy = puzzle.top + puzzle.height! / 2
-    let checked = 0
-    for (const name of ['number', 'tuft']) {
-      for (const o of partsOf(puzzle, name)) {
-        const cellLeft = plan.grid.left + Number(o.data?.col) * plan.cell
-        const cellTop = plan.grid.top + Number(o.data?.row) * plan.cell
-        const w = name === 'number' ? Number(o.fontSize) * 0.7 : o.width!
-        const h = name === 'number' ? Number(o.fontSize) : o.height!
-        expect(o.left + dx - w / 2).toBeGreaterThanOrEqual(cellLeft - 0.5)
-        expect(o.left + dx + w / 2).toBeLessThanOrEqual(cellLeft + plan.cell + 0.5)
-        expect(o.top + dy - h / 2).toBeGreaterThanOrEqual(cellTop - 0.5)
-        expect(o.top + dy + h / 2).toBeLessThanOrEqual(cellTop + plan.cell + 0.5)
-        checked++
-      }
+    const numbers = partsOf(puzzle, 'number')
+    for (const o of numbers) {
+      const cellLeft = plan.grid.left + Number(o.data?.col) * plan.cell
+      const cellTop = plan.grid.top + Number(o.data?.row) * plan.cell
+      const w = Number(o.fontSize) * 0.7
+      const h = Number(o.fontSize)
+      expect(o.left + dx - w / 2).toBeGreaterThanOrEqual(cellLeft - 0.5)
+      expect(o.left + dx + w / 2).toBeLessThanOrEqual(cellLeft + plan.cell + 0.5)
+      expect(o.top + dy - h / 2).toBeGreaterThanOrEqual(cellTop - 0.5)
+      expect(o.top + dy + h / 2).toBeLessThanOrEqual(cellTop + plan.cell + 0.5)
     }
-    const land = fenceInside(10, built.rails)
-    expect(checked).toBe(fenceClueCount(built.puzzle) + built.puzzle.clues.filter((v, s) => land[s] && v === FENCE_BLANK).length)
+    expect(numbers).toHaveLength(fenceClueCount(built.puzzle))
     // The ring runs post to post, one rail at a time.
     const ring = fenceRing(plan, built.rails)
     expect(ring).toHaveLength(built.rails.length)
@@ -472,8 +468,6 @@ describe('country fence pages', () => {
       expect(Math.abs(nx - x) + Math.abs(ny - y)).toBeCloseTo(plan.cell, 5)
     })
     expect(fencePostPoint(plan, 0)).toEqual([plan.grid.left, plan.grid.top])
-    const tuft = fenceTuft(plan, 0, 0).flat()
-    expect(Math.min(...tuft.map(([, y]) => y))).toBeGreaterThan(plan.grid.top)
   })
 
   it('stacks the legend rather than shrinking the field on a narrow panel', () => {
@@ -527,7 +521,7 @@ describe('country fence pages', () => {
     const numbers = partsOf(puzzle, 'number')
     expect(numbers.length).toBeGreaterThan(8)
     expect(numbers.every((t) => t.visible !== false && t.fill === STUDIO_INK && /^[0-3]$/.test(String(t.text)))).toBe(true)
-    const hidden = ['pasture', 'tuft', 'fence', 'posts'].flatMap((name) => partsOf(puzzle, name))
+    const hidden = ['pasture', 'fence', 'posts'].flatMap((name) => partsOf(puzzle, name))
     expect(partsOf(puzzle, 'fence')).toHaveLength(1)
     expect(partsOf(puzzle, 'pasture')).toHaveLength(1)
     expect(hidden.every((o) => o.visible === false && o.studioRole === 'answer' && o.type === 'path')).toBe(true)
@@ -553,7 +547,8 @@ describe('country fence pages', () => {
     const [posts] = partsOf(puzzle, 'posts')
     expect(posts!.visible).toBe(true)
     expect(posts!.fill).toBe(STUDIO_INK)
-    expect(partsOf(puzzle, 'tuft').every((t) => t.visible === true && t.fill === 'transparent')).toBe(true)
+    // Nothing but the gray wash and the numbers inside the fence: no grass.
+    expect(partsOf(puzzle, 'tuft')).toHaveLength(0)
     // The fence on the key gives every number on the page its count.
     const n = 8
     const clues = new Array<number>(n * n).fill(FENCE_BLANK)
@@ -561,7 +556,7 @@ describe('country fence pages', () => {
     const rails = String(fence!.data?.rails).split(',').map(Number)
     expect(isFenceSolution({ size: n, clues }, rails)).toBe(true)
     expect(Number(posts!.data?.posts)).toBe(fenceLoopOrder(n, rails)!.length)
-    // The pasture under the grass, the posts over the fence, and every number on top.
+    // The pasture under the posts, the posts over the fence, and every number on top.
     const names = puzzle.objects!.map((o) => String(o.data?.[FENCE_PART_KEY]))
     expect(names.indexOf('pasture')).toBeLessThan(names.indexOf('dots'))
     expect(names.lastIndexOf('dots')).toBeLessThan(names.indexOf('fence'))
@@ -650,7 +645,7 @@ describe('country fence preflight', () => {
     const other = builtFor('classic', 4)
     const errors = checkFenceDrawnPage({ puzzle, built: other, pasture }).join(' ')
     expect(errors).toMatch(/numbers/)
-    expect(errors).toMatch(/fence|grass/)
+    expect(errors).toMatch(/fence/)
     expect(checkFenceDrawnPage({ puzzle, built, pasture: FENCE_PASTURES[5]! }).join(' ')).toMatch(/name the pasture/)
   })
 })

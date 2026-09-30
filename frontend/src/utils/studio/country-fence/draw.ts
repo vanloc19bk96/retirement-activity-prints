@@ -1,5 +1,5 @@
 import type { StudioFabricObject, StudioRole } from '@/types/studio-template.types'
-import { STUDIO_DIGIT_FONT, STUDIO_INK, STUDIO_STROKE_HAIRLINE } from '@/constants/studio.constants'
+import { STUDIO_DIGIT_FONT, STUDIO_INK } from '@/constants/studio.constants'
 import { STUDIO_CANONICAL_KEY } from '../_shared/uniqueness'
 import { buildGroup, buildRect, buildText, nextObjectId, type StudioTag } from '../studio-fabric-builders'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
@@ -31,7 +31,7 @@ import {
   type FencePlan,
 } from './layout'
 import type { FenceBuilt } from './puzzle'
-import { FENCE_BLANK, fenceAnswerKey, fenceInside, fenceLoopOrder } from './solver'
+import { FENCE_BLANK, fenceAnswerKey, fenceLoopOrder } from './solver'
 
 /**
  * A planned field → one Fabric group: the pasture's name board, the posts,
@@ -40,9 +40,8 @@ import { FENCE_BLANK, fenceAnswerKey, fenceInside, fenceLoopOrder } from './solv
  *
  * The puzzle page is black on white — bold posts and bold numbers and
  * nothing else, so a pencilled fence reads clearly. On the answer page the
- * loop becomes the pasture: the land inside washed a soft gray with a tuft
- * of grass in every square free of a number, the fence a heavy black rail
- * from post to post, and a square fence post on every post it passes. Black
+ * loop becomes the pasture: the land inside washed a soft gray, the fence
+ * a heavy black rail from post to post, and a square fence post on every post it passes. Black
  * and one gray only, so it prints the same on any interior.
  */
 
@@ -51,10 +50,6 @@ export const FENCE_PART_KEY = 'fencePart'
 
 /** The pasture's wash: a soft gray, dark enough to print, light enough for black numbers over it. */
 export const FENCE_MEADOW_FILL = '#DDDDDD'
-
-/** A tuft of grass, as a share of a square: how wide and how tall. */
-const TUFT_W = 0.34
-const TUFT_H = 0.28
 
 const r2 = (n: number) => Math.round(n * 100) / 100
 
@@ -148,35 +143,6 @@ export function fencePostPoint(plan: FencePlan, i: number): Pt {
 /** The fence as a closed polygon of post points, in order round the loop. */
 export function fenceRing(plan: FencePlan, rails: readonly number[]): Pt[] {
   return (fenceLoopOrder(plan.size, rails) ?? []).map((i) => fencePostPoint(plan, i))
-}
-
-/**
- * Blades of a tuft: where each leaves the root and where its tip leans (as
- * shares of half the tuft's width), and how tall it stands (as a share of
- * the tuft's height).
- */
-const BLADES: readonly (readonly [number, number, number])[] = [
-  [-0.2, -1, 0.68],
-  [0, -0.18, 1],
-  [0.2, 1, 0.78],
-]
-
-/**
- * A tuft of grass: three blades rising from a root low in the square,
- * standing straight at the foot and bending outward toward the tip.
- */
-export function fenceTuft(plan: FencePlan, row: number, col: number): Pt[][] {
-  const { grid, cell } = plan
-  const cx = grid.left + (col + 0.5) * cell
-  const root = grid.top + (row + 0.5) * cell + (TUFT_H / 2) * cell
-  const w = (TUFT_W / 2) * cell
-  const h = TUFT_H * cell
-  return BLADES.map(([foot, tip, tall]) =>
-    Array.from({ length: 5 }, (_, k) => {
-      const t = k / 4
-      return [cx + w * (foot + (tip - foot) * t * t), root - h * tall * t] as const
-    }),
-  )
 }
 
 /* ------------------------------------------------------------------ *
@@ -349,16 +315,9 @@ export function buildFencePuzzle(options: {
     ),
   )
 
-  // The pasture, hidden until the answer page: the land inside washed gray, a tuft of grass in every square free of a number.
+  // The pasture, hidden until the answer page: the land inside washed gray.
   const ring = fenceRing(plan, rails)
   parts.push(part(pathOf({ lines: [ring], close: true, fill: FENCE_MEADOW_FILL, strokeWidth: 0, tag, role: 'answer', join: 'miter' }), 'pasture'))
-  const inside = fenceInside(n, rails)
-  for (let s = 0; s < n * n; s++) {
-    if (!inside[s] || puzzle.clues[s] !== FENCE_BLANK) continue
-    const row = Math.floor(s / n)
-    const col = s % n
-    parts.push(part(pathOf({ lines: fenceTuft(plan, row, col), close: false, fill: 'transparent', strokeWidth: STUDIO_STROKE_HAIRLINE, tag, role: 'answer' }), 'tuft', { row, col }))
-  }
 
   // The posts, a row at a time.
   for (let r = 0; r < N; r++) {

@@ -16,7 +16,6 @@ import { drawGridLines } from '../studio-grid-rules'
 import type { Box } from '../studio-layout'
 import { TY_TEMPLATE_KEY, tyLetter, tySignText, type TyLevel, type TyProject } from './content'
 import {
-  TY_BALL_OF_CELL,
   TY_LEGEND_ICON,
   TY_LEGEND_ICON_GAP,
   TY_LEGEND_ITEM_GAP,
@@ -40,12 +39,11 @@ import type { TyBuilt } from './puzzle'
  * with their letters, and the legend.
  *
  * Black on white with soft gray rules, so it prints the same on any
- * interior. A yarn ball is a white ball with a bold letter in the middle
- * and a short tail of yarn curling into its square's corner, so the letter
- * reads first and the ball second. The strand the reader draws is shown once, in the
- * legend; on the answer page every strand is drawn, thick and round-cornered
- * like a length of yarn, from ball to ball through the middle of every
- * square it fills.
+ * interior. A yarn ball is a plain white ball with a bold letter in the
+ * middle, so the letter reads first and the ball second. The strand the
+ * reader draws is shown once, in the legend; on the answer page every
+ * strand is drawn, thick and round-cornered like a length of yarn, from
+ * ball to ball through the middle of every square it fills.
  */
 
 /** Marks the objects a Tangled Yarn page draws, for checks and the editor. */
@@ -53,10 +51,6 @@ export const TY_PART_KEY = 'tyPart'
 
 /** An answer strand's weight, as a share of the square (never under 5 px). */
 const STRAND_OF_CELL = 0.16
-/** The yarn's tail: it leaves the ball's rim at the lower left and curls into the square's corner, clear of every strand. */
-const TAIL_FROM = Math.PI * 0.75
-const TAIL_BEND: Pt = [-0.47, 0.33]
-const TAIL_END: Pt = [-0.4, 0.42]
 
 const r2 = (n: number) => Math.round(n * 100) / 100
 
@@ -111,33 +105,11 @@ function strokes(options: { lines: readonly (readonly Pt[])[]; width: number; st
   }
 }
 
-/**
- * A ball's tail, as a short curl from its rim towards the lower-left corner
- * of a square `side` across. The strands leave a square through the middle
- * of its sides, so a tail in the corner never meets one.
- */
-export function tyTailLine(cx: number, cy: number, radius: number, side: number): Pt[] {
-  const steps = 8
-  const p0: Pt = [cx + Math.cos(TAIL_FROM) * radius, cy + Math.sin(TAIL_FROM) * radius]
-  const c: Pt = [cx + TAIL_BEND[0] * side, cy + TAIL_BEND[1] * side]
-  const p2: Pt = [cx + TAIL_END[0] * side, cy + TAIL_END[1] * side]
-  const line: Pt[] = []
-  for (let k = 0; k <= steps; k++) {
-    const s = k / steps
-    const a = (1 - s) * (1 - s)
-    const b = 2 * s * (1 - s)
-    const e = s * s
-    line.push([a * p0[0] + b * c[0] + e * p2[0], a * p0[1] + b * c[1] + e * p2[1]])
-  }
-  return line
-}
-
-/** A yarn ball: the white ball, its tail, and its letter. */
-function ballParts(options: { cx: number; cy: number; radius: number; side: number; letter: string; letterSize: number; tag: StudioTag; name: string; extra: Record<string, unknown> }): StudioFabricObject[] {
-  const { cx, cy, radius, side, letter, letterSize, tag, name, extra } = options
+/** A yarn ball: the white ball and its letter. */
+function ballParts(options: { cx: number; cy: number; radius: number; letter: string; letterSize: number; tag: StudioTag; name: string; extra: Record<string, unknown> }): StudioFabricObject[] {
+  const { cx, cy, radius, letter, letterSize, tag, name, extra } = options
   const outline = radius >= 20 ? STUDIO_STROKE_NORMAL : STUDIO_STROKE_HAIRLINE
   return [
-    part(strokes({ lines: [tyTailLine(cx, cy, radius, side)], width: outline, tag, role: 'prompt' }), `${name}-tail`, extra),
     part(buildCircle({ left: r2(cx), top: r2(cy), radius, fill: STUDIO_PAPER, stroke: STUDIO_INK, strokeWidth: outline }, tag, 'prompt'), name, extra),
     part(
       buildText(
@@ -277,13 +249,13 @@ export function buildTyPuzzle(options: {
     parts.push(part(strokes({ lines: [tyStrandPoints(plan, puzzle.cols, path)], width: weight, tag, role: 'answer' }), 'strand', { k: i + 1, cells: path.join('.') }))
   })
 
-  // The yarn balls: a white ball, its tail, its letter.
+  // The yarn balls: a white ball and its letter.
   puzzle.ends.forEach((k, i) => {
     if (k === 0) return
     const row = Math.floor(i / puzzle.cols)
     const col = i % puzzle.cols
     const [x, y] = tyCentre(plan, row, col)
-    parts.push(...ballParts({ cx: x, cy: y, radius: ballRadius, side: cell, letter: tyLetter(k), letterSize, tag, name: 'ball', extra: { k, row, col } }))
+    parts.push(...ballParts({ cx: x, cy: y, radius: ballRadius, letter: tyLetter(k), letterSize, tag, name: 'ball', extra: { k, row, col } }))
   })
 
   // The legend: the ball they are given (and how many pairs), the strand they draw.
@@ -308,7 +280,7 @@ export function buildTyPuzzle(options: {
   let midY = rowMid(0)
   const icon = TY_LEGEND_ICON
   const legendBall = (icon / 2 - 1) * 0.92
-  parts.push(...ballParts({ cx: x + icon / 2, cy: midY, radius: legendBall, side: legendBall / (TY_BALL_OF_CELL / 2), letter: tyLetter(1), letterSize: Math.round(icon * 0.46), tag, name: 'legend-ball', extra: {} }))
+  parts.push(...ballParts({ cx: x + icon / 2, cy: midY, radius: legendBall, letter: tyLetter(1), letterSize: Math.round(icon * 0.46), tag, name: 'legend-ball', extra: {} }))
   parts.push(words(ballWord, x + icon + TY_LEGEND_ICON_GAP, midY, { pairs }))
 
   if (plan.legendRows === 1) x += ballItem + TY_LEGEND_ITEM_GAP

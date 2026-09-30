@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import type { StudioConfig, StudioFabricObject, StudioGenerateContext } from '@/types/studio-template.types'
 import { STUDIO_TEMPLATES, buildDefaultConfig } from '@/constants/studio-templates'
-import { STUDIO_ANSWER_INK_MONO_TEMPLATES, STUDIO_INK, STUDIO_PAPER } from '@/constants/studio.constants'
+import { STUDIO_ANSWER_INK_MONO_TEMPLATES, STUDIO_INK } from '@/constants/studio.constants'
 import { DPI } from '@/types/canvas-settings.types'
 import { resetObjectCounter } from '../studio-fabric-builders'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
@@ -29,9 +29,9 @@ import {
   skySignText,
   type SkyLevel,
 } from './content'
-import { SKY_BUILDING_FILL, SKY_PART_KEY, buildSkyPuzzle, skyBuildingShape, skyRoofOf } from './draw'
+import { SKY_PART_KEY, buildSkyPuzzle } from './draw'
 import { checkSkyDrawnPage, runSkyKdpPreflight } from './kdp-preflight'
-import { SKY_ANSWER_MIN, SKY_DIGIT_MIN, SKY_SIGN_GAP_MIN, planSkyPage, skyContentBox, skyPanelInBody, skyPrintNote } from './layout'
+import { SKY_DIGIT_MIN, SKY_SIGN_GAP_MIN, planSkyPage, skyContentBox, skyPanelInBody, skyPrintNote } from './layout'
 import { buildSkyCity, drawSkyAnswer, drawSkyCandidate, skyCluesPerSide, skyMeetsLevel, skyPicture, skySignature, type SkyBuilt } from './puzzle'
 import {
   countSkySolutions,
@@ -386,8 +386,7 @@ describe('skyline tour pages', () => {
         expect(puzzle!.data?.size).toBe(`${size}x${size}`)
         const clues = partsOf(puzzle!, 'clue')
         expect(clues.length).toBeGreaterThanOrEqual(4)
-        expect([...clues, ...partsOf(puzzle!, 'given')].every((t) => Number(t.fontSize) >= SKY_DIGIT_MIN)).toBe(true)
-        expect(partsOf(puzzle!, 'height').every((t) => Number(t.fontSize) >= SKY_ANSWER_MIN)).toBe(true)
+        expect([...clues, ...partsOf(puzzle!, 'given'), ...partsOf(puzzle!, 'height')].every((t) => Number(t.fontSize) >= SKY_DIGIT_MIN)).toBe(true)
       }
     }
   }, SLOW)
@@ -402,38 +401,19 @@ describe('skyline tour pages', () => {
     expect(small.band).toBeGreaterThanOrEqual(small.digitSize + 14)
   })
 
-  it('stands every building inside its plot, clear of the frame, taller for a greater height', () => {
+  it('centres every height in its plot, as large as the clues', () => {
     const plan = planSkyPage(panelFor(kdpCtx(5.5, 8.5), 'challenging'), 'challenging', FONT)!
     const built = builtFor('challenging')
     const puzzle = buildSkyPuzzle({ built, plan, city: SKY_CITIES[0]!, level: 'challenging', label: 'x', tag, font: FONT })
     // Children sit relative to the group's centre.
     const dx = puzzle.left + puzzle.width! / 2
     const dy = puzzle.top + puzzle.height! / 2
-    let checked = 0
-    for (const name of ['building', 'windows', 'door', 'spire', 'height']) {
-      for (const o of partsOf(puzzle, name)) {
-        const cellLeft = plan.grid.left + Number(o.data?.col) * plan.cell
-        const cellTop = plan.grid.top + Number(o.data?.row) * plan.cell
-        const inset = name === 'spire' || name === 'height' ? 0 : 4
-        // A height is a one-glyph textbox: as tall as its type.
-        const tall = name === 'height' ? Number(o.fontSize) : o.height!
-        const wide = name === 'height' ? Number(o.fontSize) * 0.7 : o.width!
-        expect(o.left + dx - wide / 2).toBeGreaterThanOrEqual(cellLeft + inset - 0.5)
-        expect(o.left + dx + wide / 2).toBeLessThanOrEqual(cellLeft + plan.cell - inset + 0.5)
-        expect(o.top + dy - tall / 2).toBeGreaterThanOrEqual(cellTop - 0.5)
-        expect(o.top + dy + tall / 2).toBeLessThanOrEqual(cellTop + plan.cell - inset + 0.5)
-        checked++
-      }
-    }
-    expect(checked).toBeGreaterThan(49 * 2)
-    // Every height on its facade, under the roof and above the foot.
-    for (let h = 1; h <= 7; h++) {
-      const shape = skyBuildingShape({ left: 0, top: 0, width: plan.cell, height: plan.cell }, h, 7, plan.answerSize)
-      const roof = Math.min(...shape.body.map(([, y]) => y))
-      const foot = Math.max(...shape.body.map(([, y]) => y))
-      expect(shape.label[1] - plan.answerSize / 2).toBeGreaterThan(roof)
-      expect(shape.label[1] + plan.answerSize / 2).toBeLessThanOrEqual(foot)
-      if (h > 1) expect(skyRoofOf(h, 7)).toBeLessThan(skyRoofOf(h - 1, 7))
+    const digits = [...partsOf(puzzle, 'height'), ...partsOf(puzzle, 'given')]
+    expect(digits).toHaveLength(49)
+    for (const o of digits) {
+      expect(o.left + dx).toBeCloseTo(plan.grid.left + (Number(o.data?.col) + 0.5) * plan.cell, 1)
+      expect(o.top + dy).toBeCloseTo(plan.grid.top + (Number(o.data?.row) + 0.5) * plan.cell, 1)
+      expect(o.fontSize).toBe(plan.digitSize)
     }
   })
 
@@ -474,7 +454,7 @@ describe('skyline tour pages', () => {
     expect(small[0]!.objects.some((o) => /too small/.test(String(o.text ?? '')))).toBe(true)
   })
 
-  it('draws the board, the ruled plots, the givens and clues in a frame, and the skyline hidden', () => {
+  it('draws the board, the ruled plots, the givens and clues in a frame, and the answer’s heights hidden', () => {
     const pages = generate(base, kdpCtx(8.5, 11))
     const puzzle = puzzleOf(pages[0]!.objects)!
     const [id, level, signature] = String(puzzle.data?.[STUDIO_CONTENT_LABEL_KEY]).split('|')
@@ -487,30 +467,26 @@ describe('skyline tour pages', () => {
     expect(partsOf(puzzle, 'frame')).toHaveLength(4)
     const shown = [...partsOf(puzzle, 'clue'), ...partsOf(puzzle, 'given')]
     expect(shown.every((t) => t.visible !== false && t.fontWeight === 700 && t.fill === STUDIO_INK)).toBe(true)
-    const buildings = partsOf(puzzle, 'building')
-    expect(buildings).toHaveLength(36)
-    expect(buildings.every((b) => b.fill === SKY_BUILDING_FILL)).toBe(true)
-    expect(partsOf(puzzle, 'spire')).toHaveLength(6)
-    const hidden = ['building', 'windows', 'door', 'spire', 'height'].flatMap((name) => partsOf(puzzle, name))
-    expect(hidden.every((o) => o.visible === false && o.studioRole === 'answer')).toBe(true)
-    expect(partsOf(puzzle, 'height').length + partsOf(puzzle, 'given').length).toBe(36)
+    const hidden = partsOf(puzzle, 'height')
+    expect(hidden.every((o) => o.visible === false && o.studioRole === 'answer' && o.fontWeight === 'normal')).toBe(true)
+    expect(hidden.length + partsOf(puzzle, 'given').length).toBe(36)
+    // Nothing on the plots but the rules and the digits: no drawings.
+    expect(puzzle.objects!.filter((o) => o.type === 'path').every((o) => String(o.data?.[SKY_PART_KEY]).startsWith('legend-'))).toBe(true)
     const texts = partsOf(puzzle, 'legend-text').map((t) => t.text)
     expect(texts).toEqual(['Heights 1 to 6', '= 3 buildings seen from here'])
-    // The legend's skyline and sample are on show; only the city's buildings wait for the answer page.
+    // The legend's skyline and sample are on show; only the answer's heights wait for the answer page.
     expect([...partsOf(puzzle, 'legend-skyline'), ...partsOf(puzzle, 'legend-arrow'), ...partsOf(puzzle, 'legend-clue')].every((o) => o.visible !== false)).toBe(true)
   })
 
-  it('raises the whole skyline on the answer page in black and grays, without the how-to line', () => {
+  it('fills every plot with its height on the answer page, in plain black digits, without the how-to line', () => {
     const out = generate(base, kdpCtx(8.5, 11))
     const answers = out.flatMap((p) => harvestAnswers(p.objects))
     expect(answers.length).toBeGreaterThan(0)
     const key = buildAnswerKeyFromOutputs(out, STUDIO_INK)
     const puzzle = puzzleOf(key)!
-    const buildings = partsOf(puzzle, 'building')
-    expect(buildings.every((b) => b.visible === true && b.fill === SKY_BUILDING_FILL && b.stroke === STUDIO_INK)).toBe(true)
-    expect(partsOf(puzzle, 'windows').every((w) => w.visible === true && w.fill === STUDIO_PAPER)).toBe(true)
-    expect(partsOf(puzzle, 'door').every((d) => d.visible === true && d.fill === STUDIO_INK)).toBe(true)
-    // Every plot shows its height on its facade: the answer's, and the given ones moved up with them.
+    // Every plot shows its height in its middle: the answer's plain, the given ones bold as on the puzzle page.
+    expect(partsOf(puzzle, 'height').every((t) => t.fontWeight === 'normal')).toBe(true)
+    expect(partsOf(puzzle, 'given').every((t) => t.fontWeight === 700)).toBe(true)
     const n = 6
     const grid = new Array<number>(n * n).fill(0)
     for (const t of [...partsOf(puzzle, 'height'), ...partsOf(puzzle, 'given')]) {
@@ -521,11 +497,11 @@ describe('skyline tour pages', () => {
     const clues = new Array<number>(4 * n).fill(0)
     for (const t of partsOf(puzzle, 'clue')) clues[Number(t.data?.k)] = Number(t.text)
     expect(isSkySolution({ size: n, clues, givens: new Array(n * n).fill(0) }, grid)).toBe(true)
-    for (const b of buildings) expect(Number(b.data?.height)).toBe(grid[Number(b.data?.row) * n + Number(b.data?.col)])
-    // The rules run under the buildings, and every height over its building.
+    // The rules run under the heights, and the frame over them.
     const names = puzzle.objects!.map((o) => String(o.data?.[SKY_PART_KEY]))
-    expect(names.lastIndexOf('rule')).toBeLessThan(names.indexOf('building'))
-    expect(names.lastIndexOf('building')).toBeLessThan(names.indexOf('frame'))
+    expect(names.lastIndexOf('rule')).toBeLessThan(names.indexOf('height'))
+    expect(names.lastIndexOf('height')).toBeLessThan(names.indexOf('frame'))
+    expect(names.some((name) => ['building', 'windows', 'door', 'spire'].includes(name))).toBe(false)
     expect(key.some((o) => o.text === skyInstruction(base, 'classic'))).toBe(false)
     expect(out[0]!.objects.some((o) => o.text === skyInstruction(base, 'classic'))).toBe(true)
   })
@@ -607,18 +583,15 @@ describe('skyline tour preflight', () => {
     const off = { ...plan, city: { ...plan.city, left: panel.left - 40 } }
     expect(run({ plan: off })).toMatch(/printable area/)
     expect(run({ plan: { ...plan, digitSize: 12 } })).toMatch(/below 16 pt/)
-    expect(run({ plan: { ...plan, answerSize: 10 } })).toMatch(/below 12 pt/)
   })
 
-  it('catches a drawn page whose clues, givens or buildings do not match', () => {
+  it('catches a drawn page whose clues, givens or heights do not match', () => {
     const puzzle = buildSkyPuzzle({ built, plan, city, level: 'classic', label: 'x', tag, font: FONT })
     expect(checkSkyDrawnPage({ puzzle, built, city })).toEqual([])
-    const key = buildSkyPuzzle({ built, plan, city, level: 'classic', label: 'x', tag, font: FONT, key: true })
-    expect(checkSkyDrawnPage({ puzzle: key, built, city })).toEqual([])
     const other = builtFor('classic', 4)
     const errors = checkSkyDrawnPage({ puzzle, built: other, city }).join(' ')
     expect(errors).toMatch(/clues/)
-    expect(errors).toMatch(/buildings|heights/)
+    expect(errors).toMatch(/heights|given plots/)
     expect(checkSkyDrawnPage({ puzzle, built, city: SKY_CITIES[5]! }).join(' ')).toMatch(/board/)
   })
 })

@@ -1,5 +1,5 @@
 import type { StudioFabricObject, StudioRole } from '@/types/studio-template.types'
-import { STUDIO_DIGIT_FONT, STUDIO_INK, STUDIO_PAPER, STUDIO_RULE_MEDIUM, STUDIO_STROKE_HAIRLINE, STUDIO_STROKE_NORMAL } from '@/constants/studio.constants'
+import { STUDIO_DIGIT_FONT, STUDIO_INK, STUDIO_RULE_MEDIUM, STUDIO_STROKE_HAIRLINE, STUDIO_STROKE_NORMAL } from '@/constants/studio.constants'
 import { STUDIO_CANONICAL_KEY } from '../_shared/uniqueness'
 import { buildGroup, buildRect, buildText, nextObjectId, type StudioTag } from '../studio-fabric-builders'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
@@ -33,9 +33,9 @@ import { cfShipSquares, type CfPiece, type CfShip } from './solver'
  * Black on white with one light gray, so it prints the same on any
  * interior. The squares shown are solid black ship pieces (a round rowboat,
  * a bow or stern rounded on its open end, a square middle) or a wave for
- * open water. On the answer page every ship sails in: a gray hull, outlined
- * in black, with a white porthole on every square, and the pieces the
- * reader was shown still black on top.
+ * open water. On the answer page every ship sails in: a plain gray hull,
+ * outlined in black, with the pieces the reader was shown still black on
+ * top.
  */
 
 /** Marks the objects a Cruise Fleet page draws, for checks and the editor. */
@@ -45,9 +45,6 @@ export const CF_PART_KEY = 'cfPart'
 export const CF_HULL = '#BDBDBD'
 /** Ship pieces sit this share of a square in from its sides (a bow's open end runs to the edge). */
 const INSET = 0.15
-/** A porthole's radius, as a share of the square: on the answer page, and larger in the small legend. */
-const PORTHOLE = 0.1
-const LEGEND_PORTHOLE = 0.15
 
 const r2 = (n: number) => Math.round(n * 100) / 100
 
@@ -176,34 +173,12 @@ function shownParts(piece: CfPiece, box: Box, tag: StudioTag, name: string, extr
   return part(pathOf({ lines: [inBox(pieceShape(piece), box)], close: true, fill: STUDIO_INK, strokeWidth: weight, tag, role: 'prompt' }), name, { piece, ...extra })
 }
 
-/** A ship: its hull across its squares and a porthole on each (a rowboat is all hull). */
-function shipParts(options: {
-  squares: Box
-  length: number
-  across: boolean
-  cell: number
-  fill: string
-  portholeFill: string
-  porthole?: number
-  tag: StudioTag
-  role: StudioRole
-  name: string
-  extra?: Record<string, unknown>
-}): StudioFabricObject[] {
-  const { squares, length, across, cell, fill, portholeFill, porthole = PORTHOLE, tag, role, name, extra = {} } = options
+/** A ship: one plain hull, rounded at both ends, across its squares. */
+function shipHull(options: { squares: Box; cell: number; fill: string; tag: StudioTag; role: StudioRole; name: string; extra?: Record<string, unknown> }): StudioFabricObject {
+  const { squares, cell, fill, tag, role, name, extra = {} } = options
   const inset = cell * INSET
   const hull: Box = { left: squares.left + inset, top: squares.top + inset, width: squares.width - inset * 2, height: squares.height - inset * 2 }
-  const weight = weightFor(cell)
-  const out = [part(pathOf({ lines: [stadium(hull)], close: true, fill, strokeWidth: weight, tag, role }), name, extra)]
-  if (length > 1) {
-    const holes = Array.from({ length }, (_, k) => {
-      const cx = squares.left + (across ? k + 0.5 : 0.5) * cell
-      const cy = squares.top + (across ? 0.5 : k + 0.5) * cell
-      return circle(cx, cy, cell * porthole, 18)
-    })
-    out.push(part(pathOf({ lines: holes, close: true, fill: portholeFill, strokeWidth: STUDIO_STROKE_HAIRLINE, tag, role }), `${name}-portholes`, extra))
-  }
-  return out
+  return part(pathOf({ lines: [stadium(hull)], close: true, fill, strokeWidth: weightFor(cell), tag, role }), name, extra)
 }
 
 /* ------------------------------------------------------------------ *
@@ -341,13 +316,10 @@ export function buildCfPuzzle(options: {
   // The fleet, hidden until the answer page, under the pieces the reader is shown.
   ships.forEach((ship, k) => {
     parts.push(
-      ...shipParts({
+      shipHull({
         squares: shipBox(plan, ship),
-        length: ship.length,
-        across: ship.across,
         cell,
         fill: CF_HULL,
-        portholeFill: STUDIO_PAPER,
         tag,
         role: 'answer',
         name: 'ship',
@@ -381,14 +353,10 @@ export function buildCfPuzzle(options: {
     const iconTop = midY - seg / 2
     if (entry.kind === 'ship') {
       parts.push(
-        ...shipParts({
+        shipHull({
           squares: { left: x, top: iconTop, width: seg * entry.length, height: seg },
-          length: entry.length,
-          across: true,
           cell: seg,
           fill: STUDIO_INK,
-          portholeFill: STUDIO_PAPER,
-          porthole: LEGEND_PORTHOLE,
           tag,
           role: 'prompt',
           name: 'legend-ship',

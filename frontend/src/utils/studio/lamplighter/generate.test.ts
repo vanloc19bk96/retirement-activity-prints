@@ -29,7 +29,7 @@ import {
   pickLampHome,
   type LampLevel,
 } from './content'
-import { LAMP_BEAM_FILL, LAMP_PART_KEY, buildLampPuzzle, lampArms } from './draw'
+import { LAMP_PART_KEY, buildLampPuzzle } from './draw'
 import { checkLampDrawnPage, runLampKdpPreflight } from './kdp-preflight'
 import { LAMP_NUMBER_MIN, LAMP_SIGN_GAP_MIN, lampContentBox, lampPanelInBody, lampPrintNote, planLampPage } from './layout'
 import {
@@ -417,7 +417,7 @@ describe('lamplighter pages', () => {
     expect(small.numberSize).toBeGreaterThanOrEqual(LAMP_NUMBER_MIN)
   })
 
-  it('keeps every lamp and its halo inside its square at the smallest squares', () => {
+  it('keeps every lamp inside its square at the smallest squares', () => {
     const plan = planLampPage(panelFor(kdpCtx(5.5, 8.5), 'challenging'), 'challenging', FONT)!
     const built = builtFor('challenging')
     const puzzle = buildLampPuzzle({ built, plan, home: LAMP_HOMES[0]!, level: 'challenging', label: 'x', tag, font: FONT })
@@ -425,7 +425,7 @@ describe('lamplighter pages', () => {
     const dx = puzzle.left + puzzle.width! / 2
     const dy = puzzle.top + puzzle.height! / 2
     let checked = 0
-    for (const name of ['lamp', 'lamp-base', 'lamp-rays', 'halo']) {
+    for (const name of ['lamp', 'lamp-base', 'lamp-rays']) {
       for (const o of partsOf(puzzle, name)) {
         const cellLeft = plan.grid.left + Number(o.data?.col) * plan.cell
         const cellTop = plan.grid.top + Number(o.data?.row) * plan.cell
@@ -436,7 +436,7 @@ describe('lamplighter pages', () => {
         checked++
       }
     }
-    expect(checked).toBe(built.lamps.length * 4)
+    expect(checked).toBe(built.lamps.length * 3)
   })
 
   it('stacks the legend rather than shrinking the house on a narrow panel', () => {
@@ -492,22 +492,20 @@ describe('lamplighter pages', () => {
     expect(numbers.every((t) => t.visible !== false && t.fontWeight === 700 && t.fill === STUDIO_PAPER)).toBe(true)
     const bulbs = partsOf(puzzle, 'lamp')
     expect(bulbs.length).toBeGreaterThan(5)
-    const hidden = ['lamp', 'lamp-base', 'lamp-rays', 'halo', 'beam'].flatMap((name) => partsOf(puzzle, name))
-    expect(hidden.length).toBeGreaterThan(bulbs.length * 4)
+    const hidden = ['lamp', 'lamp-base', 'lamp-rays'].flatMap((name) => partsOf(puzzle, name))
+    expect(hidden).toHaveLength(bulbs.length * 3)
     expect(hidden.every((o) => o.visible === false && o.studioRole === 'answer' && o.type === 'path')).toBe(true)
-    expect(partsOf(puzzle, 'beam').every((b) => b.fill === LAMP_BEAM_FILL)).toBe(true)
+    // Only the lamps wait for the answer page: no light beams or halos cross the floor.
+    expect(puzzle.objects!.filter((o) => o.studioRole === 'answer')).toHaveLength(hidden.length)
+    expect(partsOf(puzzle, 'beam')).toEqual([])
+    expect(partsOf(puzzle, 'halo')).toEqual([])
     const texts = partsOf(puzzle, 'legend-text').map((t) => t.text)
     expect(texts).toEqual([`${bulbs.length} lamps`, '= 2 lamps touch it'])
     // The legend's lamp is on show; only the house's lamps wait for the answer page.
     expect(partsOf(puzzle, 'legend-lamp').every((o) => o.visible !== false)).toBe(true)
   })
 
-  it('throws a beam for every stretch of light, stopped by the walls', () => {
-    const arms = lampArms(TOY.puzzle, TOY.lamps).map((a) => `${a.at}:${a.dir}:${a.reach}`)
-    expect(arms.sort()).toEqual(['0:right:2', '6:left:1', '6:up:1', '6:down:2', '11:left:2', '11:down:1', '13:left:1', '13:right:2', '13:up:3'].sort())
-  })
-
-  it('lights the whole house on the answer page in black and grays, without the how-to line', () => {
+  it('shows every lamp on the answer page in black and white, without the how-to line', () => {
     const out = generate(base, kdpCtx(8.5, 11))
     const answers = out.flatMap((p) => harvestAnswers(p.objects))
     expect(answers.length).toBeGreaterThan(0)
@@ -515,8 +513,7 @@ describe('lamplighter pages', () => {
     const puzzle = puzzleOf(key)!
     const bulbs = partsOf(puzzle, 'lamp')
     expect(bulbs.every((b) => b.visible === true && b.fill === STUDIO_PAPER && b.stroke === STUDIO_INK)).toBe(true)
-    expect(partsOf(puzzle, 'beam').every((b) => b.visible === true && b.fill === LAMP_BEAM_FILL)).toBe(true)
-    expect(partsOf(puzzle, 'halo').every((h) => h.visible === true && h.fill === STUDIO_PAPER)).toBe(true)
+    expect(partsOf(puzzle, 'beam')).toEqual([])
     // The lamps on the key light a finished house for the page's walls and numbers.
     const n = 9
     const cells = new Array<number>(n * n).fill(LAMP_FLOOR)
@@ -524,12 +521,10 @@ describe('lamplighter pages', () => {
     for (const t of partsOf(puzzle, 'number')) cells[Number(t.data?.row) * n + Number(t.data?.col)] = Number(t.text)
     const lamps = bulbs.map((b) => Number(b.data?.row) * n + Number(b.data?.col))
     expect(isLampSolution({ size: n, cells }, lamps)).toBe(true)
-    // The rules run over the walls, every beam over the rules, and every lamp over the beams.
+    // The rules run over the walls, and every lamp over the rules.
     const names = puzzle.objects!.map((o) => String(o.data?.[LAMP_PART_KEY]))
     expect(names.lastIndexOf('wall')).toBeLessThan(names.indexOf('rule'))
-    expect(names.lastIndexOf('rule')).toBeLessThan(names.indexOf('beam'))
-    expect(names.lastIndexOf('beam')).toBeLessThan(names.indexOf('halo'))
-    expect(names.lastIndexOf('beam')).toBeLessThan(names.indexOf('number'))
+    expect(names.lastIndexOf('rule')).toBeLessThan(names.indexOf('lamp'))
     expect(key.some((o) => o.text === LAMP_INSTRUCTION)).toBe(false)
     expect(out[0]!.objects.some((o) => o.text === LAMP_INSTRUCTION)).toBe(true)
   })
@@ -622,7 +617,11 @@ describe('lamplighter preflight', () => {
     const other = builtFor('classic', 4)
     const errors = checkLampDrawnPage({ puzzle, built: other, home }).join(' ')
     expect(errors).toMatch(/walls|numbers/)
-    expect(errors).toMatch(/lamps|beams/)
+    expect(errors).toMatch(/lamps/)
+    // A light beam slipped back onto the answer page is refused.
+    const lamp = partsOf(puzzle, 'lamp')[0]!
+    const beamed = { ...puzzle, objects: [...puzzle.objects!, { ...lamp, data: { ...lamp.data, [LAMP_PART_KEY]: 'beam' } }] }
+    expect(checkLampDrawnPage({ puzzle: beamed, built, home }).join(' ')).toMatch(/more than the lamps/)
     expect(checkLampDrawnPage({ puzzle, built, home: LAMP_HOMES[5]! }).join(' ')).toMatch(/board/)
   })
 })

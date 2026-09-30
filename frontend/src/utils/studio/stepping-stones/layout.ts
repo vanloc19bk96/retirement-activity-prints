@@ -40,10 +40,6 @@ export const STONES_GAP_MIN = 5
 /** A stone's rounded corner, as a share of its side. */
 const RADIUS_OF_STONE = 0.24
 
-/** The answer page's trail: its width as a share of the pitch (never under 8 px). */
-const TRAIL_OF_CELL = 0.3
-export const STONES_TRAIL_MIN = 8
-
 /** The signpost: bold, 16 pt, down to 14 pt on a narrow trim. */
 export const STONES_SIGN_SIZE = ptToPx(16)
 export const STONES_SIGN_MIN = ptToPx(14)
@@ -82,8 +78,6 @@ export interface StonesPlan {
   radius: number
   /** The numbers, px. */
   digitSize: number
-  /** The answer page's trail width. */
-  trail: number
   signSize: number
   /** The name on one line, or broken between words when one line is too wide. */
   signLines: 1 | 2
@@ -135,9 +129,6 @@ export const stonesDigitSizeFor = (cell: number) => Math.max(STONES_DIGIT_MIN, M
 /** The lawn between stones for a pitch. */
 export const stonesGapFor = (cell: number) => Math.max(STONES_GAP_MIN, Math.round(cell * GAP_OF_CELL))
 
-/** The answer page's trail width for a pitch. */
-export const stonesTrailFor = (cell: number) => Math.max(STONES_TRAIL_MIN, Math.round(cell * TRAIL_OF_CELL))
-
 /** The signpost's outer width for a walk at a size. */
 export function stonesSignWidth(text: string, size: number, font: string): number {
   return stonesTextWidth(text, size, stonesSignSpec(font)) + STONES_SIGN_PAD_X * 2
@@ -188,7 +179,6 @@ function planAt(panel: Box, level: StonesLevel, cell: number, signSize: number, 
     gap,
     radius: Math.round(stone * RADIUS_OF_STONE),
     digitSize: stonesDigitSizeFor(cell),
-    trail: stonesTrailFor(cell),
     signSize,
     signLines,
     signGap,

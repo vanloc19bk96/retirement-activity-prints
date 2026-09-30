@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import type { StudioConfig, StudioFabricObject, StudioGenerateContext } from '@/types/studio-template.types'
 import { STUDIO_TEMPLATES, buildDefaultConfig } from '@/constants/studio-templates'
-import { STUDIO_ANSWER_INK_MONO_TEMPLATES, STUDIO_INK, STUDIO_PAPER } from '@/constants/studio.constants'
+import { STUDIO_ANSWER_INK_MONO_TEMPLATES, STUDIO_INK } from '@/constants/studio.constants'
 import { DPI } from '@/types/canvas-settings.types'
 import { resetObjectCounter } from '../studio-fabric-builders'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
@@ -455,19 +455,22 @@ describe('cruise-fleet pages', () => {
     expect(ships).toHaveLength(8)
     expect(ships.every((s) => s.visible === false && s.studioRole === 'answer' && s.fill === CF_HULL)).toBe(true)
     expect(partsOf(puzzle, 'legend-text').map((t) => t.text)).toEqual(['1 cruise ship', '2 ferries', '2 sailboats', '3 rowboats', 'Open water'])
-    expect(partsOf(puzzle, 'legend-ship').every((s) => s.visible !== false)).toBe(true)
+    const legendShips = partsOf(puzzle, 'legend-ship')
+    expect(legendShips).toHaveLength(4)
+    expect(legendShips.every((s) => s.visible !== false && s.fill === STUDIO_INK)).toBe(true)
+    expect(partsOf(puzzle, 'legend-ship-portholes')).toHaveLength(0)
   })
 
   it('sails the whole fleet in on the answer page, in black ink, without the how-to line', () => {
     const out = generate(base, kdpCtx(8.5, 11))
     const answers = out.flatMap((p) => harvestAnswers(p.objects))
-    // A hull for each of the eight ships, and portholes on the five longer than a rowboat.
-    expect(answers).toHaveLength(13)
+    // One plain hull for each of the eight ships, and nothing else.
+    expect(answers).toHaveLength(8)
     const key = buildAnswerKeyFromOutputs(out, STUDIO_INK)
     const puzzle = puzzleOf(key)!
     const hulls = partsOf(puzzle, 'ship')
     expect(hulls.every((s) => s.visible === true && s.stroke === STUDIO_INK && s.fill === CF_HULL)).toBe(true)
-    expect(partsOf(puzzle, 'ship-portholes').every((p) => p.visible === true && p.fill === STUDIO_PAPER)).toBe(true)
+    expect(partsOf(puzzle, 'ship-portholes')).toHaveLength(0)
     // The hulls are a finished harbor for the page's numbers.
     const n = 8
     const grid = new Int8Array(n * n)

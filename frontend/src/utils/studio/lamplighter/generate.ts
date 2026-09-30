@@ -70,7 +70,7 @@ function errorPage(ctx: StudioGenerateContext, config: StudioConfig, tag: Studio
  * logic on exactly that answer and not by easier steps alone where the
  * level asks for more, large print, on the page, not a repeat) and the
  * drawn check (every wall and number on its square, a lamp on exactly
- * every square of the answer, a beam for every stretch of its light). A
+ * every square of the answer and nothing else added to the floor). A
  * house that fails anywhere is set aside and another built; if none passes,
  * the page says so plainly instead of printing a house a reader cannot
  * finish.
@@ -126,7 +126,7 @@ export const lamplighterTemplate: StudioTemplateDefinition = {
   label: 'Lamplighter: Light the House',
   category: 'logic',
   description:
-    'The classic Light Up (Akari) puzzle, moved into a retiree’s home: put lamps on the white squares until every square is lit. Each lamp shines along its row and column until a wall stops it, no lamp may shine on another, and a number on a wall says how many lamps touch it. Every house is built fresh, proven to have one answer reached by logic alone, and named for a retiree’s home, such as Lakeside Cabin, Grandma’s Farmhouse or Lighthouse Keeper’s House. Three levels, large print, and an answer page that switches every lamp on, its light beaming down the rows and columns.',
+    'The classic Light Up (Akari) puzzle, moved into a retiree’s home: put lamps on the white squares until every square is lit. Each lamp shines along its row and column until a wall stops it, no lamp may shine on another, and a number on a wall says how many lamps touch it. Every house is built fresh, proven to have one answer reached by logic alone, and named for a retiree’s home, such as Lakeside Cabin, Grandma’s Farmhouse or Lighthouse Keeper’s House. Three levels, large print, and a clear answer page that shows every lamp on its square.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: LAMP_DEFAULT_TITLE,

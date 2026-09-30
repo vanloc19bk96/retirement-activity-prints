@@ -70,10 +70,10 @@ function errorPage(ctx: StudioGenerateContext, config: StudioConfig, tag: Studio
  * pearl's rule, finished by the level's own logic on exactly that necklace
  * and not by easier steps alone where the level asks for more, large
  * print, on the page, not a repeat) and the drawn check (every pearl in its
- * square and colour, the cord threading exactly the necklace, a bead on
- * every square between the pearls). A board that fails anywhere is set
- * aside and another built; if none passes, the page says so plainly instead
- * of printing a board a reader cannot finish.
+ * square and colour, the cord threading exactly the necklace and nothing
+ * else strung on it). A board that fails anywhere is set aside and another
+ * built; if none passes, the page says so plainly instead of printing a
+ * board a reader cannot finish.
  */
 function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageOutput[] {
   const level = parsePearlLevel(config.level)
@@ -126,7 +126,7 @@ export const stringOfPearlsTemplate: StudioTemplateDefinition = {
   label: 'String of Pearls: Thread the Necklace',
   category: 'logic',
   description:
-    'The classic Masyu puzzle, strung as a necklace from a retiree’s life: draw one loop through the squares that threads every pearl, going straight through a white pearl with a turn beside it and turning on a black pearl with a straight run each way. Every board is built fresh, proven to have one necklace reached by logic alone, and named for a necklace worth remembering, like Golden Anniversary Pearls, Grandma’s Sunday Pearls or the Grandkids’ Macaroni Necklace. Three levels, large print, and an answer page where the loop becomes the necklace itself: a smooth cord through the pearls, a bead on every square between.',
+    'The classic Masyu puzzle, strung as a necklace from a retiree’s life: draw one loop through the squares that threads every pearl, going straight through a white pearl with a turn beside it and turning on a black pearl with a straight run each way. Every board is built fresh, proven to have one necklace reached by logic alone, and named for a necklace worth remembering, like Golden Anniversary Pearls, Grandma’s Sunday Pearls or the Grandkids’ Macaroni Necklace. Three levels, large print, and an answer page where the loop becomes the necklace itself: one smooth, bold cord through the pearls.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: PEARL_DEFAULT_TITLE,
