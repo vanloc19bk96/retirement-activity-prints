@@ -1,12 +1,7 @@
 import type { StudioFabricObject } from '@/types/studio-template.types'
-import {
-  STUDIO_INK,
-  STUDIO_RULE_MEDIUM,
-  STUDIO_STROKE_BOLD,
-  STUDIO_STROKE_HAIRLINE,
-} from '@/constants/studio.constants'
+import { STUDIO_RULE_MEDIUM } from '@/constants/studio.constants'
 import { unionObjectBounds, type Box } from '../studio-layout'
-import { buildCircle, buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import { buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
 import { FABRIC_FONT_SIZE_MULT } from '../studio-text-metrics'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import { OT_LETTERS } from './content'
@@ -15,11 +10,9 @@ import {
   TEXT_LINE_HEIGHT,
   choiceRowHeight,
   choiceRows,
-  choiceTextOffset,
   itemNumber,
   keyAnswerRowHeight,
   keyEntryHeight,
-  keyTextOffset,
   textHeight,
   type OtKeyPlan,
   type OtQuizPlan,
@@ -83,55 +76,8 @@ function rule(ctx: DrawContext, left: number, width: number, top: number) {
   )
 }
 
-/**
- * A letter in its ring — the place the reader marks. The ring is a drawn
- * outline, so it prints crisp in black and white, and the letter is centred
- * on its glyph, not its box.
- */
-function ringedLetter(
-  ctx: DrawContext,
-  options: {
-    letter: string
-    left: number
-    top: number
-    ringR: number
-    letterFont: number
-    stroke: number
-    role: 'prompt' | 'answer'
-  },
-) {
-  const { letter, left, top, ringR, letterFont, stroke, role } = options
-  const centerX = Math.round(left + ringR)
-  const centerY = Math.round(top + ringR)
-  ctx.objects.push(
-    buildCircle(
-      {
-        left: centerX,
-        top: centerY,
-        radius: ringR,
-        stroke: STUDIO_INK,
-        strokeWidth: stroke,
-        strokeUniform: true,
-      },
-      ctx.tag,
-      role === 'answer' ? 'answer' : 'decoration',
-    ),
-    text(
-      ctx,
-      {
-        left: centerX - ringR,
-        top: Math.round(centerY - (letterFont * FABRIC_FONT_SIZE_MULT) / 2),
-        text: letter,
-        width: 2 * ringR,
-        fontSize: letterFont,
-        fontWeight: 700,
-        textAlign: 'center',
-        lineHeight: 1,
-      },
-      role,
-    ),
-  )
-}
+/** "A." — the bold letter that leads a choice, and the right one on the answer page. */
+const letterLabel = (letter: string) => `${letter}.`
 
 /** Leftover height shared between the gaps of a stack — at most one more `cap` each. */
 function spread(usable: number, content: number, gaps: number, cap: number): number {
@@ -145,14 +91,14 @@ function firstTop(field: Box, usable: number, stack: number, font: number): numb
 }
 
 /**
- * One question: its number, its wording, and its four ringed choices — two by
+ * One question: its number, its wording, and its four lettered choices — two by
  * two or one under another, as it was fitted. The wording carries the
  * question's label so a later pack in the book can refuse the same fact.
  *
  * The question is drawn as one group, so a seller drags or deletes a whole
- * question in the editor rather than chasing its rings and lines one by one.
- * Each choice — ring, letter and wording — is a group inside it, so ungrouping
- * a question hands back four choices, not twelve loose marks.
+ * question in the editor rather than chasing its letters and lines one by one.
+ * Each choice — letter and wording — is a group inside it, so ungrouping a
+ * question hands back four choices, not eight loose marks.
  */
 function question(outer: DrawContext, plan: OtQuizPlan, q: FittedOtQuestion, left: number, top: number) {
   const m = plan.metrics
@@ -180,19 +126,11 @@ function question(outer: DrawContext, plan: OtQuizPlan, q: FittedOtQuestion, lef
     const x = grid ? textLeft + (i % 2) * (plan.cellWidth + m.gutter) : textLeft
     const y = rowTops[grid ? Math.floor(i / 2) : i]!
     const choice: DrawContext = { ...ctx, objects: [] }
-    ringedLetter(choice, {
-      letter: OT_LETTERS[i]!,
-      left: x,
-      top: y,
-      ringR: m.ringR,
-      letterFont: m.letterFont,
-      stroke: STUDIO_STROKE_HAIRLINE,
-      role: 'prompt',
-    })
     choice.objects.push(
+      text(ctx, { left: x, top: y, text: letterLabel(OT_LETTERS[i]!), width: m.letterW, fontSize: m.font, fontWeight: 700 }),
       text(ctx, {
-        left: x + m.ringW,
-        top: y + choiceTextOffset(m),
+        left: x + m.letterW,
+        top: y,
         text: q.choiceLines[i]!.join('\n'),
         width: grid ? plan.gridChoiceWidth : plan.listChoiceWidth,
         fontSize: m.font,
@@ -265,14 +203,13 @@ export function drawOtQuizPage(
 }
 
 /**
- * The answer page: every question's number, its right letter ringed, the
+ * The answer page: every question's number, its right letter in bold, the
  * answer exactly as the quiz printed it, and the note in italic beneath. All
  * of it is drawn from the fitted records the quiz pages were drawn from, so the
  * key can only ever show the pack's own answers.
  *
- * Each entry is one group — number, ringed letter, answer and note — so a
- * seller moves a whole answer as one piece; the ring and its letter are a group
- * inside it, one mark the way the reader sees it.
+ * Each entry is one group — number, letter, answer and note — so a seller
+ * moves a whole answer as one piece.
  */
 export function drawOtKeyPage(
   objects: StudioFabricObject[],
@@ -294,29 +231,22 @@ export function drawOtKeyPage(
   const gaps = heights.length - 1
   const gap = m.entryGap + spread(usable, content, gaps, m.entryGap)
   const left = Math.round(field.left + (field.width - key.blockWidth) / 2)
-  const answerLeft = left + m.numberW + m.ringW
+  const answerLeft = left + m.numberW + m.letterW
   let top = firstTop(field, usable, content + (gap - m.entryGap) * gaps, m.font)
 
   questions.forEach((q, i) => {
     const entry = key.entries[i]!
-    const lineTop = top + keyTextOffset(m)
     const parts: StudioFabricObject[] = []
-    parts.push(text(ctx, { left, top: lineTop, text: itemNumber(q.index), width: m.numberW, fontSize: m.font, fontWeight: 700 }))
-    const ring: DrawContext = { ...ctx, objects: [] }
-    ringedLetter(ring, {
-      letter: q.letter,
-      left: left + m.numberW,
-      top,
-      ringR: m.ringR,
-      letterFont: m.letterFont,
-      stroke: STUDIO_STROKE_BOLD,
-      role: 'answer',
-    })
-    pushGroup(parts, ring.objects, tag)
     parts.push(
+      text(ctx, { left, top, text: itemNumber(q.index), width: m.numberW, fontSize: m.font, fontWeight: 700 }),
       text(
         ctx,
-        { left: answerLeft, top: lineTop, text: entry.answerLines.join('\n'), width: key.answerWidth, fontSize: m.font, fontWeight: 700 },
+        { left: left + m.numberW, top, text: letterLabel(q.letter), width: m.letterW, fontSize: m.font, fontWeight: 700 },
+        'answer',
+      ),
+      text(
+        ctx,
+        { left: answerLeft, top, text: entry.answerLines.join('\n'), width: key.answerWidth, fontSize: m.font, fontWeight: 700 },
         'answer',
       ),
     )

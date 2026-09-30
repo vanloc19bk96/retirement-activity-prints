@@ -138,17 +138,11 @@ export const occupationTriviaTemplate: StudioTemplateDefinition = {
       <text x="4" y="7">1.</text>
     </g>
     <path d="M11 5.6h38M11 10.4h24" stroke="currentColor" stroke-width="0.9" stroke-linecap="round"/>
-    <g fill="none" stroke="currentColor" stroke-width="0.6">
-      <circle cx="13.2" cy="17.4" r="2.3"/>
-      <circle cx="37.2" cy="17.4" r="2.3"/>
-      <circle cx="13.2" cy="24.6" r="2.3"/>
-      <circle cx="37.2" cy="24.6" r="2.3"/>
-    </g>
-    <g font-family="serif" font-size="2.8" font-weight="700" fill="currentColor" text-anchor="middle">
-      <text x="13.2" y="18.4">A</text>
-      <text x="37.2" y="18.4">B</text>
-      <text x="13.2" y="25.6">C</text>
-      <text x="37.2" y="25.6">D</text>
+    <g font-family="serif" font-size="3.4" font-weight="700" fill="currentColor">
+      <text x="11" y="18.6">A.</text>
+      <text x="35" y="18.6">B.</text>
+      <text x="11" y="25.8">C.</text>
+      <text x="35" y="25.8">D.</text>
     </g>
     <g stroke="currentColor" stroke-width="0.7" stroke-linecap="round" opacity="0.65">
       <path d="M17.5 17.4h13M41.5 17.4h15M17.5 24.6h11M41.5 24.6h13"/>

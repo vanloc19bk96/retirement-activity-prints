@@ -94,14 +94,14 @@ function choicesByQuestion(pages: StudioFabricObject[][]) {
     const qs = questionBoxes(objects).sort((a, b) => a.top - b.top)
     qs.forEach((q, i) => {
       const bottom = qs[i + 1]?.top ?? Number.POSITIVE_INFINITY
-      const letters = boxes.filter((o) => /^[A-D]$/.test(clean(o.text)) && o.top > q.top && o.top < bottom)
+      const letters = boxes.filter((o) => /^[A-D]\.$/.test(clean(o.text)) && o.top > q.top && o.top < bottom)
       const map = new Map<string, string>()
       for (const letter of letters) {
-        // The choice text sits on the letter's row, just right of its ring.
+        // The choice text sits on the letter's row, just right of it.
         const text = boxes
-          .filter((o) => o.left > letter.left && Math.abs(o.top - letter.top) < 12 && !/^[A-D]$/.test(clean(o.text)))
+          .filter((o) => o.left > letter.left && Math.abs(o.top - letter.top) < 12 && !/^[A-D]\.$/.test(clean(o.text)))
           .sort((a, b) => a.left - b.left)[0]!
-        map.set(oneLine(clean(text.text)), clean(letter.text))
+        map.set(oneLine(clean(text.text)), clean(letter.text).slice(0, 1))
       }
       out.set(oneLine(clean(q.text)), map)
     })
@@ -218,8 +218,8 @@ describe('occupation-trivia pages', () => {
 
       keyNumbers.forEach((number, i) => {
         const row = keyBoxes.filter((o) => Math.abs(o.top - number.top) < 14 && o !== number).sort((a, b) => a.left - b.left)
-        const letter = clean(row.find((o) => /^[A-D]$/.test(clean(o.text)))!.text)
-        const answer = oneLine(clean(row.find((o) => o.fontWeight === 700 && !/^[A-D]$/.test(clean(o.text)))!.text))
+        const letter = clean(row.find((o) => /^[A-D]\.$/.test(clean(o.text)))!.text).slice(0, 1)
+        const answer = oneLine(clean(row.find((o) => o.fontWeight === 700 && !/^[A-D]\.$/.test(clean(o.text)))!.text))
         const source = OT_FIXTURE_QUESTIONS.find((q) => q.question === order[i])!
         expect(answer).toBe(source.answer)
         expect(byQuestion.get(order[i]!)!.get(answer)).toBe(letter)
@@ -239,7 +239,7 @@ describe('occupation-trivia pages', () => {
     expect(labels).toContain(otLabel('teacher', OT_FIXTURE_QUESTIONS[0]!))
   })
 
-  it('groups each question, each choice kept with its ring, and each answer entry', () => {
+  it('groups each question, each choice kept with its letter, and each answer entry', () => {
     const pages = generate(base, kdpCtx(6, 9))
     const groups = pages.flatMap((p) => p.objects.filter((o) => o.type === 'group'))
     expect(groups).toHaveLength(OT_TARGET_QUESTIONS)
@@ -250,10 +250,10 @@ describe('occupation-trivia pages', () => {
       expect(choices).toHaveLength(OT_LETTERS.length)
       choices.forEach((choice, c) => {
         expect(choice.type).toBe('group')
-        const [ring, letter, words, ...rest] = choice.objects ?? []
+        const [letter, words, ...rest] = choice.objects ?? []
         expect(rest).toEqual([])
-        expect(ring?.type).toBe('circle')
-        expect(clean(letter?.text)).toBe(OT_LETTERS[c])
+        expect(clean(letter?.text)).toBe(`${OT_LETTERS[c]}.`)
+        expect(letter?.fontWeight).toBe(700)
         expect(words?.type).toBe('textbox')
       })
     })
@@ -262,17 +262,17 @@ describe('occupation-trivia pages', () => {
     const entries = key.filter((o) => o.type === 'group')
     expect(entries).toHaveLength(OT_TARGET_QUESTIONS)
     entries.forEach((entry, i) => {
-      const [number, ring, answer, note, ...rest] = entry.objects ?? []
+      const [number, letter, answer, note, ...rest] = entry.objects ?? []
       expect(rest).toEqual([])
       expect(clean(number?.text)).toBe(`${i + 1}.`)
-      expect(ring?.type).toBe('group')
-      expect(ring?.objects?.map((o) => o.type)).toEqual(['circle', 'textbox'])
+      expect(clean(letter?.text)).toMatch(/^[A-D]\.$/)
+      expect(letter?.studioRole).toBe('answer')
       expect(answer?.studioRole).toBe('answer')
       expect(note?.fontStyle).toBe('italic')
     })
     // Nothing of a question or an answer is left loose on the page.
     for (const objects of [...pages.map((p) => p.objects), key]) {
-      expect(objects.filter((o) => o.type !== 'group' && /^(\d+\.|[A-D])$/.test(clean(o.text)))).toEqual([])
+      expect(objects.filter((o) => o.type !== 'group' && /^(\d+|[A-D])\.$/.test(clean(o.text)))).toEqual([])
     }
   })
 

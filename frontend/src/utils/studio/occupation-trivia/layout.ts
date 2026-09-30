@@ -6,7 +6,6 @@ import { DPI, PDF_POINTS_PER_INCH } from '@/types/canvas-settings.types'
 import { STUDIO_CONTENT_SAFE_INSET_X } from '@/constants/studio.constants'
 import { contentBox, insetHorizontal, measureHeaderHeight, type Box } from '../studio-layout'
 import {
-  FABRIC_FONT_SIZE_MULT,
   fabricTextHeight,
   wrapSafeWidth,
   wrapTextToWidth,
@@ -25,8 +24,8 @@ import {
  *
  * A pack is a quiz that flows over as many pages as it needs, then one answer
  * page. Each question is its number, its wording, and four lettered choices
- * under it, each letter printed inside a ring the reader circles. The choices
- * sit two by two when every one fits a single line of half the column, and
+ * under it, each led by its bold letter ("A.") that the reader circles. The
+ * choices sit two by two when every one fits a single line of half the column, and
  * one under another otherwise — so a short set stays compact and a long one
  * never wraps into a squint.
  *
@@ -36,7 +35,7 @@ import {
  * limit. No trim can talk the quiz into small type: it prints on more pages,
  * or — on the smallest trims — a pack of eight instead of ten.
  *
- * The answer page is one page, always: number, ringed letter, the answer, and
+ * The answer page is one page, always: number, letter, the answer, and
  * a short italic note. It is planned from the questions actually placed, and
  * drops the notes rather than a single answer if a small trim cannot hold them.
  */
@@ -74,12 +73,8 @@ export interface OtMetrics {
   font: number
   /** Column holding the question numbers. */
   numberW: number
-  /** Radius of the ring each letter sits in. */
-  ringR: number
-  /** The letter inside the ring. */
-  letterFont: number
-  /** Column holding a ring, with the space after it. */
-  ringW: number
+  /** Column holding a choice's letter ("A."), with the space after it. */
+  letterW: number
   /** Between a question's last line and its first choice. */
   choiceGap: number
   /** Between two rows of choices. */
@@ -97,9 +92,7 @@ export function otMetrics(font: number): OtMetrics {
   return {
     font,
     numberW: Math.round(font * 2.1),
-    ringR: Math.round(font * 0.62),
-    letterFont: Math.round(font * 0.78),
-    ringW: Math.round(font * 1.24 + font * 0.5),
+    letterW: Math.round(font * 1.5),
     choiceGap: Math.round(font * 0.55),
     choiceRowGap: Math.round(font * 0.4),
     gutter: Math.round(font * 1.0),
@@ -122,11 +115,11 @@ export interface OtQuizGeometry {
   blockWidth: number
   /** Question text, right of the number column. */
   textWidth: number
-  /** One column of a two-by-two set, ring included. */
+  /** One column of a two-by-two set, letter included. */
   cellWidth: number
-  /** Choice text in a two-by-two set, right of its ring. */
+  /** Choice text in a two-by-two set, right of its letter. */
   gridChoiceWidth: number
-  /** Choice text in a stacked set, right of its ring. */
+  /** Choice text in a stacked set, right of its letter. */
   listChoiceWidth: number
 }
 
@@ -150,8 +143,8 @@ function quizGeometry(width: number, font: number): OtQuizGeometry {
     blockWidth,
     textWidth,
     cellWidth,
-    gridChoiceWidth: cellWidth - metrics.ringW,
-    listChoiceWidth: textWidth - metrics.ringW,
+    gridChoiceWidth: cellWidth - metrics.letterW,
+    listChoiceWidth: textWidth - metrics.letterW,
   }
 }
 
@@ -184,13 +177,9 @@ export function textHeight(lines: number, metrics: OtMetrics): number {
   return fabricTextHeight(lines, metrics.font, TEXT_LINE_HEIGHT)
 }
 
-/** Drop from a choice row's top to its first line, so the line sits centred in its ring. */
-export const choiceTextOffset = (m: OtMetrics) =>
-  Math.max(0, Math.round((2 * m.ringR - m.font * FABRIC_FONT_SIZE_MULT) / 2))
-
-/** One row of choices, as tall as its tallest choice or its ring. */
+/** One row of choices, as tall as its tallest choice. */
 export function choiceRowHeight(lines: number, m: OtMetrics): number {
-  return Math.max(2 * m.ringR, choiceTextOffset(m) + textHeight(lines, m))
+  return textHeight(lines, m)
 }
 
 /** Every choice row of one question, top to bottom. */
@@ -345,9 +334,8 @@ export interface OtKeyMetrics {
   font: number
   noteFont: number
   numberW: number
-  ringR: number
-  letterFont: number
-  ringW: number
+  /** Column holding the right letter ("B."), with the space after it. */
+  letterW: number
   /** Between an answer and its note. */
   noteGap: number
   /** Between two answers, before leftover height is shared out. */
@@ -359,9 +347,7 @@ export function otKeyMetrics(font: number): OtKeyMetrics {
     font,
     noteFont: Math.max(NOTE_FONT_MIN, Math.round(font * 0.87)),
     numberW: Math.round(font * 2.1),
-    ringR: Math.round(font * 0.62),
-    letterFont: Math.round(font * 0.78),
-    ringW: Math.round(font * 1.24 + font * 0.5),
+    letterW: Math.round(font * 1.5),
     noteGap: Math.round(font * 0.15),
     entryGap: Math.round(font * 0.45),
   }
@@ -376,9 +362,9 @@ export interface OtKeyEntryLines {
 export interface OtKeyPlan {
   metrics: OtKeyMetrics
   blockWidth: number
-  /** Answer text, right of the number and the ring. */
+  /** Answer text, right of the number and the letter. */
   answerWidth: number
-  /** Note text, set under the answer, hanging from the ring. */
+  /** Note text, set under the answer, hanging from the letter. */
   noteWidth: number
   showNotes: boolean
   entries: OtKeyEntryLines[]
@@ -387,13 +373,9 @@ export interface OtKeyPlan {
 
 const keyTextHeight = (lines: number, size: number) => fabricTextHeight(lines, size, TEXT_LINE_HEIGHT)
 
-/** Drop from an answer row's top to its first line, so the line sits centred in its ring. */
-export const keyTextOffset = (m: OtKeyMetrics) =>
-  Math.max(0, Math.round((2 * m.ringR - m.font * FABRIC_FONT_SIZE_MULT) / 2))
-
-/** An answer row: its ring, or its answer of `lines` lines, whichever is taller. */
+/** An answer row: its answer of `lines` lines. */
 export function keyAnswerRowHeight(lines: number, m: OtKeyMetrics): number {
-  return Math.max(2 * m.ringR, keyTextOffset(m) + keyTextHeight(lines, m.font))
+  return keyTextHeight(lines, m.font)
 }
 
 export function keyEntryHeight(entry: OtKeyEntryLines, m: OtKeyMetrics): number {
@@ -410,8 +392,8 @@ export function keyStackHeight(entries: readonly OtKeyEntryLines[], m: OtKeyMetr
 function keyGeometry(width: number, size: number) {
   const metrics = otKeyMetrics(size)
   const blockWidth = Math.min(width, BLOCK_MAX_WIDTH)
-  const answerWidth = blockWidth - metrics.numberW - metrics.ringW
-  // Notes hang from the ring, not the answer: a wider measure keeps most to one or two lines.
+  const answerWidth = blockWidth - metrics.numberW - metrics.letterW
+  // Notes hang from the letter, not the answer: a wider measure keeps most to one or two lines.
   return { metrics, blockWidth, answerWidth, noteWidth: blockWidth - metrics.numberW }
 }
 
