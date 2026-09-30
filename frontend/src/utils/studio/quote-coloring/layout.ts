@@ -20,13 +20,25 @@ export const QC_HEADER_AIR = 10
 export const QC_MIN_PANEL_WIDTH = Math.round(3.6 * DPI)
 export const QC_MIN_PANEL_HEIGHT = Math.round(4.4 * DPI)
 
+/**
+ * Extra air round the whole panel, so the frame's heavy outline and the
+ * pattern's outer shapes sit well inside the safe line rather than a hair
+ * from it. It grows with the room a trim leaves past `QC_TIGHT_ROOM`, up to
+ * `QC_SAFE_AIR` a side: a small trim needs all its width to letter the saying.
+ */
+export const QC_SAFE_AIR = Math.round(0.2 * DPI)
+const QC_TIGHT_ROOM = Math.round(4.5 * DPI)
+const QC_SAFE_AIR_RATE = 0.1
+
 export function qcPanelInBody(body: Box, headed: boolean): Box {
   const top = body.top + (headed ? QC_HEADER_AIR : QC_EDGE_AIR)
+  const width = body.width - QC_EDGE_AIR * 2
+  const air = Math.round(Math.min(QC_SAFE_AIR, Math.max(0, (width - QC_TIGHT_ROOM) * QC_SAFE_AIR_RATE)))
   return {
-    left: body.left + QC_EDGE_AIR,
-    top,
-    width: body.width - QC_EDGE_AIR * 2,
-    height: body.top + body.height - QC_EDGE_AIR - top,
+    left: body.left + QC_EDGE_AIR + air,
+    top: top + air,
+    width: width - air * 2,
+    height: body.top + body.height - QC_EDGE_AIR - top - air * 2,
   }
 }
 
