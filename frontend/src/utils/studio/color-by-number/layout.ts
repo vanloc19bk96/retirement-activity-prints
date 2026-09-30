@@ -1,6 +1,6 @@
 import type { StudioConfig, StudioConfigLayoutContext } from '@/types/studio-template.types'
 import { DPI } from '@/types/canvas-settings.types'
-import { STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
+import { STUDIO_CONTENT_SAFE_INSET_X, STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
 import { contentBox, measureHeaderHeightOverFullWidth, type Box } from '../studio-layout'
 import { hugTextBoxWidth } from '../studio-text-metrics'
 import type { Bounds } from '../stained-glass/geometry'
@@ -19,6 +19,14 @@ import { CBN_COLORS, CBN_MAX_COLORS, cbnColor, type CbnColorId } from './palette
 
 /** Air between the safe area (or the heading) and the frame, canvas px. */
 export const CBN_EDGE_AIR = 6
+/**
+ * Air each side of the scene and key: the heading's rail. Set 6px off the
+ * guide, the frame of a full-width scene read as touching the gutter on the
+ * inside pages of a book.
+ */
+export const CBN_SIDE_AIR = STUDIO_CONTENT_SAFE_INSET_X
+/** Air under the key, so it never sits on the safe-area guide. */
+export const CBN_FOOT_AIR = 16
 /** Extra air under the instruction, so the frame does not crowd it. */
 export const CBN_HEADER_AIR = 10
 /** Air between the scene and the key. */
@@ -140,10 +148,10 @@ export interface CbnPageLayout {
  */
 export function cbnLayoutInBody(body: Box, headed: boolean, fontFamily: string, keyStyle: CbnKeyStyle): CbnPageLayout {
   const top = body.top + (headed ? CBN_HEADER_AIR : CBN_EDGE_AIR)
-  const width = body.width - CBN_EDGE_AIR * 2
-  const left = body.left + CBN_EDGE_AIR
+  const width = body.width - CBN_SIDE_AIR * 2
+  const left = body.left + CBN_SIDE_AIR
   const reserve = cbnKeyReserve(width, fontFamily, keyStyle)
-  const bottom = body.top + body.height - CBN_EDGE_AIR
+  const bottom = body.top + body.height - CBN_FOOT_AIR
   const panelH = bottom - reserve - CBN_KEY_GAP - top
   return {
     panel: { left, top, width, height: panelH },
