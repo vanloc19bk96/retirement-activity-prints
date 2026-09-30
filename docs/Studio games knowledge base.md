@@ -3200,10 +3200,15 @@ pt; nothing is ever set below 14 pt, and no choice runs past three lines).
 AI writes fresh questions for every page. Each question in a request gets its
 own brief — a retirement topic and a dilemma shape, sampled by seed — so
 variety comes from structure, not paraphrase. Every shape is an axis with two
-opposite ends (quiet vs lively, host vs guest, cosy favourite vs something new,
-old memories vs new ones…): the topic gives the one situation both choices
-share, and each choice sits at one end, so picking one means giving up the
-other. The model first names that shared setup and the "X vs Y" trade-off; a
+opposite ends that each cost something (near the grandkids vs the dream house,
+the dream trip alone vs a trip close to home with the family, the comfort you
+know vs the adventure you always wanted…): the topic gives the one situation
+both choices share, and each choice sits at one end, so picking one means giving
+up the other. The prompt asks for the voice of a friend asking the table, not a
+brochure: every pair has to split a room of retirees, carry a price the reader
+can feel, and touch something personal (family, home, the old job, a dream put
+off). A choice using a brochure or essay word ("voyage", "scenic", "perfect a
+technique", "cherish"…) is dropped in the API. The model first names that shared setup and the "X vs Y" trade-off; a
 pair it cannot sum up that way (two unrelated activities, or two versions of
 the same thing with nothing to weigh) is dropped in the API. Every pair is
 validated in the API and again in the browser: both

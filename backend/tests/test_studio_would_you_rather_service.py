@@ -137,10 +137,20 @@ def test_option_labels_and_leads_are_stripped(raw: str, expected: str) -> None:
         "win a trip to Disney with the grandchildren",  # brand
         "forget where you parked the car",  # ageist joke
         "pay off every bill before breakfast",  # money worries
+        "voyage to a distant island",  # brochure word, not how people talk
+        "explore every hidden scenic spot nearby",
+        "perfect a master technique at cards",
     ],
 )
 def test_bad_options_are_rejected(raw: str) -> None:
     assert normalize_option(raw, budget=60) is None
+
+
+def test_a_price_after_but_is_kept() -> None:
+    assert (
+        normalize_option("take your dream trip overseas, but go alone", budget=60)
+        == "Take your dream trip overseas, but go alone"
+    )
 
 
 def test_option_over_the_budget_is_rejected() -> None:
@@ -242,6 +252,8 @@ def test_prompt_carries_one_brief_per_question_and_the_rules() -> None:
     assert "\n6. " not in prompt
     assert "at most 60 characters" in prompt
     assert "Brand names" in prompt
+    assert "voyage" in prompt  # stiff words are named so the model avoids them
+    assert "torn test" in prompt
     assert '"dilemma"' in prompt
     assert '"setup"' in prompt
 

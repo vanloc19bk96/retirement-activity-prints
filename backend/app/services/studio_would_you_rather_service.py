@@ -19,6 +19,9 @@ Everything here is printed and sold on KDP, so a pair only survives whole:
 * **No repeats.** Pairs are compared on their content words, qualifiers and
   plurals folded and sides in either order, against each other, against what
   the client says the book already prints, and against this worker's memory.
+* **Said like a person.** A choice is phrased the way a friend would ask it
+  across the kitchen table; brochure and essay words ("voyage", "scenic",
+  "perfect a technique") drop the option.
 * **Nothing sensitive.** Health, ageing bodies, money trouble, loneliness,
   death, politics, religion, alcohol, gambling, brands and celebrities are
   dropped.
@@ -131,6 +134,11 @@ def _blocked_re() -> re.Pattern[str]:
 @lru_cache(maxsize=1)
 def _brand_re() -> re.Pattern[str]:
     return word_pattern(string_list(_config(), "brandTerms"))
+
+
+@lru_cache(maxsize=1)
+def _stiff_re() -> re.Pattern[str]:
+    return word_pattern(string_list(_config(), "stiffWords"))
 
 
 @lru_cache(maxsize=1)
@@ -364,6 +372,9 @@ def normalize_option(raw: Any, *, budget: int) -> str | None:
         return None
     if not _opens_on_verb(text) or is_unsafe(text):
         return None
+    # Brochure words ("voyage", "scenic") read as a machine, not a friend asking.
+    if _stiff_re().search(text):
+        return None
     return text[0].upper() + text[1:]
 
 
@@ -509,9 +520,15 @@ def _build_prompt(req: WouldYouRatherRequest, *, seed: int | None = None) -> str
         else f"Every question is about {theme}, each from a different corner of it."
     )
 
+    stiff = ", ".join(string_list(_config(), "stiffWords"))
+
     return f"""Create "Would you rather...?" questions for a large-print retirement
 activity book, read by retirees, couples, families and guests at retirement
 parties. Each question is two choices printed after "Would you rather".
+
+Write like the warm, funny friend at the party who asks the whole table a
+question and starts a ten-minute argument. Not like a travel brochure, a
+textbook or a greeting card.
 
 Theme: {theme}
 {theme_rule}
@@ -520,39 +537,58 @@ Write exactly {want} questions, one per brief, in this order:
 {briefs}
 
 How to build each question -- in this order:
-1. "setup": the ONE concrete situation both choices share, drawn from the
-   brief's topic (or the theme) -- the same free afternoon, the same trip, the
-   same party, the same chore, the same wish.
+1. "setup": the ONE real-life situation both choices share, drawn from the
+   brief's topic (or the theme) -- the same free Tuesday, the same trip, the
+   same Sunday dinner, the same grandkids, the same old job.
 2. "dilemma": the two OPPOSITE ends the reader weighs, written "X vs Y" (e.g.
-   "peace and quiet vs a lively crowd"). Take the axis from the brief's shape;
+   "near family vs the dream house"). Take the axis from the brief's shape;
    if it sits awkwardly on the setup, use the nearest opposite that fits.
 3. optionA sits at one end, optionB at the other, both inside the setup. Picking
-   one must mean giving up what the other offers -- that is the whole game.
+   one must mean giving up something the reader truly cares about.
 
-Related AND opposite, never just two nice things:
-- Bad (same topic, no opposite -- both are tidying old keepsakes):
-  "label every family photo in a velvet album" / "sort a lifetime of letters by year"
-- Good (preserving the past vs making new memories):
-  "put every old family photo into albums" / "fill a new album with this year's adventures"
-- Bad (nothing in common): "shape a bowl on a pottery wheel" / "spot five new
-  constellations through a telescope"
-- Good (one clear evening, quiet vs lively): "spend a clear night stargazing in
-  the backyard" / "spend a clear night dancing at an outdoor concert"
+The torn test -- every pair must pass all three:
+- Split: picture ten retirees reading it. About half pick each side, and the
+  table argues. If nine would pick the same side, it fails.
+- Price: each side has a cost the reader can feel. Put the cost right in the
+  choice when it helps ("..., but you go alone"). Two free treats is no dilemma.
+- Feeling: it makes the reader picture their own life -- a person they love,
+  their home, the old job, a small daily pleasure, a dream they put off. If it
+  could sit in a travel brochure or a sports manual, it fails.
+
+Bad and good:
+- Bad (brochure words, nothing personal at stake): "explore every hidden scenic
+  spot in your home county" / "voyage to a distant island on the other side of
+  the globe"
+- Good (the dream vs the people, each with a price): "take your dream trip
+  overseas, but go alone" / "take a trip close to home with the whole family"
+- Bad (vague, stiff, no feeling -- matches of what?): "play twice as many
+  matches during the summer season" / "perfect a master technique to win every
+  single tournament"
+- Good (winning vs being wanted): "be unbeatable at cards, but nobody wants to
+  play you" / "lose most games, but always be first on the invite list"
+- Good (people vs place): "live next door to the grandkids in a tiny flat" /
+  "live in your dream house four hours away"
+- Good (playful, both have a catch): "have your partner retire too and be home
+  all day" / "have your partner keep working five more years"
+- Bad (same topic, no opposite): "label every family photo in an album" /
+  "sort all the old letters by year"
 - Check every pair: if either choice could be moved to another question without
   anyone noticing, or the reader cannot say what they give up, rewrite it.
 
 Each choice:
-- Completes "Would you rather ...": starts with a plain verb ("spend", "learn",
-  "host", "have") and is one clause. Where it reads naturally, repeat the shared
-  part of the setup in both and change only the part that differs.
-- Both genuinely appealing (or both equally, harmlessly awkward) -- neither
-  obviously better.
+- Completes "Would you rather ...": starts with a plain verb ("live", "give up",
+  "have", "take", "be", "never") and is one clause, optionally followed by
+  ", but ..." naming its price.
+- Talk the way people talk at the kitchen table: short, everyday words a
+  70-year-old would actually say. Contractions are fine. Say "you" and "your".
+- Name real, familiar things: the grandkids, your partner, the old boss, Sunday
+  dinner, your favourite chair, the morning paper, the garden shed, the dog.
+  Never generic stand-ins like "an activity", "a hobby", "a place", "matches".
+- Never use these brochure and essay words: {stiff}.
 - 3 to {max_words} words and at most {budget} characters. Keep the two about the
   same length.
-- Specific and vivid, not vague ("spend a week on a quiet lake with a canoe", not
-  "go somewhere nice"). No specialist knowledge needed.
-- Vary the wording across questions: do not start every choice with "spend",
-  and do not reuse a sentence pattern from another question.
+- Vary the wording across questions: do not start every choice with the same
+  verb, and do not reuse a sentence pattern from another question.
 - No "or", "either" or slashes inside a choice. No question marks, numbering,
   labels or quotation marks.
 
@@ -565,11 +601,11 @@ Never:
 {language}
 
 Return JSON only:
-{{ "items": [ {{ "brief": 1, "topic": "short getaways and day trips",
-  "setup": "a spring weekend away",
-  "dilemma": "the coast vs the countryside",
-  "optionA": "spend a spring weekend in a cottage by the sea",
-  "optionB": "spend a spring weekend at a farmhouse in the hills" }} ] }}
+{{ "items": [ {{ "brief": 1, "topic": "the big trip you have talked about for years",
+  "setup": "the big trip finally happening",
+  "dilemma": "the dream destination vs the people you love",
+  "optionA": "take your dream trip overseas, but go alone",
+  "optionB": "take a trip close to home with the whole family" }} ] }}
 """
 
 
