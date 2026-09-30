@@ -3,8 +3,9 @@ import { mazeTemplate } from './generate'
 import { buildDefaultConfig, getStudioTemplate } from '@/constants/studio-templates'
 import {
   STUDIO_ANSWER_INK,
-  STUDIO_ANSWER_INK_MONO,
+  STUDIO_ANSWER_INK_BY_TEMPLATE,
   STUDIO_ANSWER_INK_MONO_TEMPLATES,
+  STUDIO_ANSWER_INK_ROUTE,
   STUDIO_CONTENT_SAFE_INSET_X,
   STUDIO_INK,
 } from '@/constants/studio.constants'
@@ -94,7 +95,7 @@ const captions = (group: StudioFabricObject) =>
     .map((obj) => String(obj.text ?? '').trim())
 
 const answerKey = (out: { objects: StudioFabricObject[]; answerSourceObjects?: StudioFabricObject[] }) =>
-  buildAnswerPage(out.answerSourceObjects ?? out.objects, STUDIO_ANSWER_INK_MONO)
+  buildAnswerPage(out.answerSourceObjects ?? out.objects, STUDIO_ANSWER_INK_ROUTE)
 
 runGeneratorContractTests(mazeTemplate)
 assertGeneratorEntropy(mazeTemplate)
@@ -246,12 +247,14 @@ describe('maze answer page', () => {
     expect(answers.every((obj) => obj.type === 'line')).toBe(true)
   })
 
-  it('traces the route in black ink, not blue', () => {
-    expect(STUDIO_ANSWER_INK_MONO_TEMPLATES.has('maze')).toBe(true)
+  it('traces the route in gray, apart from the black walls', () => {
+    expect(STUDIO_ANSWER_INK_BY_TEMPLATE.maze).toBe(STUDIO_ANSWER_INK_ROUTE)
+    expect(STUDIO_ANSWER_INK_MONO_TEMPLATES.has('maze')).toBe(false)
+    expect(STUDIO_ANSWER_INK_ROUTE).not.toBe(STUDIO_INK)
     const revealed = harvestAnswers(answerKey(page(titled)))
     expect(revealed.length).toBeGreaterThan(0)
     expect(revealed.every((obj) => obj.visible === true)).toBe(true)
-    expect(revealed.every((obj) => obj.stroke === STUDIO_ANSWER_INK_MONO)).toBe(true)
+    expect(revealed.every((obj) => obj.stroke === STUDIO_ANSWER_INK_ROUTE)).toBe(true)
     expect(revealed.every((obj) => obj.stroke !== STUDIO_ANSWER_INK)).toBe(true)
   })
 

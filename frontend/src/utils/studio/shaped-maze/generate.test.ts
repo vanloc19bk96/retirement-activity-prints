@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { buildDefaultConfig, getStudioTemplate } from '@/constants/studio-templates'
-import { STUDIO_ANSWER_INK_MONO, STUDIO_ANSWER_INK_MONO_TEMPLATES } from '@/constants/studio.constants'
+import { STUDIO_ANSWER_INK_BY_TEMPLATE, STUDIO_ANSWER_INK_ROUTE } from '@/constants/studio.constants'
 import { DPI } from '@/types/canvas-settings.types'
 import type { StudioConfig, StudioFabricObject, StudioGenerateContext, StudioPageOutput } from '@/types/studio-template.types'
 import { resetObjectCounter } from '../studio-fabric-builders'
@@ -102,12 +102,12 @@ runGeneratorContractTests(shapedMazeTemplate)
 assertGeneratorEntropy(shapedMazeTemplate)
 
 describe('shaped maze form', () => {
-  it('is registered next to the Maze, with a black answer key and no manual answer-key fields', () => {
+  it('is registered next to the Maze, with a gray answer route and no manual answer-key fields', () => {
     const registered = getStudioTemplate('shaped-maze')
     expect(registered).toBeDefined()
     expect(registered!.category).toBe('visual')
     expect(registered!.producesAnswerKey).toBe(true)
-    expect(STUDIO_ANSWER_INK_MONO_TEMPLATES.has('shaped-maze')).toBe(true)
+    expect(STUDIO_ANSWER_INK_BY_TEMPLATE['shaped-maze']).toBe(STUDIO_ANSWER_INK_ROUTE)
     const keys = new Set(registered!.configSchema.map((field) => field.key))
     expect(keys.has('includeAnswerKey')).toBe(false)
     expect(keys.has('answerKeyForAll')).toBe(false)
@@ -280,11 +280,11 @@ describe('shaped maze pages', () => {
           const hidden = harvestAnswers(out.objects)
           expect(hidden.length, label).toBeGreaterThan(0)
           expect(hidden.every((obj) => obj.visible === false), label).toBe(true)
-          const key = buildAnswerPage(out.answerSourceObjects!, STUDIO_ANSWER_INK_MONO)
+          const key = buildAnswerPage(out.answerSourceObjects!, STUDIO_ANSWER_INK_ROUTE)
           assertObjectsInSafeMargin(key, ctx)
           const shown = harvestAnswers(key)
           expect(shown.length, label).toBe(hidden.length)
-          expect(shown.every((obj) => obj.visible === true && obj.stroke === STUDIO_ANSWER_INK_MONO), label).toBe(true)
+          expect(shown.every((obj) => obj.visible === true && obj.stroke === STUDIO_ANSWER_INK_ROUTE), label).toBe(true)
           const keyGroup = mazeGroup(out.answerSourceObjects!)!
           expect(keyGroup.data?.studioCanonicalKey, label).toBe(group!.data?.studioCanonicalKey)
         }

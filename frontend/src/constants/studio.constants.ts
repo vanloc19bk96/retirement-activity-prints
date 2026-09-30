@@ -10,6 +10,8 @@ export const STUDIO_PAPER = '#FFFFFF'
 export const STUDIO_ANSWER_INK = '#1D4ED8'
 /** Monochrome answer marks — print-safe, not blue. */
 export const STUDIO_ANSWER_INK_MONO = STUDIO_INK
+/** Maze routes: print-safe like mono, but gray so the path never reads as another wall. */
+export const STUDIO_ANSWER_INK_ROUTE = STUDIO_RULE_MEDIUM
 
 /**
  * B&W / print-first templates: answer-key reveal must use black ink, not blue.
@@ -58,11 +60,15 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'office-relics',
   'work-lingo-match',
   'occupation-trivia',
-  'maze',
-  'shaped-maze',
   'dot-to-dot',
   'spot-the-difference',
 ])
+
+/** Templates whose answer key needs its own ink, ahead of the mono / blue default. */
+export const STUDIO_ANSWER_INK_BY_TEMPLATE: Readonly<Record<string, string>> = {
+  maze: STUDIO_ANSWER_INK_ROUTE,
+  'shaped-maze': STUDIO_ANSWER_INK_ROUTE,
+}
 
 export const STUDIO_STROKE_HAIRLINE = 1.5
 export const STUDIO_STROKE_NORMAL = 2

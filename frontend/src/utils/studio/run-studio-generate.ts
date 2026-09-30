@@ -22,6 +22,7 @@ import { ensureFontFamilyLoaded } from '@/utils/font-loader'
 import { clearStudioTextMetricsCache } from '@/utils/studio/studio-text-metrics'
 import {
   STUDIO_ANSWER_INK,
+  STUDIO_ANSWER_INK_BY_TEMPLATE,
   STUDIO_ANSWER_INK_MONO,
   STUDIO_ANSWER_INK_MONO_TEMPLATES,
   STUDIO_CONTENT_SAFE_INSET_X,
@@ -73,6 +74,8 @@ function shiftStudioObjects(objects: StudioFabricObject[], dx: number): StudioFa
 }
 
 function answerInkForTemplate(templateKey: string): string {
+  const override = STUDIO_ANSWER_INK_BY_TEMPLATE[templateKey]
+  if (override) return override
   return STUDIO_ANSWER_INK_MONO_TEMPLATES.has(templateKey)
     ? STUDIO_ANSWER_INK_MONO
     : STUDIO_ANSWER_INK
