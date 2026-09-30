@@ -100,7 +100,7 @@ export function buildCbnScene(options: {
   labels: readonly CbnLabel[]
   box: Box
   tag: StudioTag
-  /** The page's book label (`subject|version|composition|palette`). */
+  /** The page's book label (`subject|version|composition|palette|key`). */
   label: string
   /** Stands in for the whole subtree when the page is fingerprinted. */
   canonical: string

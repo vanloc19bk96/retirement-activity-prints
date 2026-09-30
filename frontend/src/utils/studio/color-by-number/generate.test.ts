@@ -222,6 +222,62 @@ describe('color-by-number palettes', () => {
     const result = colorUnits({ units, touching: new Map(), palette, subjectId: 'teapot' })
     expect(result.ok).toBe(false)
   })
+
+  describe('dealt colors', () => {
+    const units = [
+      { id: 'sky', role: 'sky' as const, area: 900, spaces: 1 },
+      { id: 'hillFar', role: 'hillFar' as const, area: 500, spaces: 1 },
+      { id: 'hillNear', role: 'hillNear' as const, area: 400, spaces: 1 },
+      { id: 'sun', role: 'sun' as const, area: 150, spaces: 1 },
+      ...Array.from({ length: 6 }, (_, i) => ({ id: `s${i}`, area: 100 - i, spaces: 1 })),
+    ]
+    const touching = new Map<string, Set<string>>()
+    const link = (a: string, b: string) => {
+      touching.set(a, new Set([...(touching.get(a) ?? []), b]))
+      touching.set(b, new Set([...(touching.get(b) ?? []), a]))
+    }
+    link('sky', 'hillFar')
+    link('hillFar', 'hillNear')
+    link('sun', 'sky')
+    for (let i = 0; i < 6; i++) {
+      link(`s${i}`, 'sky')
+      if (i > 0) link(`s${i}`, `s${i - 1}`)
+    }
+    const deal = (seed: number, recentColors?: Map<CbnColorId, number>) => {
+      const result = colorUnits({ units, touching, palette: CBN_PALETTES[0]!, subjectId: 'teapot', rng: createRng(seed), recentColors })
+      expect(result.ok).toBe(true)
+      return result.ok ? result.coloring : null
+    }
+
+    it('deals different keys and numbers from page to page, never breaking the rules', () => {
+      const keys = new Set<string>()
+      const sets = new Set<string>()
+      const firsts = new Set<CbnColorId>()
+      for (let seed = 1; seed <= 40; seed++) {
+        const { colors, legend } = deal(seed)!
+        expect(legend.length).toBeGreaterThanOrEqual(CBN_MIN_COLORS)
+        expect(legend.length).toBeLessThanOrEqual(CBN_MAX_COLORS)
+        expect(new Set(legend).size).toBe(legend.length)
+        for (const [a, set] of touching) for (const b of set) expect(colors.get(a)).not.toBe(colors.get(b))
+        keys.add(legend.join('.'))
+        sets.add([...legend].sort().join('.'))
+        firsts.add(legend[0]!)
+      }
+      expect(keys.size).toBeGreaterThanOrEqual(35)
+      expect(sets.size).toBeGreaterThanOrEqual(10)
+      // "1" is not the same color on every page.
+      expect(firsts.size).toBeGreaterThanOrEqual(5)
+    })
+
+    it('leans away from colors the book has just used', () => {
+      const count = (recent?: Map<CbnColorId, number>) => {
+        let n = 0
+        for (let seed = 1; seed <= 200; seed++) if (deal(seed, recent)!.colors.get('sky') === 'lightBlue') n++
+        return n
+      }
+      expect(count(new Map([['lightBlue', 6]]))).toBeLessThan(count())
+    })
+  })
 })
 
 describe('color-by-number piece hints', () => {
@@ -461,6 +517,24 @@ describe('color-by-number uniqueness', () => {
     }
   })
 
+  it('never prints the colors of the page before, and spreads its keys across the book', () => {
+    const book: string[] = []
+    for (let i = 0; i < 16; i++) {
+      const [page] = generate({ ...base, seed: 700 + i }, kdpCtx(8.5, 11, 700 + i, book, saltOf(13)))
+      const label = labelOf(page!.objects)
+      expect(label).not.toBe('')
+      book.push(label)
+    }
+    const entries = parseCbnBook(book)
+    expect(entries.every((e) => e.key && e.key.length >= CBN_MIN_COLORS)).toBe(true)
+    const sets = entries.map((e) => [...e.key!].sort().join('.'))
+    for (let i = 1; i < sets.length; i++) expect(sets[i]).not.toBe(sets[i - 1])
+    expect(new Set(sets).size).toBe(sets.length)
+    // Neither the same "1" nor the same handful of pencils on every page.
+    expect(new Set(entries.map((e) => e.key![0])).size).toBeGreaterThanOrEqual(6)
+    expect(new Set(entries.flatMap((e) => e.key!)).size).toBeGreaterThanOrEqual(18)
+  })
+
   it('gives two sellers on the same settings different pages', () => {
     const labels = new Set<string>()
     for (let n = 1; n <= 6; n++) {
@@ -477,6 +551,11 @@ describe('color-by-number uniqueness', () => {
     expect(parseCbnBook([label, 'nonsense', 'teapot|x', 'ghost|a|b|summer'])).toHaveLength(1)
     const entry = parseCbnBook([label])[0]!
     expect(cbnPageLabel(entry)).toBe(label)
+    expect(entry.key).toEqual(legendOf(page!.objects))
+    // A label from before keys were recorded still reads; an unreadable key is dropped.
+    const design = label.split('|').slice(0, 4).join('|')
+    expect(parseCbnBook([design])[0]!.key).toBeUndefined()
+    expect(parseCbnBook([`${design}|yellow.cerulean`])[0]!.key).toBeUndefined()
     expect(isValidComposition(parseCompositionKey(entry.composition)!)).toBe(true)
   })
 })

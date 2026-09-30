@@ -9,7 +9,7 @@ export interface CbnRemoteData {
 /**
  * No network: every subject is bundled and every scene is built in the
  * browser. This only reads back the designs the book's Color by Number pages
- * already carry (`subject|version|composition|palette`, stamped on each
+ * already carry (`subject|version|composition|palette|key`, stamped on each
  * scene), which generate cannot see on its own, so page 41 is not page 3
  * again. The collector caps what it returns, so a long book costs the same.
  */

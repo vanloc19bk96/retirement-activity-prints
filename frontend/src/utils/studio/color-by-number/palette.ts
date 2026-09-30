@@ -27,26 +27,41 @@
  * fresh one while there are fewer than six. If neither can be done without
  * two touching spaces sharing a color, the design is refused and another
  * dealt — the key is never padded with an unused color or cut short.
+ *
+ * **Variety.** Each page deals its colors from these lists rather than always
+ * taking the first, leans away from colors the book's recent pages asked
+ * for, and deals which number each color gets, so a book of thirty pages
+ * does not print thirty keys that start "1 Yellow".
  */
+
+import type { StudioRng } from '../studio-rng'
 
 export type CbnColorId =
   | 'yellow'
   | 'gold'
   | 'orange'
   | 'peach'
+  | 'coral'
   | 'red'
+  | 'darkRed'
   | 'pink'
+  | 'magenta'
   | 'purple'
   | 'lavender'
   | 'lightBlue'
   | 'blue'
   | 'darkBlue'
   | 'turquoise'
+  | 'teal'
+  | 'mint'
   | 'lightGreen'
   | 'green'
+  | 'olive'
   | 'darkGreen'
+  | 'beige'
   | 'tan'
   | 'brown'
+  | 'darkBrown'
   | 'lightGray'
   | 'gray'
 
@@ -58,25 +73,33 @@ export interface CbnColor {
   hex: string
 }
 
-/** Pencil-box order: the key lists its colors in this order, so light blue sits by blue. */
+/** Pencil-box order, the tie-break wherever colors are listed without a dealt order. */
 export const CBN_COLORS: readonly CbnColor[] = [
   { id: 'yellow', name: 'Yellow', hex: '#F7D842' },
   { id: 'gold', name: 'Gold', hex: '#E0A526' },
   { id: 'orange', name: 'Orange', hex: '#F08A24' },
   { id: 'peach', name: 'Peach', hex: '#F7C29B' },
+  { id: 'coral', name: 'Coral', hex: '#F2735F' },
   { id: 'red', name: 'Red', hex: '#D62F3A' },
+  { id: 'darkRed', name: 'Dark Red', hex: '#8E1B2A' },
   { id: 'pink', name: 'Pink', hex: '#F29BC0' },
+  { id: 'magenta', name: 'Magenta', hex: '#C2338A' },
   { id: 'purple', name: 'Purple', hex: '#7D55B8' },
   { id: 'lavender', name: 'Lavender', hex: '#C6B3E3' },
   { id: 'lightBlue', name: 'Light Blue', hex: '#9CD3F2' },
   { id: 'blue', name: 'Blue', hex: '#2E78D6' },
   { id: 'darkBlue', name: 'Dark Blue', hex: '#1F3A8A' },
   { id: 'turquoise', name: 'Turquoise', hex: '#2BB9AE' },
+  { id: 'teal', name: 'Teal', hex: '#12787A' },
+  { id: 'mint', name: 'Mint Green', hex: '#A8E6C8' },
   { id: 'lightGreen', name: 'Light Green', hex: '#A6D86A' },
   { id: 'green', name: 'Green', hex: '#3E9B47' },
+  { id: 'olive', name: 'Olive Green', hex: '#7A8B2E' },
   { id: 'darkGreen', name: 'Dark Green', hex: '#1E5C2A' },
+  { id: 'beige', name: 'Beige', hex: '#EDE0C4' },
   { id: 'tan', name: 'Tan', hex: '#D4B48A' },
   { id: 'brown', name: 'Brown', hex: '#8A5A2E' },
+  { id: 'darkBrown', name: 'Dark Brown', hex: '#5A3A1E' },
   { id: 'lightGray', name: 'Light Gray', hex: '#D0D0D0' },
   { id: 'gray', name: 'Gray', hex: '#8C8C8C' },
 ]
@@ -134,220 +157,433 @@ export interface CbnPalette {
   roles: Partial<Record<CbnRole, readonly CbnColorId[]>>
   /** Colors the subject's pieces lean on, best first, after the subject's own. */
   accents: readonly CbnColorId[]
+  /** The sun may sit low on the horizon (golden hour, dusk). */
+  lowSun?: boolean
 }
 
 /**
  * Moods. Outdoor moods serve every outdoor scene (meadow, shore, beach);
  * indoor moods serve the room. Each is a believable light: sunsets give a
  * lavender sky with a peach glow at the horizon and pink clouds, autumn turns
- * the trees orange, spring puts blossom on them.
+ * the trees orange, spring puts blossom on them, dusk turns the sky deep blue.
+ * Most roles list two or more colors the light allows, and the page deals
+ * among them, so one mood does not print the same key twice.
  */
 export const CBN_PALETTES: readonly CbnPalette[] = [
   {
     id: 'summer',
     setting: 'outdoor',
     roles: {
-      sky: ['lightBlue'],
-      sun: ['yellow', 'gold'],
+      sky: ['lightBlue', 'blue'],
+      sun: ['yellow', 'gold', 'orange'],
       cloud: ['lightGray', 'lavender'],
-      mountain: ['lavender', 'gray'],
+      mountain: ['lavender', 'gray', 'purple'],
       snow: ['lightGray'],
-      hillFar: ['green', 'darkGreen'],
-      hillNear: ['lightGreen', 'green'],
-      foliage: ['darkGreen', 'green'],
-      trunk: ['brown'],
-      path: ['tan', 'peach'],
-      fence: ['brown', 'tan'],
-      field: ['gold', 'lightGreen', 'tan'],
-      petal: ['red', 'pink', 'purple'],
-      flowerCenter: ['yellow', 'orange'],
-      water: ['blue'],
+      hillFar: ['green', 'darkGreen', 'olive'],
+      hillNear: ['lightGreen', 'green', 'mint'],
+      foliage: ['darkGreen', 'green', 'olive'],
+      trunk: ['brown', 'darkBrown'],
+      path: ['tan', 'peach', 'beige'],
+      fence: ['brown', 'tan', 'darkBrown'],
+      field: ['gold', 'lightGreen', 'tan', 'yellow'],
+      petal: ['red', 'pink', 'purple', 'magenta', 'coral'],
+      flowerCenter: ['yellow', 'orange', 'gold'],
+      water: ['blue', 'teal'],
       waterLight: ['turquoise', 'lightBlue'],
-      sand: ['tan', 'peach'],
-      dune: ['peach', 'gold'],
+      sand: ['tan', 'peach', 'beige'],
+      dune: ['peach', 'gold', 'beige'],
     },
-    accents: ['red', 'blue', 'orange', 'tan', 'brown'],
+    accents: ['red', 'blue', 'orange', 'coral', 'teal', 'tan', 'brown', 'magenta'],
   },
   {
     id: 'golden',
     setting: 'outdoor',
+    lowSun: true,
     roles: {
-      sky: ['lavender'],
-      skyLow: ['peach', 'orange'],
-      sun: ['yellow', 'orange'],
-      cloud: ['pink', 'peach'],
-      mountain: ['purple'],
+      sky: ['lavender', 'pink'],
+      skyLow: ['peach', 'orange', 'coral'],
+      sun: ['yellow', 'orange', 'gold'],
+      cloud: ['pink', 'peach', 'coral'],
+      mountain: ['purple', 'magenta', 'darkBlue'],
       snow: ['pink', 'lavender'],
-      hillFar: ['green', 'darkGreen'],
-      hillNear: ['lightGreen', 'green'],
-      foliage: ['darkGreen', 'green'],
-      trunk: ['brown'],
-      path: ['tan', 'peach'],
-      fence: ['brown'],
-      field: ['gold', 'orange'],
-      petal: ['pink', 'red'],
+      hillFar: ['green', 'darkGreen', 'olive'],
+      hillNear: ['lightGreen', 'green', 'olive'],
+      foliage: ['darkGreen', 'green', 'olive'],
+      trunk: ['brown', 'darkBrown'],
+      path: ['tan', 'peach', 'beige'],
+      fence: ['brown', 'darkBrown'],
+      field: ['gold', 'orange', 'olive'],
+      petal: ['pink', 'red', 'coral', 'magenta'],
       flowerCenter: ['yellow', 'orange'],
-      water: ['blue', 'darkBlue'],
-      waterLight: ['turquoise', 'lavender'],
-      sand: ['tan', 'peach'],
-      dune: ['peach', 'orange'],
+      water: ['blue', 'darkBlue', 'teal'],
+      waterLight: ['turquoise', 'lavender', 'pink'],
+      sand: ['tan', 'peach', 'beige'],
+      dune: ['peach', 'orange', 'gold'],
     },
-    accents: ['red', 'blue', 'brown', 'yellow', 'orange'],
+    accents: ['red', 'blue', 'brown', 'yellow', 'orange', 'darkRed', 'teal'],
   },
   {
     id: 'spring',
     setting: 'outdoor',
     roles: {
-      sky: ['lightBlue'],
-      sun: ['yellow'],
-      cloud: ['lavender', 'lightGray'],
-      mountain: ['lavender', 'purple'],
+      sky: ['lightBlue', 'lavender'],
+      sun: ['yellow', 'gold'],
+      cloud: ['lavender', 'lightGray', 'pink'],
+      mountain: ['lavender', 'purple', 'blue'],
       snow: ['lightGray'],
-      hillFar: ['lightGreen', 'green'],
-      hillNear: ['green', 'lightGreen'],
-      foliage: ['pink', 'darkGreen'],
-      trunk: ['brown'],
-      path: ['tan'],
-      fence: ['tan', 'brown'],
-      field: ['lightGreen', 'yellow'],
-      petal: ['purple', 'pink', 'red'],
-      flowerCenter: ['yellow'],
-      water: ['blue'],
-      waterLight: ['turquoise'],
-      sand: ['tan', 'peach'],
-      dune: ['peach', 'yellow'],
+      hillFar: ['lightGreen', 'green', 'mint'],
+      hillNear: ['green', 'lightGreen', 'mint'],
+      foliage: ['pink', 'darkGreen', 'lightGreen', 'magenta'],
+      trunk: ['brown', 'darkBrown'],
+      path: ['tan', 'beige'],
+      fence: ['tan', 'brown', 'beige'],
+      field: ['lightGreen', 'yellow', 'mint'],
+      petal: ['purple', 'pink', 'red', 'magenta', 'coral', 'yellow'],
+      flowerCenter: ['yellow', 'orange'],
+      water: ['blue', 'teal'],
+      waterLight: ['turquoise', 'mint'],
+      sand: ['tan', 'peach', 'beige'],
+      dune: ['peach', 'yellow', 'beige'],
     },
-    accents: ['pink', 'purple', 'yellow', 'blue', 'orange'],
+    accents: ['pink', 'purple', 'yellow', 'blue', 'orange', 'mint', 'coral', 'magenta'],
   },
   {
     id: 'autumn',
     setting: 'outdoor',
     roles: {
-      sky: ['lightBlue'],
-      sun: ['yellow', 'gold'],
-      cloud: ['lightGray'],
-      mountain: ['lavender', 'gray'],
+      sky: ['lightBlue', 'lightGray'],
+      sun: ['yellow', 'gold', 'orange'],
+      cloud: ['lightGray', 'beige'],
+      mountain: ['lavender', 'gray', 'purple'],
       snow: ['lightGray'],
-      hillFar: ['green', 'darkGreen'],
-      hillNear: ['gold', 'tan'],
-      foliage: ['orange', 'red'],
-      trunk: ['brown'],
-      path: ['tan', 'brown'],
-      fence: ['brown'],
-      field: ['orange', 'tan', 'gold'],
-      petal: ['red', 'orange'],
-      flowerCenter: ['yellow'],
-      water: ['blue'],
-      waterLight: ['turquoise'],
-      sand: ['tan', 'peach'],
+      hillFar: ['green', 'darkGreen', 'olive'],
+      hillNear: ['gold', 'tan', 'olive'],
+      foliage: ['orange', 'red', 'darkRed', 'gold'],
+      trunk: ['brown', 'darkBrown'],
+      path: ['tan', 'brown', 'beige'],
+      fence: ['brown', 'darkBrown'],
+      field: ['orange', 'tan', 'gold', 'olive'],
+      petal: ['red', 'orange', 'darkRed', 'purple'],
+      flowerCenter: ['yellow', 'gold'],
+      water: ['blue', 'darkBlue', 'teal'],
+      waterLight: ['turquoise', 'lightBlue'],
+      sand: ['tan', 'peach', 'beige'],
       dune: ['peach', 'gold'],
     },
-    accents: ['red', 'brown', 'darkGreen', 'orange', 'blue'],
+    accents: ['red', 'brown', 'darkGreen', 'orange', 'blue', 'darkRed', 'olive', 'gold'],
   },
   {
     id: 'seaside',
     setting: 'outdoor',
     roles: {
-      sky: ['lightBlue'],
-      sun: ['yellow'],
+      sky: ['lightBlue', 'blue'],
+      sun: ['yellow', 'gold'],
       cloud: ['lightGray', 'lavender'],
-      mountain: ['lavender'],
+      mountain: ['lavender', 'gray'],
       snow: ['lightGray'],
-      hillFar: ['green'],
-      hillNear: ['lightGreen', 'green'],
+      hillFar: ['green', 'olive'],
+      hillNear: ['lightGreen', 'green', 'mint'],
       foliage: ['darkGreen', 'green'],
-      trunk: ['brown'],
-      path: ['peach', 'tan'],
-      fence: ['tan', 'brown'],
+      trunk: ['brown', 'tan'],
+      path: ['peach', 'tan', 'beige'],
+      fence: ['tan', 'brown', 'lightGray'],
       field: ['gold', 'lightGreen'],
-      petal: ['pink', 'red'],
+      petal: ['pink', 'red', 'coral'],
       flowerCenter: ['yellow'],
-      water: ['blue', 'darkBlue'],
-      waterLight: ['turquoise', 'lightBlue'],
-      sand: ['tan', 'peach'],
+      water: ['blue', 'darkBlue', 'teal'],
+      waterLight: ['turquoise', 'lightBlue', 'mint'],
+      sand: ['tan', 'peach', 'beige'],
+      dune: ['peach', 'gold', 'beige'],
+    },
+    accents: ['red', 'orange', 'darkBlue', 'yellow', 'tan', 'coral', 'teal'],
+  },
+  {
+    id: 'twilight',
+    setting: 'outdoor',
+    lowSun: true,
+    roles: {
+      sky: ['darkBlue', 'purple'],
+      skyLow: ['magenta', 'pink', 'orange'],
+      sun: ['yellow', 'gold', 'orange'],
+      cloud: ['pink', 'lavender', 'magenta'],
+      mountain: ['purple', 'gray', 'lavender'],
+      snow: ['lavender', 'pink'],
+      hillFar: ['darkGreen', 'olive'],
+      hillNear: ['green', 'darkGreen', 'olive'],
+      foliage: ['darkGreen', 'olive', 'green'],
+      trunk: ['darkBrown', 'brown'],
+      path: ['tan', 'beige'],
+      fence: ['darkBrown', 'brown'],
+      field: ['olive', 'gold'],
+      petal: ['magenta', 'pink', 'coral'],
+      flowerCenter: ['yellow', 'gold'],
+      water: ['darkBlue', 'blue', 'teal'],
+      waterLight: ['lavender', 'pink', 'turquoise'],
+      sand: ['tan', 'beige'],
+      dune: ['peach', 'tan'],
+    },
+    accents: ['orange', 'teal', 'red', 'yellow', 'coral', 'darkRed'],
+  },
+  {
+    id: 'misty',
+    setting: 'outdoor',
+    roles: {
+      sky: ['lightGray', 'lavender', 'lightBlue'],
+      skyLow: ['peach', 'pink', 'yellow'],
+      sun: ['yellow', 'gold'],
+      cloud: ['beige', 'lavender', 'lightBlue', 'pink'],
+      mountain: ['gray', 'lavender', 'teal'],
+      snow: ['lightGray', 'beige'],
+      hillFar: ['mint', 'teal', 'olive'],
+      hillNear: ['lightGreen', 'green', 'olive'],
+      foliage: ['teal', 'darkGreen', 'green'],
+      trunk: ['gray', 'brown'],
+      path: ['beige', 'tan'],
+      fence: ['gray', 'brown'],
+      field: ['mint', 'lightGreen', 'yellow'],
+      petal: ['lavender', 'pink', 'purple', 'coral'],
+      flowerCenter: ['yellow', 'gold'],
+      water: ['teal', 'blue'],
+      waterLight: ['mint', 'lightBlue', 'lavender'],
+      sand: ['beige', 'tan'],
+      dune: ['beige', 'peach'],
+    },
+    accents: ['coral', 'teal', 'purple', 'yellow', 'blue', 'darkRed'],
+  },
+  {
+    id: 'tropical',
+    setting: 'outdoor',
+    roles: {
+      sky: ['turquoise', 'lightBlue', 'blue'],
+      sun: ['yellow', 'orange'],
+      cloud: ['lightGray', 'pink'],
+      mountain: ['teal', 'green', 'darkGreen'],
+      snow: ['lightGray'],
+      hillFar: ['darkGreen', 'teal', 'green'],
+      hillNear: ['lightGreen', 'green', 'olive'],
+      foliage: ['green', 'darkGreen', 'lightGreen'],
+      trunk: ['tan', 'brown'],
+      path: ['beige', 'peach', 'tan'],
+      fence: ['tan', 'brown', 'beige'],
+      field: ['lightGreen', 'yellow', 'olive'],
+      petal: ['magenta', 'coral', 'orange', 'red', 'pink'],
+      flowerCenter: ['yellow', 'orange'],
+      water: ['teal', 'blue', 'turquoise'],
+      waterLight: ['mint', 'lightBlue', 'turquoise'],
+      sand: ['beige', 'peach', 'tan'],
       dune: ['peach', 'gold'],
     },
-    accents: ['red', 'orange', 'darkBlue', 'yellow', 'tan'],
+    accents: ['coral', 'magenta', 'orange', 'yellow', 'red', 'blue'],
+  },
+  {
+    id: 'harvest',
+    setting: 'outdoor',
+    roles: {
+      sky: ['lightBlue', 'peach'],
+      sun: ['gold', 'orange', 'yellow'],
+      cloud: ['lightGray', 'beige'],
+      mountain: ['gray', 'lavender', 'purple'],
+      snow: ['lightGray'],
+      hillFar: ['olive', 'darkGreen', 'green'],
+      hillNear: ['gold', 'tan', 'yellow'],
+      foliage: ['orange', 'darkRed', 'gold', 'red'],
+      trunk: ['darkBrown', 'brown'],
+      path: ['brown', 'tan'],
+      fence: ['darkBrown', 'brown', 'gray'],
+      field: ['gold', 'orange', 'olive', 'tan'],
+      petal: ['darkRed', 'orange', 'red', 'purple'],
+      flowerCenter: ['brown', 'gold', 'yellow'],
+      water: ['blue', 'darkBlue'],
+      waterLight: ['lightBlue', 'turquoise'],
+      sand: ['tan', 'beige'],
+      dune: ['gold', 'peach'],
+    },
+    accents: ['darkRed', 'orange', 'olive', 'brown', 'blue', 'red', 'gold'],
+  },
+  {
+    id: 'meadow',
+    setting: 'outdoor',
+    roles: {
+      sky: ['blue', 'lightBlue'],
+      sun: ['yellow', 'gold'],
+      cloud: ['lightGray', 'lavender'],
+      mountain: ['blue', 'lavender', 'gray'],
+      snow: ['lightGray'],
+      hillFar: ['darkGreen', 'olive', 'green'],
+      hillNear: ['mint', 'lightGreen', 'green'],
+      foliage: ['green', 'darkGreen', 'olive'],
+      trunk: ['brown', 'darkBrown'],
+      path: ['beige', 'tan'],
+      fence: ['lightGray', 'brown', 'tan'],
+      field: ['yellow', 'mint', 'lightGreen', 'gold'],
+      petal: ['coral', 'purple', 'red', 'pink', 'magenta'],
+      flowerCenter: ['yellow', 'orange'],
+      water: ['teal', 'blue'],
+      waterLight: ['turquoise', 'lightBlue', 'mint'],
+      sand: ['beige', 'tan'],
+      dune: ['peach', 'beige'],
+    },
+    accents: ['coral', 'red', 'purple', 'orange', 'blue', 'magenta'],
   },
   {
     id: 'cozy',
     setting: 'indoor',
     roles: {
-      wall: ['peach'],
-      wallLow: ['tan', 'brown'],
-      trim: ['brown', 'tan'],
-      floor: ['tan'],
-      floorAlt: ['brown'],
-      rug: ['red', 'blue'],
-      rugBorder: ['gold', 'yellow'],
+      wall: ['peach', 'beige'],
+      wallLow: ['tan', 'brown', 'darkRed'],
+      trim: ['brown', 'tan', 'darkBrown'],
+      floor: ['tan', 'brown'],
+      floorAlt: ['brown', 'darkBrown'],
+      rug: ['red', 'blue', 'darkRed'],
+      rugBorder: ['gold', 'yellow', 'orange'],
       sky: ['lightBlue'],
-      hillNear: ['green'],
+      hillNear: ['green', 'lightGreen'],
       sun: ['yellow'],
-      curtain: ['green', 'darkGreen'],
-      wood: ['brown', 'tan'],
-      cloth: ['yellow', 'lightBlue'],
+      curtain: ['green', 'darkGreen', 'olive'],
+      wood: ['brown', 'tan', 'darkBrown'],
+      cloth: ['yellow', 'lightBlue', 'coral'],
     },
-    accents: ['blue', 'red', 'yellow', 'green', 'orange'],
+    accents: ['blue', 'red', 'yellow', 'green', 'orange', 'teal'],
   },
   {
     id: 'sage',
     setting: 'indoor',
     roles: {
-      wall: ['lightGreen'],
-      wallLow: ['green'],
-      trim: ['tan', 'brown'],
-      floor: ['brown'],
-      floorAlt: ['tan'],
-      rug: ['purple', 'blue'],
-      rugBorder: ['lavender', 'pink'],
+      wall: ['lightGreen', 'mint'],
+      wallLow: ['green', 'olive'],
+      trim: ['tan', 'brown', 'beige'],
+      floor: ['brown', 'tan'],
+      floorAlt: ['tan', 'darkBrown'],
+      rug: ['purple', 'blue', 'magenta'],
+      rugBorder: ['lavender', 'pink', 'coral'],
       sky: ['lightBlue'],
       hillNear: ['green'],
       sun: ['yellow'],
-      curtain: ['pink', 'yellow'],
+      curtain: ['pink', 'yellow', 'coral'],
       wood: ['brown', 'tan'],
-      cloth: ['pink', 'lavender'],
+      cloth: ['pink', 'lavender', 'coral'],
     },
-    accents: ['pink', 'purple', 'orange', 'blue', 'yellow'],
+    accents: ['pink', 'purple', 'orange', 'blue', 'yellow', 'magenta', 'coral'],
   },
   {
     id: 'coastal',
     setting: 'indoor',
     roles: {
-      wall: ['lightBlue'],
-      wallLow: ['blue'],
-      trim: ['tan', 'lightGray'],
-      floor: ['tan'],
+      wall: ['lightBlue', 'beige'],
+      wallLow: ['blue', 'teal'],
+      trim: ['tan', 'lightGray', 'beige'],
+      floor: ['tan', 'beige'],
       floorAlt: ['brown'],
-      rug: ['darkBlue', 'turquoise'],
-      rugBorder: ['yellow', 'peach'],
+      rug: ['darkBlue', 'turquoise', 'teal'],
+      rugBorder: ['yellow', 'peach', 'coral'],
       sky: ['turquoise', 'lightBlue'],
       hillNear: ['green'],
       sun: ['yellow'],
-      curtain: ['yellow', 'peach'],
+      curtain: ['yellow', 'peach', 'coral'],
       wood: ['brown', 'tan'],
-      cloth: ['yellow', 'peach'],
+      cloth: ['yellow', 'peach', 'coral'],
     },
-    accents: ['red', 'orange', 'yellow', 'darkBlue', 'turquoise'],
+    accents: ['red', 'orange', 'yellow', 'darkBlue', 'turquoise', 'coral'],
   },
   {
     id: 'lavender',
     setting: 'indoor',
     roles: {
       wall: ['lavender'],
-      wallLow: ['purple'],
-      trim: ['tan', 'gray'],
-      floor: ['brown'],
+      wallLow: ['purple', 'magenta'],
+      trim: ['tan', 'gray', 'beige'],
+      floor: ['brown', 'darkBrown'],
       floorAlt: ['tan'],
-      rug: ['pink', 'blue'],
-      rugBorder: ['purple', 'darkBlue'],
+      rug: ['pink', 'blue', 'teal'],
+      rugBorder: ['purple', 'darkBlue', 'magenta'],
       sky: ['lightBlue'],
       hillNear: ['green'],
       sun: ['yellow'],
-      curtain: ['pink', 'darkGreen'],
+      curtain: ['pink', 'darkGreen', 'mint'],
       wood: ['brown', 'tan'],
-      cloth: ['pink', 'yellow'],
+      cloth: ['pink', 'yellow', 'mint'],
     },
-    accents: ['pink', 'green', 'yellow', 'blue', 'orange'],
+    accents: ['pink', 'green', 'yellow', 'blue', 'orange', 'teal'],
+  },
+  {
+    id: 'terracotta',
+    setting: 'indoor',
+    roles: {
+      wall: ['coral', 'peach'],
+      wallLow: ['darkRed', 'brown'],
+      trim: ['beige', 'tan'],
+      floor: ['tan', 'brown'],
+      floorAlt: ['darkBrown', 'brown'],
+      rug: ['teal', 'darkBlue', 'olive'],
+      rugBorder: ['gold', 'yellow', 'mint'],
+      sky: ['lightBlue', 'turquoise'],
+      hillNear: ['olive', 'green'],
+      sun: ['yellow', 'gold'],
+      curtain: ['olive', 'teal', 'gold'],
+      wood: ['darkBrown', 'brown', 'tan'],
+      cloth: ['beige', 'yellow', 'mint'],
+    },
+    accents: ['teal', 'gold', 'darkBlue', 'olive', 'yellow', 'blue'],
+  },
+  {
+    id: 'vintage',
+    setting: 'indoor',
+    roles: {
+      wall: ['beige', 'peach'],
+      wallLow: ['darkGreen', 'olive', 'darkRed'],
+      trim: ['darkBrown', 'brown'],
+      floor: ['brown', 'tan'],
+      floorAlt: ['darkBrown', 'tan'],
+      rug: ['darkRed', 'darkBlue', 'purple'],
+      rugBorder: ['gold', 'tan', 'orange'],
+      sky: ['lightBlue'],
+      hillNear: ['green', 'olive'],
+      sun: ['yellow'],
+      curtain: ['darkRed', 'olive', 'gold'],
+      wood: ['darkBrown', 'brown'],
+      cloth: ['lightGray', 'beige', 'lavender'],
+    },
+    accents: ['darkRed', 'gold', 'darkGreen', 'blue', 'orange', 'teal'],
+  },
+  {
+    id: 'sunroom',
+    setting: 'indoor',
+    roles: {
+      wall: ['yellow', 'beige'],
+      wallLow: ['lightGreen', 'mint', 'tan'],
+      trim: ['lightGray', 'tan', 'beige'],
+      floor: ['tan', 'beige'],
+      floorAlt: ['brown', 'gold'],
+      rug: ['turquoise', 'coral', 'blue'],
+      rugBorder: ['orange', 'darkBlue', 'magenta'],
+      sky: ['lightBlue', 'blue'],
+      hillNear: ['green', 'lightGreen'],
+      sun: ['gold', 'orange'],
+      curtain: ['turquoise', 'coral', 'lightBlue'],
+      wood: ['tan', 'brown'],
+      cloth: ['coral', 'lightBlue', 'mint'],
+    },
+    accents: ['coral', 'blue', 'red', 'teal', 'orange', 'magenta'],
+  },
+  {
+    id: 'rose',
+    setting: 'indoor',
+    roles: {
+      wall: ['pink', 'peach'],
+      wallLow: ['darkRed', 'magenta', 'brown'],
+      trim: ['beige', 'lightGray', 'tan'],
+      floor: ['brown', 'tan'],
+      floorAlt: ['tan', 'darkBrown'],
+      rug: ['teal', 'darkGreen', 'blue'],
+      rugBorder: ['gold', 'mint', 'lavender'],
+      sky: ['lightBlue'],
+      hillNear: ['green'],
+      sun: ['yellow'],
+      curtain: ['mint', 'lavender', 'teal'],
+      wood: ['brown', 'darkBrown'],
+      cloth: ['mint', 'yellow', 'lavender'],
+    },
+    accents: ['teal', 'green', 'yellow', 'darkBlue', 'purple', 'orange'],
   },
 ]
 
@@ -365,35 +601,35 @@ export const paletteHas = (palette: CbnPalette, role: CbnRole) => (palette.roles
  * with its neighbour — wood stays a wood tone, grass a green, water a blue.
  */
 const ROLE_FAMILIES: Readonly<Record<CbnRole, readonly CbnColorId[]>> = {
-  sky: ['lightBlue', 'lavender', 'peach', 'lightGray'],
-  skyLow: ['peach', 'orange', 'pink', 'yellow'],
+  sky: ['lightBlue', 'lavender', 'peach', 'lightGray', 'blue', 'turquoise'],
+  skyLow: ['peach', 'orange', 'pink', 'yellow', 'coral', 'magenta'],
   sun: ['yellow', 'gold', 'orange'],
-  cloud: ['lightGray', 'lavender', 'pink', 'peach', 'lightBlue'],
-  mountain: ['lavender', 'purple', 'gray', 'blue'],
-  snow: ['lightGray', 'lavender', 'pink', 'lightBlue'],
-  hillFar: ['green', 'lightGreen', 'darkGreen', 'gold', 'tan'],
-  hillNear: ['lightGreen', 'green', 'darkGreen', 'gold', 'tan'],
-  field: ['gold', 'lightGreen', 'yellow', 'tan', 'orange', 'green'],
-  foliage: ['darkGreen', 'green', 'lightGreen', 'orange', 'red'],
-  trunk: ['brown', 'tan', 'gray'],
-  path: ['tan', 'peach', 'gray', 'brown', 'gold'],
-  fence: ['brown', 'tan', 'gray', 'lightGray', 'red'],
-  petal: ['red', 'pink', 'purple', 'orange', 'yellow', 'lavender'],
+  cloud: ['lightGray', 'lavender', 'pink', 'peach', 'lightBlue', 'beige'],
+  mountain: ['lavender', 'purple', 'gray', 'blue', 'teal', 'darkBlue'],
+  snow: ['lightGray', 'lavender', 'pink', 'lightBlue', 'beige'],
+  hillFar: ['green', 'lightGreen', 'darkGreen', 'olive', 'mint', 'gold', 'tan'],
+  hillNear: ['lightGreen', 'green', 'darkGreen', 'olive', 'mint', 'gold', 'tan'],
+  field: ['gold', 'lightGreen', 'yellow', 'tan', 'orange', 'green', 'olive', 'mint'],
+  foliage: ['darkGreen', 'green', 'lightGreen', 'olive', 'orange', 'red', 'teal'],
+  trunk: ['brown', 'tan', 'darkBrown', 'gray'],
+  path: ['tan', 'peach', 'beige', 'gray', 'brown', 'gold'],
+  fence: ['brown', 'tan', 'darkBrown', 'gray', 'lightGray', 'red', 'beige'],
+  petal: ['red', 'pink', 'purple', 'orange', 'yellow', 'lavender', 'coral', 'magenta'],
   flowerCenter: ['yellow', 'orange', 'gold', 'brown'],
-  water: ['blue', 'darkBlue', 'turquoise', 'lightBlue'],
-  waterLight: ['turquoise', 'lightBlue', 'blue', 'lavender'],
-  sand: ['tan', 'peach', 'gold', 'yellow'],
-  dune: ['peach', 'gold', 'tan', 'yellow'],
-  wall: ['peach', 'lightGreen', 'lightBlue', 'lavender', 'yellow', 'tan'],
-  wallLow: ['tan', 'green', 'blue', 'purple', 'brown', 'peach'],
-  trim: ['brown', 'tan', 'lightGray', 'gray', 'gold'],
-  floor: ['tan', 'brown', 'gold', 'peach', 'gray'],
-  floorAlt: ['brown', 'tan', 'gold', 'orange', 'gray'],
-  rug: ['red', 'blue', 'purple', 'green', 'gold', 'pink', 'darkBlue'],
-  rugBorder: ['gold', 'yellow', 'lavender', 'pink', 'orange', 'turquoise'],
-  curtain: ['green', 'pink', 'yellow', 'blue', 'red', 'purple'],
-  wood: ['brown', 'tan', 'gold', 'orange', 'gray'],
-  cloth: ['yellow', 'pink', 'lightBlue', 'lavender', 'red', 'turquoise'],
+  water: ['blue', 'darkBlue', 'turquoise', 'teal', 'lightBlue'],
+  waterLight: ['turquoise', 'lightBlue', 'blue', 'lavender', 'mint'],
+  sand: ['tan', 'peach', 'beige', 'gold', 'yellow'],
+  dune: ['peach', 'gold', 'tan', 'beige', 'yellow'],
+  wall: ['peach', 'lightGreen', 'lightBlue', 'lavender', 'yellow', 'beige', 'mint', 'pink', 'tan'],
+  wallLow: ['tan', 'green', 'blue', 'purple', 'brown', 'peach', 'olive', 'teal', 'darkRed'],
+  trim: ['brown', 'tan', 'lightGray', 'gray', 'beige', 'darkBrown', 'gold'],
+  floor: ['tan', 'brown', 'gold', 'peach', 'beige', 'darkBrown', 'gray'],
+  floorAlt: ['brown', 'tan', 'darkBrown', 'gold', 'orange', 'gray'],
+  rug: ['red', 'blue', 'purple', 'green', 'teal', 'darkRed', 'gold', 'pink', 'darkBlue', 'coral'],
+  rugBorder: ['gold', 'yellow', 'lavender', 'pink', 'orange', 'turquoise', 'mint', 'coral'],
+  curtain: ['green', 'pink', 'yellow', 'blue', 'red', 'purple', 'teal', 'coral', 'olive'],
+  wood: ['brown', 'tan', 'darkBrown', 'gold', 'orange', 'gray'],
+  cloth: ['yellow', 'pink', 'lightBlue', 'lavender', 'red', 'turquoise', 'mint', 'coral'],
 }
 
 /** Every color a role may take under this palette: the mood's own first, then its family. */
@@ -405,42 +641,42 @@ export const roleChoices = (palette: CbnPalette, role: CbnRole): CbnColorId[] =>
  * mood's accents alone.
  */
 export const CBN_SUBJECT_HUES: Readonly<Record<string, readonly CbnColorId[]>> = {
-  'rocking-chair': ['brown', 'tan', 'red'],
-  'coffee-mug': ['red', 'lightGray', 'blue'],
-  teacup: ['pink', 'lightBlue', 'yellow'],
-  teapot: ['blue', 'yellow', 'pink'],
-  'book-and-glasses': ['red', 'lightGray', 'brown'],
-  houseplant: ['green', 'orange', 'darkGreen'],
-  'yarn-basket': ['tan', 'purple', 'red'],
-  'sleeping-cat': ['orange', 'peach', 'pink'],
-  'vintage-radio': ['brown', 'tan', 'gold'],
-  'fresh-pie': ['tan', 'brown', 'red'],
-  sailboat: ['lightGray', 'red', 'brown'],
-  motorhome: ['lightGray', 'blue', 'gray'],
-  'camper-trailer': ['lightGray', 'turquoise', 'gray'],
-  suitcase: ['brown', 'tan', 'red'],
-  'cruise-ship': ['lightGray', 'blue', 'red'],
-  'hot-air-balloon': ['red', 'yellow', 'blue'],
-  'beach-chair': ['red', 'blue', 'yellow'],
-  lighthouse: ['gray', 'red', 'lightGray'],
-  'steam-train': ['red', 'darkBlue', 'gray'],
-  'watering-can': ['green', 'blue', 'gray'],
-  'flower-pot': ['orange', 'pink', 'green'],
-  birdhouse: ['red', 'brown', 'tan'],
-  'garden-tools': ['brown', 'gray', 'red'],
-  wheelbarrow: ['red', 'brown', 'gray'],
-  sunflower: ['yellow', 'brown', 'green'],
-  butterfly: ['orange', 'purple', 'yellow'],
-  songbird: ['blue', 'orange', 'brown'],
-  'picnic-basket': ['tan', 'red', 'brown'],
-  fishing: ['brown', 'orange', 'gray'],
-  'golf-bag': ['darkGreen', 'tan', 'lightGray'],
-  bicycle: ['blue', 'gray', 'tan'],
-  'acoustic-guitar': ['tan', 'brown', 'orange'],
-  'paint-palette': ['tan', 'red', 'blue'],
-  'vintage-camera': ['gray', 'brown', 'lightGray'],
-  gramophone: ['gold', 'brown', 'red'],
-  binoculars: ['gray', 'darkGreen', 'lightGray'],
+  'rocking-chair': ['brown', 'tan', 'darkBrown', 'red', 'lightGray', 'olive'],
+  'coffee-mug': ['red', 'lightGray', 'blue', 'teal', 'coral', 'yellow', 'darkRed'],
+  teacup: ['pink', 'lightBlue', 'yellow', 'mint', 'lavender', 'coral'],
+  teapot: ['blue', 'yellow', 'pink', 'teal', 'coral', 'mint', 'darkRed'],
+  'book-and-glasses': ['red', 'lightGray', 'brown', 'darkBlue', 'darkGreen', 'darkRed'],
+  houseplant: ['green', 'orange', 'darkGreen', 'coral', 'teal', 'olive'],
+  'yarn-basket': ['tan', 'purple', 'red', 'magenta', 'teal', 'coral'],
+  'sleeping-cat': ['orange', 'peach', 'pink', 'gray', 'tan', 'darkBrown'],
+  'vintage-radio': ['brown', 'tan', 'gold', 'darkRed', 'teal', 'beige'],
+  'fresh-pie': ['tan', 'brown', 'red', 'darkRed', 'gold', 'purple'],
+  sailboat: ['lightGray', 'red', 'brown', 'beige', 'darkBlue', 'coral'],
+  motorhome: ['lightGray', 'blue', 'gray', 'beige', 'teal', 'darkRed'],
+  'camper-trailer': ['lightGray', 'turquoise', 'gray', 'mint', 'coral', 'beige'],
+  suitcase: ['brown', 'tan', 'red', 'darkBrown', 'teal', 'darkRed'],
+  'cruise-ship': ['lightGray', 'blue', 'red', 'darkBlue', 'beige', 'teal'],
+  'hot-air-balloon': ['red', 'yellow', 'blue', 'magenta', 'teal', 'orange', 'purple', 'coral'],
+  'beach-chair': ['red', 'blue', 'yellow', 'coral', 'turquoise', 'teal', 'magenta'],
+  lighthouse: ['gray', 'red', 'lightGray', 'beige', 'darkRed', 'teal'],
+  'steam-train': ['red', 'darkBlue', 'gray', 'darkGreen', 'darkRed', 'gold'],
+  'watering-can': ['green', 'blue', 'gray', 'teal', 'coral', 'red'],
+  'flower-pot': ['orange', 'pink', 'green', 'coral', 'magenta', 'purple'],
+  birdhouse: ['red', 'brown', 'tan', 'teal', 'beige', 'darkRed', 'mint'],
+  'garden-tools': ['brown', 'gray', 'red', 'olive', 'darkGreen', 'orange'],
+  wheelbarrow: ['red', 'brown', 'gray', 'teal', 'darkGreen', 'orange'],
+  sunflower: ['yellow', 'brown', 'green', 'gold', 'darkBrown', 'olive'],
+  butterfly: ['orange', 'purple', 'yellow', 'magenta', 'teal', 'blue', 'coral'],
+  songbird: ['blue', 'orange', 'brown', 'red', 'teal', 'gold'],
+  'picnic-basket': ['tan', 'red', 'brown', 'beige', 'darkRed', 'blue'],
+  fishing: ['brown', 'orange', 'gray', 'olive', 'teal', 'darkBrown'],
+  'golf-bag': ['darkGreen', 'tan', 'lightGray', 'darkRed', 'darkBlue', 'olive'],
+  bicycle: ['blue', 'gray', 'tan', 'red', 'teal', 'coral', 'mint'],
+  'acoustic-guitar': ['tan', 'brown', 'orange', 'darkBrown', 'darkRed', 'gold'],
+  'paint-palette': ['tan', 'red', 'blue', 'yellow', 'magenta', 'teal', 'beige'],
+  'vintage-camera': ['gray', 'brown', 'lightGray', 'darkBrown', 'darkRed', 'teal'],
+  gramophone: ['gold', 'brown', 'red', 'darkRed', 'darkBrown', 'teal'],
+  binoculars: ['gray', 'darkGreen', 'lightGray', 'olive', 'darkBrown', 'teal'],
 }
 
 /**
@@ -453,17 +689,17 @@ export const CBN_SUBJECT_HUES: Readonly<Record<string, readonly CbnColorId[]>> =
  */
 export type CbnPieceHint = (index: number, count: number, knobs: Readonly<Record<string, number>>) => readonly CbnColorId[] | undefined
 
-const STEAM: readonly CbnColorId[] = ['lightGray', 'lavender', 'lightBlue']
-const LEAF: readonly CbnColorId[] = ['green', 'darkGreen', 'lightGreen']
-const PETAL: readonly CbnColorId[] = ['pink', 'red', 'purple', 'orange', 'yellow']
+const STEAM: readonly CbnColorId[] = ['lightGray', 'lavender', 'lightBlue', 'beige']
+const LEAF: readonly CbnColorId[] = ['green', 'darkGreen', 'lightGreen', 'olive', 'mint']
+const PETAL: readonly CbnColorId[] = ['pink', 'red', 'purple', 'orange', 'yellow', 'coral', 'magenta']
 
 /** Pieces a daisy (six petals, then its centre) and a tulip (three petals) add, in the potted-flowers drawing. */
 function flowerPotHint(index: number, count: number, knobs: Readonly<Record<string, number>>): readonly CbnColorId[] | undefined {
   // Two stems, then two leaves.
   if (index < 4) return LEAF
   // The pot, then its rim, close the drawing.
-  if (index === count - 2) return ['orange', 'red', 'brown']
-  if (index === count - 1) return ['orange', 'red', 'tan']
+  if (index === count - 2) return ['orange', 'coral', 'red', 'brown']
+  if (index === count - 1) return ['orange', 'coral', 'red', 'tan']
   const heads = knobs.bloom === 0 ? ['tulip', 'tulip'] : knobs.bloom === 1 ? ['daisy', 'daisy'] : ['daisy', 'tulip']
   let at = 4
   for (const head of heads) {
@@ -509,7 +745,7 @@ export interface CbnUnit {
 export interface CbnColoring {
   /** Unit id → color. */
   colors: Map<string, CbnColorId>
-  /** The key, in pencil-box order: number n is `legend[n - 1]`. */
+  /** The key: number n is `legend[n - 1]`. Dealt per page, so "1" is not the same color on every page. */
   legend: CbnColorId[]
 }
 
@@ -517,10 +753,49 @@ export type CbnColoringResult = { ok: true; coloring: CbnColoring } | { ok: fals
 
 const order = (id: CbnColorId) => COLOR_INDEX.get(id)!
 
+/** How closely a deal keeps to a list's order: each color is about half as likely as the one before it. */
+const DEAL_DECAY = 0.5
+/** How far a color gives way for each recent page of the book that already asked for it. */
+const BOOK_WEIGHT = 0.6
+/** A scene part leans toward a color the key already has (a flower's centre in the sun's yellow), so the key stays small. */
+const ON_KEY_BONUS = 2
+
+/**
+ * `list` reordered by a weighted draw: the first color stays likeliest, the
+ * rest can come first too, and `weight` tilts each draw. With no rng the
+ * list keeps its order.
+ */
+function dealOrder(list: readonly CbnColorId[], rng: StudioRng | undefined, weight: (color: CbnColorId, rank: number) => number): CbnColorId[] {
+  if (!rng || list.length < 2) return [...list]
+  const rest = list.map((color, rank) => ({ color, w: weight(color, rank) }))
+  const out: CbnColorId[] = []
+  while (rest.length > 0) {
+    const total = rest.reduce((s, r) => s + r.w, 0)
+    let roll = rng.next() * total
+    let at = rest.length - 1
+    for (let i = 0; i < rest.length; i++) {
+      roll -= rest[i]!.w
+      if (roll < 0) {
+        at = i
+        break
+      }
+    }
+    out.push(rest.splice(at, 1)[0]!.color)
+  }
+  return out
+}
+
 /**
  * Give every unit a color: scene roles from the palette, subject pieces by
  * rule, then settle the key at six to eight colors with no two touching
- * units sharing one. Deterministic: ties go by area, then by id.
+ * units sharing one. Ties go by area, then by id.
+ *
+ * With an `rng` the page deals its colors instead of always taking each
+ * list's first: the sky may be light blue or blue, the teapot blue or teal,
+ * and a color the book's recent pages leaned on (`recentColors`) gives way,
+ * so a book does not print the same key page after page. The numbers are
+ * dealt too. Without one, every choice is each list's first and the key is
+ * in pencil-box order.
  */
 export function colorUnits(options: {
   units: readonly CbnUnit[]
@@ -530,30 +805,48 @@ export function colorUnits(options: {
   subjectId: string
   /** Preferred colors for subject piece `s<index>`, ahead of the subject's own (see `CBN_PIECE_HINTS`). */
   pieceHint?: (index: number) => readonly CbnColorId[] | undefined
+  rng?: StudioRng
+  /** How many of the book's recent pages asked for each color. */
+  recentColors?: ReadonlyMap<CbnColorId, number>
   min?: number
   max?: number
 }): CbnColoringResult {
-  const { units, touching, palette, subjectId, pieceHint, min = CBN_MIN_COLORS, max = CBN_MAX_COLORS } = options
+  const { units, touching, palette, subjectId, pieceHint, rng, recentColors, min = CBN_MIN_COLORS, max = CBN_MAX_COLORS } = options
   const colors = new Map<string, CbnColorId>()
   const neighbours = (id: string) => touching.get(id) ?? new Set<string>()
   const clash = (id: string, color: CbnColorId) => [...neighbours(id)].some((n) => colors.get(n) === color)
   const byArea = [...units].sort((a, b) => b.area - a.area || (a.id < b.id ? -1 : 1))
   const everyColor = CBN_COLORS.map((c) => c.id)
+  const fresh = (color: CbnColorId, rank: number) => DEAL_DECAY ** rank / (1 + BOOK_WEIGHT * (recentColors?.get(color) ?? 0))
 
-  // Scene first: every role takes its first color no neighbour has — the
-  // mood's own choices, then its family's.
+  // Scene first: every role deals one of the mood's own colors no neighbour
+  // has, and failing that takes its family's first.
   for (const unit of byArea) {
     if (!unit.role) continue
     if (!paletteHas(palette, unit.role)) return { ok: false, reason: `The mood has no color for the ${unit.role}.` }
-    const pick = roleChoices(palette, unit.role).find((c) => !clash(unit.id, c))
+    const onKey = new Set(colors.values())
+    const own = (palette.roles[unit.role] ?? []).filter((c) => !clash(unit.id, c))
+    const pick =
+      dealOrder(own, rng, (c, rank) => fresh(c, rank) * (onKey.has(c) ? ON_KEY_BONUS : 1))[0] ??
+      roleChoices(palette, unit.role).find((c) => !clash(unit.id, c))
     if (!pick) return { ok: false, reason: `Every color for the ${unit.role} is taken by something it touches.` }
     colors.set(unit.id, pick)
   }
-  // Then the subject, biggest piece first, in its own colors.
+  // Then the subject, biggest piece first, in its own colors. The order is
+  // dealt once per page, so pieces that do not touch still share a color.
   const hues = CBN_SUBJECT_HUES[subjectId] ?? []
-  const subjectList = [...new Set<CbnColorId>([...hues, ...palette.accents])]
+  const subjectList = dealOrder([...new Set<CbnColorId>([...hues, ...palette.accents])], rng, fresh)
+  const hintOrders = new Map<string, CbnColorId[]>()
+  const dealtHint = (hint: readonly CbnColorId[]) => {
+    const key = hint.join(',')
+    if (!hintOrders.has(key)) hintOrders.set(key, dealOrder(hint, rng, fresh))
+    return hintOrders.get(key)!
+  }
   const hintOf = (unit: CbnUnit) => (pieceHint && !unit.role ? pieceHint(Number(unit.id.slice(1))) : undefined)
-  const prefer = (unit: CbnUnit): CbnColorId[] => [...new Set<CbnColorId>([...(hintOf(unit) ?? []), ...subjectList])]
+  const prefer = (unit: CbnUnit): CbnColorId[] => {
+    const hint = hintOf(unit)
+    return [...new Set<CbnColorId>([...(hint ? dealtHint(hint) : []), ...subjectList])]
+  }
   for (const unit of byArea) {
     if (unit.role) continue
     const used = new Set(colors.values())
@@ -614,6 +907,7 @@ export function colorUnits(options: {
     if (!moved) return { ok: false, reason: 'The scene has too few spaces for a full color key.' }
   }
 
-  const legend = distinct().sort((a, b) => order(a) - order(b))
+  const sorted = distinct().sort((a, b) => order(a) - order(b))
+  const legend = rng ? rng.shuffle(sorted) : sorted
   return { ok: true, coloring: { colors, legend } }
 }

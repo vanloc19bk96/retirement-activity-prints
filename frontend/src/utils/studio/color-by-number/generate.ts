@@ -23,6 +23,7 @@ import {
   cbnInstruction,
   cbnLevelSpec,
   cbnPageLabel,
+  cbnRecentColors,
   parseCbnBook,
   parseCbnKeyStyle,
   parseCbnLevel,
@@ -35,7 +36,7 @@ import { buildCbnKey, buildCbnScene } from './draw'
 import { checkCbnDrawnPage, runCbnKdpPreflight } from './kdp-preflight'
 import { boxToBounds, cbnKeyLayout, cbnLayoutInBody, cbnPanelFits } from './layout'
 import { CBN_INK_WIDTH, cbnDrawingScaleFloor, paintScene, type CbnArtResult } from './paint'
-import { CBN_PIECE_HINTS } from './palette'
+import { CBN_PIECE_HINTS, type CbnColorId } from './palette'
 import { colorByNumberPrefetch, parseCbnRemoteData } from './prefetch'
 import { buildScene } from './scene'
 
@@ -108,6 +109,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
   if (!cbnPanelFits(layout.panel)) return fail(CBN_PAGE_TOO_SMALL_MESSAGE)
 
   const book = parseCbnBook(parseCbnRemoteData(ctx.remoteData).bookLabels)
+  const recentColors = cbnRecentColors(book)
   const recent = studioAvoidList(VARIETY_KEY, RECENT_WINDOW)
   const recentArt = studioAvoidList(ART_VARIETY_KEY, RECENT_ART_WINDOW)
   const exclude = new Set<string>()
@@ -131,7 +133,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
       attempt,
     })
     if (!design) break
-    const art = buildCbnArt({ design, level, box, seed: ctx.seed, ownerSalt, attempt })
+    const art = buildCbnArt({ design, level, box, seed: ctx.seed, ownerSalt, attempt, recentColors })
     const artKey = `${design.subject.id}:${sgVariantKey(design.subject, design.variant)}`
     if (!art.ok) {
       // A drawing that will not number cleanly is set aside; a subject that fails twice, too.
@@ -148,7 +150,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
       continue
     }
 
-    const label = cbnPageLabel(cbnDesignEntry(drawn))
+    const label = cbnPageLabel({ ...cbnDesignEntry(drawn), key: art.legend })
     const scene = buildCbnScene({
       runs: art.runs,
       labels: art.labels,
@@ -176,8 +178,10 @@ export function buildCbnArt(options: {
   seed: number
   ownerSalt: string
   attempt: number
+  /** How many of the book's recent pages asked for each color (see `cbnRecentColors`). */
+  recentColors?: ReadonlyMap<CbnColorId, number>
 }): CbnArtResult {
-  const { design, level, box, seed, ownerSalt, attempt } = options
+  const { design, level, box, seed, ownerSalt, attempt, recentColors } = options
   const drawing = cbnDesignDrawing(design)
   const hint = CBN_PIECE_HINTS[design.subject.id]
   const pieceHint = hint ? (index: number) => hint(index, drawing.pieces.length, design.variant.knobs) : undefined
@@ -205,7 +209,26 @@ export function buildCbnArt(options: {
       art = { ok: false, reason: scene.reason }
       continue
     }
-    art = paintScene({ scene, box, rules: level.rules, palette: design.palette, subjectId: design.subject.id, pieceHint, spaces: level.spaces })
+    // Colors and numbers come from their own stream, so dealing them never moves the scenery.
+    const colorRng = createRngFromSeedInput({
+      ownerSalt,
+      templateKey: CBN_TEMPLATE_KEY,
+      configHash: `color:${level.value}`,
+      pageNonce: seed,
+      stream: `${attempt}.${deal}`,
+    })
+    art = paintScene({
+      scene,
+      box,
+      rules: level.rules,
+      palette: design.palette,
+      subjectId: design.subject.id,
+      pieceHint,
+      colorRng,
+      recentColors,
+      spaces: level.spaces,
+      maxSpaceShare: level.maxSpaceShare,
+    })
   }
   return art
 }

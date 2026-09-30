@@ -14,6 +14,7 @@ import {
 } from '../stained-glass/geometry'
 import { rasterCheck, type InkPolyline, type RasterRegion } from '../stained-glass/raster'
 import { drawingBounds, placeDrawing, rect, type SubjectDrawing } from '../stained-glass/subject-kit'
+import type { StudioRng } from '../studio-rng'
 import { colorUnits, type CbnColorId, type CbnPalette, type CbnUnit } from './palette'
 import type { CbnComposition, CbnScene } from './scene'
 
@@ -433,8 +434,14 @@ export function paintScene(options: {
   subjectId: string
   /** Preferred colors for subject piece i (see `CBN_PIECE_HINTS`). */
   pieceHint?: (index: number) => readonly CbnColorId[] | undefined
+  /** Deals the page's colors and numbers (see `colorUnits`). */
+  colorRng?: StudioRng
+  /** How many of the book's recent pages asked for each color. */
+  recentColors?: ReadonlyMap<CbnColorId, number>
   /** Spaces allowed on the page. */
   spaces: { min: number; max: number }
+  /** Largest share of the scene one space may take (the level's `maxSpaceShare`). */
+  maxSpaceShare?: number
 }): CbnArtResult {
   const { scene, box, rules, palette, subjectId } = options
   const regions = scene.layers.map((l, i) => (i === 0 ? scene.panel : toRegion(l.ring)))
@@ -479,6 +486,13 @@ export function paintScene(options: {
   const spaces = report.regions.filter((r) => !isSpeck(r))
   if (spaces.length < options.spaces.min) return { ok: false, reason: 'The scene has too few spaces to be a Color by Number page.' }
   if (spaces.length > options.spaces.max) return { ok: false, reason: 'The scene has too many spaces to color comfortably.' }
+  const largest = spaces.reduce((a, b) => (b.area > a.area ? b : a))
+  const pb = scene.panel.bounds
+  const panelArea = (pb.maxX - pb.minX) * (pb.maxY - pb.minY)
+  // Refused here rather than by the preflight, so the scene is dealt again at another size instead of dropped.
+  if (options.maxSpaceShare !== undefined && largest.area / panelArea > options.maxSpaceShare) {
+    return { ok: false, reason: 'One space takes up so much of the scene that the page looks unfinished.' }
+  }
 
   // Which part each space belongs to, and which parts touch.
   const unitOf = (p: Pt) => scene.layers[topLayerAt(p, regions)]!.unit
@@ -526,7 +540,15 @@ export function paintScene(options: {
     unit.spaces += 1
     unitMap.set(id, unit)
   })
-  const coloring = colorUnits({ units: [...unitMap.values()], touching, palette, subjectId, pieceHint: options.pieceHint })
+  const coloring = colorUnits({
+    units: [...unitMap.values()],
+    touching,
+    palette,
+    subjectId,
+    pieceHint: options.pieceHint,
+    rng: options.colorRng,
+    recentColors: options.recentColors,
+  })
   if (!coloring.ok) return { ok: false, reason: coloring.reason }
   const { colors, legend } = coloring.coloring
   let clashes = 0
@@ -546,9 +568,6 @@ export function paintScene(options: {
     perNumber[n - 1]! += 1
   }
 
-  const largest = spaces.reduce((a, b) => (b.area > a.area ? b : a))
-  const pb = scene.panel.bounds
-  const panelArea = (pb.maxX - pb.minX) * (pb.maxY - pb.minY)
   return {
     ok: true,
     runs,

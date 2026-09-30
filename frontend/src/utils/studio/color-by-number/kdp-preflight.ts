@@ -3,7 +3,7 @@ import { DPI } from '@/types/canvas-settings.types'
 import { STUDIO_DIGIT_FONT, STUDIO_INK } from '@/constants/studio.constants'
 import type { Box } from '../studio-layout'
 import { sgSubjectById } from '../stained-glass/subjects'
-import { cbnDesignEntry, cbnPageLabel, isValidCbnDesign, type CbnBookEntry, type CbnDesign, type CbnLevelSpec } from './content'
+import { cbnDesignEntry, cbnDesignLabel, isValidCbnDesign, sameCbnKeyColors, type CbnBookEntry, type CbnDesign, type CbnLevelSpec } from './content'
 import { CBN_PART_KEY } from './draw'
 import { CBN_INK_WIDTH, cbnNumberRadius, type CbnArt } from './paint'
 import { CBN_MAX_COLORS, CBN_MIN_COLORS, cbnColor, cbnPaletteById, isCbnColorId } from './palette'
@@ -38,8 +38,9 @@ export const CBN_NUMBER_FLOOR_PX = 12
  * The scene has already been printed to a grid and every space measured
  * (`paint.ts`); this re-proves the result against the page as a whole: a real
  * subject in a real version, big enough to be the picture and inside its
- * frame; a key of six to eight distinct colors, every one of them used and
- * every space numbered from it; every number at a readable size with clear
+ * frame; a key of six to eight distinct colors, every one of them used,
+ * every space numbered from it, and not the same colors the page before
+ * asked for; every number at a readable size with clear
  * paper round it; a scene that is neither a thicket nor half empty; and not
  * a page — or the same subject in nearly the same scene — the book already
  * has. Any failure sends the page back to be rebuilt, never into the book.
@@ -82,6 +83,9 @@ export function runCbnKdpPreflight(options: {
   if (n < CBN_MIN_COLORS || n > CBN_MAX_COLORS) errors.push(`The key has ${n} colors; a page needs ${CBN_MIN_COLORS} to ${CBN_MAX_COLORS}.`)
   if (new Set(art.legend).size !== n || !art.legend.every((id) => isCbnColorId(id))) errors.push('The key lists a color twice, or a color it cannot name.')
   if (art.perNumber.length !== n || art.perNumber.some((count) => count < 1)) errors.push('The key lists a color no space uses.')
+  // Nor the colors the page before asked for: a book reads as a run of different pictures, not one key reprinted.
+  const previous = book[book.length - 1]?.key
+  if (previous && sameCbnKeyColors(previous, art.legend)) errors.push('The key asks for the same colors as the page before.')
 
   // Every space has exactly one number from the key, readable and clear of every line.
   if (art.labels.length !== art.spaces) errors.push('A space has no number, or has two.')
@@ -109,8 +113,8 @@ export function runCbnKdpPreflight(options: {
 
   // Not a page the book already has — nor the same subject in nearly the same scene.
   const entry = cbnDesignEntry(design)
-  const label = cbnPageLabel(entry)
-  if (book.some((e) => cbnPageLabel(e) === label)) errors.push('This book already has this exact page.')
+  const label = cbnDesignLabel(entry)
+  if (book.some((e) => cbnDesignLabel(e) === label)) errors.push('This book already has this exact page.')
   else {
     for (const e of book) {
       if (e.subject !== entry.subject) continue

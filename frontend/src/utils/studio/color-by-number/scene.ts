@@ -330,7 +330,7 @@ function dealOnce(subject: SgSubject, palette: CbnPalette, rng: StudioRng, richn
   }
 
   const sunny = rng.chance(0.85)
-  const low = palette.id === 'golden' && setting !== 'meadow' ? rng.chance(0.5) : palette.id === 'golden' && rng.chance(0.3)
+  const low = palette.lowSun && setting !== 'meadow' ? rng.chance(0.5) : palette.lowSun === true && rng.chance(0.3)
   c.sun = !sunny ? 'none' : low ? 'low' : place === 'left' ? 'right' : place === 'right' ? 'left' : rng.pick(['left', 'right'] as const)
   c.rays = c.sun !== 'none' && c.sun !== 'low' && rng.chance(richness === 0 ? 0.35 : 0.55)
   c.skyBand = paletteHas(palette, 'skyLow') && rng.chance(0.85)

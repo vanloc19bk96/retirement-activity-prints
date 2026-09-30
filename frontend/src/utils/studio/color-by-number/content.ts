@@ -11,7 +11,7 @@ import {
 import type { SubjectDrawing } from '../stained-glass/subject-kit'
 import { SG_SUBJECTS, sgSubjectById, type SgSubject, type SgTheme } from '../stained-glass/subjects'
 import type { CbnSpaceRules } from './paint'
-import { cbnPaletteById, cbnPalettesFor, type CbnPalette } from './palette'
+import { cbnPaletteById, cbnPalettesFor, isCbnColorId, type CbnColorId, type CbnPalette } from './palette'
 import {
   compositionKey,
   dealComposition,
@@ -207,21 +207,43 @@ export interface CbnBookEntry {
   variant: string
   composition: string
   palette: string
+  /** The page's key, number order (`CbnColorId`s). Pages printed before keys were recorded have none. */
+  key?: readonly CbnColorId[]
 }
 
-/** The label a page carries: `subject|version|composition|palette`. Two pages with the same label are the same design. */
-export const cbnPageLabel = (entry: CbnBookEntry) => `${entry.subject}|${entry.variant}|${entry.composition}|${entry.palette}`
+/** The design a page shows: `subject|version|composition|palette`. Two pages with the same design are the same page. */
+export const cbnDesignLabel = (entry: CbnBookEntry) => `${entry.subject}|${entry.variant}|${entry.composition}|${entry.palette}`
 
-/** The pages the book already shows, from the labels they carry. Unknown labels are ignored. */
+/** The label a page carries: its design, then its key (`yellow.tan.blue`) when known. */
+export const cbnPageLabel = (entry: CbnBookEntry) =>
+  entry.key && entry.key.length > 0 ? `${cbnDesignLabel(entry)}|${entry.key.join('.')}` : cbnDesignLabel(entry)
+
+/** The pages the book already shows, from the labels they carry. Unknown labels are ignored; an unreadable key is dropped. */
 export function parseCbnBook(labels: readonly string[]): CbnBookEntry[] {
   const out: CbnBookEntry[] = []
   for (const label of labels) {
-    const [subject, variant, composition, palette] = label.split('|')
+    const [subject, variant, composition, palette, rawKey] = label.split('|')
     if (!subject || !variant || !composition || !palette || !sgSubjectById(subject) || !cbnPaletteById(palette)) continue
-    out.push({ subject, variant, composition, palette })
+    const key = rawKey?.split('.') ?? []
+    const known = key.length > 0 && key.every(isCbnColorId)
+    out.push({ subject, variant, composition, palette, ...(known ? { key: key as CbnColorId[] } : {}) })
   }
   return out
 }
+
+/** Recent pages a new page's colors are weighed against. */
+export const CBN_RECENT_KEY_PAGES = 6
+
+/** How many of the book's last few pages asked for each color: the next page leans away from these. */
+export function cbnRecentColors(book: readonly CbnBookEntry[], pages = CBN_RECENT_KEY_PAGES): Map<CbnColorId, number> {
+  const uses = new Map<CbnColorId, number>()
+  for (const entry of book.slice(-pages)) for (const id of entry.key ?? []) uses.set(id, (uses.get(id) ?? 0) + 1)
+  return uses
+}
+
+/** Two keys that ask for the same set of colors, whatever their numbers. */
+export const sameCbnKeyColors = (a: readonly CbnColorId[], b: readonly CbnColorId[]) =>
+  a.length === b.length && a.every((id) => b.includes(id))
 
 /* ------------------------------------------------------------------ *
  * Choosing a page
