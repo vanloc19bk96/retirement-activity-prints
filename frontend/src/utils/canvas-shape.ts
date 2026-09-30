@@ -1,6 +1,7 @@
 import type { Canvas } from 'fabric'
 import { Circle, Ellipse, Group, Line, Path, Polygon, Rect, Triangle } from 'fabric'
 import type { ShapeType } from '@/utils/shape-dnd'
+import { getCanvasPageLogicalSize } from '@/utils/fabric-canvas-pasteboard'
 
 type AddShapeToCanvasOptions = {
   canvas: Canvas
@@ -342,9 +343,7 @@ export function addShapeToFabricCanvasAtClientPoint(options: AddShapeToCanvasOpt
   const pointer = canvas.getScenePoint({ clientX, clientY } as MouseEvent)
   const shape = createShapeObject(shapeType) as any
 
-  const zoom = canvas.getZoom()
-  const baseWidth = canvas.getWidth() / zoom
-  const baseHeight = canvas.getHeight() / zoom
+  const { width: baseWidth, height: baseHeight } = getCanvasPageLogicalSize(canvas)
 
   shape.set?.({
     left: clamp(pointer.x, 0, baseWidth),

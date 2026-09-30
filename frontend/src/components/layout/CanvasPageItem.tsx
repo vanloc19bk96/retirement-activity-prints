@@ -57,7 +57,7 @@ export const CanvasPageItem = memo(function CanvasPageItem({
     >
       <div
         ref={canvasMountRef}
-        className="relative z-[1] overflow-hidden"
+        className="relative z-[1]"
         style={EDITOR_CANVAS_SIZE_STYLE}
       />
       {showQueuedRestoreOverlay ? <CanvasLoadingOverlay /> : null}

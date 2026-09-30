@@ -4,6 +4,7 @@ import { FabricImage } from 'fabric'
 import type { CoverPlacementKind } from '@/types/fabric-canvas-item.types'
 import { applyCoverZoneToImage } from '@/utils/book-cover-image-placement'
 import { isSvgImageSrc, loadSvgAsFabricObject } from '@/utils/canvas-svg'
+import { getCanvasPageLogicalSize } from '@/utils/fabric-canvas-pasteboard'
 
 type ImageFitMode = 'default' | 'contain' | 'cover'
 
@@ -117,9 +118,7 @@ export async function addImageToFabricCanvasAtClientPoint(
   const img = await loadImageOrSvgObject(src)
   if (!img) return
 
-  const zoom = canvas.getZoom()
-  const baseWidth = canvas.getWidth() / zoom
-  const baseHeight = canvas.getHeight() / zoom
+  const { width: baseWidth, height: baseHeight } = getCanvasPageLogicalSize(canvas)
   const fitMode = options.fitMode ?? 'default'
   const zone = options.placementZone
   const targetWidth = zone?.width ?? baseWidth

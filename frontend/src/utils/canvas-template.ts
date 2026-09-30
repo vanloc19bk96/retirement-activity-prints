@@ -1,6 +1,7 @@
 import type { Canvas, FabricObject } from 'fabric'
 import type { MarginGuide } from '@/types/canvas-settings.types'
 import type { CanvasLogicalSize } from '@/types/fabric-canvas-item.types'
+import { getCanvasPageLogicalSize } from '@/utils/fabric-canvas-pasteboard'
 
 const STANDARD_TEMPLATE_SIZE = {
   width: 612,
@@ -125,8 +126,7 @@ export function getCanvasLogicalSize(canvas: Canvas): CanvasLogicalSize | null {
   const zoom = canvas.getZoom()
   if (!isPositiveFiniteNumber(zoom)) return null
 
-  const width = canvas.getWidth() / zoom
-  const height = canvas.getHeight() / zoom
+  const { width, height } = getCanvasPageLogicalSize(canvas)
   if (!isPositiveFiniteNumber(width) || !isPositiveFiniteNumber(height)) return null
 
   return { width, height }

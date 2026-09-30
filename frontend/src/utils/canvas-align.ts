@@ -2,6 +2,7 @@ import { ActiveSelection, Point, type Canvas, type FabricObject } from 'fabric'
 
 import { isFabricActiveSelection } from '@/utils/fabric-active-selection'
 import { getActiveSelectionTargets } from '@/utils/canvas-selection'
+import { getCanvasPageLogicalSize, getCanvasPasteboardPadding } from '@/utils/fabric-canvas-pasteboard'
 
 export type CanvasAlign =
   | 'left'
@@ -90,10 +91,10 @@ function getCanvasSceneBounds(canvas: Canvas): CanvasSceneBounds {
   const zoomY = viewportTransform[3] || 1
   const translateX = viewportTransform[4] || 0
   const translateY = viewportTransform[5] || 0
-  const left = -translateX / zoomX
-  const top = -translateY / zoomY
-  const width = canvas.getWidth() / zoomX
-  const height = canvas.getHeight() / zoomY
+  const padding = getCanvasPasteboardPadding(canvas)
+  const left = (padding - translateX) / zoomX
+  const top = (padding - translateY) / zoomY
+  const { width, height } = getCanvasPageLogicalSize(canvas)
 
   return {
     left,

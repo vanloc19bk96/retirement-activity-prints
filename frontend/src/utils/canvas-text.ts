@@ -2,6 +2,7 @@ import type { Canvas, StaticCanvas } from 'fabric'
 import { Textbox, cache, util, type FabricObject } from 'fabric'
 import { findFontFamilyOption } from '@/constants/font-families'
 import { ensureFontFamilyLoaded } from '@/utils/font-loader'
+import { getCanvasPageLogicalSize } from '@/utils/fabric-canvas-pasteboard'
 import {
   FABRIC_TEXT_FONT_SIZE_MULT,
   FABRIC_TEXT_LINE_HEIGHT,
@@ -211,9 +212,7 @@ export function addTextToFabricCanvasAtClientPoint(options: AddTextToCanvasOptio
   const { canvas, text, fontSize, fontWeight, clientX, clientY } = options
   if (!text?.trim()) return
 
-  const zoom = canvas.getZoom()
-  const baseWidth = canvas.getWidth() / zoom
-  const baseHeight = canvas.getHeight() / zoom
+  const { width: baseWidth, height: baseHeight } = getCanvasPageLogicalSize(canvas)
 
   const element =
     ((canvas as any).getElement?.() as HTMLCanvasElement | null | undefined) ??
@@ -223,12 +222,10 @@ export function addTextToFabricCanvasAtClientPoint(options: AddTextToCanvasOptio
   let pointer = { x: baseWidth / 2, y: baseHeight / 2 }
 
   if (element) {
-    const rect = element.getBoundingClientRect()
-    const x = (clientX - rect.left) / zoom
-    const y = (clientY - rect.top) / zoom
+    const scenePoint = canvas.getScenePoint({ clientX, clientY } as MouseEvent)
     pointer = {
-      x: clampNumber(x, 0, baseWidth),
-      y: clampNumber(y, 0, baseHeight),
+      x: clampNumber(scenePoint.x, 0, baseWidth),
+      y: clampNumber(scenePoint.y, 0, baseHeight),
     }
   }
 

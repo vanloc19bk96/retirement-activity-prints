@@ -11,6 +11,11 @@ import { scaleAndClampCanvasObjects } from '@/utils/fabric-canvas-resize'
 import { resolveInteriorPageSafeArea } from '@/utils/canvas-template'
 import { dispatchCanvasLive } from '@/utils/canvas-events'
 import { attachEraserAutoBakeListener } from '@/utils/fabric-eraser-bake'
+import {
+  getPasteboardCanvasDimensions,
+  getPasteboardViewportTransform,
+  installCanvasPasteboard,
+} from '@/utils/fabric-canvas-pasteboard'
 import { rehydrateEraserMetadata } from '@/utils/eraser-rehydrate'
 import { remapBookCoverImageClipsOnCanvasResize } from '@/utils/book-cover-image-resize'
 import type { MarginGuide } from '@/types/canvas-settings.types'
@@ -153,7 +158,7 @@ function createFabricCanvasSurface(
     renderingContext.imageSmoothingQuality = 'high'
   }
 
-  canvas.setViewportTransform([zoom, 0, 0, zoom, 0, 0])
+  canvas.setViewportTransform(getPasteboardViewportTransform(zoom))
   applyFabricSelectionStyle(canvas)
   return canvas
 }
@@ -210,17 +215,17 @@ export function useFabricCanvasLifecycle({
     )
 
     const currentZoom = zoomRef.current
-    const initWidth = Math.round(baseWidth * currentZoom)
-    const initHeight = Math.round(baseHeight * currentZoom)
+    const initSize = getPasteboardCanvasDimensions(baseWidth, baseHeight, currentZoom)
 
     const canvas = createFabricCanvasSurface(
       mount,
       id,
-      initWidth,
-      initHeight,
+      initSize.width,
+      initSize.height,
       canvasBackgroundColor,
       currentZoom,
     )
+    const detachPasteboard = installCanvasPasteboard(canvas, mount.parentElement)
 
     fabricCanvasRef.current = canvas
     setFabricSurfaceEpoch((n) => n + 1)
@@ -353,6 +358,7 @@ export function useFabricCanvasLifecycle({
       history.dispose()
       detachListeners()
       detachEraserAutoBake()
+      detachPasteboard()
       onCanvasReadyRef.current?.(registeredCanvasIndex, null)
       onHasSelectionChangeRef.current?.(false)
       fabricCanvasRef.current = null

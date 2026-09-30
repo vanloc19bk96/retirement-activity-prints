@@ -41,6 +41,7 @@ import {
   type ApplyTemplateToCanvasEventDetail,
 } from '@/utils/template-events'
 import { dispatchCanvasThumbnailInvalidated } from '@/utils/canvas-thumbnail-events'
+import { getCanvasPasteboardPadding } from '@/utils/fabric-canvas-pasteboard'
 import { alignSelectionAction, applyTextParagraphAlignAction } from './canvas-editor-actions'
 import type { AlignmentPanelTextContext } from './use-canvas-editor-page-row-bindings'
 
@@ -81,9 +82,10 @@ function restoreCanvasDimensionsAndViewport(args: {
     zoomX > 0 &&
     zoomY > 0
   ) {
+    const padding = getCanvasPasteboardPadding(canvas)
     canvas.setDimensions({
-      width: Math.round(targetSize.width * zoomX),
-      height: Math.round(targetSize.height * zoomY),
+      width: Math.round(targetSize.width * zoomX) + padding * 2,
+      height: Math.round(targetSize.height * zoomY) + padding * 2,
     })
   }
 

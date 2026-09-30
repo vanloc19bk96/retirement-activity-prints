@@ -1,6 +1,7 @@
 import type { Canvas } from 'fabric'
 
 import { loadPhosphorIconSvg } from '@/utils/phosphor-dynamic-icons'
+import { getCanvasPageLogicalSize } from '@/utils/fabric-canvas-pasteboard'
 import {
   createFabricIconGroupFromPhosphorSvg,
   PHOSPHOR_ICON_GROUP_TYPE,
@@ -25,9 +26,7 @@ export async function addPanelIconToFabricCanvasAtClientPoint(
   if (!svg) return
 
   const pointer = canvas.getScenePoint({ clientX, clientY } as MouseEvent)
-  const zoom = canvas.getZoom()
-  const baseWidth = canvas.getWidth() / zoom
-  const baseHeight = canvas.getHeight() / zoom
+  const { width: baseWidth, height: baseHeight } = getCanvasPageLogicalSize(canvas)
 
   const group = createFabricIconGroupFromPhosphorSvg(svg)
   group.set('data', {

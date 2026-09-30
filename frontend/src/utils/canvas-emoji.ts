@@ -1,6 +1,7 @@
 import type { Canvas } from 'fabric'
 
 import { loadSvgAsFabricObject } from '@/utils/canvas-svg'
+import { getCanvasPageLogicalSize } from '@/utils/fabric-canvas-pasteboard'
 
 type AddEmojiToCanvasOptions = {
   canvas: Canvas
@@ -31,9 +32,7 @@ export async function addEmojiToFabricCanvasAtClientPoint(
   if (!emoji) return
 
   const pointer = canvas.getScenePoint({ clientX, clientY } as MouseEvent)
-  const zoom = canvas.getZoom()
-  const baseWidth = canvas.getWidth() / zoom
-  const baseHeight = canvas.getHeight() / zoom
+  const { width: baseWidth, height: baseHeight } = getCanvasPageLogicalSize(canvas)
 
   emoji.set({
     originX: 'center',

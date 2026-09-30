@@ -2,6 +2,12 @@ import type { MutableRefObject, RefObject } from 'react'
 import { useCallback, useEffect, useRef } from 'react'
 import type { Canvas } from 'fabric'
 
+import {
+  getCanvasPasteboardPadding,
+  getPasteboardCanvasDimensions,
+  getPasteboardViewportTransform,
+} from '@/utils/fabric-canvas-pasteboard'
+
 type UseFabricCanvasZoomSyncOptions = {
   fabricCanvasRef: RefObject<Canvas | null>
   baseWidth: number
@@ -69,8 +75,8 @@ export function useFabricCanvasZoomSync({
     const canvas = fabricCanvasRef.current
     if (!canvas) return
     const z = zoomRef.current
-    const dw = Math.round(baseWidth * z)
-    const dh = Math.round(baseHeight * z)
+    const padding = getCanvasPasteboardPadding(canvas)
+    const { width: dw, height: dh } = getPasteboardCanvasDimensions(baseWidth, baseHeight, z, padding)
 
     if (
       canvas.getWidth() === dw &&
@@ -81,7 +87,7 @@ export function useFabricCanvasZoomSync({
     }
 
     canvas.setDimensions({ width: dw, height: dh })
-    canvas.setViewportTransform([z, 0, 0, z, 0, 0])
+    canvas.setViewportTransform(getPasteboardViewportTransform(z, padding))
     canvas.requestRenderAll()
 
     // Defer the expensive snap + crispness walk until zoom settles.

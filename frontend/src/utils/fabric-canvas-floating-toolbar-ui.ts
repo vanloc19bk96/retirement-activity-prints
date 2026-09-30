@@ -4,6 +4,7 @@ import {
   canUngroupActiveSelection,
   getActiveSelectionTargets,
 } from '@/utils/canvas-selection'
+import { getCanvasPasteboardPadding } from '@/utils/fabric-canvas-pasteboard'
 
 export function getCanvasSelectionFloatingToolbarPosition(
   canvas: Canvas,
@@ -34,9 +35,11 @@ export function getCanvasSelectionFloatingToolbarPosition(
     return null
   }
 
+  // Surface pixels include the pasteboard margin; the toolbar is positioned in page pixels.
+  const padding = getCanvasPasteboardPadding(canvas)
   return {
-    left: (minX + maxX) / 2,
-    top: minY,
+    left: (minX + maxX) / 2 - padding,
+    top: minY - padding,
   }
 }
 

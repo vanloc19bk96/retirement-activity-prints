@@ -1,5 +1,6 @@
 import { StaticCanvas, type Canvas, type FabricObject } from 'fabric'
 import { omitFabricCanvasJsonSurfaceFields } from '@/utils/canvas-template'
+import { getCanvasPasteboardPadding } from '@/utils/fabric-canvas-pasteboard'
 
 export const CANVAS_THUMBNAIL_PIXEL_WIDTH = 180
 const THUMBNAIL_JPEG_QUALITY = 0.74
@@ -160,13 +161,29 @@ function getSelectionVisualTargets(canvas: Canvas): FabricObject[] {
   return Array.from(targets)
 }
 
+/** Source rect in backing-store pixels; excludes the editor pasteboard margin. */
+type CanvasSourceRect = { x: number; y: number; width: number; height: number }
+
+function resolvePageSourceRect(canvas: Canvas, sourceElement: HTMLCanvasElement): CanvasSourceRect {
+  const padding = getCanvasPasteboardPadding(canvas)
+  const pixelRatio = sourceElement.width / Math.max(1, canvas.getWidth())
+  const inset = padding * pixelRatio
+  return {
+    x: inset,
+    y: inset,
+    width: Math.max(1, sourceElement.width - inset * 2),
+    height: Math.max(1, sourceElement.height - inset * 2),
+  }
+}
+
 function copyCanvasElement(
   sourceElement: HTMLCanvasElement,
+  sourceRect: CanvasSourceRect,
   multiplier: number,
 ): HTMLCanvasElement | null {
   const snapshotElement = document.createElement('canvas')
-  snapshotElement.width = Math.max(1, Math.round(sourceElement.width * multiplier))
-  snapshotElement.height = Math.max(1, Math.round(sourceElement.height * multiplier))
+  snapshotElement.width = Math.max(1, Math.round(sourceRect.width * multiplier))
+  snapshotElement.height = Math.max(1, Math.round(sourceRect.height * multiplier))
 
   const context = snapshotElement.getContext('2d')
   if (!context) return null
@@ -175,7 +192,17 @@ function copyCanvasElement(
   context.fillRect(0, 0, snapshotElement.width, snapshotElement.height)
   context.imageSmoothingEnabled = true
   context.imageSmoothingQuality = 'high'
-  context.drawImage(sourceElement, 0, 0, snapshotElement.width, snapshotElement.height)
+  context.drawImage(
+    sourceElement,
+    sourceRect.x,
+    sourceRect.y,
+    sourceRect.width,
+    sourceRect.height,
+    0,
+    0,
+    snapshotElement.width,
+    snapshotElement.height,
+  )
   return snapshotElement
 }
 
@@ -195,7 +222,7 @@ function createLiveCanvasThumbnailSnapshotElement(
       target.set({ hasBorders: false, hasControls: false })
     }
     canvas.renderAll()
-    return copyCanvasElement(sourceElement, multiplier)
+    return copyCanvasElement(sourceElement, resolvePageSourceRect(canvas, sourceElement), multiplier)
   } finally {
     for (const { target, hasBorders, hasControls } of selectionVisuals) {
       target.set({ hasBorders, hasControls })
@@ -224,7 +251,7 @@ export async function createCanvasThumbnailObjectUrl(
   const lifecycle = canvas as Canvas & { disposed?: boolean }
   if (lifecycle.disposed) return null
 
-  const width = canvas.getWidth()
+  const width = canvas.getWidth() - getCanvasPasteboardPadding(canvas) * 2
   if (!Number.isFinite(width) || width <= 0) return null
 
   const multiplier = Math.min(1, maxWidth / width)
