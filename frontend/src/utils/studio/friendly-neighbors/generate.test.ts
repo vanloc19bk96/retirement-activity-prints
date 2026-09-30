@@ -43,7 +43,7 @@ import {
   neighborsRoundedOutline,
 } from './draw'
 import { checkNeighborsDrawnPage, runNeighborsKdpPreflight } from './kdp-preflight'
-import { NEIGHBORS_DIGIT_MIN, NEIGHBORS_SIGN_GAP_MIN, NEIGHBORS_STREET_MIN, neighborsContentBox, neighborsPanelInBody, neighborsPrintNote, planNeighborsPage } from './layout'
+import { NEIGHBORS_DIGIT_MIN, NEIGHBORS_LEGEND_TWIN_STREET, NEIGHBORS_SIGN_GAP_MIN, NEIGHBORS_STREET_MIN, neighborsContentBox, neighborsPanelInBody, neighborsPrintNote, planNeighborsPage } from './layout'
 import {
   buildNeighborsTown,
   drawNeighborsBlocks,
@@ -569,6 +569,29 @@ describe('friendly neighbors pages', () => {
     // The town takes the whole width; only the legend gives way.
     expect(plan.grid.width).toBeLessThanOrEqual(380)
     expect(plan.grid.width).toBeGreaterThan(380 - 6)
+  })
+
+  it('keeps the legend on one row when both entries fit beside each other', () => {
+    const panel = panelFor(kdpCtx(8, 10))
+    const plan = planNeighborsPage(panel, 'classic', FONT)!
+    expect(plan.legendRows).toBe(1)
+    const built = builtFor('classic')
+    const street = NEIGHBORS_STREETS[0]!
+    expect(runNeighborsKdpPreflight({ built, plan, level: 'classic', street, panel, font: FONT }).errors).toEqual([])
+    const puzzle = buildNeighborsPuzzle({ built, plan, street, level: 'classic', label: 'x', tag, font: FONT })
+    const [blockWords, touchWords] = partsOf(puzzle, 'legend-text')
+    expect(touchWords!.top).toBe(blockWords!.top)
+    // The words' boxes stay on the panel.
+    const dx = puzzle.left + puzzle.width! / 2
+    expect(touchWords!.left + dx + Number(touchWords!.width)).toBeLessThanOrEqual(panel.left + panel.width + 0.5)
+  })
+
+  it('ends the legend cross on the two houses’ outlines, not inside them', () => {
+    const plan = planNeighborsPage(panelFor(kdpCtx(8.5, 11)), 'classic', FONT)!
+    const puzzle = buildNeighborsPuzzle({ built: builtFor('classic'), plan, street: NEIGHBORS_STREETS[0]!, level: 'classic', label: 'x', tag, font: FONT })
+    const [cross] = partsOf(puzzle, 'legend-cross')
+    // The round caps reach half a stroke past the path: exactly the street.
+    expect(Number(cross!.width) + Number(cross!.strokeWidth)).toBeCloseTo(NEIGHBORS_LEGEND_TWIN_STREET, 5)
   })
 
   it('keeps the sign and the legend clear of the town', () => {

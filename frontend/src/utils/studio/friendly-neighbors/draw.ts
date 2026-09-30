@@ -30,6 +30,7 @@ import {
   neighborsLegendRowHeight,
   neighborsLegendSpec,
   neighborsLegendWidth,
+  neighborsLegendWordsWidth,
   neighborsLineHeight,
   neighborsSignSpec,
   neighborsSignWidth,
@@ -438,9 +439,10 @@ function legendTwins(box: Box, legendSize: number, tag: StudioTag): StudioFabric
   const house = NEIGHBORS_LEGEND_HOUSE
   // Pitch is a house and a street; the town starts half a street outside the icon.
   const geo: NeighborsGeometry = { left: box.left - street / 2, top: box.top - street / 2, cell: house + street, street, radius: Math.round(house * 0.2), inner: street / 2 }
-  // The cross stands in the street between them, reaching just onto each house.
+  // The cross stands in the street between them: its round caps end on each
+  // house's outline, touching it without running on into the house.
   const [cx, cy] = [box.left + house + street / 2, box.top + house / 2]
-  const arm = Math.round(street / 2 + 2)
+  const arm = street / 2 - CROSS_STROKE / 2
   return [
     ...drawTown(geo, (r, c) => (r === 0 && (c === 0 || c === 1) ? c : -1), 1, 2, tag, {}, ['legend-twins', 'legend-lines']),
     ...[0, 1].map((c) => {
@@ -566,7 +568,10 @@ export function buildNeighborsPuzzle(options: {
   const [blockItem] = neighborsLegendItemWidths(font)
   const rowHeight = neighborsLegendRowHeight()
   const rowMid = (row: number) => legend.top + row * (rowHeight + NEIGHBORS_LEGEND_ROW_GAP) + rowHeight / 2
-  const words = (text: string, x: number, midY: number, extra: Record<string, unknown>) =>
+  // The words take the full spare against a font still loading, but never
+  // past the next entry or the panel's edge (and never under what was planned).
+  const panelRight = plan.block.left + plan.block.width
+  const words = (text: string, x: number, midY: number, room: number, extra: Record<string, unknown>) =>
     part(
       buildText(
         {
@@ -576,7 +581,7 @@ export function buildNeighborsPuzzle(options: {
           fontFamily: font,
           fontSize: plan.legendSize,
           lineHeight: 1,
-          width: neighborsTextWidth(text, plan.legendSize, neighborsLegendSpec(font)),
+          width: Math.max(neighborsLegendWordsWidth(text, font), Math.min(neighborsTextWidth(text, plan.legendSize, neighborsLegendSpec(font)), Math.floor(room))),
         },
         tag,
         'prompt',
@@ -588,12 +593,15 @@ export function buildNeighborsPuzzle(options: {
   let midY = rowMid(0)
   const house = NEIGHBORS_LEGEND_HOUSE
   parts.push(...legendBlock({ left: x, top: midY - house / 2, width: NEIGHBORS_LEGEND_BLOCK_WIDTH, height: house }, plan.legendSize, tag))
-  parts.push(words(NEIGHBORS_BLOCK_WORD, x + NEIGHBORS_LEGEND_BLOCK_WIDTH + NEIGHBORS_LEGEND_ICON_GAP, midY, { entry: 'block' }))
+  const blockWordsLeft = x + NEIGHBORS_LEGEND_BLOCK_WIDTH + NEIGHBORS_LEGEND_ICON_GAP
+  const blockRoom = plan.legendRows === 1 ? x + blockItem + NEIGHBORS_LEGEND_ITEM_GAP / 2 - blockWordsLeft : panelRight - blockWordsLeft
+  parts.push(words(NEIGHBORS_BLOCK_WORD, blockWordsLeft, midY, blockRoom, { entry: 'block' }))
   if (plan.legendRows === 1) x += blockItem + NEIGHBORS_LEGEND_ITEM_GAP
   else midY = rowMid(1)
   const twin = NEIGHBORS_LEGEND_TWIN_WIDTH
   parts.push(...legendTwins({ left: x, top: midY - house / 2, width: twin, height: house }, plan.legendSize, tag))
-  parts.push(words(NEIGHBORS_TOUCH_WORD, x + twin + NEIGHBORS_LEGEND_ICON_GAP, midY, { entry: 'touch' }))
+  const touchWordsLeft = x + twin + NEIGHBORS_LEGEND_ICON_GAP
+  parts.push(words(NEIGHBORS_TOUCH_WORD, touchWordsLeft, midY, panelRight - touchWordsLeft, { entry: 'touch' }))
 
   const groupTop = plan.block.top
   const bottom = plan.legendTop + plan.legendHeight

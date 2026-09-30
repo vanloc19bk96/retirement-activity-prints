@@ -68,7 +68,7 @@ export const NEIGHBORS_LEGEND_HOUSE = Math.round(NEIGHBORS_LEGEND_SIZE * 1.6)
 /** The street round the legend's block of three. */
 export const NEIGHBORS_LEGEND_STREET = 6
 /** The street between the legend's two neighbours: wide enough to cross out. */
-export const NEIGHBORS_LEGEND_TWIN_STREET = 12
+export const NEIGHBORS_LEGEND_TWIN_STREET = 16
 /** The legend's sample block: three houses in a row. */
 export const NEIGHBORS_LEGEND_BLOCK_WIDTH = NEIGHBORS_LEGEND_HOUSE * NEIGHBORS_LEGEND_BLOCK.length
 /** The legend's two houses side by side, a street apart. */
@@ -155,9 +155,18 @@ export function neighborsSignWidth(text: string, size: number, font: string): nu
 /** The widest sign any street makes at a size. */
 const widestSign = (size: number, lines: 1 | 2, font: string) => Math.max(...NEIGHBORS_STREETS.map((w) => neighborsSignWidth(neighborsSignText(w, lines), size, font)))
 
+/**
+ * The room a legend entry's words take on the page: their measured width,
+ * not the full spare of `neighborsTextWidth`. That spare, on both entries,
+ * pushed a legend that fits on one row onto two. The textbox itself still
+ * takes the spare wherever the row leaves room for it.
+ */
+export const neighborsLegendWordsWidth = (text: string, font: string) =>
+  hugTextBoxWidth(text, NEIGHBORS_LEGEND_SIZE, Number.POSITIVE_INFINITY, neighborsLegendSpec(font))
+
 /** Each legend entry's width: icon, gap, words. */
 export function neighborsLegendItemWidths(font: string): [number, number] {
-  const words = (text: string) => neighborsTextWidth(text, NEIGHBORS_LEGEND_SIZE, neighborsLegendSpec(font))
+  const words = (text: string) => neighborsLegendWordsWidth(text, font)
   return [
     NEIGHBORS_LEGEND_BLOCK_WIDTH + NEIGHBORS_LEGEND_ICON_GAP + words(NEIGHBORS_BLOCK_WORD),
     NEIGHBORS_LEGEND_TWIN_WIDTH + NEIGHBORS_LEGEND_ICON_GAP + words(NEIGHBORS_TOUCH_WORD),
