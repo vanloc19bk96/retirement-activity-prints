@@ -59,7 +59,7 @@ export const QC_LETTER_STYLES: readonly QcLetterStyle[] = [
   { id: 'classic', file: 'Montserrat Bold.ttf', caps: true, minEm: 76 },
   { id: 'rounded', file: 'Rubik Bold.ttf', caps: true, minEm: 76 },
   { id: 'playful', file: 'Galindo.ttf', caps: true, minEm: 70 },
-  { id: 'serif', file: 'Bitter Bold.ttf', caps: false, minEm: 84 },
+  { id: 'serif', file: 'Bitter Bold.ttf', caps: false, minEm: 88 },
   { id: 'retro', file: 'Righteous.ttf', caps: true, minEm: 84 },
   { id: 'bubbly', file: 'Baloo 2 Bold.ttf', caps: true, minEm: 94 },
   { id: 'slab', file: 'Patua One.ttf', caps: false, minEm: 96 },
