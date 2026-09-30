@@ -101,7 +101,7 @@ const hiddenAnswer = (o: StudioFabricObject) => o.visible === false && o.studioR
  * The drawn page, checked against the quilt it was drawn from: every number
  * on its square and no other, the binding, the sewn quilt waiting, hidden,
  * with a fabric on exactly every patch of the answer (no two neighbours
- * alike), a stitch round each, a seam on every stretch where two patches
+ * alike), a seam on every stretch where two patches
  * meet and nowhere else, a button under every number, the label naming the
  * quilt, and the legend counting the patches.
  */
@@ -114,7 +114,6 @@ export function checkPqDrawnPage(options: { puzzle: StudioFabricObject; built: P
   const fabrics = new Map<string, string>()
   const seams: string[] = []
   let frame = 0
-  let stitches = 0
   let buttons = 0
   let sign: StudioFabricObject | null = null
   let legendPatches: number | null = null
@@ -130,9 +129,8 @@ export function checkPqDrawnPage(options: { puzzle: StudioFabricObject; built: P
     else if (role === 'fabric') {
       fabrics.set(pqRectKey({ row: Number(o.data?.row), col: Number(o.data?.col), height: Number(o.data?.height), width: Number(o.data?.width) }), String(o.data?.fabric))
       if (!hiddenAnswer(o)) errors.push('A patch shows on the puzzle page.')
-    } else if (role === 'print' || role === 'stitch' || role === 'seam' || role === 'button') {
+    } else if (role === 'seam' || role === 'button') {
       if (!hiddenAnswer(o)) errors.push('The sewn quilt shows on the puzzle page.')
-      if (role === 'stitch') stitches++
       if (role === 'button') buttons++
       if (role === 'seam') seams.push(`${o.data?.line}:${o.data?.from}-${o.data?.to}`)
     } else if (role === 'sign-text') sign = o
@@ -155,7 +153,6 @@ export function checkPqDrawnPage(options: { puzzle: StudioFabricObject; built: P
       if (chosen[map[i]!] === chosen[map[j]!] || fabrics.get(pqRectKey(a)) === fabrics.get(pqRectKey(b))) errors.push('Two neighbouring patches share a fabric.')
     }
   }
-  if (stitches !== patches.length) errors.push('A patch is not quilted.')
   const { across, down } = pqSeamRuns(n, map)
   const seamsWanted = [...down.map(([l, f, t]) => `c${l}:${f}-${t}`), ...across.map(([l, f, t]) => `r${l}:${f}-${t}`)].sort()
   if (seams.sort().join(' ') !== seamsWanted.join(' ')) errors.push('The seams do not follow the patches.')

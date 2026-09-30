@@ -59,11 +59,11 @@ const inch = (n: number) => Math.round(n * DPI * 100) / 100
  * block" at least once.
  */
 export const PQ_LEVELS: readonly PqLevelSpec[] = [
-  { value: 'gentle', label: 'Gentle: 7 × 7, patches up to 8', gridLabel: '7 × 7', size: 7, maxPatch: 8, maxSide: 4, rules: 'basic', beyond: null, minCell: inch(0.5) },
-  { value: 'classic', label: 'Classic: 9 × 9, patches up to 12', gridLabel: '9 × 9', size: 9, maxPatch: 12, maxSide: 6, rules: 'reach', beyond: 'basic', minCell: inch(0.45) },
+  { value: 'gentle', label: 'Gentle: 7 × 7 quilt', gridLabel: '7 × 7', size: 7, maxPatch: 8, maxSide: 4, rules: 'basic', beyond: null, minCell: inch(0.5) },
+  { value: 'classic', label: 'Classic: 9 × 9 quilt', gridLabel: '9 × 9', size: 9, maxPatch: 12, maxSide: 6, rules: 'reach', beyond: 'basic', minCell: inch(0.45) },
   {
     value: 'challenging',
-    label: 'Challenging: 10 × 10, patches up to 18',
+    label: 'Challenging: 10 × 10 quilt',
     gridLabel: '10 × 10',
     size: 10,
     maxPatch: 18,

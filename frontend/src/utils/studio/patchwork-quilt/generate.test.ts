@@ -29,7 +29,7 @@ import {
   pqSignText,
   type PqLevel,
 } from './content'
-import { PQ_FABRICS, PQ_PART_KEY, buildPqPuzzle, pqButtonRadius, pqPatchFabrics, pqSeamRuns, stripeLines } from './draw'
+import { PQ_FABRICS, PQ_PART_KEY, buildPqPuzzle, pqButtonRadius, pqPatchFabrics, pqSeamRuns } from './draw'
 import { checkPqDrawnPage, runPqKdpPreflight } from './kdp-preflight'
 import { PQ_NUMBER_MIN, PQ_SIGN_GAP_MIN, planPqPage, pqContentBox, pqPanelInBody, pqPrintNote } from './layout'
 import { PQ_MIN_PATCH, buildPqQuilt, drawPqCandidate, drawPqPatches, pqFromPatches, pqMeetsLevel, pqPatchMap, pqSignature, type PqBuilt } from './puzzle'
@@ -455,10 +455,13 @@ describe('patchwork-quilt pages', () => {
     expect(partsOf(puzzle, 'frame')).toHaveLength(4)
     const numbers = partsOf(puzzle, 'number')
     expect(numbers.every((t) => t.visible !== false && t.fontWeight === 700)).toBe(true)
-    const hidden = ['fabric', 'print', 'stitch', 'seam', 'button'].flatMap((name) => partsOf(puzzle, name))
-    expect(hidden.length).toBeGreaterThan(numbers.length * 3)
+    const hidden = ['fabric', 'seam', 'button'].flatMap((name) => partsOf(puzzle, name))
+    expect(hidden.length).toBeGreaterThan(numbers.length * 2)
     expect(hidden.every((o) => o.visible === false && o.studioRole === 'answer' && o.type === 'path')).toBe(true)
     expect(partsOf(puzzle, 'fabric').every((f) => PQ_FABRICS.some((fabric) => fabric.fill === f.fill && fabric.name === f.data?.fabric))).toBe(true)
+    // Plain fabrics only: no prints or stitching on the answer page.
+    expect(partsOf(puzzle, 'print')).toHaveLength(0)
+    expect(partsOf(puzzle, 'stitch')).toHaveLength(0)
     const texts = partsOf(puzzle, 'legend-text').map((t) => t.text)
     expect(texts).toEqual(['= 2 squares', `${numbers.length} patches`])
   })
@@ -489,20 +492,6 @@ describe('patchwork-quilt pages', () => {
       expect(new Set(fabrics).size).toBeGreaterThanOrEqual(3)
     }
   }, SLOW)
-
-  it('keeps every pinstripe inside its patch', () => {
-    const box = { left: 10, top: 20, width: 90, height: 40 }
-    const lines = stripeLines(box, 12)
-    expect(lines.length).toBeGreaterThan(5)
-    for (const line of lines) {
-      for (const [x, y] of line) {
-        expect(x).toBeGreaterThanOrEqual(box.left - 1e-6)
-        expect(x).toBeLessThanOrEqual(box.left + box.width + 1e-6)
-        expect(y).toBeGreaterThanOrEqual(box.top - 1e-6)
-        expect(y).toBeLessThanOrEqual(box.top + box.height + 1e-6)
-      }
-    }
-  })
 
   it('sews the whole quilt on the answer page in black and grays, without the how-to line', () => {
     const out = generate(base, kdpCtx(8.5, 11))

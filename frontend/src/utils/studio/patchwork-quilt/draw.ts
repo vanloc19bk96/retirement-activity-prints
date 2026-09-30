@@ -34,9 +34,8 @@ import type { PqRect } from './solver'
  *
  * The puzzle page is black on white — nothing on the quilt but the lines
  * and the numbers, so pencil lines read clearly. On the answer page every
- * patch is cut from one of four fabrics (a light plain, polka dots,
- * pinstripes, a deeper plain; no two patches that share a side alike),
- * quilted with a running stitch just inside its edge, sewn to its
+ * patch is a plain fabric in one of four grays (no two patches that share a
+ * side alike, no prints or stitching to muddy the page), sewn to its
  * neighbours with a heavy seam, and every number sits on a white button so
  * it reads over any fabric. Grays only, so it prints the same on any
  * interior.
@@ -45,23 +44,17 @@ import type { PqRect } from './solver'
 /** Marks the objects a Patchwork Quilt page draws, for checks and the editor. */
 export const PQ_PART_KEY = 'pqPart'
 
-/** The answer page's fabrics: two plains far enough apart to tell side by side, and two prints on white. */
+/** The answer page's fabrics: four plain grays, far enough apart to tell side by side. */
 export const PQ_FABRICS = [
-  { name: 'plain', fill: '#E3E3E3' },
-  { name: 'dots', fill: STUDIO_PAPER },
-  { name: 'stripes', fill: STUDIO_PAPER },
-  { name: 'shade', fill: '#C8C8C8' },
+  { name: 'white', fill: STUDIO_PAPER },
+  { name: 'light', fill: '#E6E6E6' },
+  { name: 'mid', fill: '#D2D2D2' },
+  { name: 'deep', fill: '#BDBDBD' },
 ] as const
 
 export type PqFabric = (typeof PQ_FABRICS)[number]['name']
 
-/** Polka dots: gray, two to a square, staggered. */
-const DOT_FILL = '#8C8C8C'
-const DOT_RADIUS = 0.075
-/** Pinstripes: one every this share of a square. */
-const STRIPE_EVERY = 0.24
-/** The running stitch: this share of a square inside the patch's edge. */
-const STITCH_INSET = 0.13
+/** The running stitch on the label's inner rule. */
 const STITCH_DASH = [5, 4]
 
 const r2 = (n: number) => Math.round(n * 100) / 100
@@ -73,20 +66,19 @@ function part(obj: StudioFabricObject, name: string, extra: Record<string, unkno
 }
 
 /**
- * One path of polylines in canvas px: filled closed shapes, or open strokes
- * with no fill. Answer paths start hidden; the answer key reveals them,
- * keeping their fill and inking their stroke.
+ * One path of polylines in canvas px, closed into filled shapes. Answer
+ * paths start hidden; the answer key reveals them, keeping their fill and
+ * inking their stroke.
  */
 function pathOf(options: {
   lines: readonly (readonly Pt[])[]
   close: boolean
   fill: string
   strokeWidth: number
-  dash?: number[]
   tag: StudioTag
   role: StudioRole
 }): StudioFabricObject {
-  const { lines, close, fill, strokeWidth, dash, tag, role } = options
+  const { lines, close, fill, strokeWidth, tag, role } = options
   const path: (string | number)[][] = []
   let minX = Infinity
   let minY = Infinity
@@ -118,10 +110,8 @@ function pathOf(options: {
     stroke: STUDIO_INK,
     strokeWidth,
     strokeUniform: true,
-    // Open strokes (pinstripes) end square on their patch's edge; outlines join round.
     strokeLineCap: close ? 'round' : 'butt',
     strokeLineJoin: 'round',
-    ...(dash ? { strokeDashArray: dash, strokeLineCap: 'butt' } : {}),
     objectId: nextObjectId(tag.instanceId),
     studioTemplateKey: tag.templateKey,
     studioInstanceId: tag.instanceId,
@@ -144,38 +134,6 @@ const circle = (cx: number, cy: number, r: number, steps = 20): Pt[] =>
     const a = (k / steps) * Math.PI * 2
     return [cx + r * Math.cos(a), cy + r * Math.sin(a)] as const
   })
-
-/** Pinstripes rising left to right across a box, every `step` px. */
-export function stripeLines(box: Box, step: number): Pt[][] {
-  const { left: x0, top: y0 } = box
-  const x1 = box.left + box.width
-  const y1 = box.top + box.height
-  const out: Pt[][] = []
-  // Lines x + y = t, from the top-left corner to the bottom-right.
-  for (let t = x0 + y0 + step / 2; t < x1 + y1; t += step) {
-    const from = Math.max(x0, t - y1)
-    const to = Math.min(x1, t - y0)
-    if (to - from < 1) continue
-    out.push([
-      [from, t - from],
-      [to, t - to],
-    ])
-  }
-  return out
-}
-
-/** Polka dots across a box of whole squares: two to a square, staggered. */
-function dotCircles(box: Box, cell: number): Pt[][] {
-  const out: Pt[][] = []
-  const r = Math.max(1.5, cell * DOT_RADIUS)
-  for (let y = box.top; y < box.top + box.height - 1; y += cell) {
-    for (let x = box.left; x < box.left + box.width - 1; x += cell) {
-      out.push(circle(x + cell * 0.27, y + cell * 0.27, r, 12))
-      out.push(circle(x + cell * 0.73, y + cell * 0.73, r, 12))
-    }
-  }
-  return out
-}
 
 /* ------------------------------------------------------------------ *
  * The patches
@@ -389,23 +347,13 @@ export function buildPqPuzzle(options: {
   // Soft rules between every square.
   for (const bar of drawGridLines(grid, cell, size, size, tag, { fill: STUDIO_RULE_MEDIUM, thickness: STUDIO_STROKE_HAIRLINE })) parts.push(part(bar, 'rule'))
 
-  // The sewn quilt, hidden until the answer page: fabric, its print, the quilting stitch.
+  // The sewn quilt, hidden until the answer page: a plain gray fabric on every patch.
   const fabrics = pqPatchFabrics(n, patches)
   patches.forEach((rect, k) => {
     const box = patchBox(plan, rect)
     const fabric = PQ_FABRICS[fabrics[k]!]!
     const at = { patch: k, row: rect.row, col: rect.col, height: rect.height, width: rect.width }
     parts.push(part(pathOf({ lines: [boxCorners(box)], close: true, fill: fabric.fill, strokeWidth: 0, tag, role: 'answer' }), 'fabric', { ...at, fabric: fabric.name }))
-    if (fabric.name === 'dots') {
-      parts.push(part(pathOf({ lines: dotCircles(box, cell), close: true, fill: DOT_FILL, strokeWidth: 0, tag, role: 'answer' }), 'print', { patch: k, fabric: fabric.name }))
-    } else if (fabric.name === 'stripes') {
-      // Stopped half a seam short of the edge, so no stripe peeks past a seam or the binding.
-      const inner: Box = { left: box.left + PQ_FRAME / 2, top: box.top + PQ_FRAME / 2, width: box.width - PQ_FRAME, height: box.height - PQ_FRAME }
-      parts.push(part(pathOf({ lines: stripeLines(inner, cell * STRIPE_EVERY), close: false, fill: 'transparent', strokeWidth: 1, tag, role: 'answer' }), 'print', { patch: k, fabric: fabric.name }))
-    }
-    const inset = cell * STITCH_INSET
-    const stitch: Box = { left: box.left + inset, top: box.top + inset, width: box.width - inset * 2, height: box.height - inset * 2 }
-    parts.push(part(pathOf({ lines: [boxCorners(stitch)], close: true, fill: 'transparent', strokeWidth: 1.25, dash: STITCH_DASH, tag, role: 'answer' }), 'stitch', { patch: k }))
   })
 
   // Heavy seams between patches, each reaching half its weight past its ends so corners meet square.
@@ -475,10 +423,9 @@ export function buildPqPuzzle(options: {
 
   if (plan.legendRows === 1) x += sampleItem + PQ_LEGEND_ITEM_GAP
   else midY = rowMid(1)
-  // A swatch: pinstriped fabric, quilted, in a heavy seam.
+  // A swatch: a plain gray patch in a heavy seam.
   const swatch: Box = { left: x + 1.5, top: midY - icon / 2 + 1.5, width: icon - 3, height: icon - 3 }
-  parts.push(part(pathOf({ lines: stripeLines(swatch, icon * 0.22), close: false, fill: 'transparent', strokeWidth: 1, tag, role: 'prompt' }), 'legend-swatch'))
-  parts.push(part(buildRect({ ...swatch, fill: 'transparent', stroke: STUDIO_INK, strokeWidth: 3 }, tag), 'legend-swatch'))
+  parts.push(part(buildRect({ ...swatch, fill: PQ_FABRICS[2].fill, stroke: STUDIO_INK, strokeWidth: 3 }, tag), 'legend-swatch'))
   parts.push(words(pqPatchWord(patches.length), x + icon + PQ_LEGEND_ICON_GAP, midY, { patches: patches.length }))
 
   const top = plan.block.top

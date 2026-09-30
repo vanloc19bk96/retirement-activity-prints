@@ -95,7 +95,7 @@ export const WORD_WHEEL_LEVELS: readonly WordWheelLevel[] = [
     goalRatio: 0.35,
     firstLetterGiven: true,
     instruction:
-      'Make words of four letters or more. Every word must use the middle letter.',
+      'Using the letters in the wheel, make words of four letters or more. Use each letter only once in a word, and every word must use the middle letter. One word uses all nine letters.',
   },
   {
     id: 'classic',
@@ -106,7 +106,7 @@ export const WORD_WHEEL_LEVELS: readonly WordWheelLevel[] = [
     goalRatio: 0.5,
     firstLetterGiven: false,
     instruction:
-      'Make words of four letters or more. Every word must use the middle letter.',
+      'Using the letters in the wheel, make words of four letters or more. Use each letter only once in a word, and every word must use the middle letter. One word uses all nine letters.',
   },
   {
     id: 'challenging',
@@ -117,7 +117,7 @@ export const WORD_WHEEL_LEVELS: readonly WordWheelLevel[] = [
     goalRatio: 0.6,
     firstLetterGiven: false,
     instruction:
-      'Make words of five letters or more. Every word must use the middle letter.',
+      'Using the letters in the wheel, make words of five letters or more. Use each letter only once in a word, and every word must use the middle letter. One word uses all nine letters.',
   },
 ]
 

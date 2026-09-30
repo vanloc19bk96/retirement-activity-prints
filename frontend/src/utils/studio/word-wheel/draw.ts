@@ -248,7 +248,7 @@ const SLOT_LETTER_RATIO = 0.74
 /** Lift of a written letter off its rule, so the glyph does not sit on the ink. */
 const SLOT_LETTER_LIFT = 0.1
 export const SLOT_LABEL_SIZE = ptToPx(12)
-const SLOT_LABEL_GAP = 8
+const SLOT_LABEL_GAP = 14
 export const SLOT_LABEL = 'The nine-letter word'
 
 export interface WordWheelSlotPlan {
