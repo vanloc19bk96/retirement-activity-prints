@@ -4,8 +4,8 @@ import { createRngFromSeedInput, sha256Hex } from '../_shared/uniqueness'
 /**
  * What a Spot the Differences page is about, and the words it prints.
  *
- * A page is two copies of one retirement scene â€” a porch on a summer
- * afternoon, a tea table, a fishing dock â€” stacked one above the other. The
+ * A page is two copies of one retirement scene - a porch on a summer
+ * afternoon, a tea table, a fishing dock - stacked one above the other. The
  * lower picture (or now and then the upper one) has a handful of deliberate
  * changes, and the reader circles them. Everything about the scene is dealt
  * per page; the seller chooses only what kind of scenes and how many
@@ -74,7 +74,7 @@ export interface SdLevelSpec {
 }
 
 /**
- * Difficulty is how many changes there are and how bold they are â€” never
+ * Difficulty is how many changes there are and how bold they are - never
  * smaller pictures or changes lost in clutter. Every level keeps every change
  * at least a fifth of an inch across in print, well clear of any line in the
  * other picture, and one clear thing (a whole object, a clock's hands, a
@@ -83,7 +83,7 @@ export interface SdLevelSpec {
 export const SD_LEVELS: readonly SdLevelSpec[] = [
   {
     value: 'relaxed',
-    label: 'Relaxed â€” 5 or 6 differences, big and clear',
+    label: 'Relaxed - 5 or 6 differences, big and clear',
     fairness: {
       count: [5, 6],
       tolerance: 0.07,
@@ -96,7 +96,7 @@ export const SD_LEVELS: readonly SdLevelSpec[] = [
   },
   {
     value: 'classic',
-    label: 'Classic â€” 7 or 8 differences',
+    label: 'Classic - 7 or 8 differences',
     fairness: {
       count: [6, 8],
       tolerance: 0.06,
@@ -109,7 +109,7 @@ export const SD_LEVELS: readonly SdLevelSpec[] = [
   },
   {
     value: 'challenging',
-    label: 'Challenging â€” 9 or 10 differences, some subtler',
+    label: 'Challenging - 9 or 10 differences, some subtler',
     fairness: {
       count: [8, 10],
       tolerance: 0.05,
