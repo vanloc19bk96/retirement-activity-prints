@@ -2764,9 +2764,11 @@ the worker's memory — all bounded, never a comparison with every page ever
 made. No more than two sayings in a reply open with the same two words.
 
 Lettering (`lettering.ts`, `fonts.ts`): drawn from the bundled font files as
-vector outlines — never a text box, which the PDF export would fill solid. Five
-print-proven faces (Montserrat Bold, Rubik Bold, Galindo and Righteous in
-capitals; Bitter Bold in mixed case). One glyph per character, straight from the
+vector outlines — never a text box, which the PDF export would fill solid. Seven
+print-proven faces (Montserrat Bold, Rubik Bold, Galindo, Righteous and Baloo 2
+Bold in capitals; Bitter Bold and Patua One in mixed case), all under the SIL
+Open Font License 1.1, which allows their outlines in a book that is sold; the
+license texts sit in `public/fonts/licenses`. One glyph per character, straight from the
 character map; a missing glyph refuses the saying. Overlapping contours inside a
 font's letters are removed, so only each letter's true edge prints. Every pair
 of letters is eased apart until clear paper separates their outlines. Lines

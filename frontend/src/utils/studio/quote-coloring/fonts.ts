@@ -19,7 +19,7 @@ import { fetchFontArrayBuffer, parseOpenTypeFont } from '@/utils/fetch-font-bina
  * tests, not estimated.
  */
 
-export type QcLetterStyleId = 'classic' | 'rounded' | 'playful' | 'serif' | 'retro'
+export type QcLetterStyleId = 'classic' | 'rounded' | 'playful' | 'serif' | 'retro' | 'bubbly' | 'slab'
 
 export interface QcLetterStyle {
   id: QcLetterStyleId
@@ -39,7 +39,21 @@ export interface QcLetterStyle {
  * dropped: their counters close up before their strokes open wide enough to
  * color (a black-weight B is a blob with two pinholes), so they fit fewer
  * words at a colorable size. Galindo is set in capitals: its lowercase s
- * nearly closes on itself and leaves a pocket too small to color.
+ * nearly closes on itself and leaves a pocket too small to color; so is
+ * Baloo 2, whose lowercase e closes up.
+ *
+ * Every face is under the SIL Open Font License 1.1 (text beside the files
+ * in `/fonts/licenses`), which allows printing its outlines in a book that is
+ * sold; only the font file itself may not be sold. Baloo 2 Bold is the
+ * 700-weight instance of the variable Baloo 2, which reserves no font name.
+ * Faces tried and left out: Fredoka and Baloo 2 ExtraBold, whose A pinches
+ * shut across most of the size range; Bungee, too wide at its colorable size
+ * to letter a medallion on a letter page; Lilita One, Sniglet, Oswald and Chewy,
+ * which close their counters until well past 110 px and fit too few words;
+ * Bree Serif, which letters much like Patua One at a bigger size. Script,
+ * outline, dotted and novelty faces are never candidates: joined letters
+ * leave no paper between them, and a face already drawn as an outline would
+ * print twice.
  */
 export const QC_LETTER_STYLES: readonly QcLetterStyle[] = [
   { id: 'classic', file: 'Montserrat Bold.ttf', caps: true, minEm: 76 },
@@ -47,6 +61,8 @@ export const QC_LETTER_STYLES: readonly QcLetterStyle[] = [
   { id: 'playful', file: 'Galindo.ttf', caps: true, minEm: 70 },
   { id: 'serif', file: 'Bitter Bold.ttf', caps: false, minEm: 84 },
   { id: 'retro', file: 'Righteous.ttf', caps: true, minEm: 84 },
+  { id: 'bubbly', file: 'Baloo 2 Bold.ttf', caps: true, minEm: 94 },
+  { id: 'slab', file: 'Patua One.ttf', caps: false, minEm: 96 },
 ]
 
 export const qcLetterStyle = (id: string): QcLetterStyle | undefined => QC_LETTER_STYLES.find((style) => style.id === id)
