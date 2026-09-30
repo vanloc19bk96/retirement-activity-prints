@@ -281,6 +281,21 @@ describe('farewell-logic-grid pages', () => {
     expect(sawChart).toBe(true)
   })
 
+  it('prints the write-in chart at every level on common trims', () => {
+    const isChart = (o: StudioFabricObject) =>
+      o.type === 'group' && Boolean(o.objects?.some((c) => clean(c.text) === CHART_HEADING))
+    for (const [w, h] of [[7.5, 9.25], [8.5, 8.5], [8.5, 11]] as const) {
+      for (const level of LEVELS) {
+        for (const showInstructions of [true, false]) {
+          for (const seed of [4, 10]) {
+            const pages = generate({ ...base, level, showInstructions }, kdpCtx(w, h, seed))
+            expect(pages[pages.length - 1]!.objects.some(isChart), `${w} x ${h} ${level} seed ${seed}`).toBe(true)
+          }
+        }
+      }
+    }
+  }, 30000)
+
   it('reports what the trim prints, and refuses a page too small', () => {
     const config = { ...base, level: 'classic' }
     const note = lgPrintNote({ page: kdpCtx(8.5, 11), config, instruction: instructionFor(config), font: FONT, level: parseLgLevel('classic') })

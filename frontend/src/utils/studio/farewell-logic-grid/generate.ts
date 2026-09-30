@@ -91,6 +91,9 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
     return { lines, height: clueSlotHeight(lines, plan.text) }
   }
 
+  // A puzzle whose clues or long labels crowd the write-in chart off the grid
+  // page is kept only if no fresh draw carries it.
+  let chartless: StudioPageOutput[] | null = null
   for (let attempt = 0; attempt < REBUILDS; attempt++) {
     const puzzle = buildLgPuzzle({
       level,
@@ -105,9 +108,10 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
     const laid = layoutLgPuzzle({ puzzle, plan, config, ctx, font, instruction, tag })
     if (!laid) continue
     if (!runLgKdpPreflight({ puzzle, laid, level }).ok) continue
-    return laid.outputs
+    if (laid.chart || laid.solution.mode !== 'table') return laid.outputs
+    chartless ??= laid.outputs
   }
-  return fail(LG_BUILD_FAILED_MESSAGE)
+  return chartless ?? fail(LG_BUILD_FAILED_MESSAGE)
 }
 
 export const farewellLogicGridTemplate: StudioTemplateDefinition = {

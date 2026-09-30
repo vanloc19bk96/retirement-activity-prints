@@ -15,6 +15,7 @@ import {
   hugWidth,
   pushBlock,
   planSolution,
+  tightSolution,
   puzzleGridLabels,
   type LgSetClue,
   type LgSolutionLayout,
@@ -22,11 +23,14 @@ import {
 import {
   CELL_COMFORT,
   CELL_MIN,
+  CHART_LEAD,
+  CHART_LEAD_TIGHT,
   CLUE_FONTS,
   ONE_PAGE_CLUE_FLOOR,
   LABEL_FONT_MIN,
   MAX_CLUE_LINES,
   boldSpec,
+  chartBlockHeight,
   clueSlotHeight,
   fitGrid,
   footerHeight,
@@ -41,6 +45,7 @@ import {
   wrapLines,
   type LgGridGeometry,
   type LgGridLabels,
+  type LgTextMetrics,
   type LgPagePlan,
 } from './layout'
 import type { LgPuzzle } from './puzzle'
@@ -68,22 +73,31 @@ export interface LgLaidOut {
   solution: LgSolutionLayout
 }
 
+/** This puzzle's write-in chart as set under the grid; 0 when it prints as a list. */
+function chartHeight(solution: LgSolutionLayout, text: LgTextMetrics, lead = CHART_LEAD): number {
+  return solution.mode === 'table' ? chartBlockHeight(solution.height, text, lead) : 0
+}
+
 /**
  * The plan is sized for a heavy clue set; this puzzle's own clues may need
- * less. A two-page plan whose clues and a comfortable grid fit together
- * becomes one page. Otherwise, when every clue fits page one at a larger size
- * (up to 18 pt), they are set there: the page fills with bigger type rather
- * than white space. Grid squares never shrink below the plan's to allow it.
+ * less. A two-page plan whose clues, a comfortable grid and the write-in
+ * chart fit together becomes one page; the chart is only given up for one
+ * page when the grid page could not hold it either. Otherwise, when every
+ * clue fits page one at a larger size (up to 18 pt), they are set there: the
+ * page fills with bigger type rather than white space. Grid squares never
+ * shrink below the plan's to allow it.
  */
 function fitToPuzzle(options: {
   puzzle: LgPuzzle
   plan: LgPagePlan
   font: string
   first: Box
+  second: Box
   labels: LgGridLabels
   gridHeight: number
+  solution: LgSolutionLayout
 }): LgPagePlan {
-  const { puzzle, plan, font, first, labels, gridHeight } = options
+  const { puzzle, plan, font, first, second, labels, gridHeight, solution } = options
   const set = (size: number) => {
     const text = lgTextMetrics(size)
     const textWidth = plan.blockWidth - text.numberW
@@ -97,15 +111,11 @@ function fitToPuzzle(options: {
     for (const size of CLUE_FONTS.filter((s) => s >= ONE_PAGE_CLUE_FLOOR)) {
       const m = set(size)
       if (!m.fits) continue
-      const grid = fitGrid({
-        shape: puzzle.shape,
-        labels,
-        labelFont: plan.labelFont,
-        font,
-        width: first.width,
-        height: first.height - m.used - m.text.font,
-        minCell: Math.max(plan.cell, CELL_COMFORT),
-      })
+      const fit = (height: number, minCell: number) =>
+        fitGrid({ shape: puzzle.shape, labels, labelFont: plan.labelFont, font, width: first.width, height, minCell })
+      const chartH = chartHeight(tightSolution(solution), m.text, CHART_LEAD_TIGHT)
+      const chartOnGridPage = chartH > 0 && fit(second.height - chartH, plan.cell) !== null
+      const grid = fit(first.height - m.used - m.text.font - (chartOnGridPage ? chartH : 0), Math.max(plan.cell, CELL_COMFORT))
       if (grid) {
         return { ...plan, pages: 1, text: m.text, textWidth: m.textWidth, cell: grid.cell, footerHeight: 0, secondCapacity: 0 }
       }
@@ -117,7 +127,7 @@ function fitToPuzzle(options: {
     const m = set(size)
     if (!m.fits) continue
     const footer = plan.pages === 2 ? footerHeight(m.text) : 0
-    const below = plan.pages === 1 ? m.text.font + gridHeight : footer
+    const below = plan.pages === 1 ? m.text.font + gridHeight + chartHeight(tightSolution(solution), m.text, CHART_LEAD_TIGHT) : footer
     if (m.used + below <= first.height) return { ...plan, text: m.text, textWidth: m.textWidth, footerHeight: footer }
   }
   return plan
@@ -162,18 +172,19 @@ export function layoutLgPuzzle(options: {
   const labels = puzzleGridLabels(puzzle)
   const planned = lgGridGeometry(puzzle.shape, options.plan.cell, options.plan.labelFont, labels, font)
   if (!planned) return null
+  // One table geometry serves the write-in chart and the answer page alike.
+  const solution = planSolution(puzzle, content.width, font, ptToPx)
   const plan = fitToPuzzle({
     puzzle,
     plan: options.plan,
     font,
     first: drawHeader(content, config, tag, instruction).body,
+    second: drawHeader(content, config, tag, '').body,
     labels,
     gridHeight: planned.height,
+    solution,
   })
   const { text } = plan
-
-  // One table geometry serves the write-in chart and the answer page alike.
-  const solution = planSolution(puzzle, content.width, font, ptToPx)
 
   const clues: LgSetClue[] = puzzle.clueTexts.map((clue, index) => ({
     index,
@@ -192,30 +203,36 @@ export function layoutLgPuzzle(options: {
   let chart = false
   /**
    * The grid grows into whatever room the real clues leave (never below the
-   * plan's squares), with the write-in chart under it when the squares can
-   * stay generous. Grid, heading and chart share one left edge, and the
+   * plan's squares), with the write-in chart under it whenever the plan's
+   * squares leave room for it. Grid, heading and chart share one left edge, and the
    * stack sits centred across the page, a little above centre down it.
    */
   const placeGrid = (objects: StudioFabricObject[], top: number, bottom: number): Box | null => {
     const room = bottom - top
-    const fit = (height: number, minCell: number) =>
-      fitGrid({ shape: puzzle.shape, labels, labelFont: plan.labelFont, font, width: content.width, height, minCell })
+    const fit = (height: number, minCell: number, labelFont = plan.labelFont) =>
+      fitGrid({ shape: puzzle.shape, labels, labelFont, font, width: content.width, height, minCell })
     const headingH = Math.round(textBlockHeight(1, text.font))
     const headingW = hugWidth([CHART_HEADING], text.font, boldSpec(font))
-    const chartBlock =
-      solution.mode === 'table' ? Math.round(text.font * 1.4 + headingH + text.gap + solution.height) : 0
     const best = fit(room, plan.cell)
     // The chart comes free when the grid is held back by the page's width;
-    // otherwise it may cost the squares only down to a generous floor.
+    // otherwise it costs the squares, first only down to a generous floor,
+    // then down to the plan's own squares, which are still pencil-sized, and
+    // last the chart tightens: its heading closer to the grid, its rows
+    // shorter but still roomy enough to write in.
+    const chartUnder = (table: LgSolutionLayout, lead: number, minCell: number, labelFont = plan.labelFont) => {
+      const height = chartHeight(table, text, lead)
+      if (height <= 0 || !best) return null
+      const grid = room - best.height >= height ? best : fit(room - height, minCell, labelFont)
+      return grid && { grid, table, lead, height }
+    }
     const withChart =
-      chartBlock <= 0 || !best
-        ? null
-        : room - best.height >= chartBlock
-          ? best
-          : fit(room - chartBlock, Math.max(plan.cell, CHART_CELL_FLOOR))
-    const placed = withChart ?? best
+      chartUnder(solution, CHART_LEAD, Math.max(plan.cell, CHART_CELL_FLOOR)) ??
+      chartUnder(solution, CHART_LEAD, plan.cell) ??
+      chartUnder(tightSolution(solution), CHART_LEAD_TIGHT, plan.cell) ??
+      chartUnder(tightSolution(solution), CHART_LEAD_TIGHT, plan.cell, LABEL_FONT_MIN)
+    const placed = withChart?.grid ?? best
     if (!placed) return null
-    const block = placed.height + (withChart ? chartBlock : 0)
+    const block = placed.height + (withChart?.height ?? 0)
     const stackW = Math.min(content.width, withChart ? Math.max(placed.width, solution.width, headingW) : placed.width)
     const left = Math.round(content.left + (content.width - stackW) / 2)
     const box: Box = {
@@ -230,7 +247,7 @@ export function layoutLgPuzzle(options: {
       // names nothing else, so it should never be left behind when the chart
       // is moved.
       const chartParts: StudioFabricObject[] = []
-      const headingTop = Math.round(box.top + placed.height + text.font * 1.4)
+      const headingTop = Math.round(box.top + placed.height + text.font * withChart.lead)
       chartParts.push(
         buildText(
           {
@@ -249,7 +266,7 @@ export function layoutLgPuzzle(options: {
       )
       drawSolution(chartParts, {
         puzzle,
-        layout: solution,
+        layout: withChart.table,
         left,
         top: headingTop + headingH + text.gap,
         font,

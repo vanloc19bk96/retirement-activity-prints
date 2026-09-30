@@ -10,9 +10,9 @@ import type { LgShape } from './solver'
  *   and "who did not" clues.
  * - Classic: four people and three categories, a real mix of clue types, at
  *   most two outright matches.
- * - Challenging: five people and three categories where the page allows it
- *   (four on small trims), led by either/or, pairs and exact order, with at
- *   most one outright match.
+ * - Challenging: five people and three categories where the page holds that
+ *   grid with its write-in chart (four elsewhere), led by either/or, pairs
+ *   and exact order, with at most one outright match.
  */
 export interface LgLevel {
   value: LgLevelValue

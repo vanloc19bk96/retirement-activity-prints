@@ -61,6 +61,17 @@ export const TEXT_LINE_HEIGHT = 1.2
 /** Past three lines a clue stops being quick to read. */
 export const MAX_CLUE_LINES = 3
 
+/** Answer table type sizes in points, largest first, and each row's height in ems. */
+export const TABLE_FONTS = [16, 15, 14, 13]
+export const TABLE_ROW_EMS = 1.9
+/** Rows of a write-in chart on a page that would otherwise lose it: still room to write. */
+export const TABLE_ROW_EMS_TIGHT = 1.5
+
+/** Space between the grid and the write-in chart's heading, in clue ems. */
+export const CHART_LEAD = 1.4
+/** The same space on a page that would otherwise lose the chart. */
+export const CHART_LEAD_TIGHT = 0.8
+
 /** Least share of a typical puzzle's clue height a two-page plan must hold. */
 const MIN_BUDGET_SHARE = 0.7
 
@@ -271,6 +282,18 @@ export function storyHeight(lines: { subtitle: readonly string[]; scenario: read
 /** Space between the story and the first clue, in clue-font ems. */
 export const STORY_AFTER = 1.1
 
+/** The write-in chart as set under the grid: space, heading and a blank table `tableHeight` tall. */
+export function chartBlockHeight(tableHeight: number, text: LgTextMetrics, lead = CHART_LEAD): number {
+  return Math.round(text.font * lead + Math.round(textBlockHeight(1, text.font)) + text.gap + tableHeight)
+}
+
+/**
+ * Room a shape's chart needs when set tight, at most: a header row and a row
+ * per person at the largest type.
+ */
+export const chartTableReserve = (shape: LgShape) =>
+  Math.round(ptToPx(TABLE_FONTS[0]!) * TABLE_ROW_EMS_TIGHT) * (shape.n + 1) + 2 * GRID_EDGE
+
 /** Largest grid for these labels, between `minCell` and `maxCell`, that fits the box. */
 export function fitGrid(options: {
   shape: LgShape
@@ -305,7 +328,8 @@ function smallestGrid(shape: LgShape, labelFont: number, font: string, width: nu
  *
  * Shapes are tried largest first, and for each shape three layouts in turn:
  *
- * 1. Everything on one page, clues at 15 pt or more, squares at least 0.29 in.
+ * 1. Everything on one page, clues at 15 pt or more, squares at least 0.29 in,
+ *    with room under the grid for the write-in chart.
  * 2. The story and every clue on page one, the grid on page two.
  * 3. As 2, with clues that miss page one set above the grid.
  *
@@ -341,7 +365,11 @@ export function planLgPage(options: {
     return { text, textWidth, typical, story, worstClue: clueSlotHeight(MAX_CLUE_LINES, text) }
   }
 
-  for (const shape of level.shapes) {
+  for (const [i, shape] of level.shapes.entries()) {
+    // A larger grid is only worth it with the write-in chart under it; the
+    // last shape takes the page as it comes.
+    const chart = chartBlockHeight(chartTableReserve(shape), lgTextMetrics(CLUE_FONT_MIN), CHART_LEAD_TIGHT)
+    if (i < level.shapes.length - 1 && !smallestGrid(shape, LABEL_FONT_MIN, font, second.width, second.height - chart, CELL_MIN)) continue
     const expected = EXPECTED_CLUES[`${shape.n}x${shape.K}`] ?? 10
     const planned = (
       m: ReturnType<typeof measure>,
@@ -370,9 +398,10 @@ export function planLgPage(options: {
       const m = measure(size)
       // A little over a typical puzzle, so an ordinary draw is rarely refused.
       const need = Math.round(expected * m.typical * 1.1)
+      const below = m.text.font + chartBlockHeight(chartTableReserve(shape), m.text, CHART_LEAD_TIGHT)
       for (const labelFont of LABEL_FONTS) {
-        const grid = smallestGrid(shape, labelFont, font, first.width, first.height - m.story - need - m.text.font, CELL_COMFORT)
-        if (grid) return planned(m, 1, grid, first.height - m.story - grid.height - m.text.font, 0, 0)
+        const grid = smallestGrid(shape, labelFont, font, first.width, first.height - m.story - need - below, CELL_COMFORT)
+        if (grid) return planned(m, 1, grid, first.height - m.story - grid.height - below, 0, 0)
       }
     }
 

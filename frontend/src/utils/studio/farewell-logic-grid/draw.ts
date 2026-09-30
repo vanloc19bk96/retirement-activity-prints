@@ -14,6 +14,9 @@ import { measureRunWidth, type FontSpec } from '../studio-text-metrics'
 import { LG_PEOPLE_TITLE } from './content'
 import {
   GRID_EDGE,
+  TABLE_FONTS,
+  TABLE_ROW_EMS,
+  TABLE_ROW_EMS_TIGHT,
   TEXT_LINE_HEIGHT,
   boldSpec,
   colGroups,
@@ -445,8 +448,6 @@ export function solutionRows(puzzle: LgPuzzle): string[][] {
   ])
 }
 
-const TABLE_FONTS = [16, 15, 14, 13]
-
 /** Largest table that fits the column; a list when no table does. */
 export function planSolution(puzzle: LgPuzzle, width: number, font: string, ptToPx: (pt: number) => number): LgSolutionLayout {
   const header = [0, ...colGroups(puzzle.shape.K)].map((g) => groupTitle(puzzle, g))
@@ -464,7 +465,7 @@ export function planSolution(puzzle: LgPuzzle, width: number, font: string, ptTo
     )
     const total = colWidths.reduce((a, b) => a + b, 0) + 2 * GRID_EDGE
     if (total <= width) {
-      const rowH = Math.round(size * 1.9)
+      const rowH = Math.round(size * TABLE_ROW_EMS)
       return { mode: 'table', font: size, colWidths, rowH, padX, height: rowH * (rows.length + 1) + 2 * GRID_EDGE, width: total }
     }
   }
@@ -480,6 +481,14 @@ export function planSolution(puzzle: LgPuzzle, width: number, font: string, ptTo
     height: Math.round(textBlockHeight(count, size) + (rows.length - 1) * size * 0.5),
     width,
   }
+}
+
+/** The same table with shorter rows, for a write-in chart on a crowded page. */
+export function tightSolution(layout: LgSolutionLayout): LgSolutionLayout {
+  if (layout.mode !== 'table') return layout
+  const rows = Math.round((layout.height - 2 * GRID_EDGE) / layout.rowH)
+  const rowH = Math.round(layout.font * TABLE_ROW_EMS_TIGHT)
+  return { ...layout, rowH, height: rowH * rows + 2 * GRID_EDGE }
 }
 
 /**
