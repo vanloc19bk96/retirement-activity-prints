@@ -1,19 +1,23 @@
 import { memo, useCallback, useEffect, useState } from 'react'
 import { useAuthContext } from '@/context/AuthContext'
 import {
+  DEFAULT_NICHE_VAULT_URL,
   DEFAULT_PROMOTIONAL_PACK_URL,
   DEFAULT_PRO_UPGRADE_URL,
   DEFAULT_STANDARD_UPGRADE_URL,
+  DEFAULT_STARTER_URL,
 } from '@/constants/plan-features'
 import { isProPlan, isStarterPlan, normalizeUserPlan } from '@/utils/user-plan'
 import { HeaderDialogActions } from './header-dialog-actions'
 import { UserMenu } from './UserMenu'
 
+const STARTER_URL = import.meta.env.VITE_STARTER_URL || DEFAULT_STARTER_URL
 const STANDARD_UPGRADE_URL =
   import.meta.env.VITE_STANDARD_UPGRADE_URL || DEFAULT_STANDARD_UPGRADE_URL
 const PRO_UPGRADE_URL = import.meta.env.VITE_PRO_UPGRADE_URL || DEFAULT_PRO_UPGRADE_URL
 const PROMOTIONAL_PACK_URL =
   import.meta.env.VITE_PROMOTIONAL_PACK_URL || DEFAULT_PROMOTIONAL_PACK_URL
+const NICHE_VAULT_URL = import.meta.env.VITE_NICHE_VAULT_URL || DEFAULT_NICHE_VAULT_URL
 
 function HeaderComponent(): JSX.Element {
   const [isDarkMode, setIsDarkMode] = useState(false)
@@ -90,9 +94,11 @@ function HeaderComponent(): JSX.Element {
             shouldShowUpgradeButton={shouldShowUpgradeButton}
             isBlueHeaderSurface={isBlueHeaderSurface}
             userPlan={userPlan}
+            starterUrl={STARTER_URL}
             standardUpgradeUrl={STANDARD_UPGRADE_URL}
             proUpgradeUrl={PRO_UPGRADE_URL}
             promotionalPackUrl={PROMOTIONAL_PACK_URL}
+            nicheVaultUrl={NICHE_VAULT_URL}
           />
 
           <UserMenu

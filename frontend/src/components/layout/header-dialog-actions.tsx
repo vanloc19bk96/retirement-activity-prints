@@ -14,18 +14,22 @@ type HeaderDialogActionsProps = {
   shouldShowUpgradeButton: boolean
   isBlueHeaderSurface: boolean
   userPlan: string | null
+  starterUrl: string
   standardUpgradeUrl: string
   proUpgradeUrl: string
   promotionalPackUrl: string
+  nicheVaultUrl: string
 }
 
 function HeaderDialogActionsComponent({
   shouldShowUpgradeButton,
   isBlueHeaderSurface,
   userPlan,
+  starterUrl,
   standardUpgradeUrl,
   proUpgradeUrl,
   promotionalPackUrl,
+  nicheVaultUrl,
 }: HeaderDialogActionsProps): JSX.Element {
   const [isVideoTrainingDialogOpen, setIsVideoTrainingDialogOpen] = useState(false)
   const [shouldMountVideoTrainingDialog, setShouldMountVideoTrainingDialog] = useState(false)
@@ -125,9 +129,11 @@ function HeaderDialogActionsComponent({
           isOpen={isPremiumUpgradeDialogOpen}
           onOpenChange={setIsPremiumUpgradeDialogOpen}
           currentPlan={userPlan}
+          starterUrl={starterUrl}
           standardUpgradeUrl={standardUpgradeUrl}
           proUpgradeUrl={proUpgradeUrl}
           promotionalPackUrl={promotionalPackUrl}
+          nicheVaultUrl={nicheVaultUrl}
         />
       )}
     </>

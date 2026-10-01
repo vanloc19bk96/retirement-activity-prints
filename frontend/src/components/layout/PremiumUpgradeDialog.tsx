@@ -7,9 +7,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import {
+  DEFAULT_NICHE_VAULT_URL,
   DEFAULT_PROMOTIONAL_PACK_URL,
   DEFAULT_PRO_UPGRADE_URL,
   DEFAULT_STANDARD_UPGRADE_URL,
+  DEFAULT_STARTER_URL,
+  NICHE_VAULT_FEATURES,
   PRO_PLAN_FEATURES,
   PROMOTIONAL_PACK_FEATURES,
   STANDARD_PLAN_FEATURES,
@@ -20,9 +23,11 @@ import { isProPlan, isStarterPlan, normalizeUserPlan } from '@/utils/user-plan'
 type PlanKey = 'starter' | 'standard' | 'pro'
 
 const DEFAULT_UPGRADE_URLS = {
+  starter: DEFAULT_STARTER_URL,
   standard: DEFAULT_STANDARD_UPGRADE_URL,
   pro: DEFAULT_PRO_UPGRADE_URL,
   promotionalPack: DEFAULT_PROMOTIONAL_PACK_URL,
+  nicheVault: DEFAULT_NICHE_VAULT_URL,
 } as const
 
 const PLAN_CONFIG: Record<
@@ -36,17 +41,17 @@ const PLAN_CONFIG: Record<
 > = {
   starter: {
     title: 'Starter',
-    subtitle: 'Everything you need to start publishing custom books.',
+    subtitle: 'Build complete, print-ready retirement books from 30 games.',
     features: STARTER_PLAN_FEATURES,
   },
   standard: {
     title: 'Standard',
-    subtitle: 'Unlock AI images, icons, book covers, and more layouts.',
+    subtitle: 'All 64 games, the Book Cover Editor, and unlimited AI images.',
     features: STANDARD_PLAN_FEATURES,
   },
   pro: {
     title: 'Pro',
-    subtitle: 'Maximum power for professional publishers and power users.',
+    subtitle: 'Build a whole book in one pass, with every ceiling removed.',
     features: PRO_PLAN_FEATURES,
     isHighlighted: true,
   },
@@ -55,9 +60,11 @@ const PLAN_CONFIG: Record<
 export type PremiumUpgradeDialogProps = {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
+  starterUrl?: string
   standardUpgradeUrl?: string
   proUpgradeUrl?: string
   promotionalPackUrl?: string
+  nicheVaultUrl?: string
   currentPlan?: string | null
 }
 
@@ -72,19 +79,22 @@ function isCurrentPlan(plan: PlanKey, normalizedPlan: string | null): boolean {
   return isProPlan(normalizedPlan)
 }
 
-function resolveUpgradeUrl(
-  plan: PlanKey,
-  standardUpgradeUrl: string,
-  proUpgradeUrl: string,
-): string | null {
-  if (plan === 'starter') return null
-  if (plan === 'standard') return standardUpgradeUrl
-  return proUpgradeUrl
+/** Starter is the entry plan: only purchasable when the account has no plan yet. */
+function isPlanPurchasable(plan: PlanKey, normalizedPlan: string | null): boolean {
+  if (isCurrentPlan(plan, normalizedPlan)) return false
+  if (plan === 'starter') {
+    return !(
+      isStarterPlan(normalizedPlan) ||
+      isStandardPlan(normalizedPlan) ||
+      isProPlan(normalizedPlan)
+    )
+  }
+  return true
 }
 
-function resolveCtaLabel(plan: PlanKey, isCurrent: boolean): string {
+function resolveCtaLabel(plan: PlanKey, isCurrent: boolean, isPurchasable: boolean): string {
   if (isCurrent) return 'Current plan'
-  if (plan === 'starter') return 'Starter plan'
+  if (plan === 'starter') return isPurchasable ? 'Get Starter' : 'Starter plan'
   return `Upgrade to ${PLAN_CONFIG[plan].title}`
 }
 
@@ -134,37 +144,44 @@ function PlanCard({ plan, isCurrent }: PlanCardProps): JSX.Element {
 type PlanCtaButtonProps = {
   plan: PlanKey
   isCurrent: boolean
-  upgradeUrl: string | null
-  onUpgrade: (url: string) => void
-}
-
-type PromotionalPackCardProps = {
+  isPurchasable: boolean
   upgradeUrl: string
   onUpgrade: (url: string) => void
 }
 
-function PromotionalPackCard({ upgradeUrl, onUpgrade }: PromotionalPackCardProps): JSX.Element {
+type AddOnCardProps = {
+  title: string
+  description: string
+  features: readonly string[]
+  ctaLabel: string
+  upgradeUrl: string
+  onUpgrade: (url: string) => void
+}
+
+function AddOnCard({
+  title,
+  description,
+  features,
+  ctaLabel,
+  upgradeUrl,
+  onUpgrade,
+}: AddOnCardProps): JSX.Element {
   const hasUpgradeUrl = Boolean(upgradeUrl && upgradeUrl !== '#')
 
   return (
     <section
       className="rounded-xl border border-border bg-muted/20 p-4"
-      aria-label="Promotional Material Pack add-on"
+      aria-label={`${title} add-on`}
     >
       <div className="flex flex-wrap items-center gap-2">
-        <h3 className="text-base font-semibold leading-tight text-foreground">
-          Promotional Material Pack
-        </h3>
+        <h3 className="text-base font-semibold leading-tight text-foreground">{title}</h3>
         <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
           Add-on
         </span>
       </div>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Listing, categories, and a 30-day launch plan for the book you already built. Not an app
-        plan.
-      </p>
+      <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       <ul className="mt-4 grid gap-2 sm:grid-cols-2" role="list">
-        {PROMOTIONAL_PACK_FEATURES.map((feature) => (
+        {features.map((feature) => (
           <li key={feature} className="flex gap-3 text-sm text-foreground">
             <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
             <span className="leading-snug">{feature}</span>
@@ -181,18 +198,23 @@ function PromotionalPackCard({ upgradeUrl, onUpgrade }: PromotionalPackCardProps
           }
         }}
         disabled={!hasUpgradeUrl}
-        aria-label="Continue to Promotional Material Pack checkout (opens in a new tab)"
+        aria-label={`Continue to ${title} checkout (opens in a new tab)`}
       >
-        <span>Get the Promotional Pack</span>
+        <span>{ctaLabel}</span>
         {hasUpgradeUrl && <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />}
       </Button>
     </section>
   )
 }
 
-function PlanCtaButton({ plan, isCurrent, upgradeUrl, onUpgrade }: PlanCtaButtonProps): JSX.Element {
-  const isDisabled = isCurrent || plan === 'starter'
-  const label = resolveCtaLabel(plan, isCurrent)
+function PlanCtaButton({
+  plan,
+  isCurrent,
+  isPurchasable,
+  upgradeUrl,
+  onUpgrade,
+}: PlanCtaButtonProps): JSX.Element {
+  const label = resolveCtaLabel(plan, isCurrent, isPurchasable)
   const hasUpgradeUrl = Boolean(upgradeUrl && upgradeUrl !== '#')
 
   return (
@@ -201,11 +223,11 @@ function PlanCtaButton({ plan, isCurrent, upgradeUrl, onUpgrade }: PlanCtaButton
       variant={plan === 'pro' ? 'default' : 'outline'}
       className="h-11 w-full gap-2"
       onClick={() => {
-        if (hasUpgradeUrl && upgradeUrl) {
+        if (hasUpgradeUrl) {
           onUpgrade(upgradeUrl)
         }
       }}
-      disabled={isDisabled}
+      disabled={!isPurchasable}
       aria-label={
         isCurrent
           ? `${PLAN_CONFIG[plan].title} is your current plan`
@@ -213,7 +235,7 @@ function PlanCtaButton({ plan, isCurrent, upgradeUrl, onUpgrade }: PlanCtaButton
       }
     >
       <span>{label}</span>
-      {!isCurrent && plan !== 'starter' && hasUpgradeUrl && (
+      {isPurchasable && hasUpgradeUrl && (
         <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />
       )}
     </Button>
@@ -223,9 +245,11 @@ function PlanCtaButton({ plan, isCurrent, upgradeUrl, onUpgrade }: PlanCtaButton
 export function PremiumUpgradeDialog({
   isOpen,
   onOpenChange,
+  starterUrl = DEFAULT_UPGRADE_URLS.starter,
   standardUpgradeUrl = DEFAULT_UPGRADE_URLS.standard,
   proUpgradeUrl = DEFAULT_UPGRADE_URLS.pro,
   promotionalPackUrl = DEFAULT_UPGRADE_URLS.promotionalPack,
+  nicheVaultUrl = DEFAULT_UPGRADE_URLS.nicheVault,
   currentPlan = null,
 }: PremiumUpgradeDialogProps): JSX.Element {
   const openUpgradeUrl = (url: string): void => {
@@ -235,6 +259,11 @@ export function PremiumUpgradeDialog({
 
   const normalizedPlan = normalizeUserPlan(currentPlan)
   const plans: PlanKey[] = ['starter', 'standard', 'pro']
+  const planUrls: Record<PlanKey, string> = {
+    starter: starterUrl,
+    standard: standardUpgradeUrl,
+    pro: proUpgradeUrl,
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -275,7 +304,8 @@ export function PremiumUpgradeDialog({
                 key={plan}
                 plan={plan}
                 isCurrent={isCurrentPlan(plan, normalizedPlan)}
-                upgradeUrl={resolveUpgradeUrl(plan, standardUpgradeUrl, proUpgradeUrl)}
+                isPurchasable={isPlanPurchasable(plan, normalizedPlan)}
+                upgradeUrl={planUrls[plan]}
                 onUpgrade={openUpgradeUrl}
               />
             ))}
@@ -284,7 +314,24 @@ export function PremiumUpgradeDialog({
 
         <div className="mt-6 border-t border-border pt-5">
           <p className="mb-3 text-sm font-medium text-foreground">Also available</p>
-          <PromotionalPackCard upgradeUrl={promotionalPackUrl} onUpgrade={openUpgradeUrl} />
+          <div className="space-y-4">
+            <AddOnCard
+              title="Promotional Material Pack"
+              description="Listing, categories, Amazon Ads data, and launch checklists for the book you already built. Not an app plan."
+              features={PROMOTIONAL_PACK_FEATURES}
+              ctaLabel="Get the Promotional Pack"
+              upgradeUrl={promotionalPackUrl}
+              onUpgrade={openUpgradeUrl}
+            />
+            <AddOnCard
+              title="Retirement Niche Vault"
+              description="Ready-to-use keyword and category research for retirement books, from real Amazon data. Not an app plan."
+              features={NICHE_VAULT_FEATURES}
+              ctaLabel="Get the Niche Vault"
+              upgradeUrl={nicheVaultUrl}
+              onUpgrade={openUpgradeUrl}
+            />
+          </div>
         </div>
       </DialogContent>
     </Dialog>
