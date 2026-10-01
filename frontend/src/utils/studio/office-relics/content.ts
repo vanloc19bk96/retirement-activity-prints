@@ -2,7 +2,7 @@ import type { StudioConfig } from '@/types/studio-template.types'
 import { resolveOwnerSalt } from '../_shared/uniqueness'
 import { createRng, deriveSeed } from '../studio-rng'
 import { RELIC_DRAWINGS, type RelicDrawingId } from './drawings'
-import { dealRelicVariant, type RelicVariant } from './variants'
+import { artLabel, dealRelicVariant, relicVariants, type RelicVariant } from './variants'
 
 /**
  * What an Office Relics page can show, and how a page's objects are chosen.
@@ -36,8 +36,6 @@ export const OR_DEFAULT_TITLE = 'Office Relics'
 export const OR_PAGE_TOO_SMALL_MESSAGE =
   'This page size is too small for Office Relics pictures. Pick a larger page in Settings.'
 export const OR_BUILD_FAILED_MESSAGE = 'Could not lay out these pictures on this page. Try again.'
-export const OR_BOOK_FULL_MESSAGE =
-  'This book already shows every Office Relic there is. Remove an Office Relics page to add another.'
 
 /**
  * How well known an object is today.
@@ -266,6 +264,59 @@ export const relicsClash = (a: OfficeRelic, b: OfficeRelic) =>
   a.id === b.id || a.lookalikes.some((group) => b.lookalikes.includes(group))
 
 /* ------------------------------------------------------------------ *
+ * What the book already shows
+ * ------------------------------------------------------------------ */
+
+/**
+ * Pictures on the book's latest Office Relics pages — two full pages' worth.
+ * An object printed this recently waits while any other can take its place,
+ * so a repeat never lands on the page next to its first showing.
+ */
+export const BOOK_LATEST_PICTURES = 18
+
+/** What a book's Office Relics pages already print, read back from the labels their pictures carry. */
+export interface BookRelics {
+  /** Pictures of each object the book prints. */
+  uses: ReadonlyMap<string, number>
+  /** Every picture the book prints, as `id:version`: a repeated object is drawn in a version not yet used. */
+  art: ReadonlySet<string>
+  /** Objects on the book's latest pages. */
+  latest: ReadonlySet<string>
+}
+
+/** The label a picture carries in the book: its object and the version it prints. */
+export const relicBookLabel = (drawing: RelicDrawingId, variant: RelicVariant) => artLabel(drawing, variant)
+
+/** The object a book label names, or undefined. Pages made before versions were stamped carry the bare id. */
+export function relicIdOfLabel(label: string): string | undefined {
+  const id = label.trim().split(':')[0] ?? ''
+  return RELIC_INDEX.has(id) ? id : undefined
+}
+
+/** Reads the book's labels (page order, as the collector returns them) into what the next page must respect. */
+export function readBookRelics(labels: readonly string[]): BookRelics {
+  const uses = new Map<string, number>()
+  const art = new Set<string>()
+  const ids: string[] = []
+  for (const raw of labels) {
+    const label = raw.trim()
+    const id = relicIdOfLabel(label)
+    if (!id) continue
+    uses.set(id, (uses.get(id) ?? 0) + 1)
+    if (label.includes(':')) art.add(label)
+    ids.push(id)
+  }
+  return { uses, art, latest: new Set(ids.slice(-BOOK_LATEST_PICTURES)) }
+}
+
+const EMPTY_BOOK: BookRelics = { uses: new Map(), art: new Set(), latest: new Set() }
+
+/** True when every version of every drawing of this object is already printed in the book. */
+function allVersionsPrinted(r: OfficeRelic, art: ReadonlySet<string>): boolean {
+  return r.drawings.every((drawing) => relicVariants(drawing).every((variant) => art.has(artLabel(drawing, variant))))
+}
+
+/* ------------------------------------------------------------------ *
  * Choosing a page
  * ------------------------------------------------------------------ */
 
@@ -282,41 +333,60 @@ export interface PlacedRelic {
 /**
  * The objects for one page, in the order they print.
  *
- * Nothing the book already shows is dealt again. Within what is left, the
- * level's preferred tiers come first, then objects this seller has not printed
- * recently (`recent`, newest last), so a second book starts with different
- * objects from the first. Each pick then goes to a category the page has used
- * least, so a page spans the office rather than clustering, and no decade may
- * fill more than half the page. Among what is left the seed chooses evenly, so
- * over many books every object turns up about as often as its tier allows.
- * Objects that clash with one already picked are passed over.
+ * A book deals the catalog like a deck: every object is shown once before any
+ * is shown twice, twice before any three times, and so on, so a book of any
+ * length fills every page and its repeats are spread as thin as the catalog
+ * allows. Within the fewest-shown, the level's preferred tiers come first,
+ * then objects not on the book's latest pages (`BOOK_LATEST_PICTURES`), then
+ * objects this seller has not printed recently (`recent`), so a second book
+ * starts with different objects from the first. A page takes at most
+ * `MAX_PER_CATEGORY` from one kind of thing, so it spans the office, and no
+ * decade may fill more than half the page. Objects that clash with one already
+ * picked are passed over. Among what is left the seed chooses evenly.
+ *
+ * The spread is a cap, not a quota. An earlier rule sent every pick to the
+ * category the page had used least, which on a nine-picture page meant one
+ * object from each of the nine categories: so few combinations that two
+ * sellers' first pages often showed the same nine objects. The cap keeps a
+ * page varied (five categories at least) while leaving millions of pages.
  *
  * Each picture is then dealt a version of its drawing (see `variants.ts`) from
- * the seller's salt and the seed, passing over versions in `recentArt`, so two
- * sellers — or one seller's two books — rarely print the same picture.
+ * the seller's salt and the seed. A version the book already prints is never
+ * dealt again while another remains, so an object shown a second time is a
+ * different picture of it, never the same image reprinted. Versions in
+ * `recentArt` (this seller's history, newest first) are passed over too, and
+ * once every version has been printed the longest-unprinted ones come back
+ * first, so a seller works through the whole picture library before any
+ * picture returns.
  *
- * Returns fewer than `count` only when the book has used up the catalog.
+ * Returns fewer than `count` only when the page rules themselves cannot be met.
  */
 export function pickRelics(options: {
   count: number
   level: OfficeRelicsLevel
   seed: number
-  book?: readonly string[]
+  /** The labels the book's pages carry (`relicBookLabel`, or a bare id), in page order. */
+  book?: readonly string[] | BookRelics
+  /** Objects this seller printed lately. */
   recent?: readonly string[]
   /** The seller's puzzle salt; defaults to the anonymous one. */
   ownerSalt?: string
-  /** `id:version` labels this seller printed lately. */
+  /** `id:version` labels this seller printed, newest first (as `studioAvoidList` returns them). */
   recentArt?: readonly string[]
 }): PlacedRelic[] {
-  const { count, level, seed, book = [], recent = [], recentArt = [] } = options
+  const { count, level, seed, recent = [], recentArt = [] } = options
+  const book = !options.book ? EMPTY_BOOK : Array.isArray(options.book) ? readBookRelics(options.book) : (options.book as BookRelics)
   const ownerSalt = options.ownerSalt ?? resolveOwnerSalt({})
   const rng = createRng(deriveSeed(seed, `${OR_TEMPLATE_KEY}:pick`))
-  const printed = new Set(book)
   const recently = new Set(recent)
   const { tierRank } = levelSpec(level)
-  const rank = (r: OfficeRelic) => tierRank[r.tier] * 2 + (recently.has(r.id) ? 1 : 0)
+  // Times shown in the book first, then tier, then the book's latest pages, then this seller's history.
+  const rank = (r: OfficeRelic) =>
+    (book.uses.get(r.id) ?? 0) * 16 + tierRank[r.tier] * 4 + (book.latest.has(r.id) ? 2 : 0) + (recently.has(r.id) ? 1 : 0)
 
-  const pool = rng.shuffle(OFFICE_RELICS.filter((r) => !printed.has(r.id) && relicFaults(r).length === 0))
+  const pool = rng.shuffle(
+    OFFICE_RELICS.filter((r) => relicFaults(r).length === 0 && !(book.uses.has(r.id) && allVersionsPrinted(r, book.art))),
+  )
   const picked: OfficeRelic[] = []
   const least = <T>(items: readonly T[], score: (item: T) => number): T[] => {
     const low = Math.min(...items.map(score))
@@ -333,18 +403,20 @@ export function pickRelics(options: {
         onPage((kept) => kept.decade === r.decade) < decadeCap,
     )
     if (open.length === 0) break
-    const best = least(open, rank)
-    picked.push(rng.pick(least(best, (r) => onPage((kept) => kept.category === r.category))))
+    picked.push(rng.pick(least(open, rank)))
   }
 
-  const printedArt = new Set(recentArt)
+  // Label → how long ago it printed (0 = newest), first occurrence wins.
+  const printedArt = new Map<string, number>()
+  recentArt.forEach((label, age) => {
+    if (!printedArt.has(label)) printedArt.set(label, age)
+  })
   return rng.shuffle(picked).map((r) => {
     const drawing = rng.pick(r.drawings)
-    return { relic: r, drawing, variant: dealRelicVariant({ id: drawing, ownerSalt, seed, recent: printedArt }) }
+    return {
+      relic: r,
+      drawing,
+      variant: dealRelicVariant({ id: drawing, ownerSalt, seed, recent: printedArt, book: book.art }),
+    }
   })
-}
-
-/** Relic ids the book already shows, from the labels its pages carry. */
-export function bookRelicIds(labels: readonly string[]): string[] {
-  return labels.map((label) => label.trim()).filter((label) => RELIC_INDEX.has(label))
 }

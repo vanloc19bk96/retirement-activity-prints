@@ -4,7 +4,7 @@ import { unionObjectBounds, type Box } from '../studio-layout'
 import { buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
 import { fabricTextHeight, hugTextBoxWidth } from '../studio-text-metrics'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
-import { OR_TEMPLATE_KEY, type PlacedRelic } from './content'
+import { OR_TEMPLATE_KEY, relicBookLabel, type PlacedRelic } from './content'
 import {
   ALIAS_GAP,
   ALIAS_LINE_HEIGHT,
@@ -159,8 +159,9 @@ function drawCard(
       },
       tag,
       {
-        // The object's identity, so a later page in the book can refuse it.
-        [STUDIO_CONTENT_LABEL_KEY]: relic.id,
+        // The object and its version, so a later page in the book shows other
+        // objects first and never reprints this exact picture.
+        [STUDIO_CONTENT_LABEL_KEY]: relicBookLabel(drawing, variant),
         // One token for the uniqueness fingerprint, not every curve in it.
         studioCanonicalKey: relicCanonicalKey(drawing, version),
         relicDrawing: drawing,

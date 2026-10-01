@@ -21,6 +21,13 @@ const STORAGE_KEY = 'studio:recent-content:v1'
 export const STUDIO_AVOID_LIMIT = 60
 /** Labels kept per template + theme. A few sheets' worth of history. */
 const MEMORY_PER_KEY = 200
+/**
+ * Most a template may ask one bucket to keep. A picture library of several
+ * hundred versions needs its whole size remembered, or a seller's later books
+ * cycle back to pictures well before the library is used up. At ~30 characters
+ * a label this is a few tens of KB, far inside the browser's quota.
+ */
+export const STUDIO_MEMORY_MAX_PER_KEY = 1000
 /** Distinct template + theme buckets kept before the oldest is dropped. */
 const MAX_KEYS = 200
 const MAX_LABEL_CHARS = 60
@@ -109,8 +116,24 @@ export function studioAvoidList(key: string, limit: number = STUDIO_AVOID_LIMIT)
   return bucket.slice(-limit).reverse()
 }
 
-/** Record what a generation produced, so the next one is asked for something else. */
-export function rememberStudioContent(key: string, values: Iterable<unknown>): void {
+/**
+ * Record what a generation produced, so the next one is asked for something else.
+ *
+ * A label printed again moves to the newest end (keeping its first spelling):
+ * the bucket is a least-recently-printed order, so a window of its newest
+ * labels really is what was printed lately. Without the move, a template with
+ * a fixed catalog froze its window once every item had been printed once, and
+ * every later book was steered to the same items.
+ *
+ * `keep` raises this bucket's size above the default (capped at
+ * `STUDIO_MEMORY_MAX_PER_KEY`); the largest size it was ever written with
+ * sticks, so a caller that passes none never trims what another kept.
+ */
+export function rememberStudioContent(
+  key: string,
+  values: Iterable<unknown>,
+  options: { keep?: number } = {},
+): void {
   const labels: string[] = []
   for (const value of values) {
     const label = normalizeLabel(value)
@@ -120,20 +143,25 @@ export function rememberStudioContent(key: string, values: Iterable<unknown>): v
 
   const store = readStore()
   const existing = store[key] ?? []
-  const seen = new Set(existing.map((label) => label.toLowerCase()))
-  const merged = [...existing]
+  // Folded label → the spelling first printed; Map order is the printing order.
+  const order = new Map(existing.map((label) => [label.toLowerCase(), label]))
   for (const label of labels) {
     const folded = label.toLowerCase()
-    if (seen.has(folded)) continue
-    seen.add(folded)
-    merged.push(label)
+    const first = order.get(folded) ?? label
+    order.delete(folded)
+    order.set(folded, first)
   }
+  const merged = [...order.values()]
+  const keep = Math.min(
+    STUDIO_MEMORY_MAX_PER_KEY,
+    Math.max(MEMORY_PER_KEY, Math.floor(options.keep ?? 0), existing.length),
+  )
 
   // Re-insert the key so it moves to the end: spreading kept an existing
   // bucket in its first-seen slot, and the theme in use was evicted first.
   const next: RecentStore = { ...store }
   delete next[key]
-  next[key] = merged.slice(-MEMORY_PER_KEY)
+  next[key] = merged.slice(-keep)
 
   // Object key order is insertion order, so the oldest bucket is the first one.
   const keys = Object.keys(next)

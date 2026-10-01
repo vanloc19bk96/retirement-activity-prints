@@ -12,16 +12,15 @@ import { buildText, type StudioTag } from '../studio-fabric-builders'
 import { rememberStudioContent, studioAvoidList, studioVarietyKey } from '../studio-variety'
 import { OR_CONFIG_SCHEMA, instructionFor } from './config'
 import {
-  OR_BOOK_FULL_MESSAGE,
   OR_BUILD_FAILED_MESSAGE,
   OR_DEFAULT_TITLE,
   OR_PAGE_TOO_SMALL_MESSAGE,
   OR_TEMPLATE_KEY,
-  bookRelicIds,
   levelSpec,
   orInstructionOptions,
   parseOrLevel,
   pickRelics,
+  readBookRelics,
   type PlacedRelic,
 } from './content'
 import { drawOrPage, type OrDrawMode } from './draw'
@@ -29,15 +28,18 @@ import { checkOrDrawnPage, runOrKdpPreflight } from './kdp-preflight'
 import { orCardField, orContentBox, orWorstCasePlan, type OrPagePlan } from './layout'
 import { officeRelicsPrefetch, parseOrRemoteData } from './prefetch'
 import { orHouseStyle, type OrHouseStyle } from './style'
-import { artLabel } from './variants'
+import { RELIC_LIBRARY_SIZE, artLabel } from './variants'
 
 /** One ledger for the whole template: a seller's next book starts with other objects. */
 const VARIETY_KEY = studioVarietyKey(OR_TEMPLATE_KEY, 'objects')
 /** About half the catalog: recent objects wait their turn, but the pool never runs dry. */
 const RECENT_WINDOW = 24
-/** The versions of each drawing this seller printed; each object has 8 or more, so a few books' worth. */
+/**
+ * The versions of each drawing this seller printed. The whole library is
+ * remembered, so a seller prints every picture once before any comes back.
+ */
 const ART_VARIETY_KEY = studioVarietyKey(OR_TEMPLATE_KEY, 'art')
-const RECENT_ART_WINDOW = 200
+const RECENT_ART_WINDOW = RELIC_LIBRARY_SIZE
 
 function errorPage(
   ctx: StudioGenerateContext,
@@ -95,8 +97,10 @@ function layoutPage(options: {
  * Measured first, filled second, checked twice. The plan fixes the grid,
  * picture size and line weight from the trim alone, so the form's note is what
  * prints and every page of a run matches. Objects are then dealt from the
- * catalog — never one the book already shows, rarely one this seller printed
- * lately — each in a version of its drawing dealt from the seller's salt, and
+ * catalog like a deck — every object once before any twice, never one from the
+ * book's latest pages while another fits, rarely one this seller printed
+ * lately — each in a version of its drawing dealt from the seller's salt (a
+ * repeat in the book is always a version the book has not printed), and
  * the page wears the seller's house style, so two sellers' books do not print
  * the same pictures on the same page. The page is proved twice: once as data (every object valid,
  * drawn, fair to name, on its line) and once as drawn (every picture inside
@@ -120,11 +124,11 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
   const plan = orWorstCasePlan({ page: ctx, config, level, instructions: orInstructionOptions(config), font })
   if (!plan) return fail(OR_PAGE_TOO_SMALL_MESSAGE)
 
-  const book = bookRelicIds(parseOrRemoteData(ctx.remoteData).bookIds)
+  const book = readBookRelics(parseOrRemoteData(ctx.remoteData).bookIds)
   const recent = studioAvoidList(VARIETY_KEY, RECENT_WINDOW)
   const recentArt = studioAvoidList(ART_VARIETY_KEY, RECENT_ART_WINDOW)
   const items = pickRelics({ count: plan.count, level, seed: ctx.seed, book, recent, ownerSalt, recentArt })
-  if (items.length < plan.count) return fail(book.length > 0 ? OR_BOOK_FULL_MESSAGE : OR_BUILD_FAILED_MESSAGE)
+  if (items.length < plan.count) return fail(OR_BUILD_FAILED_MESSAGE)
 
   const preflight = runOrKdpPreflight({ items, plan, font, wordBank, book })
   if (!preflight.ok) return fail(preflight.errors[0] ?? OR_BUILD_FAILED_MESSAGE)
@@ -147,6 +151,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
   rememberStudioContent(
     ART_VARIETY_KEY,
     items.map((item) => artLabel(item.drawing, item.variant)),
+    { keep: RECENT_ART_WINDOW },
   )
   return [{ pageRole: 'single', objects: puzzle.objects, answerSourceObjects: answers.objects }]
 }
@@ -156,7 +161,7 @@ export const officeRelicsTemplate: StudioTemplateDefinition = {
   label: 'Office Relics',
   category: 'trivia',
   description:
-    'A nostalgic picture game: name each piece of old office equipment, from the typewriter and rotary phone to the punch clock and slide rule. Every object is a clean black line drawing made for print, and the answer page accepts the other names people use (card file or Rolodex). Pick a level (Gentle adds a word bank); pictures per page and their size are fitted to your page. Never repeats an object already in your book.',
+    'A nostalgic picture game: name each piece of old office equipment, from the typewriter and rotary phone to the punch clock and slide rule. Every object is a clean black line drawing made for print, and the answer page accepts the other names people use (card file or Rolodex). Pick a level (Gentle adds a word bank); pictures per page and their size are fitted to your page. A book shows every object before any repeats, and a repeat is always a different drawing of it, so long books never run out.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: OR_DEFAULT_TITLE,

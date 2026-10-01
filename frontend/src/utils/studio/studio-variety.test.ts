@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
   STUDIO_AVOID_LIMIT,
+  STUDIO_MEMORY_MAX_PER_KEY,
   clearStudioRecentContent,
   rememberStudioContent,
   studioAvoidList,
@@ -78,6 +79,27 @@ describe('rememberStudioContent', () => {
     rememberStudioContent(studioVarietyKey('word-search', 'one more'), ['Word'])
     expect(studioAvoidList(favourite)).toEqual(['Tulip', 'Rose'])
     expect(studioAvoidList(studioVarietyKey('word-search', 'theme 0'))).toEqual([])
+  })
+
+  it('moves a label printed again to the newest end, keeping its first spelling', () => {
+    const key = studioVarietyKey('office-relics', 'objects')
+    rememberStudioContent(key, ['Typewriter', 'Safe', 'Fan'])
+    rememberStudioContent(key, ['typewriter'])
+    expect(studioAvoidList(key)).toEqual(['Typewriter', 'Fan', 'Safe'])
+    // A window of the newest labels follows what was printed lately, even for a fixed catalog.
+    expect(studioAvoidList(key, 1)).toEqual(['Typewriter'])
+  })
+
+  it('keeps a larger bucket when asked, up to the ceiling, and never trims it back', () => {
+    const key = studioVarietyKey('office-relics', 'art')
+    const labels = (from: number, n: number) => Array.from({ length: n }, (_, i) => `Pic ${from + i}`)
+    rememberStudioContent(key, labels(0, 600), { keep: 600 })
+    expect(studioAvoidList(key, 5000)).toHaveLength(600)
+    // A caller with no `keep` does not shrink a bucket another kept larger.
+    rememberStudioContent(key, labels(600, 1))
+    expect(studioAvoidList(key, 5000)).toHaveLength(600)
+    rememberStudioContent(key, labels(1000, 5000), { keep: 5000 })
+    expect(studioAvoidList(key, 5000)).toHaveLength(STUDIO_MEMORY_MAX_PER_KEY)
   })
 
   it('honours a caller-supplied limit', () => {

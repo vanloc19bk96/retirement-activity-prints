@@ -10,7 +10,7 @@ import {
 import { resetObjectCounter } from '../studio-fabric-builders'
 import { buildAnswerPage, harvestAnswers } from '../studio-answer-key'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
-import { clearStudioRecentContent } from '../studio-variety'
+import { STUDIO_MEMORY_MAX_PER_KEY, clearStudioRecentContent } from '../studio-variety'
 import { contentFingerprint } from '../studio-content-fingerprint'
 import {
   assertGeneratorEntropy,
@@ -22,16 +22,18 @@ import { RELIC_ART, RELIC_DRAWINGS, type RelicDrawing, type RelicDrawingId } fro
 import {
   MAX_PER_CATEGORY,
   OFFICE_RELICS,
-  OR_BOOK_FULL_MESSAGE,
+  BOOK_LATEST_PICTURES,
   OR_DEFAULT_TITLE,
   OR_LEVELS,
   OR_PAGE_TOO_SMALL_MESSAGE,
-  bookRelicIds,
   nameKey,
   orInstructionOptions,
   parseOrLevel,
   pickRelics,
+  readBookRelics,
+  relicBookLabel,
   relicById,
+  relicIdOfLabel,
   relicFaults,
   relicsClash,
   type OfficeRelicsLevel,
@@ -52,7 +54,9 @@ import { buildRelicPicture, elementPathData, mergedRuns, relicInkBox } from './p
 import { parseOrRemoteData } from './prefetch'
 import { OR_BANK_LABELS, OR_FRAME_STYLES, OR_NUMBER_STYLES, orHouseStyle } from './style'
 import {
+  RELIC_LIBRARY_SIZE,
   artLabel,
+  dealRelicVariant,
   isValidVariant,
   mirrorPathData,
   referenceVariant,
@@ -126,8 +130,10 @@ const STYLE_SALTS = (() => {
  * child back in page coordinates. A picture stays one mark, as a reader sees it.
  */
 const marks = (objects: readonly StudioFabricObject[]) => placedMarks(objects)
-const pictureIds = (objects: StudioFabricObject[]) =>
+/** The book label each picture carries (`id:version`). */
+const pictureLabels = (objects: StudioFabricObject[]) =>
   marks(objects).filter(isPicture).map((o) => String(o.data?.[STUDIO_CONTENT_LABEL_KEY]))
+const pictureIds = (objects: StudioFabricObject[]) => pictureLabels(objects).map((label) => relicIdOfLabel(label)!)
 const texts = (objects: StudioFabricObject[]) => marks(objects).map((o) => clean(o.text)).filter(Boolean)
 
 beforeEach(() => clearStudioRecentContent())
@@ -215,7 +221,16 @@ describe('office-relics catalog', () => {
   })
 
   it('reads book labels back to objects, ignoring anything else', () => {
-    expect(bookRelicIds(['typewriter', ' safe ', 'not-a-relic', ''])).toEqual(['typewriter', 'safe'])
+    // Pages made before versions were stamped carry the bare id; they still count.
+    const book = readBookRelics(['typewriter', ' safe:door0 ', 'not-a-relic', '', 'typewriter:keys1', 'not-a-relic:x'])
+    expect([...book.uses]).toEqual([
+      ['typewriter', 2],
+      ['safe', 1],
+    ])
+    expect([...book.art]).toEqual(['safe:door0', 'typewriter:keys1'])
+    expect([...book.latest].sort()).toEqual(['safe', 'typewriter'])
+    expect(relicIdOfLabel('typewriter:keys1')).toBe('typewriter')
+    expect(relicIdOfLabel('nope')).toBeUndefined()
     expect(parseOrRemoteData({ bookIds: ['a', 3, null] })).toEqual({ bookIds: ['a'] })
     expect(parseOrRemoteData(undefined)).toEqual({ bookIds: [] })
   })
@@ -345,16 +360,41 @@ describe('office-relics selection', () => {
     expect(new Set(tiers('challenging'))).toEqual(new Set([2, 3]))
   })
 
-  it('never deals an object the book already shows, and fills a long book from the whole catalog', () => {
+  it('shows every object once before any twice, and fills a long book without running out', () => {
     const book: string[] = []
-    for (let page = 0; page < 5; page++) {
+    const pages: PlacedRelic[][] = []
+    // Thirty letter pages: 270 pictures from a catalog of under fifty.
+    for (let page = 0; page < 30; page++) {
       const items = pickRelics({ count: 9, level: 'gentle', seed: 100 + page, book })
-      expect(items).toHaveLength(9)
-      for (const item of items) expect(book).not.toContain(item.relic.id)
-      book.push(...items.map((i) => i.relic.id))
+      expect(items, `page ${page + 1}`).toHaveLength(9)
+      assertFairPage(items)
+      pages.push(items)
+      book.push(...items.map((i) => relicBookLabel(i.drawing, i.variant)))
     }
-    // Five letter pages: every object shown once, gentle included.
-    expect(new Set(book).size).toBe(45)
+    // The first five pages show 45 different objects, as before.
+    expect(new Set(pages.slice(0, 5).flat().map((i) => i.relic.id)).size).toBe(45)
+    // Like a deck: no object is shown a third time while another has been shown once.
+    const uses = new Map<string, number>()
+    for (const items of pages) {
+      for (const { relic } of items) uses.set(relic.id, (uses.get(relic.id) ?? 0) + 1)
+      const counts = OFFICE_RELICS.map((r) => uses.get(r.id) ?? 0)
+      expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(2)
+    }
+    // A repeated object is always another version of its drawing: the book never reprints a picture.
+    expect(new Set(book).size).toBe(book.length)
+  }, 20_000)
+
+  it('keeps a repeat off the pages next to its last showing', () => {
+    const book: string[] = []
+    for (let page = 0; page < 12; page++) {
+      const latest = readBookRelics(book).latest
+      const items = pickRelics({ count: 9, level: 'classic', seed: 900 + page, book })
+      expect(items).toHaveLength(9)
+      // Two pages' worth of pictures is far fewer than the catalog, so nothing on them is needed again.
+      for (const { relic } of items) expect(latest.has(relic.id), `${relic.id} on page ${page + 1}`).toBe(false)
+      book.push(...items.map((i) => relicBookLabel(i.drawing, i.variant)))
+    }
+    expect(BOOK_LATEST_PICTURES).toBeLessThan(OFFICE_RELICS.length / 2)
   })
 
   it('prefers objects this seller has not printed lately', () => {
@@ -501,7 +541,7 @@ describe('office-relics page', () => {
           const answers = key.filter((o) => o.studioRole === 'answer' && o.fontWeight === 700)
           expect(answers).toHaveLength(pictures.length)
           answers.forEach((answer, i) => {
-            const relic = relicById(String(pictures[i]!.data?.[STUDIO_CONTENT_LABEL_KEY]))!
+            const relic = relicById(relicIdOfLabel(String(pictures[i]!.data?.[STUDIO_CONTENT_LABEL_KEY]))!)!
             expect(clean(answer.text).replace(/\n/g, ' '), `${w}x${h} #${i + 1}`).toBe(relic.name)
             expect(answer.visible).toBe(true)
             // The answer sits in its own picture's card: of every picture above
@@ -515,7 +555,7 @@ describe('office-relics page', () => {
           })
           // Every object with other names shows at least the first that fits.
           const aliasTexts = key.filter((o) => o.studioRole === 'answer' && o.fontStyle === 'italic').map((o) => clean(o.text).replace(/\n/g, ' '))
-          const withAliases = pictures.filter((p) => relicById(String(p.data?.[STUDIO_CONTENT_LABEL_KEY]))!.aliases.length > 0)
+          const withAliases = pictures.filter((p) => relicById(relicIdOfLabel(String(p.data?.[STUDIO_CONTENT_LABEL_KEY]))!)!.aliases.length > 0)
           expect(aliasTexts).toHaveLength(withAliases.length)
           for (const text of aliasTexts) expect(text).toMatch(/^Also: /)
           // The how-to line and the word bank stay on the puzzle page.
@@ -536,18 +576,33 @@ describe('office-relics page', () => {
     }
   })
 
-  it('never repeats an object already in the book, and says so when the book has them all', () => {
+  it('shows new objects first, and keeps filling pages once the book has shown them all', () => {
     const ctx = kdpCtx(6, 9)
     const [first] = generate(base, ctx)
     const shown = pictureIds(first!.objects)
-    const [second] = generate({ ...base, seed: 43 }, { ...kdpCtx(6, 9, 43, shown) })
+    const [second] = generate({ ...base, seed: 43 }, { ...kdpCtx(6, 9, 43, pictureLabels(first!.objects)) })
     for (const id of pictureIds(second!.objects)) expect(shown).not.toContain(id)
 
-    const everything = OFFICE_RELICS.map((r) => r.id)
-    const [full] = generate(base, kdpCtx(6, 9, 42, everything))
-    expect(full!.answerSourceObjects).toBeUndefined()
-    expect(texts(full!.objects)).toContain(OR_BOOK_FULL_MESSAGE)
+    // A book that already shows every object (as older pages labelled them) still gets a full, checked page.
+    for (const [w, h] of TRIMS) {
+      const everything = OFFICE_RELICS.map((r) => r.id)
+      const [full] = generate(base, kdpCtx(w, h, 42, everything))
+      expect(full!.answerSourceObjects, `${w}x${h}`).toBeDefined()
+      expect(pictureIds(full!.objects).length).toBeGreaterThanOrEqual(MIN_ITEMS_PER_PAGE)
+    }
   })
+
+  it('builds a long book page after page, never reprinting a picture', () => {
+    const labels: string[] = []
+    for (let page = 0; page < 20; page++) {
+      const [sheet] = generate({ ...base, seed: 500 + page }, kdpCtx(8.5, 11, 500 + page, [...labels]))
+      expect(sheet!.answerSourceObjects, `page ${page + 1}`).toBeDefined()
+      const printed = pictureLabels(sheet!.objects)
+      expect(printed).toHaveLength(9)
+      for (const label of printed) expect(labels, `page ${page + 1}`).not.toContain(label)
+      labels.push(...printed)
+    }
+  }, 20_000)
 
   it('draws pictures clear of each other and of every writing line', () => {
     for (const [w, h] of TRIMS) {
@@ -598,10 +653,12 @@ describe('office-relics page', () => {
     }
   })
 
-  it('stamps each picture with its object, so a later page can refuse it', () => {
+  it('stamps each picture with its object and version, so a later page can pass over it', () => {
     const [page] = generate(base, kdpCtx(6, 9))
     for (const picture of marks(page!.objects).filter(isPicture)) {
-      expect(relicById(String(picture.data?.[STUDIO_CONTENT_LABEL_KEY]))).toBeDefined()
+      const label = String(picture.data?.[STUDIO_CONTENT_LABEL_KEY])
+      expect(relicById(relicIdOfLabel(label)!)).toBeDefined()
+      expect(label).toBe(`${picture.data?.relicDrawing}:${picture.data?.relicVersion}`)
       // The fingerprint names the drawing and its version, so two versions are two pictures.
       const id = String(picture.data?.relicDrawing) as RelicDrawingId
       expect(String(picture.data?.studioCanonicalKey)).toBe(`office-relics:picture:${id}:${picture.data?.relicVersion}`)
@@ -637,11 +694,14 @@ describe('office-relics preflight', () => {
     expect(result.errors.join(' ')).toMatch(/confuse/)
   })
 
-  it('refuses the same object twice, a mismatched drawing, and one already in the book', () => {
+  it('refuses the same object twice, a mismatched drawing, and a picture already in the book', () => {
     expect(run([items[0]!, items[0]!, ...items.slice(2)]).ok).toBe(false)
     const wrongPicture = { ...items[0]!, drawing: 'safe' as const, variant: referenceVariant('safe') }
     expect(run([wrongPicture, ...items.slice(1)]).ok).toBe(false)
-    expect(run(items, { book: [items[3]!.relic.id] }).ok).toBe(false)
+    // An object may come back in a long book, but never as the same picture.
+    expect(run(items, { book: readBookRelics([items[3]!.relic.id]) }).ok).toBe(true)
+    const reprint = readBookRelics([relicBookLabel(items[3]!.drawing, items[3]!.variant)])
+    expect(run(items, { book: reprint }).errors.join(' ')).toMatch(/already in this book/)
   })
 
   it('refuses a version its drawing does not have', () => {
@@ -755,6 +815,57 @@ describe('office-relics uniqueness across sellers', () => {
     const next = pickRelics({ count: 9, level: 'classic', seed: 11, ownerSalt, recentArt: first.map(label) })
     next.forEach((item, i) => expect(label(item)).not.toBe(label(first[i]!)))
   })
+
+  it('works through every version of a drawing before any comes back, then the longest-unprinted first', () => {
+    const ownerSalt = saltOf(4)
+    for (const id of ['typewriter', 'safe', 'floppy-disk'] as const) {
+      const versions = relicVariants(id).length
+      const history: string[] = [] // newest first, as the ledger hands it back
+      const ageMap = () => new Map(history.map((l, age) => [l, age] as const))
+      for (let n = 0; n < versions * 3; n++) {
+        const dealt = artLabel(id, dealRelicVariant({ id, ownerSalt, seed: 1000 + n, recent: ageMap() }))
+        if (n < versions) expect(history, `${id} deal ${n + 1}`).not.toContain(dealt)
+        // Once all are printed, never one of the most recent two thirds.
+        else expect(history.indexOf(dealt), `${id} deal ${n + 1}`).toBeGreaterThanOrEqual(versions - Math.ceil(versions / 3))
+        const at = history.indexOf(dealt)
+        if (at >= 0) history.splice(at, 1)
+        history.unshift(dealt)
+      }
+    }
+  })
+
+  it('remembers the whole picture library, and every label survives the ledger intact', () => {
+    let longest = 0
+    for (const id of Object.keys(RELIC_ART) as RelicDrawingId[]) {
+      for (const variant of relicVariants(id)) longest = Math.max(longest, artLabel(id, variant).length)
+    }
+    // The variety ledger trims labels past 60 characters; a trimmed label would never match again.
+    expect(longest).toBeLessThanOrEqual(60)
+    expect(RELIC_LIBRARY_SIZE).toBe(
+      (Object.keys(RELIC_ART) as RelicDrawingId[]).reduce((n, id) => n + relicVariants(id).length, 0),
+    )
+    expect(RELIC_LIBRARY_SIZE).toBeLessThanOrEqual(STUDIO_MEMORY_MAX_PER_KEY)
+  })
+
+  it('rarely deals two sellers the same nine objects on a page', () => {
+    for (const level of LEVELS) {
+      const pages = new Map<string, number>()
+      let total = 0
+      for (let seller = 1; seller <= 150; seller++) {
+        const labels: string[] = []
+        for (let page = 0; page < 6; page++) {
+          const items = pickRelics({ count: 9, level, seed: seller * 7919 + page, book: labels, ownerSalt: saltOf(seller) })
+          labels.push(...items.map(label))
+          const key = items.map((i) => i.relic.id).sort().join(',')
+          pages.set(key, (pages.get(key) ?? 0) + 1)
+          total++
+        }
+      }
+      const shared = [...pages.values()].filter((n) => n > 1).reduce((a, n) => a + n, 0)
+      // Before the category spread became a cap, one gentle page in six matched another seller's.
+      expect(shared / total, level).toBeLessThan(0.03)
+    }
+  }, 20_000)
 
   it('gives each seller a house style of their own, the same on every page', () => {
     const looks = new Set<string>()

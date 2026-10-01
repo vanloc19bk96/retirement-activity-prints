@@ -157,16 +157,21 @@ export const artLabel = (id: RelicDrawingId, variant: RelicVariant) => `${id}:${
  *
  * Keyed by salt, seed and object, so two sellers on the same seed still print
  * different versions, and adding an object to a page never re-deals the others.
- * Versions in `recent` (this seller's `id:version` labels) are passed over
- * while any other remains.
+ * Versions in `book` (already printed in this book) are passed over while any
+ * other remains, so an object shown twice in one book is two different
+ * pictures. Versions in `recent` (this seller's `id:version` labels, mapped to
+ * how long ago each printed, 0 = newest) are then passed over while any other
+ * remains; when the seller has printed them all, the longest-unprinted third
+ * is dealt from, so the library cycles rather than repeating a favourite.
  */
 export function dealRelicVariant(options: {
   id: RelicDrawingId
   ownerSalt: string
   seed: number
-  recent?: ReadonlySet<string>
+  recent?: ReadonlyMap<string, number>
+  book?: ReadonlySet<string>
 }): RelicVariant {
-  const { id, ownerSalt, seed, recent } = options
+  const { id, ownerSalt, seed, recent, book } = options
   const rng = createRngFromSeedInput({
     ownerSalt,
     templateKey: 'office-relics',
@@ -175,6 +180,18 @@ export function dealRelicVariant(options: {
     stream: id,
   })
   const all = relicVariants(id)
-  const fresh = recent ? all.filter((variant) => !recent.has(artLabel(id, variant))) : all
-  return rng.pick(fresh.length > 0 ? fresh : all)
+  const notInBook = book && book.size > 0 ? all.filter((variant) => !book.has(artLabel(id, variant))) : all
+  const pool = notInBook.length > 0 ? notInBook : all
+  if (!recent || recent.size === 0) return rng.pick(pool)
+  const age = (variant: RelicVariant) => recent.get(artLabel(id, variant)) ?? Infinity
+  const fresh = pool.filter((variant) => age(variant) === Infinity)
+  if (fresh.length > 0) return rng.pick(fresh)
+  const oldestFirst = [...pool].sort((a, b) => age(b) - age(a))
+  return rng.pick(oldestFirst.slice(0, Math.ceil(pool.length / 3)))
 }
+
+/** Every version of every drawing: how many pictures the library can print in all. */
+export const RELIC_LIBRARY_SIZE = (Object.keys(RELIC_ART) as RelicDrawingId[]).reduce(
+  (total, id) => total + relicVariants(id).length,
+  0,
+)

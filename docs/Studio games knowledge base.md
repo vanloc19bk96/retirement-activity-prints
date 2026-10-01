@@ -2979,12 +2979,24 @@ proves every picture sits inside the page, clear of the other pictures and of
 every writing line. A page that fails either check becomes a plain message,
 never a broken sheet.
 
-Within a page, variety comes from the catalog and the deal. Each pick goes to a category the page has used least, and no
-decade fills more than half a page, so a page wanders the whole office. Each
-picture stamps its object's id on the page. A local, network-free prefetch reads
-those ids back, so a new page never shows an object already in the book; when a
-book has shown every object, the form says so. The browser also remembers what
-this seller printed recently, so the next book starts with different objects.
+Within a page, variety comes from the catalog and the deal. A page takes at most two objects of one kind (so at least
+five kinds on a nine-picture page) and no decade fills more than half of it. This is a cap, not a quota: an older rule
+that forced one object per category left so few combinations that two sellers' first pages often showed the same
+nine objects. Each
+picture stamps its object's id and drawing version (`typewriter:<version>`) on the
+page. A local, network-free prefetch reads those labels back, and the book deals
+the catalog like a deck: every object is shown once before any is shown twice,
+twice before any three times, so a book of any length keeps filling pages (older
+pages carrying a bare id still count). An object on the book's latest two pages
+waits while another fits, and a returning object is always a version of its
+drawing the book has not printed, so no picture is ever reprinted line for line
+(the preflight refuses one that is). The browser also remembers what this seller
+printed: the last objects, so the next book starts with different ones, and every
+picture version across the whole library (`RELIC_LIBRARY_SIZE`, about 570), so a
+seller works through the library before a picture returns, oldest first. The
+shared ledger (`studio-variety.ts`) moves a reprinted label to the newest end, so
+its windows track what was printed lately rather than freezing once a fixed
+catalog has been seen.
 Pages: 1 · Answer key: yes (each name on its line under the same picture, other accepted names beneath) · AI content: no
 
 ### Work Lingo Match (`work-lingo-match`)

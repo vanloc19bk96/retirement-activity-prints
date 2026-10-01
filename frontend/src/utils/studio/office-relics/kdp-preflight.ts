@@ -2,7 +2,7 @@ import type { StudioFabricObject } from '@/types/studio-template.types'
 import type { Box } from '../studio-layout'
 import { measureRunWidth, wrapSafeWidth } from '../studio-text-metrics'
 import { RELIC_ART } from './drawings'
-import { MAX_PER_CATEGORY, relicFaults, relicsClash, type PlacedRelic } from './content'
+import { MAX_PER_CATEGORY, relicBookLabel, relicFaults, relicsClash, type BookRelics, type PlacedRelic } from './content'
 import {
   ALIAS_FONT_MIN,
   ANSWER_INSET,
@@ -35,7 +35,9 @@ export interface KdpPreflightResult {
  * Fit is structural, so this re-proves it, then checks what a reader only
  * finds with the book in hand: an object with no drawing, or a drawing of
  * something else, or a version of a drawing that does not exist; two pictures a reader could mistake for each other; the same
- * object twice; an answer that does not fit its line; a word bank that does
+ * object twice; a picture the book already prints, line for line (an object
+ * may come back in a long book, but only as another version of its drawing);
+ * an answer that does not fit its line; a word bank that does
  * not list exactly the page's answers; a picture printed smaller than the
  * busiest drawing can survive. Any one of those is a refund.
  */
@@ -44,16 +46,15 @@ export function runOrKdpPreflight(options: {
   plan: OrPagePlan
   font: string
   wordBank: boolean
-  book?: readonly string[]
+  book?: BookRelics
 }): KdpPreflightResult {
-  const { items, plan, font, wordBank, book = [] } = options
+  const { items, plan, font, wordBank, book } = options
   const errors: string[] = []
   const warnings: string[] = []
 
   if (items.length === 0) return { ok: false, warnings, errors: ['No pictures were laid out.'] }
   if (items.length !== plan.count) errors.push('The page holds a different number of pictures than it was laid out for.')
 
-  const printed = new Set(book)
   items.forEach(({ relic, drawing, variant }, index) => {
     if (relicFaults(relic).length > 0) errors.push(`“${relic.name}” is not a valid Office Relic.`)
     if (!relic.drawings.includes(drawing) || !RELIC_ART[drawing]) {
@@ -83,7 +84,7 @@ export function runOrKdpPreflight(options: {
     if (answerLines.length > plan.answerLines || answerLines.join(' ') !== relic.name) {
       errors.push(`“${relic.name}” does not fit its answer line.`)
     }
-    if (printed.has(relic.id)) errors.push(`“${relic.name}” is already in this book.`)
+    if (book?.art.has(relicBookLabel(drawing, variant))) errors.push(`This picture of “${relic.name}” is already in this book.`)
     items.slice(0, index).forEach((earlier) => {
       if (earlier.relic.id === relic.id) errors.push(`“${relic.name}” is on this page twice.`)
       else if (relicsClash(earlier.relic, relic)) {
