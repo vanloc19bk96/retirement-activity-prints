@@ -197,8 +197,9 @@ def briefs(
     spares cover the kinds again. Facets are shuffled per kind and flavours
     across the side, both by seed, so the same facet meets a different flavour
     next time. A mix may bring its own facets for a kind -- the social mix's
-    walks, crafts, outings and games all come with company -- so the mix is
-    in the brief itself, not only in a flavour the model may set aside.
+    walks, crafts, outings and games all come with company -- and drop the
+    flavours that contradict it ("by bus" on a cosy day at home), so the mix
+    is in the brief itself, not only in a flavour the model may set aside.
     """
     plan = plan_kinds(req.focus, req.seed, side)
     lacking = set(missing)
@@ -207,7 +208,9 @@ def briefs(
     focus = section(section(_config(), "focuses"), req.focus)
     focus_flavours = string_list(focus, "flavours")
     focus_facets = focus.get("facets", {})
-    flavours = [*string_list(_config(), "flavours"), *focus_flavours, *focus_flavours]
+    skip = set(string_list(focus, "skipFlavours")) if "skipFlavours" in focus else set()
+    general = [flavour for flavour in string_list(_config(), "flavours") if flavour not in skip]
+    flavours = [*general, *focus_flavours, *focus_flavours]
     rng.shuffle(flavours)
     kinds = section(_config(), "kinds")
     facets: dict[str, list[str]] = {}

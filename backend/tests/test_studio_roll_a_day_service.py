@@ -224,6 +224,55 @@ def test_the_social_mix_puts_company_in_most_briefs() -> None:
             assert not COMPANY.search(facets["rest"])
 
 
+def _brief_parts(focus: str, seed: int, side: str) -> tuple[dict[str, str], list[str]]:
+    lines = briefs(_req(focus=focus, seed=seed), side, 12, seed=seed)
+    facets = {kind: line.split(" -- facet: ")[1].split(" -- flavour: ")[0] for line, kind in lines[:6]}
+    flavours = [line.split(" -- flavour: ")[1] for line, _ in lines]
+    return facets, flavours
+
+
+AWAY = re.compile(r"\b(park|museum|gallery|café|pool|bus|market|library|town|club|class|bike|lawn)\b")
+AT_HOME = re.compile(r"\b(at home|video|online|radio|television|podcast|documentary|windowsill|cupboard)\b")
+
+
+@pytest.mark.parametrize("seed", range(20))
+def test_a_cosy_day_stays_close_to_home(seed: int) -> None:
+    for side in ("morning", "afternoon"):
+        facets, flavours = _brief_parts("home", seed, side)
+        assert {"home", "play"} <= set(facets)
+        for kind, facet in facets.items():
+            assert not AWAY.search(facet), (kind, facet)
+        assert not {"nearby, on foot or by bus", "outdoors in fair weather"} & set(flavours)
+
+
+@pytest.mark.parametrize("seed", range(20))
+def test_out_and_about_takes_most_kinds_out(seed: int) -> None:
+    for side in ("morning", "afternoon"):
+        facets, flavours = _brief_parts("outings", seed, side)
+        assert {"outing", "learn", "move", "people"} <= set(facets)
+        for kind in ("outing", "learn", "move", "people"):
+            assert not AT_HOME.search(facets[kind]), (kind, facets[kind])
+        assert not {"right at home", "indoors"} & set(flavours)
+
+
+@pytest.mark.parametrize("seed", range(20))
+def test_creative_turns_the_walk_people_and_home_creative(seed: int) -> None:
+    from app.services.studio_roll_a_day_service import _config
+
+    own = _config()["focuses"]["creative"]["facets"]
+    for side in ("morning", "afternoon"):
+        facets, _ = _brief_parts("creative", seed, side)
+        assert {"make", "learn", "home", "move", "people"} <= set(facets)
+        for kind in ("move", "people", "home"):
+            assert facets[kind] in own[kind]
+
+
+def test_social_never_nudges_towards_solo() -> None:
+    for seed in range(20):
+        _, flavours = _brief_parts("social", seed, "morning")
+        assert "on your own" not in flavours
+
+
 def test_kinds_vary_by_seed_and_side() -> None:
     tables = {
         (tuple(plan_kinds("balanced", s, "morning")), tuple(plan_kinds("balanced", s, "afternoon")))
