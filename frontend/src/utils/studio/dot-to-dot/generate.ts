@@ -206,18 +206,20 @@ export const dotToDotTemplate: StudioTemplateDefinition = {
   defaultPageTitle: DTD_DEFAULT_TITLE,
   prefetch: dotToDotPrefetch,
   thumbnail: `<svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg">
-    <path d="M22 11h20l3 6 7-3-3 9-3 1v8H18v-8l-5-4 6-2z" fill="none" stroke="currentColor" stroke-width="0.6" stroke-dasharray="1.2 1.6" stroke-linejoin="round"/>
+    <path d="M14 16.5C16.6 17.6 18.4 21.4 22.3 21.5A11.5 9.5 0 0 1 28 16.4A5 4 0 0 1 31.6 12.6A1.5 1.5 0 1 1 34.4 12.6A5 4 0 0 1 38 16.4A11.5 9.5 0 0 1 43.2 20.6C47 18.6 51.5 21 50.4 25.4C49.6 28.6 46.4 30.2 42.8 30A11.5 9.5 0 0 1 38.1 33.5H27.9A11.5 9.5 0 0 1 22.1 28C18.5 27 16 21.5 14 16.5Z" fill="none" stroke="currentColor" stroke-width="0.55" stroke-dasharray="0.9 1.3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M44.4 23.2C46.4 22.4 47.8 23.4 47.4 25S45.6 27.4 44.2 27.4C44.6 26 44.6 24.6 44.4 23.2Z" fill="none" stroke="currentColor" stroke-width="0.5" stroke-linejoin="round"/>
     <g fill="currentColor">
-      <circle cx="22" cy="11" r="1.1"/><circle cx="42" cy="11" r="1.1"/><circle cx="45" cy="17" r="1.1"/>
-      <circle cx="52" cy="14" r="1.1"/><circle cx="49" cy="23" r="1.1"/><circle cx="46" cy="24" r="1.1"/>
-      <circle cx="46" cy="32" r="1.1"/><circle cx="18" cy="32" r="1.1"/><circle cx="18" cy="24" r="1.1"/>
-      <circle cx="13" cy="20" r="1.1"/><circle cx="19" cy="18" r="1.1"/>
+      <circle cx="14" cy="16.5" r="1"/><circle cx="22.3" cy="21.5" r="1"/><circle cx="28" cy="16.4" r="1"/>
+      <circle cx="33" cy="10.5" r="1"/><circle cx="38" cy="16.4" r="1"/><circle cx="43.2" cy="20.6" r="1"/>
+      <circle cx="50.4" cy="25.4" r="1"/><circle cx="42.8" cy="30" r="1"/><circle cx="38.1" cy="33.5" r="1"/>
+      <circle cx="27.9" cy="33.5" r="1"/><circle cx="22.1" cy="28" r="1"/>
     </g>
-    <circle cx="22" cy="11" r="2.4" fill="none" stroke="currentColor" stroke-width="0.6"/>
-    <g fill="currentColor" font-family="sans-serif" font-size="3.4" text-anchor="middle">
-      <text x="20" y="8" font-weight="bold">1</text><text x="42" y="8.4">2</text><text x="44.6" y="21.6">3</text>
-      <text x="55" y="13">4</text><text x="53" y="25">5</text><text x="49" y="35.5">7</text>
-      <text x="15" y="35.5">8</text><text x="9.6" y="21.4">10</text>
+    <circle cx="14" cy="16.5" r="2.2" fill="none" stroke="currentColor" stroke-width="0.55"/>
+    <g fill="currentColor" font-family="sans-serif" font-size="3.2" text-anchor="middle">
+      <text x="10.4" y="15.4" font-weight="bold">1</text><text x="20.6" y="18.4">2</text><text x="26" y="14">3</text>
+      <text x="33" y="7.6">4</text><text x="40.2" y="14">5</text><text x="44.6" y="18">6</text>
+      <text x="53.6" y="26.6">7</text><text x="45.8" y="33">8</text><text x="40.6" y="37.6">9</text>
+      <text x="25.2" y="37.6">10</text><text x="18.6" y="30.6">11</text>
     </g>
   </svg>`,
   configSchema: DTD_CONFIG_SCHEMA,
