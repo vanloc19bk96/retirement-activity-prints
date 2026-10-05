@@ -15,7 +15,7 @@ import {
   assertGeneratorEntropy,
   STUDIO_TEST_CTX,
 } from '../studio-generator-test'
-import { STUDIO_INK } from '@/constants/studio.constants'
+import { STUDIO_INK, STUDIO_SAFE_AREA_PADDING_X } from '@/constants/studio.constants'
 import {
   MAX_CLUE_CHARS,
   MAX_MARKS,
@@ -90,9 +90,9 @@ const kdpCtx = (wIn: number, hIn: number, seed = 42): StudioGenerateContext => (
   pageHeight: Math.round(hIn * DPI),
   margin: {
     top: Math.round(0.25 * DPI),
-    right: Math.round(0.25 * DPI),
+    right: Math.round(0.25 * DPI) + STUDIO_SAFE_AREA_PADDING_X,
     bottom: Math.round(0.25 * DPI),
-    left: Math.round(0.375 * DPI),
+    left: Math.round(0.375 * DPI) + STUDIO_SAFE_AREA_PADDING_X,
   },
   seed,
   instanceId: 'phrase-finder-test',

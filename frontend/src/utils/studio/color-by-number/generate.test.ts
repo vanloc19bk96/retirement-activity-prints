@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import type { StudioConfig, StudioFabricObject, StudioGenerateContext } from '@/types/studio-template.types'
 import { STUDIO_TEMPLATES, buildDefaultConfig } from '@/constants/studio-templates'
 import { DPI } from '@/types/canvas-settings.types'
-import { STUDIO_DIGIT_FONT, STUDIO_INK } from '@/constants/studio.constants'
+import { STUDIO_DIGIT_FONT, STUDIO_INK, STUDIO_SAFE_AREA_PADDING_X } from '@/constants/studio.constants'
 import { resetObjectCounter } from '../studio-fabric-builders'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import { clearStudioRecentContent } from '../studio-variety'
@@ -74,9 +74,9 @@ const kdpCtx = (wIn: number, hIn: number, seed = 42, bookLabels: string[] = [], 
   pageHeight: Math.round(hIn * DPI),
   margin: {
     top: Math.round(0.25 * DPI),
-    right: Math.round(0.25 * DPI),
+    right: Math.round(0.25 * DPI) + STUDIO_SAFE_AREA_PADDING_X,
     bottom: Math.round(0.25 * DPI),
-    left: Math.round(0.375 * DPI),
+    left: Math.round(0.375 * DPI) + STUDIO_SAFE_AREA_PADDING_X,
   },
   seed,
   instanceId: 'kdp',
@@ -136,7 +136,7 @@ describe('color-by-number registry and form', () => {
   })
 
   it('reports the number size and the scene size on the trim, or that the trim is too small', () => {
-    const layout = (w: number, h: number) => ({ pageWidth: w * DPI, pageHeight: h * DPI, margin: { top: 24, right: 24, bottom: 24, left: 36 } })
+    const layout = (w: number, h: number) => ({ pageWidth: w * DPI, pageHeight: h * DPI, margin: { top: 24, right: 24 + STUDIO_SAFE_AREA_PADDING_X, bottom: 24, left: 36 + STUDIO_SAFE_AREA_PADDING_X } })
     for (const level of LEVELS) {
       const note = cbnPrintNote({ page: layout(6, 9), config: base, level, keyStyle: 'names' })
       expect(note).toMatch(/Numbers print at \d+(\.5)? pt/)

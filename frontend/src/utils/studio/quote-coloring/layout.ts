@@ -1,4 +1,5 @@
 import type { StudioConfig, StudioConfigLayoutContext } from '@/types/studio-template.types'
+import { STUDIO_SAFE_AREA_PADDING_X } from '@/constants/studio.constants'
 import { DPI } from '@/types/canvas-settings.types'
 import { contentBox, measureHeaderHeightOverFullWidth, type Box } from '../studio-layout'
 import type { Bounds } from '../stained-glass/geometry'
@@ -32,12 +33,14 @@ const QC_SAFE_AIR_RATE = 0.1
 
 export function qcPanelInBody(body: Box, headed: boolean): Box {
   const top = body.top + (headed ? QC_HEADER_AIR : QC_EDGE_AIR)
-  const width = body.width - QC_EDGE_AIR * 2
-  const air = Math.round(Math.min(QC_SAFE_AIR, Math.max(0, (width - QC_TIGHT_ROOM) * QC_SAFE_AIR_RATE)))
+  const air = Math.round(Math.min(QC_SAFE_AIR, Math.max(0, (body.width - QC_TIGHT_ROOM) * QC_SAFE_AIR_RATE)))
+  // The margin already keeps `STUDIO_SAFE_AREA_PADDING_X` off the side
+  // guides; the sides take only what that leaves of the air.
+  const side = Math.max(0, QC_EDGE_AIR + air - STUDIO_SAFE_AREA_PADDING_X)
   return {
-    left: body.left + QC_EDGE_AIR + air,
+    left: body.left + side,
     top: top + air,
-    width: width - air * 2,
+    width: body.width - side * 2,
     height: body.top + body.height - QC_EDGE_AIR - top - air * 2,
   }
 }

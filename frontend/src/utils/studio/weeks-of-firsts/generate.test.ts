@@ -41,6 +41,7 @@ import {
 } from './layout'
 import { runWfKdpPreflight } from './kdp-preflight'
 import { WF_FIXTURE, WF_FIXTURE_ALL } from './fixture'
+import { STUDIO_SAFE_AREA_PADDING_X } from '@/constants/studio.constants'
 
 const FONT = 'PT Serif'
 
@@ -60,9 +61,9 @@ const kdpCtx = (wIn: number, hIn: number, remoteData: unknown = WF_FIXTURE): Stu
   pageHeight: Math.round(hIn * DPI),
   margin: {
     top: Math.round(0.25 * DPI),
-    right: Math.round(0.25 * DPI),
+    right: Math.round(0.25 * DPI) + STUDIO_SAFE_AREA_PADDING_X,
     bottom: Math.round(0.25 * DPI),
-    left: Math.round(0.375 * DPI),
+    left: Math.round(0.375 * DPI) + STUDIO_SAFE_AREA_PADDING_X,
   },
   seed: 42,
   instanceId: 'kdp',

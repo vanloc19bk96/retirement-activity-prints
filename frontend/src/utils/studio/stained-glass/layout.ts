@@ -14,7 +14,11 @@ import { sgInstructionOptions, sgLevelSpec, type SgLevel } from './content'
  * (`SG_PANEL_INSET`) lets the window breathe on the paper.
  */
 
-/** Air between the safe area (or the heading) and the frame, canvas px. */
+/**
+ * Air between the safe area's head and foot (or the heading) and the frame,
+ * canvas px. The sides need none of their own: the safe area's side air (`STUDIO_SAFE_AREA_PADDING_X`, in the margin)
+ * keeps the frame off the guide.
+ */
 export const SG_EDGE_AIR = 6
 /** Extra air under the instruction, so the frame does not crowd it. */
 export const SG_HEADER_AIR = 10
@@ -36,7 +40,7 @@ export const SG_MIN_PANEL_HEIGHT = Math.round(3.8 * DPI)
  */
 export function sgPanelInBody(body: Box, headed: boolean): Box {
   const top = body.top + (headed ? SG_HEADER_AIR : SG_EDGE_AIR)
-  const width = body.width - SG_EDGE_AIR * 2
+  const width = body.width
   const height = body.top + body.height - SG_EDGE_AIR - top
   // On a small trim the margin gives way before the panel drops below print size.
   const inset = Math.max(
@@ -48,7 +52,7 @@ export function sgPanelInBody(body: Box, headed: boolean): Box {
     ),
   )
   return {
-    left: body.left + SG_EDGE_AIR + inset,
+    left: body.left + inset,
     top: top + inset,
     width: width - inset * 2,
     height: height - inset * 2,

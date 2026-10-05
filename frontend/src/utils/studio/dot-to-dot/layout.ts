@@ -12,7 +12,11 @@ import { labelRoom } from './puzzle'
  * them is where they breathe.
  */
 
-/** Air between the safe area (or the heading) and the picture's panel, canvas px. */
+/**
+ * Air between the safe area's head and foot (or the heading) and the picture's
+ * panel, canvas px. The sides need none of their own: the safe area's side air (`STUDIO_SAFE_AREA_PADDING_X`, in the margin)
+ * keeps the dots off the guide.
+ */
 export const DTD_EDGE_AIR = 4
 /** Extra air under the instruction. */
 export const DTD_HEADER_AIR = 12
@@ -43,9 +47,9 @@ export function dtdPanelInBody(body: Box, headed: boolean): Box {
   const name = dtdNameStrip(body, headed)
   const top = name.top + name.height + DTD_HEADER_AIR
   return {
-    left: body.left + DTD_EDGE_AIR,
+    left: body.left,
     top,
-    width: body.width - DTD_EDGE_AIR * 2,
+    width: body.width,
     height: body.top + body.height - DTD_EDGE_AIR - top,
   }
 }

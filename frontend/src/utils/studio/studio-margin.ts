@@ -1,4 +1,4 @@
-import { STUDIO_SAFE_AREA_PADDING_Y } from '@/constants/studio.constants'
+import { STUDIO_SAFE_AREA_PADDING_X, STUDIO_SAFE_AREA_PADDING_Y } from '@/constants/studio.constants'
 import { DPI, getInsideMarginInches, type MarginGuide } from '@/types/canvas-settings.types'
 import type { StudioMargin } from '@/types/studio-template.types'
 import {
@@ -26,16 +26,20 @@ export function toStudioMargin(
 /** Fallback when safe-area math cannot produce a valid box. */
 export const STUDIO_FALLBACK_MARGIN: StudioMargin = {
   top: 36 + STUDIO_SAFE_AREA_PADDING_Y,
-  right: 36,
+  right: 36 + STUDIO_SAFE_AREA_PADDING_X,
   bottom: 36 + STUDIO_SAFE_AREA_PADDING_Y,
-  left: 48,
+  left: 48 + STUDIO_SAFE_AREA_PADDING_X,
 }
 
-/** Left/right already carry `STUDIO_CONTENT_SAFE_INSET_X`; only the head and foot need air. */
+/**
+ * Air on every side. Equal left and right keep the column the same width on a
+ * recto and a verso, so a sheet laid out once can still be shifted across.
+ */
 function padStudioMargin(margin: StudioMargin): StudioMargin {
   return {
-    ...margin,
+    left: margin.left + STUDIO_SAFE_AREA_PADDING_X,
     top: margin.top + STUDIO_SAFE_AREA_PADDING_Y,
+    right: margin.right + STUDIO_SAFE_AREA_PADDING_X,
     bottom: margin.bottom + STUDIO_SAFE_AREA_PADDING_Y,
   }
 }

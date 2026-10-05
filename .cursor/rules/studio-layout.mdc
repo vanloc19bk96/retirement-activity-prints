@@ -12,7 +12,7 @@ alwaysApply: false
 
 ## Safe area (required)
 
-1. Start from `contentBox(ctx)` — that box **is** the safe area (`ctx.margin` on all four sides).
+1. Start from `contentBox(ctx)` — that box **is** the safe area (`ctx.margin` on all four sides). `ctx.margin` already sits `STUDIO_SAFE_AREA_PADDING_X` (sides) / `STUDIO_SAFE_AREA_PADDING_Y` (head, foot) inside the editor's guide, so even a full-width picture never touches the guide. Do not add a second per-game side air on top of it. Hand-built test contexts must pad left/right by `STUDIO_SAFE_AREA_PADDING_X` too, or they measure a wider column than real pages get.
 2. Apply `insetHorizontal(contentBox(ctx), STUDIO_CONTENT_SAFE_INSET_X)` before `drawHeader` so content is not edge-flush left/right.
 3. Place **all** drawing inside that inset content / `header.body` (and further insets you create). Never use raw `0` / page edges / coordinates outside `contentBox`.
 4. Account for **visual overflow** when placing near edges:

@@ -128,16 +128,17 @@ export function centerObjectsInBox(
 }
 
 /**
- * Side inset for the card figure relative to the safe-area edge.
+ * Side inset for the card figure, on top of the `STUDIO_SAFE_AREA_PADDING_X`
+ * already in `ctx.margin`.
  *
- * Header copy uses the full `STUDIO_CONTENT_SAFE_INSET_X` rail (28px). Figures
- * reclaim most of that band so a 5x8 trim can still print a legible compact
- * row. Sitting at 6–12px made full-width packs read
- * flush with the margin guide on bulk books. Twenty-two pixels is the shared
- * pack clearance — every card template gets the same air from `drawCardPageHeader`
- * without stacking a second per-game pad.
+ * Header copy uses the full `STUDIO_CONTENT_SAFE_INSET_X` rail (28px off the
+ * guide). Figures reclaim most of that band so a 5x8 trim can still print a
+ * legible compact row. Sitting 6–12px off the guide made full-width packs read
+ * flush with the margin guide on bulk books. Twenty-two pixels off the guide is
+ * the shared pack clearance — every card template gets the same air from
+ * `drawCardPageHeader` without stacking a second per-game pad.
  */
-export const CARD_FIGURE_EDGE_INSET = 22
+export const CARD_FIGURE_EDGE_INSET = 10
 /** Extra air under the figure so the last row does not sit on the bottom guide. */
 const CARD_FIGURE_BOTTOM_INSET = 18
 

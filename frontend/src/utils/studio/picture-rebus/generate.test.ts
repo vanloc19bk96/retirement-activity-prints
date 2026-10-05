@@ -9,6 +9,7 @@ import { DPI } from '@/types/canvas-settings.types'
 import {
   STUDIO_ANSWER_INK_MONO,
   STUDIO_ANSWER_INK_MONO_TEMPLATES,
+  STUDIO_SAFE_AREA_PADDING_X,
 } from '@/constants/studio.constants'
 import { resetObjectCounter } from '../studio-fabric-builders'
 import { buildAnswerPage, harvestAnswers } from '../studio-answer-key'
@@ -81,9 +82,9 @@ const kdpCtx = (wIn: number, hIn: number, seed = 42): StudioGenerateContext => (
   pageHeight: Math.round(hIn * DPI),
   margin: {
     top: Math.round(0.25 * DPI),
-    right: Math.round(0.25 * DPI),
+    right: Math.round(0.25 * DPI) + STUDIO_SAFE_AREA_PADDING_X,
     bottom: Math.round(0.25 * DPI),
-    left: Math.round(0.375 * DPI),
+    left: Math.round(0.375 * DPI) + STUDIO_SAFE_AREA_PADDING_X,
   },
   seed,
   instanceId: 'kdp',

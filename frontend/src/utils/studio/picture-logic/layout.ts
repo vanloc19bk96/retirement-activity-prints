@@ -17,7 +17,10 @@ import type { Clues } from './solver'
 
 const inch = (n: number) => n * DPI
 
-/** Air between the heading and the puzzle, and round the panel's edge, canvas px. */
+/**
+ * Air between the heading and the puzzle, and at the panel's foot, canvas px.
+ * The sides need none of their own: the safe area's side air (`STUDIO_SAFE_AREA_PADDING_X`, in the margin) keeps the grid off the guide.
+ */
 export const PL_HEADER_AIR = 12
 export const PL_EDGE_AIR = 4
 
@@ -108,9 +111,9 @@ export const plRowClueWidth = (clue: readonly number[], clueSize: number, slotWi
 export function plPanelInBody(body: Box, headed: boolean): Box {
   const top = body.top + (headed ? PL_HEADER_AIR : PL_EDGE_AIR)
   return {
-    left: body.left + PL_EDGE_AIR,
+    left: body.left,
     top,
-    width: body.width - PL_EDGE_AIR * 2,
+    width: body.width,
     height: body.top + body.height - PL_EDGE_AIR - top,
   }
 }

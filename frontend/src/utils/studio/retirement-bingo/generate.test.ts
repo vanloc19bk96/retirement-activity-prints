@@ -10,7 +10,7 @@ import {
   RETIREMENT_BINGO_INSTRUCTIONS,
   RETIREMENT_BINGO_WRITE_INS,
 } from '@/constants/studio-phrasing/retirement-bingo'
-import { STUDIO_PAPER } from '@/constants/studio.constants'
+import { STUDIO_PAPER, STUDIO_SAFE_AREA_PADDING_X } from '@/constants/studio.constants'
 import { DPI } from '@/types/canvas-settings.types'
 import { resetObjectCounter } from '../studio-fabric-builders'
 import { harvestAnswers } from '../studio-answer-key'
@@ -112,9 +112,9 @@ const kdpCtx = (
   pageHeight: Math.round(hIn * DPI),
   margin: {
     top: Math.round(0.25 * DPI),
-    right: Math.round(0.25 * DPI),
+    right: Math.round(0.25 * DPI) + STUDIO_SAFE_AREA_PADDING_X,
     bottom: Math.round(0.25 * DPI),
-    left: Math.round(0.375 * DPI),
+    left: Math.round(0.375 * DPI) + STUDIO_SAFE_AREA_PADDING_X,
   },
   seed,
   instanceId: 'kdp',

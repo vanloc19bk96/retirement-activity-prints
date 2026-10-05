@@ -89,8 +89,18 @@ export const STUDIO_SECTION_GAP = 40
  * safe-area guide and read as clipped.
  */
 export const STUDIO_SAFE_AREA_PADDING_Y = 10
-/** Extra left/right inset inside the safe area — shared by all studio games. */
-export const STUDIO_CONTENT_SAFE_INSET_X = 28
+/**
+ * Air every studio page keeps inside the safe area, left and right. Built into
+ * `ctx.margin`, so no game can draw closer to the guide: the full-width picture
+ * games (Picture Logic, Dot to Dot, Spot the Difference, Stained Glass) ran
+ * their grids and frames onto it.
+ */
+export const STUDIO_SAFE_AREA_PADDING_X = 12
+/**
+ * Extra left/right inset for text columns, on top of `STUDIO_SAFE_AREA_PADDING_X`:
+ * headings and copy sit 28px in from the safe-area guide.
+ */
+export const STUDIO_CONTENT_SAFE_INSET_X = 16
 /**
  * Air a grid game's puzzle panel keeps above the safe area's foot. Grids
  * sized to fill the panel otherwise set their legend flush on that edge, and

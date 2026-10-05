@@ -1,7 +1,7 @@
 ﻿import { describe, it, expect, beforeEach, vi } from 'vitest'
 import type { StudioConfig, StudioFabricObject, StudioGenerateContext } from '@/types/studio-template.types'
 import { STUDIO_TEMPLATES, buildDefaultConfig } from '@/constants/studio-templates'
-import { STUDIO_ANSWER_INK_MONO_TEMPLATES, STUDIO_INK } from '@/constants/studio.constants'
+import { STUDIO_ANSWER_INK_MONO_TEMPLATES, STUDIO_INK, STUDIO_SAFE_AREA_PADDING_X } from '@/constants/studio.constants'
 import { DPI } from '@/types/canvas-settings.types'
 import { resetObjectCounter } from '../studio-fabric-builders'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
@@ -55,9 +55,9 @@ const kdpCtx = (wIn: number, hIn: number, seed = 42, bookLabels: string[] = [], 
   pageHeight: Math.round(hIn * DPI),
   margin: {
     top: Math.round(0.25 * DPI),
-    right: Math.round(0.25 * DPI),
+    right: Math.round(0.25 * DPI) + STUDIO_SAFE_AREA_PADDING_X,
     bottom: Math.round(0.25 * DPI),
-    left: Math.round(0.375 * DPI),
+    left: Math.round(0.375 * DPI) + STUDIO_SAFE_AREA_PADDING_X,
   },
   seed,
   instanceId: 'kdp',
@@ -157,7 +157,7 @@ describe('spot the differences: registry and form', () => {
   })
 
   it('reports the picture size on the trim, or that the trim is too small', () => {
-    const layout = (w: number, h: number) => ({ pageWidth: w * DPI, pageHeight: h * DPI, margin: { top: 24, right: 24, bottom: 24, left: 36 } })
+    const layout = (w: number, h: number) => ({ pageWidth: w * DPI, pageHeight: h * DPI, margin: { top: 24, right: 24 + STUDIO_SAFE_AREA_PADDING_X, bottom: 24, left: 36 + STUDIO_SAFE_AREA_PADDING_X } })
     expect(sdPrintNote({ page: layout(6, 9), config: base, minExtent: 0.26 })).toMatch(/Each picture prints .* in\. Every difference/)
     expect(sdPrintNote({ page: layout(3, 3.5), config: base, minExtent: 0.26 })).toMatch(/too small/)
   })
@@ -185,7 +185,7 @@ describe('spot the differences: registry and form', () => {
     expect(sdCrowdedWarning(small, 'home', 'relaxed')).toBeNull()
     expect(sdCrowdedWarning(roomy, 'home', 'challenging')).toBeNull()
     const level = SD_CONFIG_SCHEMA.find((f) => f.key === 'level')!
-    const page = (w: number, h: number) => ({ pageWidth: w * DPI, pageHeight: h * DPI, margin: { top: 24, right: 24, bottom: 24, left: 36 } })
+    const page = (w: number, h: number) => ({ pageWidth: w * DPI, pageHeight: h * DPI, margin: { top: 24, right: 24 + STUDIO_SAFE_AREA_PADDING_X, bottom: 24, left: 36 + STUDIO_SAFE_AREA_PADDING_X } })
     expect(level.warningWhen!({ ...base, level: 'challenging' }, page(5, 8))).toMatch(/small/)
     expect(level.warningWhen!({ ...base, level: 'challenging' }, page(8.5, 11))).toBeNull()
   })

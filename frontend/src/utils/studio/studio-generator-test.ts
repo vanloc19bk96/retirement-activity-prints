@@ -6,13 +6,15 @@ import { harvestAnswers } from './studio-answer-key'
 import type { StudioTemplateDefinition } from '@/types/studio-template.types'
 import { contentFingerprint } from './studio-content-fingerprint'
 import { clearStudioRecentContent } from './studio-variety'
+import { STUDIO_SAFE_AREA_PADDING_X } from '@/constants/studio.constants'
 
 export { contentFingerprint } from './studio-content-fingerprint'
 
 export const STUDIO_TEST_CTX: StudioGenerateContext = {
   pageWidth: 576,
   pageHeight: 864,
-  margin: { top: 36, right: 36, bottom: 36, left: 48 },
+  // Left/right padded like every real page, so the safe-margin check keeps that air too.
+  margin: { top: 36, right: 36 + STUDIO_SAFE_AREA_PADDING_X, bottom: 36, left: 48 + STUDIO_SAFE_AREA_PADDING_X },
   seed: 42,
   instanceId: 'test-run',
 }

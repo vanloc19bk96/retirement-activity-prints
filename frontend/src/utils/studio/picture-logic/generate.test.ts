@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import type { StudioConfig, StudioFabricObject, StudioGenerateContext } from '@/types/studio-template.types'
 import { STUDIO_TEMPLATES, buildDefaultConfig } from '@/constants/studio-templates'
-import { STUDIO_ANSWER_INK_MONO_TEMPLATES, STUDIO_INK } from '@/constants/studio.constants'
+import { STUDIO_ANSWER_INK_MONO_TEMPLATES, STUDIO_INK, STUDIO_SAFE_AREA_PADDING_X } from '@/constants/studio.constants'
 import { DPI } from '@/types/canvas-settings.types'
 import { resetObjectCounter } from '../studio-fabric-builders'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
@@ -53,9 +53,9 @@ const kdpCtx = (wIn: number, hIn: number, seed = 42, bookLabels: string[] = [], 
   pageHeight: Math.round(hIn * DPI),
   margin: {
     top: Math.round(0.25 * DPI),
-    right: Math.round(0.25 * DPI),
+    right: Math.round(0.25 * DPI) + STUDIO_SAFE_AREA_PADDING_X,
     bottom: Math.round(0.25 * DPI),
-    left: Math.round(0.375 * DPI),
+    left: Math.round(0.375 * DPI) + STUDIO_SAFE_AREA_PADDING_X,
   },
   seed,
   instanceId: 'kdp',
@@ -114,7 +114,7 @@ describe('picture-logic registry and form', () => {
   })
 
   it('reports square and number sizes on the trim, how many pictures fit, or that the trim is too small', () => {
-    const layout = (w: number, h: number) => ({ pageWidth: w * DPI, pageHeight: h * DPI, margin: { top: 24, right: 24, bottom: 24, left: 36 } })
+    const layout = (w: number, h: number) => ({ pageWidth: w * DPI, pageHeight: h * DPI, margin: { top: 24, right: 24 + STUDIO_SAFE_AREA_PADDING_X, bottom: 24, left: 36 + STUDIO_SAFE_AREA_PADDING_X } })
     for (const level of LEVELS) {
       const note = plPrintNote({ page: layout(8.5, 11), config: base, level })
       expect(note).toContain(String(plLevelPictures(level).length))

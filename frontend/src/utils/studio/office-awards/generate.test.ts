@@ -6,7 +6,7 @@ import type {
   StudioPageOutput,
 } from '@/types/studio-template.types'
 import { DPI } from '@/types/canvas-settings.types'
-import { STUDIO_INK, STUDIO_INK_MUTED } from '@/constants/studio.constants'
+import { STUDIO_INK, STUDIO_INK_MUTED, STUDIO_SAFE_AREA_PADDING_X } from '@/constants/studio.constants'
 import { STUDIO_TEMPLATES, buildDefaultConfig, getStudioTemplate } from '@/constants/studio-templates'
 import { resetObjectCounter } from '../studio-fabric-builders'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
@@ -59,9 +59,9 @@ const kdpCtx = (wIn: number, hIn: number, remoteData: unknown = OA_FIXTURE): Stu
   pageHeight: Math.round(hIn * DPI),
   margin: {
     top: Math.round(0.25 * DPI),
-    right: Math.round(0.25 * DPI),
+    right: Math.round(0.25 * DPI) + STUDIO_SAFE_AREA_PADDING_X,
     bottom: Math.round(0.25 * DPI),
-    left: Math.round(0.375 * DPI),
+    left: Math.round(0.375 * DPI) + STUDIO_SAFE_AREA_PADDING_X,
   },
   seed: 42,
   instanceId: 'kdp',

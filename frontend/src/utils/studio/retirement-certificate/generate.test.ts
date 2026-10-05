@@ -38,6 +38,7 @@ import {
 } from './content'
 import { SIZES } from './layout'
 import { parseCrRemoteData, retirementCertificatePrefetch } from './prefetch'
+import { STUDIO_SAFE_AREA_PADDING_X } from '@/constants/studio.constants'
 
 const FONT = 'PT Serif'
 const NBSP = / /g
@@ -64,9 +65,9 @@ const kdpCtx = (wIn: number, hIn: number, seed = 42, bookLabels: string[] = []):
   pageHeight: Math.round(hIn * DPI),
   margin: {
     top: Math.round(0.25 * DPI),
-    right: Math.round(0.25 * DPI),
+    right: Math.round(0.25 * DPI) + STUDIO_SAFE_AREA_PADDING_X,
     bottom: Math.round(0.25 * DPI),
-    left: Math.round(0.375 * DPI),
+    left: Math.round(0.375 * DPI) + STUDIO_SAFE_AREA_PADDING_X,
   },
   seed,
   instanceId: 'kdp',

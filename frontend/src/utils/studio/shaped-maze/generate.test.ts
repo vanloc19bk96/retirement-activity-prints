@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { buildDefaultConfig, getStudioTemplate } from '@/constants/studio-templates'
-import { STUDIO_ANSWER_INK_BY_TEMPLATE, STUDIO_ANSWER_INK_ROUTE } from '@/constants/studio.constants'
+import { STUDIO_ANSWER_INK_BY_TEMPLATE, STUDIO_ANSWER_INK_ROUTE, STUDIO_SAFE_AREA_PADDING_X } from '@/constants/studio.constants'
 import { DPI } from '@/types/canvas-settings.types'
 import type { StudioConfig, StudioFabricObject, StudioGenerateContext, StudioPageOutput } from '@/types/studio-template.types'
 import { resetObjectCounter } from '../studio-fabric-builders'
@@ -36,7 +36,7 @@ import { outlineChains } from './draw'
 const kdpCtx = (wIn: number, hIn: number, seed = 4242): StudioGenerateContext => ({
   pageWidth: Math.round(wIn * DPI),
   pageHeight: Math.round(hIn * DPI),
-  margin: { top: 24, right: 24, bottom: 24, left: 36 },
+  margin: { top: 24, right: 24 + STUDIO_SAFE_AREA_PADDING_X, bottom: 24, left: 36 + STUDIO_SAFE_AREA_PADDING_X },
   seed,
   instanceId: 'kdp',
 })
@@ -123,7 +123,7 @@ describe('shaped maze form', () => {
   it('reports path widths on a real trim and says so when a trim is too small', () => {
     const note = smPrintNote({ level: SM_LEVELS[1]!, page: kdpCtx(6, 9), config: base })
     expect(note).toMatch(/Paths 0\.\d\d–0\.\d\d in wide/)
-    const tiny = { pageWidth: 3 * DPI, pageHeight: 4 * DPI, margin: { top: 24, right: 24, bottom: 24, left: 36 } }
+    const tiny = { pageWidth: 3 * DPI, pageHeight: 4 * DPI, margin: { top: 24, right: 24 + STUDIO_SAFE_AREA_PADDING_X, bottom: 24, left: 36 + STUDIO_SAFE_AREA_PADDING_X } }
     expect(smPrintNote({ level: SM_LEVELS[2]!, page: tiny, config: base })).toMatch(/too small/)
   })
 

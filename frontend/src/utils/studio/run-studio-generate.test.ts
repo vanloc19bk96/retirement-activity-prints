@@ -6,6 +6,7 @@ import type {
   StudioPageOutput,
 } from '@/types/studio-template.types'
 import { DPI, calculateMarginGuide } from '@/types/canvas-settings.types'
+import { STUDIO_SAFE_AREA_PADDING_X } from '@/constants/studio.constants'
 import type { CanvasStateStore } from '@/utils/canvas-state-store'
 
 /** One text box pinned to the top-left of the content box, the same every seed. */
@@ -85,24 +86,24 @@ describe('runStudioGenerateOnce margins', () => {
       interiorPageCount: 40,
       projectedPageCount: 200,
     })
-    expect(writes[0]!.objects[0]!.left).toBe(Math.round(0.5 * DPI))
+    expect(writes[0]!.objects[0]!.left).toBe(Math.round(0.5 * DPI) + STUDIO_SAFE_AREA_PADDING_X)
   })
 
   it('keeps the 0.375in gutter while the book stays under 151 pages', async () => {
     const { writes } = await generateAt({ startPageIndex: 0, interiorPageCount: 40 })
-    expect(writes[0]!.objects[0]!.left).toBe(Math.round(0.375 * DPI))
+    expect(writes[0]!.objects[0]!.left).toBe(Math.round(0.375 * DPI) + STUDIO_SAFE_AREA_PADDING_X)
   })
 
   it('widens the gutter when this sheet itself takes the book past 150 pages', async () => {
     const { writes } = await generateAt({ startPageIndex: 0, interiorPageCount: 150 })
-    expect(writes[0]!.objects[0]!.left).toBe(Math.round(0.5 * DPI))
+    expect(writes[0]!.objects[0]!.left).toBe(Math.round(0.5 * DPI) + STUDIO_SAFE_AREA_PADDING_X)
   })
 
   it('puts a verso sheet on its outside margin, gutter on the right', async () => {
     const { writes } = await generateAt({ startPageIndex: 1, interiorPageCount: 40 })
     const obj = writes[0]!.objects[0]!
     expect(writes[0]!.pageIndex).toBe(1)
-    expect(obj.left).toBe(Math.round(0.25 * DPI))
+    expect(obj.left).toBe(Math.round(0.25 * DPI) + STUDIO_SAFE_AREA_PADDING_X)
   })
 })
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import type { StudioConfig, StudioFabricObject, StudioGenerateContext } from '@/types/studio-template.types'
 import { STUDIO_TEMPLATES, buildDefaultConfig } from '@/constants/studio-templates'
-import { STUDIO_ANSWER_INK_MONO_TEMPLATES, STUDIO_DIGIT_FONT, STUDIO_INK } from '@/constants/studio.constants'
+import { STUDIO_ANSWER_INK_MONO_TEMPLATES, STUDIO_DIGIT_FONT, STUDIO_INK, STUDIO_SAFE_AREA_PADDING_X } from '@/constants/studio.constants'
 import { DPI } from '@/types/canvas-settings.types'
 import { resetObjectCounter } from '../studio-fabric-builders'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
@@ -59,9 +59,9 @@ const kdpCtx = (wIn: number, hIn: number, seed = 42, bookLabels: string[] = [], 
   pageHeight: Math.round(hIn * DPI),
   margin: {
     top: Math.round(0.25 * DPI),
-    right: Math.round(0.25 * DPI),
+    right: Math.round(0.25 * DPI) + STUDIO_SAFE_AREA_PADDING_X,
     bottom: Math.round(0.25 * DPI),
-    left: Math.round(0.375 * DPI),
+    left: Math.round(0.375 * DPI) + STUDIO_SAFE_AREA_PADDING_X,
   },
   seed,
   instanceId: 'kdp',
@@ -133,7 +133,7 @@ describe('dot-to-dot registry and form', () => {
   })
 
   it('reports the number size and the picture size on the trim, or that the trim is too small', () => {
-    const layout = (w: number, h: number) => ({ pageWidth: w * DPI, pageHeight: h * DPI, margin: { top: 24, right: 24, bottom: 24, left: 36 } })
+    const layout = (w: number, h: number) => ({ pageWidth: w * DPI, pageHeight: h * DPI, margin: { top: 24, right: 24 + STUDIO_SAFE_AREA_PADDING_X, bottom: 24, left: 36 + STUDIO_SAFE_AREA_PADDING_X } })
     for (const level of LEVELS) {
       const note = dtdPrintNote({ page: layout(6, 9), config: base, level })
       expect(note).toMatch(/pt/)
@@ -372,7 +372,7 @@ describe('dot-to-dot quality gates', () => {
   })
 
   it('draws the answer as the picture’s own smooth outline, through every dot in order', () => {
-    for (const subjectId of ['teapot', 'coffee-mug', 'teacup']) {
+    for (const subjectId of ['teapot', 'coffee-mug', 'watering-can']) {
       const { design, puzzle, panel, level } = build('classic', subjectId)
       const tag = { templateKey: DTD_TEMPLATE_KEY, instanceId: 't', pageRole: 'single' as const }
       const picture = buildDtdPicture({ puzzle, rules: level.rules, box: panel, tag, label: 'x', canonical: 'x', name: design.subject.name })
