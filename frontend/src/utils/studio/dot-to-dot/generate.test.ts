@@ -402,7 +402,20 @@ describe('dot-to-dot quality gates', () => {
         }
         ;(x = x3!), (y = y3!)
       }
-      expect(worst, subjectId).toBeLessThan(1)
+      // Within a thin line's width of it (the traced silhouette itself is only good to a grid cell).
+      expect(worst, subjectId).toBeLessThan(2.5)
+      // No ripple from the tracing grid: the bend changes side seldom, not at nearly every point.
+      let flips = 0
+      let side = 0
+      for (let i = 0; i < anchors.length; i++) {
+        const a = anchors[(i - 1 + anchors.length) % anchors.length]!
+        const b = anchors[i]!
+        const c = anchors[(i + 1) % anchors.length]!
+        const turn = Math.sign((b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x))
+        if (turn && side && turn !== side) flips++
+        if (turn) side = turn
+      }
+      expect(flips, subjectId).toBeLessThan(puzzle.dots.length * 0.75)
       // The group is centred on the curve's real extent, so nothing shifts when Fabric loads it.
       expect(checkDtdDrawnPage({ picture, box: panel, puzzle, numberSize: level.rules.numberSize })).toEqual([])
     }

@@ -53,6 +53,9 @@ interface PathBounds {
 /** Closest two points of the answer line may sit, canvas px; nearer than this a curve kinks. */
 const ANSWER_MIN_STEP = 0.75
 
+/** How far the answer line may cut the traced silhouette between dots, as a share of the picture's size. */
+const ANSWER_TOLERANCE = 0.0015
+
 /**
  * The answer line: the picture's true silhouette, run from dot 1 round
  * through every dot in order. The dots were all taken from the silhouette,
@@ -100,7 +103,50 @@ export function dtdAnswerLoop(contour: readonly Pt[], dots: readonly Pt[]): Pt[]
     out.push(item)
   }
   while (out.length > 1 && !out[out.length - 1]!.dot && near(out[out.length - 1]!.p, out[0]!.p)) out.pop()
-  return out.map((v) => v.p)
+  // The silhouette was traced off a grid and still carries its faint
+  // stair-step ripple; a curve through every traced point would wave along
+  // it. Between each pair of dots keep only the points the shape needs.
+  const xs = out.map((v) => v.p.x)
+  const ys = out.map((v) => v.p.y)
+  const size = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys))
+  const tolerance = size * ANSWER_TOLERANCE
+  const kept: Pt[] = []
+  const dotAt = out.flatMap((v, i) => (v.dot ? [i] : []))
+  dotAt.forEach((from, k) => {
+    const to = k + 1 < dotAt.length ? dotAt[k + 1]! : out.length + dotAt[0]!
+    const run = Array.from({ length: to - from + 1 }, (_, i) => out[(from + i) % out.length]!.p)
+    for (const i of simplifyRunIndices(run, tolerance).slice(0, -1)) kept.push(run[i]!)
+  })
+  return kept
+}
+
+/** Douglas-Peucker on an open run: the indices it keeps, ends included. */
+function simplifyRunIndices(run: readonly Pt[], tolerance: number): number[] {
+  const keep = new Uint8Array(run.length)
+  keep[0] = 1
+  keep[run.length - 1] = 1
+  const stack: [number, number][] = [[0, run.length - 1]]
+  while (stack.length) {
+    const [s, e] = stack.pop()!
+    const p = run[s]!
+    const q = run[e]!
+    const dx = q.x - p.x
+    const dy = q.y - p.y
+    const l2 = dx * dx + dy * dy
+    let worst = -1
+    let at = -1
+    for (let i = s + 1; i < e; i++) {
+      const r = run[i]!
+      const t = l2 === 0 ? 0 : Math.max(0, Math.min(1, ((r.x - p.x) * dx + (r.y - p.y) * dy) / l2))
+      const d = Math.hypot(r.x - (p.x + t * dx), r.y - (p.y + t * dy))
+      if (d > worst) (worst = d), (at = i)
+    }
+    if (worst > tolerance) {
+      keep[at] = 1
+      stack.push([s, at], [at, e])
+    }
+  }
+  return run.flatMap((_, i) => (keep[i] ? [i] : []))
 }
 
 /** A bend sharper than this stays a corner (a spout's tip, a roof's eave); gentler ones flow. */
