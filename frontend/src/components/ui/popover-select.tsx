@@ -72,6 +72,10 @@ export function PopoverSelect({
         className="w-[var(--radix-popover-trigger-width)] border-border bg-popover p-1 shadow-none"
         role="listbox"
         aria-label={ariaLabel}
+        // Portalled outside any open Dialog, whose scroll lock would otherwise swallow
+        // wheel/touch scrolling on the option list.
+        onWheel={(event) => event.stopPropagation()}
+        onTouchMove={(event) => event.stopPropagation()}
       >
         <ul className="flex max-h-[min(16rem,var(--radix-popover-content-available-height))] flex-col gap-0.5 overflow-y-auto">
           {options.map((option) => {
