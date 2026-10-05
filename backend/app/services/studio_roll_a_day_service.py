@@ -196,19 +196,26 @@ def briefs(
     Kinds cycle through the side's plan (kinds a retry still lacks first), so
     spares cover the kinds again. Facets are shuffled per kind and flavours
     across the side, both by seed, so the same facet meets a different flavour
-    next time.
+    next time. A mix may bring its own facets for a kind -- the social mix's
+    walks, crafts, outings and games all come with company -- so the mix is
+    in the brief itself, not only in a flavour the model may set aside.
     """
     plan = plan_kinds(req.focus, req.seed, side)
     lacking = set(missing)
     order = [kind for kind in plan if kind in lacking] + [kind for kind in plan if kind not in lacking]
     rng = random.Random(seed * 2 + _side_salt(side))
-    focus_flavours = string_list(section(section(_config(), "focuses"), req.focus), "flavours")
+    focus = section(section(_config(), "focuses"), req.focus)
+    focus_flavours = string_list(focus, "flavours")
+    focus_facets = focus.get("facets", {})
     flavours = [*string_list(_config(), "flavours"), *focus_flavours, *focus_flavours]
     rng.shuffle(flavours)
     kinds = section(_config(), "kinds")
     facets: dict[str, list[str]] = {}
     for kind in order:
-        pool = list(string_list(kinds[kind], "facets"))
+        if kind in focus_facets:
+            pool = list(string_list(focus_facets, kind))
+        else:
+            pool = list(string_list(kinds[kind], "facets"))
         rng.shuffle(pool)
         facets[kind] = pool
 
@@ -351,7 +358,9 @@ with "Bake a small batch of scones" as with "Browse the shelves at the library".
 
 Each brief names a kind of activity, a facet to build it from, and a flavour --
 a gentle nudge on cost, place or company; set the flavour aside if it clashes
-with the facet.
+with the facet. When the facet names company (a friend, a neighbour, a group
+or club), the activity keeps it: "Stroll the park with a friend", never just
+"Stroll the park".
 
 Build each activity in this order:
 1. "concept": the underlying activity in 2 to 4 plain words, specific enough

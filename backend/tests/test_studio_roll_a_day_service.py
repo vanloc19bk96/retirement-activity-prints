@@ -207,6 +207,23 @@ def test_the_mix_takes_the_extra_kinds() -> None:
         assert {"outing", "learn"} <= set(plan_kinds("outings", seed, "afternoon"))
 
 
+COMPANY = re.compile(
+    r"\b(friends?|neighbours?|group|club|circle|class|choir|society|others|together|community|someone|volunteer)\b"
+)
+
+
+def test_the_social_mix_puts_company_in_most_briefs() -> None:
+    for seed in range(20):
+        for side in ("morning", "afternoon"):
+            lines = briefs(_req(focus="social", seed=seed), side, 6, seed=seed)
+            facets = {kind: line.split(" -- facet: ")[1].split(" -- flavour: ")[0] for line, kind in lines}
+            assert {"people", "move", "make", "outing", "play"} <= set(facets)
+            for kind in ("move", "make", "outing", "play"):
+                assert COMPANY.search(facets[kind]), facets[kind]
+            # Quiet moments too: rest keeps its own facets.
+            assert not COMPANY.search(facets["rest"])
+
+
 def test_kinds_vary_by_seed_and_side() -> None:
     tables = {
         (tuple(plan_kinds("balanced", s, "morning")), tuple(plan_kinds("balanced", s, "afternoon")))

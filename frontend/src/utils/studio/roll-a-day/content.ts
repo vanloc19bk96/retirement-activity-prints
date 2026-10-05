@@ -144,7 +144,8 @@ export const RD_SOFT_WORDS: readonly string[] = [
   'friend', 'friends', 'neighbour', 'neighbours', 'neighbor', 'neighbors', 'people', 'person',
   'home', 'house', 'outside', 'outdoors', 'indoors', 'inside', 'nearby', 'short', 'slow', 'slowly',
   'quiet', 'quietly', 'gentle', 'gently', 'easy', 'fresh', 'cup', 'minute', 'minutes', 'hour',
-  'hours', 'room', 'spot', 'table', 'window', 'corner', 'sunny',
+  'hours', 'room', 'spot', 'table', 'window', 'corner', 'sunny', 'together', 'group', 'groups',
+  'club', 'clubs', 'community',
 ]
 
 const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
