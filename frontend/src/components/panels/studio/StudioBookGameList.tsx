@@ -60,17 +60,24 @@ const ORDER_OPTIONS: { value: StudioBookOrder; label: string }[] = [
 /**
  * Book builder always uses the AI / preset-theme path for word games.
  * Custom word lists stay on the single-game form — hide the switchers here.
+ * A typed hidden message is one fixed answer, so every page of a row would
+ * hide the same saying — it stays on the single-game form too.
  */
-const BOOK_CUSTOMIZE_HIDDEN_KEYS = new Set(['source', 'words'])
+const BOOK_CUSTOMIZE_HIDDEN_KEYS = new Set(['source', 'words', 'customMessage'])
 
-/** Keep config on the schema default word source (AI / theme), never custom. */
+/** Fields pinned to their schema default in a book (`words` is moot once `source` is). */
+const BOOK_DEFAULT_KEYS = new Set(['source', 'customMessage'])
+
+/** Keep config on the default word source (AI / theme) with no typed message. */
 function withBookDefaultWordSource(
   schema: FieldDef[],
   config: StudioConfig,
 ): StudioConfig {
-  const sourceField = schema.find((field) => field.key === 'source')
-  if (!sourceField) return config
-  return { ...config, source: sourceField.default }
+  const next = { ...config }
+  for (const field of schema) {
+    if (BOOK_DEFAULT_KEYS.has(field.key)) next[field.key] = field.default
+  }
+  return next
 }
 
 /** Fields the user can tune for a template (visibility-aware). */
