@@ -14,7 +14,6 @@ import {
   RETIREMENT_BINGO_BUILD_FAILED_MESSAGE,
   RETIREMENT_BINGO_DEFAULT_TITLE,
   RETIREMENT_BINGO_PAGE_TOO_SMALL_MESSAGE,
-  parseCustomMoments,
   retirementBingoThemeFamilies,
   selectRetirementBingoMoments,
   type RetirementBingoMoment,
@@ -23,7 +22,6 @@ import { buildRetirementBingoDeck } from './deck'
 import { drawRetirementBingoCard } from './draw'
 import { runRetirementBingoKdpPreflight } from './kdp-preflight'
 import {
-  fitBingoPhrase,
   planRetirementBingoPage,
   retirementBingoContentBox,
 } from './layout'
@@ -99,7 +97,6 @@ function errorPage(
 function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageOutput[] {
   const theme = parseRetirementBingoTheme(config)
   const font = String(config.fontFamily ?? STUDIO_DEFAULT_FONT)
-  const spec = { fontFamily: font }
   const ownerSalt = resolveOwnerSalt(ctx)
 
   const tag: StudioTag = {
@@ -112,16 +109,6 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
   const plan = planRetirementBingoPage({ page: ctx, config, theme, font })
   if (!plan) return fail(RETIREMENT_BINGO_PAGE_TOO_SMALL_MESSAGE)
 
-  // The seller's own moments, kept only where they fit this page's squares.
-  const lines = new Map(plan.lines)
-  const custom: RetirementBingoMoment[] = []
-  for (const moment of parseCustomMoments(config.customMoments).moments) {
-    const broken = fitBingoPhrase(moment.text, plan.metrics, plan.phraseFont, spec)
-    if (!broken) continue
-    lines.set(moment.text, broken)
-    custom.push(moment)
-  }
-
   const deck = buildRetirementBingoDeck({
     families: retirementBingoThemeFamilies(theme),
     fits: (text) => plan.lines.has(text),
@@ -133,10 +120,14 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
   for (let draw = 0; draw < MAX_DRAWS && !moments; draw++) {
     const candidate = selectRetirementBingoMoments({
       deck,
-      custom,
       rng: studioPuzzleRng({ templateKey: TEMPLATE_KEY, config, ctx, stream: `card:${draw}` }),
     })
-    const preflight = runRetirementBingoKdpPreflight({ moments: candidate, plan, lines, font })
+    const preflight = runRetirementBingoKdpPreflight({
+      moments: candidate,
+      plan,
+      lines: plan.lines,
+      font,
+    })
     if (preflight.ok) moments = candidate
     else lastError = preflight.errors[0] ?? lastError
   }
@@ -150,7 +141,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
   const objects: StudioFabricObject[] = [...header.objects]
   drawRetirementBingoCard(objects, {
     moments,
-    lines,
+    lines: plan.lines,
     plan,
     style: retirementBingoHouseStyle(ownerSalt),
     font,
@@ -165,7 +156,7 @@ export const retirementBingoTemplate: StudioTemplateDefinition = {
   label: 'Retirement Bingo',
   category: 'party',
   description:
-    'A 5 x 5 bingo card of everyday retirement moments (“Slept past 9”, “Had coffee with no rush”, “Started a new hobby”) with a free NAP square in the middle. Readers cross off each moment as it happens. Your account gets its own set of moments, wording and card style, so your books don’t read like anyone else’s. You can also add moments of your own. Square and type sizes are fitted to your page. Double-click any square on the page to reword it.',
+    'A 5 x 5 bingo card of everyday retirement moments (“Slept past 9”, “Had coffee with no rush”, “Started a new hobby”) with a free NAP square in the middle. Readers cross off each moment as it happens. Your account gets its own set of moments, wording and card style, so your books don’t read like anyone else’s. Square and type sizes are fitted to your page. Double-click any square on the page to reword it.',
   pageCount: 1,
   producesAnswerKey: false,
   defaultPageTitle: RETIREMENT_BINGO_DEFAULT_TITLE,

@@ -1,16 +1,6 @@
-import type {
-  StudioConfig,
-  StudioConfigField,
-  StudioConfigLayoutContext,
-} from '@/types/studio-template.types'
+import type { StudioConfig, StudioConfigField } from '@/types/studio-template.types'
 import { STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
-import {
-  BINGO_CUSTOM_PER_CARD_MAX,
-  BINGO_MAX_CHARS,
-  customMomentsPerCard,
-  parseCustomMoments,
-} from './content'
-import { fitBingoPhrase, planRetirementBingoPage, retirementBingoPrintNote } from './layout'
+import { retirementBingoPrintNote } from './layout'
 import {
   DEFAULT_RETIREMENT_BINGO_THEME_ID,
   RETIREMENT_BINGO_THEME_OPTIONS,
@@ -18,7 +8,7 @@ import {
 } from './themes'
 
 /**
- * Two questions, both about the book rather than the page.
+ * One question, about the book rather than the page.
  *
  * What the form deliberately does not ask:
  *
@@ -38,34 +28,14 @@ import {
  *
  * *An answer page* — bingo has no answer. Every card is the reader's own record.
  *
- * What is left is what kind of retirement book this is, and — optionally — the
- * seller's own moments, which are the surest way to make a book theirs.
+ * *A list of the seller's own moments* — each account already prints its own
+ * deck of moments and its own wording of them (`deck.ts`), so a book is the
+ * seller's own without a list to type and check.
+ *
+ * What is left is what kind of retirement book this is.
  */
 
 const font = (config: StudioConfig) => String(config.fontFamily ?? STUDIO_DEFAULT_FONT)
-
-/** Custom moments that pass the rules but will not fit a square on this trim. */
-function tooLongForPage(
-  config: StudioConfig,
-  layout: StudioConfigLayoutContext,
-  texts: readonly string[],
-): string[] {
-  const plan = planRetirementBingoPage({
-    page: layout,
-    config,
-    theme: parseRetirementBingoTheme(config),
-    font: font(config),
-  })
-  if (!plan) return []
-  const spec = { fontFamily: font(config) }
-  return texts.filter((text) => !fitBingoPhrase(text, plan.metrics, plan.phraseFont, spec))
-}
-
-function quoteList(texts: readonly string[]): string {
-  const shown = texts.slice(0, 2).map((text) => `“${text}”`)
-  const more = texts.length > 2 ? ` and ${texts.length - 2} more` : ''
-  return `${shown.join(', ')}${more}`
-}
 
 export const RETIREMENT_BINGO_CONFIG_SCHEMA: StudioConfigField[] = [
   {
@@ -81,53 +51,5 @@ export const RETIREMENT_BINGO_CONFIG_SCHEMA: StudioConfigField[] = [
         config,
         font: font(config),
       }),
-  },
-  {
-    key: 'customMoments',
-    label: 'Your own moments (optional)',
-    type: 'wordList',
-    default: [],
-    placeholder: 'Moved to the lake house\nBought a red sports car\nWalked the dog at noon',
-    helpWhen: (config: StudioConfig) => {
-      const { moments } = parseCustomMoments(config.customMoments)
-      if (moments.length === 0) {
-        return (
-          'One per line, short and in the past tense. Mixed into every card with ' +
-          `the built-in moments, up to ${BINGO_CUSTOM_PER_CARD_MAX} a card. The ` +
-          'surest way to make your book unlike anyone else’s.'
-        )
-      }
-      const perCard = customMomentsPerCard(moments.length)
-      return (
-        `${moments.length} of your moments ready: about ${perCard} on each card, ` +
-        'the rest from the built-in set.'
-      )
-    },
-    warningWhen: (config: StudioConfig, layout) => {
-      const { moments, rejected } = parseCustomMoments(config.customMoments)
-      const notes: string[] = []
-      if (rejected.length > 0) {
-        const first = rejected[0]!
-        notes.push(
-          rejected.length === 1
-            ? `Skipping “${first.text}”: ${first.reason}.`
-            : `Skipping ${rejected.length} lines, such as “${first.text}”: ${first.reason}.`,
-        )
-      }
-      if (layout && moments.length > 0) {
-        const long = tooLongForPage(
-          config,
-          layout,
-          moments.map((m) => m.text),
-        )
-        if (long.length > 0) {
-          notes.push(
-            `${quoteList(long)} won’t fit a square on this page size. ` +
-              `Try under ${BINGO_MAX_CHARS} letters with shorter words.`,
-          )
-        }
-      }
-      return notes.length > 0 ? notes.join(' ') : null
-    },
   },
 ]

@@ -29,13 +29,10 @@ import {
  * burden onto every book built with it.
  */
 
-/** Where a moment came from — a bank group, or the seller's own list. */
-export type RetirementBingoMomentGroup = RetirementBingoGroup | 'custom'
-
 export interface RetirementBingoMoment {
   /** What the square says. Sentence case, no closing punctuation. */
   text: string
-  group: RetirementBingoMomentGroup
+  group: RetirementBingoGroup
   /** Near-duplicate key: two moments of one family never share a card. */
   family: string
   /** Belongs on a first-year-of-retirement card. */
@@ -91,11 +88,6 @@ export const BINGO_MIN_VARIANTS = 3
  */
 export const BINGO_MIN_THEME_FAMILIES = BINGO_MOMENT_COUNT * 2
 
-/** Most custom moments one card mixes in, however long the seller's list. */
-export const BINGO_CUSTOM_PER_CARD_MAX = 8
-/** Longest custom list the form accepts. */
-export const BINGO_CUSTOM_MAX = 100
-
 export const RETIREMENT_BINGO_PAGE_TOO_SMALL_MESSAGE =
   'This page size is too small for a bingo card: the squares would print ' +
   'below a comfortable reading size. Choose a larger page in Settings.'
@@ -120,8 +112,8 @@ export function momentKey(text: string): string {
 /**
  * Everything wrong with one moment's wording.
  *
- * Returned rather than thrown so the bank loader, the custom-moment parser and
- * preflight share one set of rules, and a failing test can say which rule.
+ * Returned rather than thrown so the bank loader and preflight share one set
+ * of rules, and a failing test can say which rule.
  */
 export function retirementBingoTextFaults(text: string): string[] {
   const faults: string[] = []
@@ -259,87 +251,6 @@ export function retirementBingoPool(theme: RetirementBingoTheme): RetirementBing
   return retirementBingoThemeFamilies(theme).flatMap(familyMoments)
 }
 
-/* --- the seller's own moments ------------------------------------------- */
-
-export interface RejectedCustomMoment {
-  text: string
-  reason: string
-}
-
-/**
- * What a seller typed, tidied the way they meant it: spaces collapsed, closing
- * punctuation dropped, first letter capitalised. "slept till noon!" is a fine
- * moment; refusing it over a capital letter would be the form being pedantic.
- */
-export function normalizeCustomMoment(raw: string): string {
-  const tidy = raw
-    .replace(/[‘’]/g, "'")
-    .replace(/\s+/g, ' ')
-    .trim()
-    .replace(/[.!?,;:]+$/, '')
-    .trim()
-  return tidy ? tidy[0]!.toUpperCase() + tidy.slice(1) : ''
-}
-
-/**
- * The seller's own moments, checked against the same rules as the bank.
- *
- * Nothing here blocks generate. A moment that breaks a rule is set aside with
- * the reason, and the form lists those under the field, so a seller learns what
- * was skipped and why instead of finding a card without it.
- */
-export function parseCustomMoments(value: unknown): {
-  moments: RetirementBingoMoment[]
-  rejected: RejectedCustomMoment[]
-} {
-  const lines = Array.isArray(value)
-    ? value.map((line) => String(line ?? ''))
-    : String(value ?? '').split(/\r?\n/)
-  const moments: RetirementBingoMoment[] = []
-  const rejected: RejectedCustomMoment[] = []
-  const seen = new Set<string>()
-
-  for (const line of lines) {
-    const text = normalizeCustomMoment(line)
-    if (!text) continue
-    const key = momentKey(text)
-    if (seen.has(key)) continue
-    seen.add(key)
-    if (moments.length >= BINGO_CUSTOM_MAX) {
-      rejected.push({ text, reason: `only the first ${BINGO_CUSTOM_MAX} are used` })
-      continue
-    }
-    const faults = retirementBingoTextFaults(text)
-    if (faults.length > 0) {
-      rejected.push({ text, reason: customFaultReason(faults[0]!) })
-      continue
-    }
-    moments.push({ text, group: 'custom', family: `custom:${key}`, firstYear: true })
-  }
-  return { moments, rejected }
-}
-
-/** The fault, reworded for the person who typed the moment. */
-function customFaultReason(fault: string): string {
-  if (fault.includes('too long for a bingo square')) return `keep it to ${BINGO_MAX_CHARS} letters`
-  if (fault.includes('more words')) return `keep it to ${BINGO_MAX_WORDS} words`
-  if (fault.includes('word too long')) return 'a word is too long for a square'
-  if (fault.includes('NAP')) return 'the NAP square is already free'
-  if (fault.includes('not suitable')) return 'not suitable for a published book'
-  return 'use plain letters and numbers only'
-}
-
-/**
- * How many of the seller's moments go on each card.
- *
- * About a third of the list, so a short list does not print the same custom
- * squares on every page, and never more than a third of the card, so the
- * seller's moments season the card rather than replace it.
- */
-export function customMomentsPerCard(count: number): number {
-  return Math.min(BINGO_CUSTOM_PER_CARD_MAX, Math.ceil(count / 3))
-}
-
 /* --- dealing one card ---------------------------------------------------- */
 
 /**
@@ -354,11 +265,11 @@ function groupQuotas(
   deck: readonly RetirementBingoMoment[],
   total: number,
   rng: StudioRng,
-): Map<RetirementBingoMomentGroup, number> {
-  const sizes = new Map<RetirementBingoMomentGroup, number>()
+): Map<RetirementBingoGroup, number> {
+  const sizes = new Map<RetirementBingoGroup, number>()
   for (const moment of deck) sizes.set(moment.group, (sizes.get(moment.group) ?? 0) + 1)
   const groups = rng.shuffle([...sizes.keys()])
-  const quotas = new Map<RetirementBingoMomentGroup, number>()
+  const quotas = new Map<RetirementBingoGroup, number>()
   if (groups.length === 0) return quotas
 
   const base = Math.floor(total / groups.length)
@@ -375,9 +286,8 @@ function groupQuotas(
  * The 24 moments one card prints, in reading order around the free centre.
  *
  * `rng` is the page's salted stream, so a card is the same card every time its
- * page is regenerated and a different card for every other seller. The
- * seller's own moments go in first, up to their share; the rest is dealt from
- * the seller's deck, balanced across groups.
+ * page is regenerated and a different card for every other seller. The card
+ * is dealt from the seller's deck, balanced across groups.
  *
  * A card never holds two moments from one family. Groups are filled to their
  * quota first; anything a quota could not supply (a small group, a family
@@ -387,15 +297,14 @@ function groupQuotas(
  */
 export function selectRetirementBingoMoments(options: {
   deck: readonly RetirementBingoMoment[]
-  custom?: readonly RetirementBingoMoment[]
   rng: StudioRng
 }): RetirementBingoMoment[] {
-  const { deck, custom = [], rng } = options
+  const { deck, rng } = options
 
   const chosen: RetirementBingoMoment[] = []
   const families = new Set<string>()
   const texts = new Set<string>()
-  const taken = new Map<RetirementBingoMomentGroup, number>()
+  const taken = new Map<RetirementBingoGroup, number>()
 
   const canTake = (moment: RetirementBingoMoment): boolean =>
     !families.has(moment.family) && !texts.has(momentKey(moment.text))
@@ -406,13 +315,8 @@ export function selectRetirementBingoMoments(options: {
     taken.set(moment.group, (taken.get(moment.group) ?? 0) + 1)
   }
 
-  for (const moment of rng.shuffle(custom)) {
-    if (chosen.length >= customMomentsPerCard(custom.length)) break
-    if (canTake(moment)) take(moment)
-  }
-
   const shuffled = rng.shuffle(deck)
-  const quotas = groupQuotas(deck, BINGO_MOMENT_COUNT - chosen.length, rng)
+  const quotas = groupQuotas(deck, BINGO_MOMENT_COUNT, rng)
   for (const moment of shuffled) {
     if (chosen.length >= BINGO_MOMENT_COUNT) break
     if ((taken.get(moment.group) ?? 0) >= (quotas.get(moment.group) ?? 0)) continue
@@ -423,7 +327,7 @@ export function selectRetirementBingoMoments(options: {
     if (canTake(moment)) take(moment)
   }
 
-  // Custom moments and top-ups land at the ends of the list; a final shuffle
-  // keeps either from collecting in one row.
+  // Top-ups land at the end of the list; a final shuffle keeps them from
+  // collecting in one row.
   return rng.shuffle(chosen)
 }

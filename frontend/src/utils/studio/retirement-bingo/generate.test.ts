@@ -17,7 +17,6 @@ import { harvestAnswers } from '../studio-answer-key'
 import { withStudioPageHeader } from '../studio-page-header'
 import { contentFingerprint } from '../studio-content-fingerprint'
 import { measureRunWidth } from '../studio-text-metrics'
-import { resolveStudioConfigField } from '../studio-config-fields'
 import { isUnsafeCopy } from '../retirement-word-search/content-quality'
 import {
   MIN_PHRASING_VARIANTS,
@@ -33,19 +32,15 @@ import {
 } from '../studio-generator-test'
 import { retirementBingoTemplate } from './generate'
 import {
-  BINGO_CUSTOM_MAX,
   BINGO_MAX_CHARS,
   BINGO_MIN_THEME_FAMILIES,
   BINGO_MIN_VARIANTS,
   BINGO_MOMENT_COUNT,
   RETIREMENT_BINGO_FREE_TEXT,
   RETIREMENT_BINGO_PAGE_TOO_SMALL_MESSAGE,
-  customMomentsPerCard,
   loadRetirementBingoBank,
   loadRetirementBingoFamilies,
   momentKey,
-  normalizeCustomMoment,
-  parseCustomMoments,
   retirementBingoBankFaults,
   retirementBingoTextFaults,
   retirementBingoThemeFamilies,
@@ -272,96 +267,6 @@ describe('retirement bingo phrasing pools', () => {
   })
 })
 
-describe('retirement bingo custom moments', () => {
-  it('tidies what a seller typed the way they meant it', () => {
-    expect(normalizeCustomMoment('  slept   till noon!! ')).toBe('Slept till noon')
-    expect(normalizeCustomMoment('bought a boat.')).toBe('Bought a boat')
-    expect(normalizeCustomMoment('   ')).toBe('')
-  })
-
-  it('keeps good lines, skips bad ones with a reason, and drops repeats', () => {
-    const { moments, rejected } = parseCustomMoments([
-      'Moved to the lake',
-      'moved to the lake',
-      'Took a long nap',
-      'Went to the grand neighborhood block party today',
-      '',
-      'Bought a red sports car',
-    ])
-    expect(moments.map((m) => m.text)).toEqual(['Moved to the lake', 'Bought a red sports car'])
-    expect(rejected.map((r) => r.text)).toEqual([
-      'Took a long nap',
-      'Went to the grand neighborhood block party today',
-    ])
-    for (const r of rejected) expect(r.reason.length).toBeGreaterThan(0)
-    for (const m of moments) expect(m.group).toBe('custom')
-  })
-
-  it('accepts a pasted block of text as well as a list', () => {
-    expect(parseCustomMoments('Moved to the lake\r\nBought a boat').moments).toHaveLength(2)
-  })
-
-  it('caps a very long list', () => {
-    const lines = Array.from({ length: BINGO_CUSTOM_MAX + 5 }, (_, i) => `Visited town ${i}`)
-    const { moments, rejected } = parseCustomMoments(lines)
-    expect(moments).toHaveLength(BINGO_CUSTOM_MAX)
-    expect(rejected).toHaveLength(5)
-  })
-
-  it('mixes in about a third of the list per card, at most eight', () => {
-    expect(customMomentsPerCard(0)).toBe(0)
-    expect(customMomentsPerCard(1)).toBe(1)
-    expect(customMomentsPerCard(10)).toBe(4)
-    expect(customMomentsPerCard(60)).toBe(8)
-  })
-
-  it('prints the seller’s moments on the card, and skips ones that cannot fit', () => {
-    const fitting = [
-      'Moved to the lake',
-      'Bought a red sports car',
-      'Joined the rowing club',
-      'Painted the boat',
-      'Took the kids fishing',
-      'Adopted a rescue dog',
-    ]
-    const field = retirementBingoTemplate.configSchema.find((f) => f.key === 'customMoments')!
-    expect(
-      resolveStudioConfigField(field, headed({ ...base, customMoments: fitting }), kdpCtx(6, 9))
-        .warning,
-    ).toBeFalsy()
-    // Passes every wording rule, but ten capital Ws cannot fit a square.
-    const tooWide = 'Saw WWWWWWWWWW'
-    for (let seed = 1; seed <= 10; seed++) {
-      const objects = generate(
-        { ...base, customMoments: [...fitting, tooWide] },
-        kdpCtx(6, 9, seed),
-      )
-      const texts = momentTexts(objects)
-      expect(texts).toHaveLength(BINGO_MOMENT_COUNT)
-      expect(new Set(texts.map(momentKey)).size).toBe(BINGO_MOMENT_COUNT)
-      expect(texts.filter((t) => fitting.includes(t)).length).toBe(
-        customMomentsPerCard(fitting.length),
-      )
-      expect(texts).not.toContain(tooWide)
-    }
-  })
-
-  it('tells the seller in the form which moments will be skipped, and why', () => {
-    const field = retirementBingoTemplate.configSchema.find((f) => f.key === 'customMoments')!
-    const config = {
-      ...base,
-      customMoments: ['Took a long nap', 'Moved to the lake', 'Saw WWWWWWWWWW'],
-    }
-    const resolved = resolveStudioConfigField(field, headed(config), kdpCtx(6, 9))
-    expect(resolved.warning).toMatch(/Took a long nap/)
-    expect(resolved.warning).toMatch(/NAP/)
-    expect(resolved.warning).toMatch(/WWWWWWWWWW.*fit a square/)
-    expect(resolved.help).toMatch(/2 of your moments/)
-    const clean = resolveStudioConfigField(field, headed({ ...base }), kdpCtx(6, 9))
-    expect(clean.warning).toBeFalsy()
-  })
-})
-
 describe('retirement bingo seller deck', () => {
   const plan = planFor(base, kdpCtx(6, 9))
   const families = retirementBingoThemeFamilies(parseRetirementBingoTheme(base))
@@ -581,7 +486,6 @@ describe('retirement bingo page', () => {
       'title',
       'showInstructions',
       'theme',
-      'customMoments',
     ])
     expect(buildDefaultConfig(registered!).theme).toBe(DEFAULT_RETIREMENT_BINGO_THEME_ID)
   })

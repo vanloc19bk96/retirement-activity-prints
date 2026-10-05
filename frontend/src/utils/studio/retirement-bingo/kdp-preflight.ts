@@ -34,7 +34,7 @@ export interface KdpPreflightResult {
 export function runRetirementBingoKdpPreflight(options: {
   moments: readonly RetirementBingoMoment[]
   plan: RetirementBingoPagePlan
-  /** Pre-broken lines for every moment the card may hold, bank and custom. */
+  /** Pre-broken lines for every moment the card may hold. */
   lines: ReadonlyMap<string, string[]>
   font: string
 }): KdpPreflightResult {
@@ -121,7 +121,6 @@ export function runRetirementBingoKdpPreflight(options: {
   for (const moment of moments) {
     perGroup.set(moment.group, (perGroup.get(moment.group) ?? 0) + 1)
   }
-  perGroup.delete('custom')
   if (perGroup.size > 1 && Math.max(...perGroup.values()) > BINGO_MOMENT_COUNT / 2) {
     warnings.push('Most of this card comes from one kind of moment.')
   }
