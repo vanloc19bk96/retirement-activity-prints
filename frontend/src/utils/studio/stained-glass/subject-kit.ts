@@ -110,6 +110,21 @@ export const ellipse = (cx: number, cy: number, rx: number, ry: number, rotateDe
 
 export const circle = (cx: number, cy: number, r: number, steps = 40): Ring => ellipseRing(cx, cy, r, r, steps)
 
+/**
+ * A heart filling the box: two round lobes, a sharp notch between them and a
+ * sharp point below. A blob through a few points rounds both off into a
+ * lumpy V, so this traces the classic heart curve instead.
+ */
+export function heart(x: number, y: number, w: number, h: number, steps = 72): Ring {
+  const raw: Pt[] = []
+  for (let i = 0; i < steps; i++) {
+    const t = (i / steps) * Math.PI * 2
+    raw.push(pt(16 * Math.sin(t) ** 3, -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t))))
+  }
+  const b = ringBounds(raw)
+  return raw.map((p) => pt(x + ((p.x - b.minX) / (b.maxX - b.minX)) * w, y + ((p.y - b.minY) / (b.maxY - b.minY)) * h))
+}
+
 /** A closed smooth curve through the control points. */
 export const blob = (...points: XY[]): Ring => smoothRing(points.map(P))
 

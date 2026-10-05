@@ -1,6 +1,6 @@
 import { subject, type SgSubject } from './catalog'
 import { pt, type Pt, type Ring } from './geometry'
-import { band, blob, circle, curve, ellipse, path, poly, rect, rod, rotate, sketch, wedge } from './subject-kit'
+import { band, blob, circle, curve, ellipse, heart, path, poly, rect, rod, rotate, sketch, wedge } from './subject-kit'
 
 /**
  * Home comforts: the chair, the cup, the quiet pleasures of a morning in.
@@ -47,7 +47,7 @@ const coffeeMug = subject('coffee-mug', 'Coffee Mug', 'home', 'indoor', 'none', 
     s.add(band(curve([x + w - 6, 52], [x + w + 18, 54], [x + w + 20, 72], [x + w - 6, 84]), 10, true))
     s.add(rect(x, 43, w, 53, [0, 10]))
     if (k.band === 1) s.add(rect(x, 63, w, 13))
-    else if (k.band === 2) s.part(blob([mid, 86], [mid - 13, 72], [mid - 7, 64], [mid, 69], [mid + 7, 64], [mid + 13, 72]))
+    else if (k.band === 2) s.part(heart(mid - 14, 63, 28, 24))
     s.add(ellipse(mid, 43, w / 2 + 1, 8))
     s.part(ellipse(mid, 43, w / 2 - 8, 4))
   }),
@@ -86,15 +86,26 @@ function taper(line: readonly Pt[], w0: number, w1: number): Ring {
   return [...side(1), ...side(-1).reverse()]
 }
 
-/** A five-petalled flower silhouette with round petals. */
-const flower = (cx: number, cy: number, r: number): Ring =>
-  blob(
-    ...Array.from({ length: 5 }, (_, i) => {
-      const a = i * 72 - 90
-      const at = (deg: number, rr: number) => [cx + rr * Math.cos((deg * Math.PI) / 180), cy + rr * Math.sin((deg * Math.PI) / 180)] as const
-      return [at(a - 20, r * 0.84), at(a - 9, r), at(a + 9, r), at(a + 20, r * 0.84), at(a + 36, r * 0.6)]
-    }).flat(),
-  )
+/**
+ * A five-petalled flower silhouette: the outline of five round petals, each a
+ * circle, meeting in a crisp notch. A blob through a few points per petal
+ * reads as a lumpy star instead.
+ */
+function flower(cx: number, cy: number, r: number, steps = 120): Ring {
+  const d = r * 0.62
+  const pr = r - d
+  return Array.from({ length: steps }, (_, i) => {
+    const a = (i / steps) * Math.PI * 2
+    // How far out the ray at this angle leaves the furthest petal.
+    let reach = 0
+    for (let p = 0; p < 5; p++) {
+      const off = a - ((p * 72 - 90) * Math.PI) / 180
+      const across = d * Math.sin(off)
+      if (Math.abs(across) <= pr) reach = Math.max(reach, d * Math.cos(off) + Math.sqrt(pr * pr - across * across))
+    }
+    return pt(cx + reach * Math.cos(a), cy + reach * Math.sin(a))
+  })
+}
 
 
 /** The part of `ring` inside the convex ring `clip` (Sutherland-Hodgman). */
