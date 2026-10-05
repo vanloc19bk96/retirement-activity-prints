@@ -23,49 +23,44 @@ export type VideoTrainingDialogProps = {
 
 const DEFAULT_TRAINING_VIDEOS: TrainingVideoItem[] = [
   {
-    id: 'instruction',
-    title: 'Instruction',
-    embedUrl: 'https://www.youtube.com/embed/R287I9p0-2k',
+    id: 'get-started',
+    title: 'Get Started',
+    embedUrl: 'https://www.youtube.com/embed/mC3mtWS53yw',
   },
   {
     id: 'settings',
     title: 'Settings',
-    embedUrl: 'https://www.youtube.com/embed/fjtslTDGYUg',
+    embedUrl: 'https://www.youtube.com/embed/TqoX31L_4bM',
   },
   {
     id: 'components',
     title: 'Components',
-    embedUrl: 'https://www.youtube.com/embed/BiXYUpQkuU0',
+    embedUrl: 'https://www.youtube.com/embed/_HBsJZgye-8',
   },
   {
-    id: 'studio',
-    title: 'Studio',
-    embedUrl: 'https://www.youtube.com/embed/VY1mW3Ia5_k',
+    id: 'create-book',
+    title: 'Create Book',
+    embedUrl: 'https://www.youtube.com/embed/ys4dU8OhN1c',
   },
   {
-    id: 'photo-library',
-    title: 'Photo Library',
-    embedUrl: 'https://www.youtube.com/embed/DxFZ_i6TbIQ',
-  },
-  {
-    id: 'tools',
-    title: 'Tools',
-    embedUrl: 'https://www.youtube.com/embed/CiiNvIkRUFM',
+    id: 'photo-and-tools',
+    title: 'Photo & Tools',
+    embedUrl: 'https://www.youtube.com/embed/Q97F-SkOiQQ',
   },
   {
     id: 'working-with-canvas',
     title: 'Working With Canvas',
-    embedUrl: 'https://www.youtube.com/embed/XNAfjSCqM_k',
+    embedUrl: 'https://www.youtube.com/embed/bvW7th5gyJI',
   },
   {
     id: 'book-cover',
     title: 'Book Cover',
-    embedUrl: 'https://www.youtube.com/embed/UQ9R1l-ePyA',
+    embedUrl: 'https://www.youtube.com/embed/jSSPYZDn8jk',
   },
   {
     id: 'download',
     title: 'Download',
-    embedUrl: 'https://www.youtube.com/embed/PYnFZ_wPOQc',
+    embedUrl: 'https://www.youtube.com/embed/yy1BJ3CwnNc',
   },
 ]
 
