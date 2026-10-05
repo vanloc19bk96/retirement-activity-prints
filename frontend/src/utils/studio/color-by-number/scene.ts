@@ -1,7 +1,6 @@
 import { DPI } from '@/types/canvas-settings.types'
 import type { StudioRng } from '../studio-rng'
 import {
-  arcPoints,
   dist,
   distToRing,
   ellipseRing,
@@ -15,7 +14,8 @@ import {
   type Region,
   type Ring,
 } from '../stained-glass/geometry'
-import { band, blob, drawingBounds, placeDrawing, rect, type SubjectDrawing } from '../stained-glass/subject-kit'
+import { band, drawingBounds, placeDrawing, rect, type SubjectDrawing } from '../stained-glass/subject-kit'
+import { bumpRing, domeDiscs, type Disc } from '../spot-the-difference/element-kit'
 import type { SgSubject } from '../stained-glass/subjects'
 import { paletteHas, type CbnPalette, type CbnRole } from './palette'
 
@@ -63,7 +63,7 @@ export interface CbnComposition {
   far: 'mountains' | 'ridge' | 'island' | 'none'
   snow: boolean
   trees: 'none' | 'left' | 'right' | 'both'
-  tree: 'round' | 'pine' | 'bush'
+  tree: CbnTree
   path: boolean
   fence: boolean
   /** Patchwork fields across the far hill. */
@@ -81,7 +81,23 @@ export interface CbnComposition {
   boards: boolean
   rug: 'none' | 'oval' | 'rect'
   table: 'none' | 'plain' | 'cloth'
+  /** Outdoors: gulls in flight, drawn as single lines (they take no color). */
+  birds: number
+  /** A pond in the meadow's foreground. */
+  pond: boolean
+  /** Boulders in the foreground, or standing out of the sea. */
+  rocks: number
+  /** A palm tree on the beach. */
+  palm: boolean
+  /** Indoors: a potted plant on the floor, a floor lamp, a clock on the wall. */
+  plant: boolean
+  lamp: boolean
+  clock: boolean
 }
+
+/** A broad round crown, a lobed oak, a fir, a tall poplar, a fruit tree, or a low bush. */
+export type CbnTree = 'round' | 'oak' | 'pine' | 'poplar' | 'fruit' | 'bush'
+const CBN_TREES: readonly CbnTree[] = ['round', 'oak', 'pine', 'poplar', 'fruit', 'bush']
 
 const EMPTY: Omit<CbnComposition, 'setting' | 'frame' | 'place'> = {
   skyBand: false,
@@ -105,9 +121,21 @@ const EMPTY: Omit<CbnComposition, 'setting' | 'frame' | 'place'> = {
   boards: false,
   rug: 'none',
   table: 'none',
+  birds: 0,
+  pond: false,
+  rocks: 0,
+  palm: false,
+  plant: false,
+  lamp: false,
+  clock: false,
 }
 
 const AXES = ['setting', 'frame', 'place', ...Object.keys(EMPTY)] as (keyof CbnComposition)[]
+/**
+ * Axes a key had before birds, ponds, rocks, palms, plants, lamps and clocks
+ * were added (always at the end): a page printed then reads back with them absent.
+ */
+const LEGACY_AXES = 24
 
 /**
  * The composition with every detail of an absent part reset (the kind of
@@ -133,11 +161,11 @@ export function compositionDistance(a: CbnComposition, b: CbnComposition): numbe
 
 export function parseCompositionKey(key: string): CbnComposition | null {
   const parts = key.split('.')
-  if (parts.length !== AXES.length) return null
+  if (parts.length !== AXES.length && parts.length !== LEGACY_AXES) return null
   const out: Record<string, unknown> = {}
   AXES.forEach((axis, i) => {
-    const raw = parts[i]!
     const sample = axis in EMPTY ? EMPTY[axis as keyof typeof EMPTY] : ''
+    const raw = parts[i] ?? String(sample)
     out[axis] = typeof sample === 'boolean' ? raw === 'true' : typeof sample === 'number' ? Number(raw) : raw
   })
   const c = out as unknown as CbnComposition
@@ -162,6 +190,9 @@ const TABLETOP = new Set([
 ])
 
 export const isTabletop = (subject: SgSubject) => TABLETOP.has(subject.id)
+
+/** Subjects that are a plant in a pot themselves: no second one stands beside them. */
+const POTTED = new Set(['houseplant', 'flower-pot'])
 
 export function settingFor(subject: SgSubject): CbnSetting {
   if (subject.setting === 'indoor') return 'room'
@@ -193,6 +224,9 @@ export function compositionRoles(c: CbnComposition, tabletop: boolean): CbnRole[
     if (c.rug !== 'none') roles.push('rug', 'rugBorder')
     if (tabletop) roles.push(c.table === 'cloth' ? 'cloth' : 'wood')
     if (tabletop) roles.push('wood')
+    if (c.plant) roles.push('foliage', 'pot')
+    if (c.lamp) roles.push('shade', 'wood')
+    if (c.clock) roles.push('wood', 'face')
     return [...new Set(roles)]
   }
   roles.push('sky')
@@ -209,6 +243,10 @@ export function compositionRoles(c: CbnComposition, tabletop: boolean): CbnRole[
   if (c.dunes > 0) roles.push('dune')
   if (c.trees !== 'none') roles.push('foliage')
   if (c.trees !== 'none' && c.tree !== 'bush') roles.push('trunk')
+  if (c.trees !== 'none' && c.tree === 'fruit') roles.push('fruit')
+  if (c.palm) roles.push('foliage', 'trunk')
+  if (c.rocks > 0) roles.push('rock')
+  if (c.pond) roles.push('water', 'waterLight')
   if (c.path) roles.push('path')
   if (c.fence) roles.push('fence')
   if (c.fields) roles.push('field')
@@ -317,11 +355,17 @@ function dealOnce(subject: SgSubject, palette: CbnPalette, rng: StudioRng, richn
     c.boards = richness > 0 && rng.chance(0.6)
     c.rug = rng.chance(richness === 0 ? 0.35 : 0.7) ? rng.pick(['oval', 'rect'] as const) : 'none'
     c.table = tabletop ? (paletteHas(palette, 'cloth') && rng.chance(0.5) ? 'cloth' : 'plain') : 'none'
+    c.plant = !POTTED.has(subject.id) && rng.chance(richness === 0 ? 0.3 : 0.5)
+    c.lamp = rng.chance(richness === 0 ? 0.15 : 0.35)
+    c.clock = rng.chance(richness === 0 ? 0.2 : 0.4)
     const drops: ((c: CbnComposition) => void)[] = [
+      (c) => (c.clock = false),
+      (c) => (c.lamp = false),
       (c) => (c.boards = false),
       (c) => (c.curtains = false),
       (c) => (c.picture = c.window === 'none' ? c.picture : 'none'),
       (c) => (c.table = c.table === 'cloth' ? 'plain' : c.table),
+      (c) => (c.plant = false),
       (c) => (c.rug = 'none'),
       (c) => (c.wainscot = false),
     ]
@@ -329,13 +373,17 @@ function dealOnce(subject: SgSubject, palette: CbnPalette, rng: StudioRng, richn
     return canonicalComposition(c)
   }
 
+  // A palm needs a side of the beach to itself: the subject stands to the other.
+  c.palm = setting === 'beach' && rng.chance(richness === 0 ? 0.45 : 0.65)
+  if (c.palm && place === 'center') c.place = rng.pick(['left', 'right'] as const)
   const sunny = rng.chance(0.85)
   const low = palette.lowSun && setting !== 'meadow' ? rng.chance(0.5) : palette.lowSun === true && rng.chance(0.3)
-  c.sun = !sunny ? 'none' : low ? 'low' : place === 'left' ? 'right' : place === 'right' ? 'left' : rng.pick(['left', 'right'] as const)
+  c.sun = !sunny ? 'none' : low ? 'low' : c.place === 'left' ? 'right' : c.place === 'right' ? 'left' : rng.pick(['left', 'right'] as const)
   c.rays = c.sun !== 'none' && c.sun !== 'low' && rng.chance(richness === 0 ? 0.35 : 0.55)
   c.skyBand = paletteHas(palette, 'skyLow') && rng.chance(0.85)
   c.clouds = rng.int(1, (richness === 0 ? 2 : 3) + (big ? 1 : 0))
   if (c.clouds === 0 && c.sun === 'none') c.clouds = 1
+  c.birds = rng.chance(richness === 0 ? 0.4 : 0.6) ? rng.int(2, 3) : 0
 
   if (setting === 'meadow') {
     c.far = pickWeighted(rng, [
@@ -346,11 +394,14 @@ function dealOnce(subject: SgSubject, palette: CbnPalette, rng: StudioRng, richn
     c.snow = c.far === 'mountains' && richness > 0 && paletteHas(palette, 'snow') && rng.chance(0.6)
     // A setting sun sits on the horizon; mountains would cut it into slivers.
     if (c.sun === 'low' && c.far === 'mountains') (c.far = 'ridge'), (c.snow = false)
-    const side = place === 'left' ? 'right' : place === 'right' ? 'left' : rng.pick(['left', 'right'] as const)
+    const side = c.place === 'left' ? 'right' : c.place === 'right' ? 'left' : rng.pick(['left', 'right'] as const)
     c.trees = rng.chance(richness === 0 ? 0.55 : 0.8) ? (place === 'center' && richness > 0 && rng.chance(0.5) ? 'both' : side) : 'none'
-    c.tree = pickWeighted(rng, [
+    c.tree = pickWeighted<CbnTree>(rng, [
       ['round', 2],
+      ['oak', 1.5],
       ['pine', 1.5],
+      ['poplar', 1],
+      ['fruit', richness === 0 ? 0 : 1.2],
       ['bush', 1],
     ])
     c.path = !floats(subject) && rng.chance(richness === 0 ? 0.3 : 0.5)
@@ -358,6 +409,8 @@ function dealOnce(subject: SgSubject, palette: CbnPalette, rng: StudioRng, richn
     c.fields = paletteHas(palette, 'field') && richness > 0 && rng.chance(richness === 1 ? 0.35 : 0.7)
     const most = (richness === 1 ? 4 : 6) + (big ? 2 : 0)
     c.flowers = richness === 0 ? 0 : rng.chance(richness === 1 ? 0.7 : 0.85) ? rng.int(richness === 1 ? 2 : 3, most) : 0
+    c.pond = richness > 0 && rng.chance(richness === 1 ? 0.25 : 0.4)
+    c.rocks = rng.chance(richness === 0 ? 0.15 : 0.3) ? rng.int(1, 2) : 0
   } else {
     c.far = pickWeighted(rng, [
       ['island', 2],
@@ -368,15 +421,20 @@ function dealOnce(subject: SgSubject, palette: CbnPalette, rng: StudioRng, richn
     if (c.sun === 'low' && c.far === 'mountains') (c.far = 'island'), (c.snow = false)
     c.waves = setting === 'shore' ? rng.int(1, richness === 0 ? 1 : 2) : rng.chance(richness === 0 ? 0.3 : 0.6) ? 1 : 0
     c.dunes = setting === 'beach' && paletteHas(palette, 'dune') ? rng.int(richness === 0 ? 0 : 1, richness === 2 ? 2 : 1) : 0
+    c.rocks = rng.chance(richness === 0 ? 0.3 : 0.45) ? rng.int(1, richness === 2 ? 3 : 2) : 0
   }
 
   const drops: ((c: CbnComposition) => void)[] = [
     (c) => (c.snow = false),
+    (c) => (c.rocks = 0),
+    (c) => (c.tree = c.tree === 'fruit' ? 'round' : c.tree),
     (c) => (c.skyBand = false),
+    (c) => (c.pond = false),
     (c) => (c.fence = false),
     (c) => (c.path = false),
     (c) => (c.flowers = 0),
     (c) => (c.fields = false),
+    (c) => (c.palm = false),
     (c) => (c.trees = 'none'),
     (c) => (c.waves = c.setting === 'shore' ? 1 : 0),
     (c) => (c.dunes = 0),
@@ -393,7 +451,7 @@ export function isValidComposition(c: CbnComposition): boolean {
   if (!['left', 'center', 'right'].includes(c.place)) return false
   if (!['left', 'right', 'low', 'none'].includes(c.sun)) return false
   if (!['mountains', 'ridge', 'island', 'none'].includes(c.far)) return false
-  if (!['none', 'left', 'right', 'both'].includes(c.trees) || !['round', 'pine', 'bush'].includes(c.tree)) return false
+  if (!['none', 'left', 'right', 'both'].includes(c.trees) || !CBN_TREES.includes(c.tree)) return false
   if (!['none', 'left', 'right'].includes(c.window) || !['none', 'left', 'right'].includes(c.picture)) return false
   if (c.window !== 'none' && c.window === c.place) return false
   if (!['none', 'oval', 'rect'].includes(c.rug) || !['none', 'plain', 'cloth'].includes(c.table)) return false
@@ -401,13 +459,18 @@ export function isValidComposition(c: CbnComposition): boolean {
   if (!Number.isInteger(c.flowers) || c.flowers < 0 || c.flowers > 8) return false
   if (!Number.isInteger(c.waves) || c.waves < 0 || c.waves > 2) return false
   if (!Number.isInteger(c.dunes) || c.dunes < 0 || c.dunes > 2 || (c.dunes > 0 && c.setting !== 'beach')) return false
+  if (!Number.isInteger(c.birds) || c.birds < 0 || c.birds > 3) return false
+  if (!Number.isInteger(c.rocks) || c.rocks < 0 || c.rocks > 3) return false
+  if (c.palm && c.setting !== 'beach') return false
+  if (c.pond && c.setting !== 'meadow') return false
   if (c.rays && (c.sun === 'none' || c.sun === 'low')) return false
   if (c.sun === 'low' && c.far === 'mountains') return false
   if (c.snow && c.far !== 'mountains') return false
   if (c.setting === 'room') {
-    return c.sun === 'none' && c.clouds === 0 && c.far === 'none' && c.trees === 'none' && !c.path && !c.fence && !c.fields && c.flowers === 0 && c.waves === 0 && !c.skyBand
+    return c.sun === 'none' && c.clouds === 0 && c.far === 'none' && c.trees === 'none' && !c.path && !c.fence && !c.fields && c.flowers === 0 && c.waves === 0 && !c.skyBand && c.birds === 0 && c.rocks === 0
   }
   if (c.window !== 'none' || c.curtains || c.picture !== 'none' || c.wainscot || c.boards || c.rug !== 'none' || c.table !== 'none') return false
+  if (c.plant || c.lamp || c.clock) return false
   if (c.setting !== 'meadow' && (c.trees !== 'none' || c.path || c.fence || c.fields || c.flowers > 0 || c.far === 'ridge')) return false
   if (c.setting === 'meadow' && (c.waves > 0 || c.far === 'island')) return false
   return true
@@ -516,65 +579,236 @@ const boxRing = (b: Bounds, r = 0): Ring => rect(b.minX, b.minY, b.maxX - b.minX
 const grow = (b: Bounds, by: number): Bounds => ({ minX: b.minX - by, minY: b.minY - by, maxX: b.maxX + by, maxY: b.maxY + by })
 const overlaps = (a: Bounds, b: Bounds) => a.minX < b.maxX && b.minX < a.maxX && a.minY < b.maxY && b.minY < a.maxY
 
-/**
- * A five-petalled flower head: full, rounded petals round a centre of about a
- * third its size, so every petal and the centre each hold a number.
- */
-function flowerRing(cx: number, cy: number, r: number, turn: number): Ring {
-  return blob(
-    ...Array.from({ length: 5 }, (_, i) => {
-      const a = i * 72 - 90 + turn
-      const at = (deg: number, rr: number) => [cx + rr * Math.cos((deg * Math.PI) / 180), cy + rr * Math.sin((deg * Math.PI) / 180)] as const
-      return [at(a - 28, r * 0.8), at(a - 13, r * 0.98), at(a + 13, r * 0.98), at(a + 28, r * 0.8), at(a + 36, r * 0.72)]
-    }).flat(),
-  )
+/* ------------------------------------------------------------------ *
+ * Shapes
+ *
+ * Every outline is a true curve: scalloped edges (clouds, crowns, bushes,
+ * flowers) are traced along the outer arcs of overlapping discs, so bumps are
+ * round and dips are crisp, the way they are drawn by hand; slopes, leaves
+ * and paths are smooth curves. Nothing is a polygon with a kink in it.
+ * ------------------------------------------------------------------ */
+
+/** A quadratic curve from `a` to `b` pulled toward `c`, both ends included. */
+function quad(a: Pt, c: Pt, b: Pt, n = 12): Pt[] {
+  return Array.from({ length: n + 1 }, (_, i) => {
+    const t = i / n
+    const u = 1 - t
+    return pt(u * u * a.x + 2 * u * t * c.x + t * t * b.x, u * u * a.y + 2 * u * t * c.y + t * t * b.y)
+  })
 }
 
 /**
- * A puffy cloud `w` wide sitting on `y`: the outline of a row of overlapping
- * puffs, tallest in the middle, over a softly rounded base. Traced round a
- * point inside every puff, so it is one clean closed shape.
+ * Discs drawn on a 0–100 grid, set `w` wide centred on `cx` with the grid's
+ * `gridY` at `y` (and mirrored, read right to left, when asked).
  */
+function fitDiscs(grid: readonly Disc[], cx: number, y: number, w: number, gridY: number, mirror = false): Disc[] {
+  const minX = Math.min(...grid.map((d) => d[0] - d[2]))
+  const maxX = Math.max(...grid.map((d) => d[0] + d[2]))
+  const k = w / (maxX - minX)
+  const mid = (minX + maxX) / 2
+  const out = grid.map(([x, gy, r]) => [cx + (mirror ? mid - x : x - mid) * k, y + (gy - gridY) * k, r * k] as const)
+  return mirror ? out.reverse() : out
+}
+
+/**
+ * Clouds, left to right on a flat base at y = 45: the end puffs just touch
+ * the base, so each end rounds smoothly into it. A small heap, broad three-
+ * to five-puff cumulus, a long low bank, a tall billow.
+ */
+const CLOUD_SHAPES: readonly (readonly Disc[])[] = [
+  [
+    [20, 33, 12],
+    [46, 23, 19],
+    [74, 30, 15],
+  ],
+  [
+    [16, 35, 10],
+    [34, 25, 15],
+    [58, 20, 18],
+    [82, 32, 13],
+  ],
+  [
+    [12, 37, 8],
+    [26, 28, 12],
+    [45, 21, 16],
+    [65, 24, 15],
+    [84, 34, 11],
+  ],
+  [
+    [10, 38, 7],
+    [24, 32, 10],
+    [42, 29, 12],
+    [60, 30, 11],
+    [77, 33, 9],
+    [90, 38, 7],
+  ],
+  [
+    [18, 35, 10],
+    [38, 22, 17],
+    [62, 17, 19],
+    [84, 33, 12],
+  ],
+]
+
+/** A puffy cloud `w` wide sitting on `y`: round puffs over a flat base, one clean outline. */
 function cloudRing(cx: number, y: number, w: number, rng: StudioRng): Ring {
-  const puffs = rng.int(3, 4)
-  const circles = Array.from({ length: puffs }, (_, i) => {
-    const t = puffs === 1 ? 0.5 : i / (puffs - 1)
-    const r = w * (0.17 + 0.1 * Math.sin(Math.PI * t) + (rng.next() - 0.5) * 0.03)
-    return { x: cx - w * 0.5 + r + (w - 2 * r) * t, y: y - r * 0.95, r }
-  })
-  const o = pt(cx, y - w * 0.13)
-  const out: Pt[] = []
-  const steps = 96
-  for (let i = 0; i < steps; i++) {
-    const a = Math.PI + (i / steps) * Math.PI * 2
-    const dx = Math.cos(a)
-    const dy = Math.sin(a)
-    let reach = 0
-    for (const c of circles) {
-      const ox = c.x - o.x
-      const oy = c.y - o.y
-      const along = ox * dx + oy * dy
-      const disc = along * along - (ox * ox + oy * oy) + c.r * c.r
-      if (disc >= 0) reach = Math.max(reach, along + Math.sqrt(disc))
-    }
-    // The base: flattened, with softly rounded ends.
-    const p = pt(o.x + dx * reach, Math.min(o.y + dy * reach, y))
-    out.push(p)
+  const grid = CLOUD_SHAPES[rng.int(0, CLOUD_SHAPES.length - 1)]!
+  return bumpRing(fitDiscs(grid, cx, y, w, 45, rng.chance(0.5)), y)
+}
+
+/**
+ * A flower head: five or six round petals round a centre (drawn on top), so
+ * the petals read as one ring to color and the centre as another.
+ */
+function flowerRing(cx: number, cy: number, r: number, turn: number, petals: 5 | 6): Ring {
+  const d = r * (petals === 5 ? 0.58 : 0.6)
+  return bumpRing(
+    Array.from({ length: petals }, (_, i) => {
+      const a = (turn * Math.PI) / 180 - Math.PI / 2 + (i * Math.PI * 2) / petals
+      return [cx + d * Math.cos(a), cy + d * Math.sin(a), r - d] as const
+    }),
+  )
+}
+
+/** A sun ray at `deg`: a round end `from` the centre, tapering to a point at `to`. */
+function rayRing(cx: number, cy: number, deg: number, from: number, to: number, rw: number): Ring {
+  const a = (deg * Math.PI) / 180
+  const len = to - from - rw
+  const t = Math.acos(rw / len)
+  const local: Pt[] = [pt(len, 0)]
+  const n = 18
+  for (let i = 0; i <= n; i++) {
+    const u = t + ((Math.PI * 2 - 2 * t) * i) / n
+    local.push(pt(rw * Math.cos(u), rw * Math.sin(u)))
   }
+  const bx = cx + (from + rw) * Math.cos(a)
+  const by = cy + (from + rw) * Math.sin(a)
+  return local.map((p) => pt(bx + p.x * Math.cos(a) - p.y * Math.sin(a), by + p.x * Math.sin(a) + p.y * Math.cos(a)))
+}
+
+/**
+ * A crown of pointed leaves round `c` (a palm's fronds, a houseplant): one
+ * outline, each leaf curving out from a valley near the centre to its tip
+ * and back to the next valley, so leaves never pinch slivers between them.
+ * Tips run clockwise (degrees from 3 o'clock, y down); `len`, `droop`,
+ * `inner` and `bulge` are shares of `r`.
+ */
+function frondRing(c: Pt, r: number, tips: readonly (readonly [deg: number, len: number, droop: number])[], inner: number, bulge: number): Ring {
+  const at = (deg: number, rr: number) => pt(c.x + rr * Math.cos((deg * Math.PI) / 180), c.y + rr * Math.sin((deg * Math.PI) / 180))
+  const gap = (a: number, b: number) => (b - a + 360) % 360 || 360
+  const out: Pt[] = []
+  tips.forEach(([deg, len, droop], i) => {
+    const prev = tips[(i - 1 + tips.length) % tips.length]![0]
+    const next = tips[(i + 1) % tips.length]![0]
+    const v0 = at(deg - gap(prev, deg) / 2, r * inner)
+    const v1 = at(deg + gap(deg, next) / 2, r * inner)
+    const reach = at(deg, r * len)
+    const tip = pt(reach.x, reach.y + r * droop)
+    const ax = tip.x - c.x
+    const ay = tip.y - c.y
+    const al = Math.hypot(ax, ay) || 1
+    // Each edge bows away from the leaf's midrib.
+    const control = (v: Pt) => {
+      const m = pt((v.x + tip.x) / 2, (v.y + tip.y) / 2)
+      const along = ((m.x - c.x) * ax + (m.y - c.y) * ay) / al
+      const px = m.x - (c.x + (ax / al) * along)
+      const py = m.y - (c.y + (ay / al) * along)
+      const pl = Math.hypot(px, py) || 1
+      return pt(m.x + (px / pl) * r * bulge, m.y + (py / pl) * r * bulge)
+    }
+    out.push(...quad(v0, control(v0), tip, 10).slice(1), ...quad(tip, control(v1), v1, 10).slice(1))
+  })
   return out
+}
+
+/** The top half of an ellipse standing on `foot` (a lamp's base, a mound). */
+function arcRing(cx: number, foot: number, rx: number, ry: number): Ring {
+  return Array.from({ length: 25 }, (_, i) => {
+    const t = Math.PI + (Math.PI * i) / 24
+    return pt(cx + rx * Math.cos(t), foot + ry * Math.sin(t))
+  })
+}
+
+/** A trunk flaring into roots at `foot`; its top (at `top`) is hidden in the crown. */
+function trunkRing(cx: number, top: number, foot: number, width: number): Ring {
+  const half = width / 2
+  const tall = foot - top
+  const side = (dir: number) =>
+    smoothLine([pt(cx + dir * half * 1.75, foot), pt(cx + dir * half * 1.15, foot - tall * 0.1), pt(cx + dir * half, foot - tall * 0.35), pt(cx + dir * half, top)], 6)
+  return [...side(-1), ...side(1).reverse()]
+}
+
+/**
+ * A boulder standing on `foot`: an uneven, lumpy top over a flat base, and a
+ * facet line running in from its top edge (a line, never a closed space).
+ */
+function rockShape(cx: number, foot: number, w: number, h: number, rng: StudioRng): { ring: Ring; facet: Pt[] } {
+  const j = () => (rng.next() - 0.5) * 0.12
+  const ring = smoothLine(
+    [
+      pt(cx - w / 2, foot),
+      pt(cx - w * (0.5 + j() * 0.3), foot - h * (0.4 + j())),
+      pt(cx - w * (0.36 + j()), foot - h * (0.82 + j())),
+      pt(cx - w * (0.12 + j()), foot - h),
+      pt(cx + w * (0.1 + j()), foot - h * (0.9 + j())),
+      pt(cx + w * (0.32 + j()), foot - h * (0.78 + j())),
+      pt(cx + w * (0.47 + j() * 0.3), foot - h * (0.42 + j())),
+      pt(cx + w / 2, foot),
+    ],
+    6,
+  )
+  const from = ring[Math.round(ring.length * (rng.chance(0.5) ? 0.42 : 0.58))]!
+  const facet = smoothLine([from, pt(from.x + (cx - from.x) * 0.25 + w * 0.04, from.y + h * 0.3), pt(from.x + (cx - from.x) * 0.2 + w * 0.12, from.y + h * 0.5)], 5)
+  return { ring, facet }
+}
+
+/** A gull in flight: two arched wings meeting at the body, one line. */
+function gullLine(x: number, y: number, size: number, deep: boolean): Pt[] {
+  const lift = deep ? 0.5 : 0.3
+  const wing = (dir: number) => smoothLine([pt(x + dir * size, y - size * 0.05), pt(x + dir * size * 0.5, y - size * lift), pt(x + dir * size * 0.12, y - size * 0.12), pt(x, y)], 6)
+  return [...wing(-1), ...wing(1).reverse().slice(1)]
+}
+
+/**
+ * A path from `points[0]` (off the bottom of the panel) up to its rounded
+ * end at the last point: `w0` wide at the bottom narrowing to `w1`, in
+ * perspective. Its edges are offset sideways from a smooth centre line, so
+ * they never cross or kink.
+ */
+function pathShape(points: readonly Pt[], w0: number, w1: number): Ring {
+  const line = smoothLine(points, 10)
+  const yb = line[0]!.y
+  const end = line[line.length - 1]!
+  const half = (y: number) => w1 / 2 + ((w0 - w1) / 2) * Math.max(0, Math.min(1, (y - end.y) / (yb - end.y)))
+  const left = line.map((p) => pt(p.x - half(p.y), p.y))
+  const right = line.map((p) => pt(p.x + half(p.y), p.y))
+  const rx = w1 / 2
+  const cap = Array.from({ length: 13 }, (_, i) => {
+    const t = Math.PI + (Math.PI * i) / 12
+    return pt(end.x + rx * Math.cos(t), end.y + rx * 0.55 * Math.sin(t))
+  })
+  return [...left, ...cap.slice(1, -1), ...right.reverse()]
 }
 
 interface Builder {
   layers: CbnLayer[]
+  /** Lines with no space of their own (a gull, a stem, a clock's hands), each over the layers before it. */
+  strokes: { pts: Pt[]; layer: number }[]
   add(ring: Ring, role: CbnRole, removable?: boolean): void
+  stroke(pts: Pt[]): void
 }
 
 function builder(): Builder {
   const layers: CbnLayer[] = []
+  const strokes: { pts: Pt[]; layer: number }[] = []
   return {
     layers,
+    strokes,
     add(ring, role, removable = false) {
       layers.push({ ring, unit: role, role, subject: false, ...(removable ? { removable: true } : {}) })
+    },
+    stroke(pts) {
+      strokes.push({ pts, layer: layers.length - 1 })
     },
   }
 }
@@ -665,7 +899,7 @@ export function buildScene(options: {
   if (!built) return { ok: false, reason: `“${subject.name}” does not fit this scene at a size worth coloring.` }
   const subjectStart = b.layers.length
   built.drawing.pieces.forEach((piece, i) => b.layers.push({ ring: piece.ring, unit: `s${i}`, subject: true }))
-  const strokes = built.drawing.strokes.map((s) => ({ pts: s.pts, layer: subjectStart + s.under - 1 }))
+  const strokes = [...b.strokes, ...built.drawing.strokes.map((s) => ({ pts: s.pts, layer: subjectStart + s.under - 1 }))]
   return { ok: true, frame, panel, layers: b.layers, strokes, subject: built.bounds, drawn: canonicalComposition(drawn) }
 }
 
@@ -744,12 +978,9 @@ function buildOutdoors(c: CbnComposition, d: CbnComposition, b: Builder, panel: 
       const box: Bounds = { minX: cx - reach, maxX: cx + reach, minY: cy - reach, maxY: cy + reach }
       if (overlaps(box, keepOut[0]!) || cy + reach > horizon - inch(0.3)) continue
       if (rays) {
-        const turn = rng.next() * 45
-        for (let i = 0; i < 8; i++) {
-          const a = ((turn + i * 45) * Math.PI) / 180
-          const d = r + inch(0.3)
-          b.add(ellipseRing(cx + d * Math.cos(a), cy + d * Math.sin(a), inch(0.17), inch(0.12), 32, (a * 180) / Math.PI), 'sun')
-        }
+        const count = rng.chance(0.5) ? 8 : 10
+        const turn = rng.next() * (360 / count)
+        for (let i = 0; i < count; i++) b.add(rayRing(cx, cy, turn + (i * 360) / count, r + inch(0.07), r + inch(0.47), inch(0.125)), 'sun')
       }
       b.add(ellipseRing(cx, cy, r, r, 56), 'sun')
       sunBox = box
@@ -773,24 +1004,28 @@ function buildOutdoors(c: CbnComposition, d: CbnComposition, b: Builder, panel: 
       ...xs.slice(1).map((x, i) => pt((xs[i]! + x) / 2, horizon - H * range(rng, 0.01, 0.04))),
       pt(pb.maxX + 40, horizon - H * 0.02),
     ]
-    const pts: Pt[] = []
-    peakList.forEach((peak, i) => pts.push(valleys[i]!, peak))
-    pts.push(valleys[valleys.length - 1]!, pt(pb.maxX + 40, baseY), pt(pb.minX - 40, baseY))
+    // Each slope sags a little below the straight line, the way a mountainside sweeps down.
+    const slope = (from: Pt, to: Pt) => quad(from, pt((from.x + to.x) / 2, (from.y + to.y) / 2 + Math.abs(to.x - from.x) * 0.1), to, 14)
+    const sides = peakList.map((peak, i) => ({ peak, left: slope(peak, valleys[i]!), right: slope(peak, valleys[i + 1]!) }))
+    const pts: Pt[] = [valleys[0]!]
+    for (const { left, right } of sides) pts.push(...[...left].reverse().slice(1), ...right.slice(1))
+    pts.push(pt(pb.maxX + 40, baseY), pt(pb.minX - 40, baseY))
     b.add(pts, 'mountain', true)
-    const peakPts = peakList.map((peak, i) => ({ peak, left: valleys[i]!, right: valleys[i + 1]! }))
     if (c.snow) {
       d.snow = false
-      for (const { peak, left, right } of peakPts) {
-        const depth = Math.min(right.y, left.y) - peak.y
-        if (depth < inch(1)) continue
+      sides.forEach(({ peak, left, right }, i) => {
+        const depth = Math.min(valleys[i]!.y, valleys[i + 1]!.y) - peak.y
+        if (depth < inch(1)) return
         d.snow = true
-        const f = Math.min(0.42, inch(0.62) / depth)
-        const L = pt(peak.x + (left.x - peak.x) * f, peak.y + (left.y - peak.y) * f)
-        const R = pt(peak.x + (right.x - peak.x) * f, peak.y + (right.y - peak.y) * f)
-        const dip = depth * f * 0.28
+        const cut = Math.max(2, Math.round(Math.min(0.42, inch(0.62) / depth) * (left.length - 1)))
+        const L = left[cut]!
+        const R = right[cut]!
+        const dip = Math.min(depth * 0.1, inch(0.16))
         const at = (t: number, down: number) => pt(R.x + (L.x - R.x) * t, R.y + (L.y - R.y) * t + down)
-        b.add([peak, R, at(0.25, dip), at(0.5, -dip * 0.2), at(0.75, dip), L], 'snow', true)
-      }
+        // A soft, dripping lower edge, joining each slope where it leaves it.
+        const hem = smoothLine([R, at(0.22, dip), at(0.45, -dip * 0.15), at(0.7, dip * 0.9), L], 6)
+        b.add([...right.slice(0, cut + 1), ...hem.slice(1, -1), ...left.slice(1, cut + 1).reverse()], 'snow', true)
+      })
     }
   } else if (c.far === 'ridge') {
     b.add(waveRing(pb, horizon - H * 0.07, H * 0.028, W * range(rng, 0.6, 0.9), phase()), 'mountain', true)
@@ -805,6 +1040,8 @@ function buildOutdoors(c: CbnComposition, d: CbnComposition, b: Builder, panel: 
   }
 
   let groundAt: (x: number) => number = () => horizon
+  /** Where the land in front begins: the grass, the sand. */
+  let landTop: (x: number) => number = () => pb.maxY
   if (c.setting === 'meadow') {
     const farAmp = H * range(rng, 0.015, 0.03)
     const farLen = W * range(rng, 0.8, 1.5)
@@ -834,6 +1071,7 @@ function buildOutdoors(c: CbnComposition, d: CbnComposition, b: Builder, panel: 
     const nearPhase = phase()
     b.add(waveRing(pb, nearY, nearAmp, nearLen, nearPhase), 'hillNear', true)
     groundAt = waveAt(nearY, nearAmp, nearLen, nearPhase)
+    landTop = (x) => groundAt(x) + nearAmp
   } else {
     // The sea, flat to the horizon.
     b.add(boxRing({ minX: pb.minX - 40, minY: horizon, maxX: pb.maxX + 40, maxY: pb.maxY + 40 }), 'water')
@@ -856,6 +1094,33 @@ function buildOutdoors(c: CbnComposition, d: CbnComposition, b: Builder, panel: 
         d.dunes++
       }
     }
+    landTop = () => shore + H * 0.02
+  }
+
+  // A palm on the beach beside the subject, leaning in toward it.
+  d.palm = false
+  if (c.palm) {
+    const order: ('left' | 'right')[] = c.place === 'left' ? ['right'] : c.place === 'right' ? ['left'] : rng.chance(0.5) ? ['left', 'right'] : ['right', 'left']
+    for (const side of order) {
+      const room = side === 'left' ? sb.minX - PART_GAP - (pb.minX + FRAME_CLEAR) : pb.maxX - FRAME_CLEAR - (sb.maxX + PART_GAP)
+      const R = Math.max(inch(0.65), Math.min(room / 2.1, H * 0.2))
+      if (room < R * 1.95) continue
+      const footX = side === 'left' ? pb.minX + FRAME_CLEAR + room * 0.42 : pb.maxX - FRAME_CLEAR - room * 0.42
+      const foot = Math.min(pb.maxY - FRAME_CLEAR - inch(0.25), Math.max(landTop(footX) + inch(0.6), base - H * 0.02))
+      const h = Math.min(H * range(rng, 0.5, 0.6), foot - pb.minY - FRAME_CLEAR - R * 1.05)
+      if (h < R * 1.8) continue
+      const lean = (side === 'left' ? 1 : -1) * R * range(rng, 0.25, 0.45)
+      const crown = pt(footX + lean, foot - h)
+      const trunk = pathShape([pt(footX, foot), pt(footX + lean * 0.15, foot - h * 0.4), pt(footX + lean * 0.55, foot - h * 0.75), crown], Math.max(inch(0.36), BAND_MIN * 1.3), BAND_MIN * 1.05)
+      const fronds = frondRing(crown, R, PALM_FRONDS, 0.2, 0.13)
+      const pb2 = ringBounds([...trunk, ...fronds])
+      if (keepOut.some((k) => overlaps(pb2, k)) || !clearOfFrame(fronds, panel) || !clearOfFrame(trunk, panel)) continue
+      b.add(trunk, 'trunk')
+      b.add(fronds, 'foliage')
+      keepOut.push(grow(pb2, PART_GAP))
+      d.palm = true
+      break
+    }
   }
 
   // Trees (or a bush) beside the subject, standing on the near hill. Placed
@@ -866,7 +1131,7 @@ function buildOutdoors(c: CbnComposition, d: CbnComposition, b: Builder, panel: 
     const sides = c.trees === 'both' ? (['left', 'right'] as const) : ([c.trees] as const)
     for (const side of sides) {
       const room = side === 'left' ? sb.minX - PART_GAP - (pb.minX + FRAME_CLEAR) : pb.maxX - FRAME_CLEAR - (sb.maxX + PART_GAP)
-      const ratio = c.tree === 'bush' ? 0.95 : c.tree === 'pine' ? 0.6 : 0.7
+      const ratio = TREE_RATIO[c.tree]
       let h = Math.min(H * range(rng, 0.3, 0.4), inch(2.8))
       let width = Math.min(h * ratio, room)
       if (width < inch(0.6)) continue
@@ -879,6 +1144,8 @@ function buildOutdoors(c: CbnComposition, d: CbnComposition, b: Builder, panel: 
       }
       h = Math.min(h, foot - pb.minY - FRAME_CLEAR - 4)
       width = Math.min(h * ratio, room)
+      // A narrow gap takes a smaller tree, not a lollipop on a long stick.
+      h = Math.min(h, (width / ratio) * 1.12)
       if (h < inch(0.9) || width < inch(0.6)) continue
       const tree = treeRings(c.tree, cx, foot, h, width, rng)
       if (!tree.every((part) => clearOfFrame(part.ring.filter((p) => p.y < pb.maxY - FRAME_CLEAR), panel))) continue
@@ -927,33 +1194,97 @@ function buildOutdoors(c: CbnComposition, d: CbnComposition, b: Builder, panel: 
     const topX = (sb.minX + sb.maxX) / 2
     const topY = base - Math.min((sb.maxY - sb.minY) * 0.12, inch(0.3))
     const bottomX = topX + (rng.next() - 0.5) * W * 0.3
-    const midX = (topX + bottomX) / 2 + (rng.chance(0.5) ? -1 : 1) * W * range(rng, 0.06, 0.12)
-    const line = smoothLine([pt(bottomX, pb.maxY + 30), pt(midX, (pb.maxY + topY) / 2), pt(topX, topY)])
-    const ring = taper(line, Math.max(W * 0.24, inch(1)), Math.max(W * 0.08, inch(0.4)))
+    // A gentle S: out to one side, back the other, up to the subject.
+    const bend = (rng.chance(0.5) ? -1 : 1) * W * range(rng, 0.05, 0.1)
+    const y0 = pb.maxY + 30
+    const at = (t: number, off: number) => pt(bottomX + (topX - bottomX) * t + off, y0 + (topY - y0) * t)
+    const ring = pathShape([pt(bottomX, y0), at(0.35, bend), at(0.72, -bend * 0.6), pt(topX, topY)], Math.max(W * 0.24, inch(1)), Math.max(W * 0.08, inch(0.4)))
     pathRing = ring
     b.add(ring, 'path')
+  }
+
+  // A pond in the foreground grass, with a few reeds at one end.
+  const path = pathRing ? toRegion(pathRing) : null
+  const offPath = (ring: readonly Pt[]) => !path || !ring.some((p) => inRegion(p, path) || distToRing(p, path.ring) < PART_GAP)
+  d.pond = false
+  if (c.pond) {
+    for (let tries = 0; tries < 40 && !d.pond; tries++) {
+      const rx = Math.max(inch(0.85), W * range(rng, 0.13, 0.17))
+      const ry = Math.max(inch(0.4), rx * 0.34)
+      const cx = range(rng, pb.minX + FRAME_CLEAR + rx, pb.maxX - FRAME_CLEAR - rx)
+      const cy = range(rng, groundAt(cx) + ry + inch(0.6), pb.maxY - FRAME_CLEAR - ry - inch(0.1))
+      const box: Bounds = { minX: cx - rx, maxX: cx + rx, minY: cy - ry - inch(0.6), maxY: cy + ry }
+      if (box.minY < Math.max(landTop(box.minX), landTop(cx), landTop(box.maxX)) + inch(0.15)) continue
+      if (keepOut.some((k) => overlaps(box, k))) continue
+      const outer = ellipseRing(cx, cy, rx, ry, 72)
+      if (!clearOfFrame(outer, panel) || !offPath(outer)) continue
+      b.add(outer, 'water')
+      b.add(ellipseRing(cx - rx * 0.12, cy - ry * 0.1, rx * 0.58, ry * 0.5, 56), 'waterLight')
+      const end = rng.chance(0.5) ? -1 : 1
+      for (let k = 0; k < 3; k++) {
+        const a = ((end < 0 ? 205 + k * 14 : 335 - k * 14) * Math.PI) / 180
+        const from = pt(cx + rx * Math.cos(a), cy + ry * Math.sin(a))
+        const tall = inch(0.42 + 0.12 * ((k + 1) % 3))
+        const lean = end * (k - 1) * inch(0.1)
+        b.stroke(smoothLine([from, pt(from.x + lean * 0.4, from.y - tall * 0.5), pt(from.x + lean, from.y - tall)], 6))
+      }
+      keepOut.push(grow(box, PART_GAP))
+      d.pond = true
+    }
+  }
+
+  // Boulders: in the grass or on the sand, or standing out of the sea at a front corner.
+  if (c.rocks > 0) {
+    const rocks: Bounds[] = []
+    for (let tries = 0; tries < 80 && rocks.length < c.rocks; tries++) {
+      const w = inch(range(rng, 0.8, 1.15)) * (rocks.length > 0 ? 0.8 : 1)
+      const h = w * range(rng, 0.5, 0.62)
+      let cx: number
+      let foot: number
+      if (c.setting === 'shore') {
+        const reach = W * 0.2
+        cx = rng.chance(0.5) ? pb.minX + FRAME_CLEAR + w / 2 + rng.next() * reach : pb.maxX - FRAME_CLEAR - w / 2 - rng.next() * reach
+        foot = pb.maxY + inch(0.15)
+      } else {
+        cx = range(rng, pb.minX + FRAME_CLEAR + w / 2, pb.maxX - FRAME_CLEAR - w / 2)
+        foot = range(rng, landTop(cx) + h + inch(0.35), pb.maxY - FRAME_CLEAR - inch(0.15))
+      }
+      const { ring, facet } = rockShape(cx, foot, w, h, rng)
+      const rb = ringBounds(ring)
+      if ((c.setting !== 'shore' && rb.minY < Math.max(landTop(rb.minX), landTop(rb.maxX)) + inch(0.2)) || rb.minY < horizon + inch(0.3)) continue
+      if ([...keepOut, ...rocks.map((q) => grow(q, PART_GAP))].some((k) => overlaps(rb, k))) continue
+      if (!clearOfFrame(ring.filter((p) => p.y < pb.maxY - FRAME_CLEAR), panel) || !offPath(ring)) continue
+      b.add(ring, 'rock')
+      b.stroke(facet)
+      rocks.push(rb)
+    }
+    for (const rb of rocks) keepOut.push(grow(rb, PART_GAP))
+    d.rocks = rocks.length
   }
 
   // Flowers in the foreground grass.
   if (c.flowers > 0) {
     const r = Math.max(inch(0.38), Math.min(W, H) * 0.05)
+    const stem = r * 1.25
     const placed: Pt[] = []
-    const path = pathRing ? toRegion(pathRing) : null
     for (let tries = 0; tries < 160 && placed.length < c.flowers; tries++) {
-      const p = pt(range(rng, pb.minX + r, pb.maxX - r), range(rng, groundAt(pb.minX) + H * 0.06 + r, pb.maxY - r))
+      const p = pt(range(rng, pb.minX + r, pb.maxX - r), range(rng, groundAt(pb.minX) + H * 0.06 + r, pb.maxY - r - stem))
       if (p.y - r < groundAt(p.x) + inch(0.2)) continue
-      const fb: Bounds = { minX: p.x - r, maxX: p.x + r, minY: p.y - r, maxY: p.y + r }
+      const fb: Bounds = { minX: p.x - r, maxX: p.x + r, minY: p.y - r, maxY: p.y + stem + inch(0.1) }
       if (keepOut.some((k) => overlaps(fb, k))) continue
       if (placed.some((q) => dist(p, q) < r * 2 + PART_GAP)) continue
-      const ring = flowerRing(p.x, p.y, r, rng.next() * 72)
-      if (!clearOfFrame(ring, panel)) continue
-      if (path && (inRegion(p, path) || distToRing(p, path.ring) < r + PART_GAP)) continue
+      if (!clearOfFrame(boxRing(fb), panel)) continue
+      if (path && (inRegion(p, path) || distToRing(p, path.ring) < r + stem + PART_GAP)) continue
       placed.push(p)
     }
     d.flowers = placed.length
+    const petals = rng.chance(0.5) ? 5 : 6
     for (const p of placed) {
-      b.add(flowerRing(p.x, p.y, r, rng.next() * 72), 'petal')
-      b.add(ellipseRing(p.x, p.y, r * 0.4, r * 0.4, 28), 'flowerCenter')
+      // A short stem with a leaf-less curve, under the head.
+      const sway = (rng.next() - 0.5) * r * 0.5
+      b.stroke(smoothLine([pt(p.x, p.y), pt(p.x + sway * 0.3, p.y + r + stem * 0.4), pt(p.x + sway, p.y + r * 0.5 + stem)], 6))
+      b.add(flowerRing(p.x, p.y, r, rng.next() * 72, petals), 'petal')
+      b.add(ellipseRing(p.x, p.y, r * 0.36, r * 0.36, 28), 'flowerCenter')
     }
   }
 
@@ -962,95 +1293,178 @@ function buildOutdoors(c: CbnComposition, d: CbnComposition, b: Builder, panel: 
     const skyFloor = horizon - (c.far === 'mountains' ? H * 0.22 : c.far === 'ridge' ? H * 0.12 : H * 0.06)
     const boxes: Bounds[] = []
     for (let tries = 0; tries < 120 && boxes.length < c.clouds; tries++) {
-      const w = Math.max(inch(1), W * range(rng, 0.2, 0.3))
-      const y = range(rng, pb.minY + FRAME_CLEAR + w * 0.5, skyFloor - w * 0.1)
+      const w = Math.max(inch(1.1), W * range(rng, 0.2, 0.3))
+      const y = range(rng, pb.minY + FRAME_CLEAR + w * 0.5, skyFloor)
       const x = range(rng, pb.minX + w / 2, pb.maxX - w / 2)
-      const cb: Bounds = { minX: x - w / 2, maxX: x + w / 2, minY: y - w * 0.52, maxY: y + w * 0.06 }
+      const ring = cloudRing(x, y, w, rng)
+      const cb = ringBounds(ring)
       if (cb.maxY > skyFloor) continue
       if ([...keepOut, ...boxes.map((q) => grow(q, PART_GAP))].some((k) => overlaps(cb, k))) continue
       if (sunBox && overlaps(cb, grow(sunBox, PART_GAP))) continue
-      const ring = cloudRing(x, y, w, rng)
       if (!clearOfFrame(ring, panel)) continue
-      boxes.push(ringBounds(ring))
+      boxes.push(cb)
       b.add(ring, 'cloud')
     }
     d.clouds = boxes.length
+    keepOut.push(...boxes.map((q) => grow(q, inch(0.12))))
+  }
+
+  // A few gulls in flight, together, in open sky.
+  d.birds = 0
+  if (c.birds > 0) {
+    const skyFloor = horizon - (c.far === 'mountains' ? H * 0.24 : H * 0.1)
+    const flock: Bounds[] = []
+    let anchor: Pt | null = null
+    const taken = [...keepOut, ...(sunBox ? [grow(sunBox, inch(0.15))] : [])]
+    for (let tries = 0; tries < 120 && flock.length < c.birds; tries++) {
+      const size = inch(range(rng, 0.17, 0.25))
+      const x = anchor ? anchor.x + range(rng, -1, 1) * inch(0.9) : range(rng, pb.minX + W * 0.15, pb.maxX - W * 0.15)
+      const y = anchor ? anchor.y + range(rng, -1, 1) * inch(0.45) : range(rng, pb.minY + FRAME_CLEAR + inch(0.3), skyFloor - inch(0.2))
+      const bb: Bounds = { minX: x - size, maxX: x + size, minY: y - size * 0.6, maxY: y + size * 0.1 }
+      if (bb.maxY > skyFloor || [...taken, ...flock.map((q) => grow(q, inch(0.14)))].some((k) => overlaps(bb, k))) continue
+      const line = gullLine(x, y, size, rng.chance(0.5))
+      if (!clearOfFrame(line, panel)) continue
+      b.stroke(line)
+      flock.push(bb)
+      anchor ??= pt(x, y)
+    }
+    d.birds = flock.length
   }
   return placed
 }
 
-function treeRings(kind: CbnComposition['tree'], cx: number, foot: number, h: number, w: number, rng: StudioRng): { ring: Ring; role: CbnRole }[] {
+/** How wide each kind of tree stands for its height. */
+const TREE_RATIO: Readonly<Record<CbnTree, number>> = { round: 0.78, oak: 0.85, pine: 0.6, poplar: 0.46, fruit: 0.8, bush: 0.95 }
+
+/** An oak's crown: big round lobes, clockwise from the top, on a 0–100 grid centred at (50, 49). */
+const OAK_LOBES: readonly Disc[] = [
+  [50, 22, 20],
+  [74, 34, 18],
+  [80, 60, 17],
+  [63, 80, 16],
+  [37, 80, 16],
+  [20, 60, 17],
+  [26, 34, 18],
+]
+
+/** A palm's fronds, clockwise: [direction, length, droop]; the two outer ones hang low. */
+const PALM_FRONDS: readonly (readonly [number, number, number])[] = [
+  [160, 1, 0.3],
+  [200, 1, 0.12],
+  [238, 0.95, 0],
+  [275, 0.9, 0],
+  [312, 0.95, 0],
+  [350, 1, 0.12],
+  [20, 1, 0.3],
+]
+
+/** A houseplant's leaves standing up out of the pot, the outer ones arching over. */
+const PLANT_LEAVES: readonly (readonly [number, number, number])[] = [
+  [195, 0.78, 0.12],
+  [230, 0.95, 0],
+  [268, 1.05, 0],
+  [305, 0.95, 0],
+  [345, 0.78, 0.12],
+]
+
+/**
+ * Discs of radius `r` evenly spaced (by length, not angle, so none crowd at
+ * the ends of a long oval) clockwise round an ellipse from its top, about
+ * 1.45 r apart: each overlaps only its neighbours, for a closed `bumpRing`.
+ */
+function discsRound(cx: number, cy: number, rx: number, ry: number, r: number): Disc[] {
+  const fine = 240
+  const pts = Array.from({ length: fine + 1 }, (_, i) => {
+    const t = -Math.PI / 2 + (i / fine) * Math.PI * 2
+    return pt(cx + rx * Math.cos(t), cy + ry * Math.sin(t))
+  })
+  const along = [0]
+  for (let i = 1; i <= fine; i++) along.push(along[i - 1]! + dist(pts[i]!, pts[i - 1]!))
+  const total = along[fine]!
+  const n = Math.max(6, Math.round(total / (r * 1.45)))
+  const out: Disc[] = []
+  let j = 0
+  for (let k = 0; k < n; k++) {
+    const want = (total * k) / n
+    while (j < fine - 1 && along[j + 1]! < want) j++
+    const f = (want - along[j]!) / (along[j + 1]! - along[j]! || 1)
+    out.push([pts[j]!.x + (pts[j + 1]!.x - pts[j]!.x) * f, pts[j]!.y + (pts[j + 1]!.y - pts[j]!.y) * f, r])
+  }
+  return out
+}
+
+/**
+ * A tree `h` tall and about `w` wide standing on `foot`: its crown (a leafy
+ * round, a lobed oak, a fir's tiers of boughs, a poplar's tall oval, a
+ * round crown hung with fruit, or a low scalloped bush) over a trunk that
+ * flares into roots. At least a third of an inch of trunk shows.
+ */
+function treeRings(kind: CbnTree, cx: number, foot: number, h: number, w: number, rng: StudioRng): { ring: Ring; role: CbnRole }[] {
   const trunkW = Math.max(BAND_MIN, w * 0.16)
   if (kind === 'bush') {
-    const bh = h * 0.55
-    const pts: [number, number][] = [
-      [cx + w * 0.5, foot],
-      [cx + w * 0.46, foot - bh * 0.55],
-      [cx + w * 0.22, foot - bh * 0.95],
-      [cx - w * 0.05, foot - bh],
-      [cx - w * 0.3, foot - bh * 0.85],
-      [cx - w * 0.5, foot - bh * 0.4],
-      [cx - w * 0.44, foot + bh * 0.06],
-      [cx, foot + bh * 0.1],
-    ]
-    return [{ ring: blob(...pts), role: 'foliage' }]
+    // Many small leafy scallops round a tall dome, where a cloud has a few big puffs.
+    const n = rng.chance(0.5) ? 11 : 13
+    return [{ ring: bumpRing(domeDiscs(cx, foot, w / 2, w * 0.62, n, w * (n === 11 ? 0.085 : 0.075)), foot), role: 'foliage' }]
   }
   if (kind === 'pine') {
-    // At least a third of an inch of trunk shows under the lowest boughs.
     const trunkH = Math.max(h * 0.2, inch(0.34) / 0.6)
-    const tiers = 3
+    const tiers = h > inch(1.8) ? 4 : 3
     const top = foot - h
     const bottom = foot - trunkH * 0.6
-    const right: Pt[] = []
+    const tierH = (bottom - top) / tiers
+    // One outline down the right side: each bough sweeps out to a drooping
+    // tip, then tucks back in under the next; the left side mirrors it.
+    const right: Pt[] = [pt(cx, top)]
+    let from = pt(cx, top)
     for (let i = 0; i < tiers; i++) {
-      const y0 = top + ((bottom - top) * i) / tiers
-      const y1 = top + ((bottom - top) * (i + 1)) / tiers
-      const half = (w / 2) * ((i + 1) / tiers)
-      if (i > 0) right.push(pt(cx + half * 0.5, y0 + (y1 - y0) * 0.08))
-      right.push(pt(cx + half, y1))
+      const y1 = top + tierH * (i + 1)
+      const half = (w / 2) * (0.42 + 0.58 * ((i + 1) / tiers))
+      const tip = pt(cx + half, y1 + tierH * 0.06)
+      right.push(...quad(from, pt(from.x + (tip.x - from.x) * 0.3, from.y + (tip.y - from.y) * 0.8), tip, 10).slice(1))
+      if (i < tiers - 1) {
+        const notch = pt(cx + half * 0.55, y1 - tierH * 0.1)
+        right.push(...quad(tip, pt((tip.x + notch.x) / 2, tip.y + tierH * 0.02), notch, 6).slice(1))
+        from = notch
+      } else {
+        right.push(...quad(tip, pt(cx + half * 0.5, bottom + tierH * 0.08), pt(cx, bottom - tierH * 0.02), 8).slice(1))
+      }
     }
     const left = right.map((p) => pt(2 * cx - p.x, p.y)).reverse()
     return [
-      { ring: rect(cx - trunkW / 2, foot - trunkH * 1.4, trunkW, trunkH * 1.4), role: 'trunk' },
-      { ring: [pt(cx, top), ...right, ...left], role: 'foliage' },
+      { ring: trunkRing(cx, foot - trunkH * 1.4, foot, trunkW), role: 'trunk' },
+      { ring: [...right, ...left.slice(1, -1)], role: 'foliage' },
     ]
   }
-  const crownR = w / 2
-  const crownCy = foot - h + crownR
-  const bumps = 8
-  const turn = rng.next()
-  const crown = blob(
-    ...Array.from({ length: bumps }, (_, i) => {
-      const a = ((i + turn) / bumps) * Math.PI * 2
-      const rr = crownR * (i % 2 === 0 ? 1 : 0.9)
-      return [cx + rr * Math.cos(a), crownCy + rr * 0.92 * Math.sin(a)] as [number, number]
-    }),
-  )
-  return [
-    { ring: rect(cx - trunkW / 2, crownCy, trunkW, foot - crownCy), role: 'trunk' },
-    { ring: crown, role: 'foliage' },
-  ]
-}
-
-/** A thick line whose width runs from w0 at its start to w1 at its end, with a rounded far end. */
-function taper(line: readonly Pt[], w0: number, w1: number): Ring {
-  const n = line.length
-  const lengths = [0]
-  for (let i = 1; i < n; i++) lengths.push(lengths[i - 1]! + dist(line[i]!, line[i - 1]!))
-  const total = lengths[n - 1] || 1
-  const side = (sign: number) =>
-    line.map((p, i) => {
-      const a = line[Math.max(0, i - 1)]!
-      const q = line[Math.min(n - 1, i + 1)]!
-      const len = dist(a, q) || 1
-      const half = (w0 + ((w1 - w0) * lengths[i]!) / total) / 2
-      return pt(p.x - (sign * (q.y - a.y) * half) / len, p.y + (sign * (q.x - a.x) * half) / len)
-    })
-  const end = line[n - 1]!
-  const prev = line[n - 2]!
-  const heading = (Math.atan2(end.y - prev.y, end.x - prev.x) * 180) / Math.PI
-  const cap = arcPoints(end.x, end.y, w1 / 2, heading + 90, heading - 90, 10).slice(1, -1)
-  return [...side(1), ...cap, ...side(-1).reverse()]
+  const trunkShows = Math.max(inch(0.36), h * 0.28)
+  const crownH = Math.min(kind === 'poplar' ? w * 1.6 : w * 0.95, h - trunkShows)
+  const crownW = kind === 'poplar' ? Math.min(w, crownH / 1.6) : kind === 'oak' ? Math.min(w, crownH) : w
+  const crownCy = foot - h + crownH / 2
+  let crown: Ring
+  const extra: { ring: Ring; role: CbnRole }[] = []
+  if (kind === 'oak') crown = bumpRing(fitDiscs(OAK_LOBES, cx, crownCy, crownW, 49, rng.chance(0.5)))
+  else {
+    const r = crownW * (kind === 'poplar' ? 0.14 : 0.13)
+    const rx = crownW / 2 - r
+    const ry = crownH / 2 - r
+    crown = bumpRing(discsRound(cx, crownCy, rx, ry, r))
+    if (kind === 'fruit') {
+      // Fruit hung round the crown, each well inside its edge and clear of the others.
+      const fr = Math.max(inch(0.16), crownW * 0.075)
+      const reachX = rx + r * 0.6 - fr - inch(0.12)
+      const reachY = ry + r * 0.6 - fr - inch(0.12)
+      const want = rng.int(3, 5)
+      const fruit: Pt[] = []
+      for (let tries = 0; tries < 80 && fruit.length < want; tries++) {
+        const a = rng.next() * Math.PI * 2
+        const k = Math.sqrt(range(rng, 0.15, 1))
+        const p = pt(cx + reachX * k * Math.cos(a), crownCy + reachY * k * Math.sin(a))
+        if (fruit.some((q) => dist(p, q) < fr * 2 + inch(0.2))) continue
+        fruit.push(p)
+      }
+      for (const p of fruit) extra.push({ ring: ellipseRing(p.x, p.y, fr, fr, 28), role: 'fruit' })
+    }
+  }
+  return [{ ring: trunkRing(cx, crownCy, foot, trunkW), role: 'trunk' }, { ring: crown, role: 'foliage' }, ...extra]
 }
 
 /* ------------------------------------------------------------------ *
@@ -1252,6 +1666,7 @@ function buildRoom(c: CbnComposition, d: CbnComposition, b: Builder, panel: Regi
 
   // A rug under the subject (or under the table, when its feet show).
   d.rug = 'none'
+  let rugBox: Bounds | null = null
   if (c.rug !== 'none' && !cropped) {
     const cx = tabletop ? tableX : (sb.minX + sb.maxX) / 2
     const rx = Math.min(W * 0.44, Math.max(W * 0.3, (tabletop ? tableW : sb.maxX - sb.minX) * 0.72))
@@ -1266,7 +1681,103 @@ function buildRoom(c: CbnComposition, d: CbnComposition, b: Builder, panel: Regi
         b.add(outer, 'rugBorder', true)
         b.add(inner, 'rug', true)
         d.rug = c.rug
+        rugBox = ringBounds(outer)
       }
+    }
+  }
+
+  // Things in the room beside the subject: a potted plant and a floor lamp
+  // standing by the wall, a clock on it. Each goes where it finds room clear
+  // of the subject, its table, the rug, the window and the picture, or is left out.
+  const taken: Bounds[] = [...keepOut, subjectZone]
+  if (tabletop) taken.push(grow({ minX: tableX - tableW / 2 - inch(0.12), maxX: tableX + tableW / 2 + inch(0.12), minY: tableTop, maxY: legBottom }, PART_GAP))
+  if (rugBox) taken.push(grow(rugBox, inch(0.08)))
+  /** Spots along the wall, the subject's far side first, each tried in turn. */
+  const spots = (half: number) => {
+    const xs: number[] = []
+    const away = (sb.minX + sb.maxX) / 2 < (pb.minX + pb.maxX) / 2 ? -1 : 1
+    for (let x = pb.minX + FRAME_CLEAR + half; x <= pb.maxX - FRAME_CLEAR - half; x += inch(0.12)) xs.push(x)
+    return xs.sort((a, b2) => (away < 0 ? b2 - a : a - b2))
+  }
+  /** By the wall, or further forward on the floor, where there is more height under a window. */
+  const feet = [floorTop + Math.min(floorDepth * 0.3, inch(0.42)), floorTop + floorDepth * 0.62].filter((y) => y < pb.maxY - FRAME_CLEAR - inch(0.15))
+  const floorSpots = (half: number) => feet.flatMap((foot) => spots(half).map((cx) => [cx, foot] as const))
+  /** The lowest thing hanging over a stretch of wall (a window sill, a picture), or the top of the panel. */
+  const ceiling = (minX: number, maxX: number, foot: number) =>
+    Math.max(pb.minY + FRAME_CLEAR, ...taken.filter((k) => k.minX < maxX && minX < k.maxX).map((k) => (k.maxY >= foot ? Infinity : k.maxY)))
+  d.plant = false
+  if (c.plant) {
+    const potW = Math.max(inch(0.7), W * 0.095)
+    const potH = potW * 0.9
+    const lipH = Math.max(BAND_MIN, potH * 0.3)
+    const most = Math.max(inch(1.05), potW * 1.5)
+    for (const [cx, foot] of floorSpots(most * 0.8)) {
+      // Under a window it stands a little smaller, its leaves clear of the sill.
+      const R = Math.min(most, (foot - potH - ceiling(cx - most * 0.8, cx + most * 0.8, foot)) / 1.05)
+      // Full leaves or none: a plant squeezed small is a fan of slivers.
+      if (R < inch(0.85)) continue
+      const box: Bounds = { minX: cx - R * 0.8, maxX: cx + R * 0.8, minY: foot - potH - R * 1.05, maxY: foot }
+      if (taken.some((k) => overlaps(box, k)) || !clearOfFrame(boxRing(box), panel)) continue
+      const potTop = foot - potH
+      // The leaves meet well inside the rim, so no notch between two of them reaches its top edge.
+      b.add(frondRing(pt(cx, potTop + lipH * 0.85), R, PLANT_LEAVES, 0.12, 0.21), 'foliage')
+      b.add([pt(cx - potW / 2, potTop + lipH - 2), pt(cx + potW / 2, potTop + lipH - 2), pt(cx + potW * 0.36, foot), pt(cx - potW * 0.36, foot)], 'pot')
+      b.add(rect(cx - potW * 0.6, potTop, potW * 1.2, lipH, lipH * 0.25), 'pot')
+      taken.push(grow(box, PART_GAP))
+      d.plant = true
+      break
+    }
+  }
+  d.lamp = false
+  if (c.lamp) {
+    const shadeW = Math.max(inch(1), W * 0.13)
+    const shadeH = shadeW * 0.62
+    const baseW = Math.max(inch(0.8), shadeW * 0.75)
+    const baseH = inch(0.3)
+    for (const [cx, foot] of floorSpots(shadeW / 2)) {
+      const tall = Math.min(H * 0.55, foot - ceiling(cx - shadeW / 2, cx + shadeW / 2, foot) - inch(0.1))
+      if (tall < shadeH + inch(1.4)) continue
+      const top = foot - tall
+      const box: Bounds = { minX: cx - shadeW / 2, maxX: cx + shadeW / 2, minY: top, maxY: foot }
+      if (taken.some((k) => overlaps(box, k)) || !clearOfFrame(boxRing(box), panel)) continue
+      const hemY = top + shadeH
+      b.add(rect(cx - BAND_MIN / 2, hemY - 2, BAND_MIN, foot - baseH * 0.5 - hemY + 2), 'wood')
+      // A dome base, flat on the floor.
+      b.add([...arcRing(cx, foot, baseW / 2, baseH)], 'wood')
+      b.add([pt(cx - shadeW * 0.31, top), pt(cx + shadeW * 0.31, top), pt(cx + shadeW / 2, hemY), ...quad(pt(cx + shadeW / 2, hemY), pt(cx, hemY + shadeH * 0.16), pt(cx - shadeW / 2, hemY), 12).slice(1)], 'shade')
+      taken.push(grow(box, PART_GAP))
+      d.lamp = true
+      break
+    }
+  }
+  d.clock = false
+  if (c.clock) {
+    const R = Math.max(inch(0.62), Math.min(W, H) * 0.075)
+    const face = R - BAND_MIN
+    const high = pb.minY + FRAME_CLEAR + R + inch(0.12) + (c.frame === 'arch' ? H * 0.06 : 0)
+    const heights = [high + H * range(rng, 0.03, 0.08), high, high + H * 0.14].filter((y) => y + R < wallFloor - inch(0.3))
+    const clockSpots = heights.flatMap((cy) => spots(R).map((cx) => [cx, cy] as const))
+    for (const [cx, cy] of clockSpots) {
+      const box: Bounds = { minX: cx - R, maxX: cx + R, minY: cy - R, maxY: cy + R }
+      if (taken.some((k) => overlaps(box, k)) || !clearOfFrame(ellipseRing(cx, cy, R, R, 48), panel)) continue
+      b.add(ellipseRing(cx, cy, R, R, 72), 'wood')
+      b.add(ellipseRing(cx, cy, face, face, 64), 'face')
+      // Hands at a gentle hour, and marks at twelve, three, six and nine.
+      const hand = (deg: number, len: number) => {
+        const a = ((deg - 90) * Math.PI) / 180
+        return [pt(cx, cy), pt(cx + len * Math.cos(a), cy + len * Math.sin(a))]
+      }
+      const hour = rng.int(1, 11)
+      const minute = rng.pick([0, 15, 30, 45] as const)
+      b.stroke(hand(hour * 30 + minute * 0.5, face * 0.45))
+      b.stroke(hand(minute * 6, face * 0.7))
+      for (let q = 0; q < 4; q++) {
+        const a = (q * Math.PI) / 2
+        b.stroke([pt(cx + face * 0.74 * Math.cos(a), cy + face * 0.74 * Math.sin(a)), pt(cx + face * 0.88 * Math.cos(a), cy + face * 0.88 * Math.sin(a))])
+      }
+      taken.push(grow(box, PART_GAP))
+      d.clock = true
+      break
     }
   }
 

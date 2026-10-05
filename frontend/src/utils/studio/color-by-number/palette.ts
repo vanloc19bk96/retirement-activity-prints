@@ -147,6 +147,11 @@ export type CbnRole =
   | 'curtain'
   | 'wood'
   | 'cloth'
+  | 'rock'
+  | 'fruit'
+  | 'pot'
+  | 'shade'
+  | 'face'
 
 export type CbnMoodSetting = 'outdoor' | 'indoor'
 
@@ -169,7 +174,7 @@ export interface CbnPalette {
  * Most roles list two or more colors the light allows, and the page deals
  * among them, so one mood does not print the same key twice.
  */
-export const CBN_PALETTES: readonly CbnPalette[] = [
+const MOODS: readonly CbnPalette[] = [
   {
     id: 'summer',
     setting: 'outdoor',
@@ -587,6 +592,26 @@ export const CBN_PALETTES: readonly CbnPalette[] = [
   },
 ]
 
+/**
+ * Colors every mood of a setting gives the smaller props (rocks, fruit, a
+ * potted plant, a lamp, a clock) unless it names its own: these keep their
+ * everyday colors whatever the light.
+ */
+const SHARED_ROLES: Readonly<Record<CbnMoodSetting, Partial<Record<CbnRole, readonly CbnColorId[]>>>> = {
+  outdoor: {
+    rock: ['gray', 'lightGray', 'tan'],
+    fruit: ['red', 'orange', 'yellow'],
+  },
+  indoor: {
+    foliage: ['green', 'darkGreen', 'olive'],
+    pot: ['orange', 'coral', 'tan'],
+    shade: ['yellow', 'peach', 'beige', 'gold'],
+    face: ['beige', 'lightGray', 'yellow'],
+  },
+}
+
+export const CBN_PALETTES: readonly CbnPalette[] = MOODS.map((p) => ({ ...p, roles: { ...SHARED_ROLES[p.setting], ...p.roles } }))
+
 const PALETTE_INDEX = new Map(CBN_PALETTES.map((p) => [p.id, p]))
 export const cbnPaletteById = (id: string) => PALETTE_INDEX.get(id)
 export const cbnPalettesFor = (setting: CbnMoodSetting) => CBN_PALETTES.filter((p) => p.setting === setting)
@@ -630,6 +655,11 @@ const ROLE_FAMILIES: Readonly<Record<CbnRole, readonly CbnColorId[]>> = {
   curtain: ['green', 'pink', 'yellow', 'blue', 'red', 'purple', 'teal', 'coral', 'olive'],
   wood: ['brown', 'tan', 'darkBrown', 'gold', 'orange', 'gray'],
   cloth: ['yellow', 'pink', 'lightBlue', 'lavender', 'red', 'turquoise', 'mint', 'coral'],
+  rock: ['gray', 'lightGray', 'tan', 'brown', 'lavender'],
+  fruit: ['red', 'orange', 'yellow', 'gold', 'darkRed'],
+  pot: ['orange', 'coral', 'tan', 'brown', 'blue', 'teal'],
+  shade: ['yellow', 'peach', 'beige', 'gold', 'pink', 'mint'],
+  face: ['beige', 'lightGray', 'yellow', 'peach', 'lightBlue'],
 }
 
 /** Every color a role may take under this palette: the mood's own first, then its family. */

@@ -2611,13 +2611,27 @@ Every page is drawn in the browser (no AI, no images): black vector lines on
 white, nothing filled, plus the numbers. The subject is one of the Studio's 36
 original retirement drawings (the stained-glass library: 722 versions), set in
 a scene built round it from its setting: a meadow (far hills, mountains or a
-ridge with optional snow, patchwork fields, a winding path, a fence, trees or a
-bush, flowers), a shoreline (sea, wave bands, an island), a beach (sea, sand,
-rolling dunes) or a room (wall, wainscoting and chair rail, a window with a view
-and optional curtains, a framed picture, baseboard, floorboards, a rug, a table
-with or without a scalloped cloth for things that sit on a table). Sun, sun
-rays and clouds fill outdoor skies. Parts are sized in inches with floors, and a
-part that cannot get its room is left out rather than squeezed in.
+ridge with optional snow, patchwork fields, a winding path, a fence, trees, a
+pond with reeds, boulders, flowers on stems), a shoreline (sea, wave bands, an
+island, rocks standing out of the sea at a front corner), a beach (sea, sand,
+rolling dunes, a palm tree, boulders) or a room (wall, wainscoting and chair
+rail, a window with a view and optional curtains, a framed picture, a wall
+clock, baseboard, floorboards, a rug, a potted plant and a floor lamp, a table
+with or without a scalloped cloth for things that sit on a table). Trees come in
+six kinds: a leafy round crown, a lobed oak, a fir with tiers of boughs, a tall
+poplar, a fruit tree (each fruit its own space) and a low scalloped bush. Sun,
+sun rays, clouds (five shapes) and gulls in flight fill outdoor skies. Parts are
+sized in inches with floors, and a part that cannot get its room is left out
+rather than squeezed in (a plant under a window stands a little smaller, but
+never so small its leaves turn to slivers).
+
+Every scenery outline is a true curve: clouds, crowns, bushes and flowers are
+traced along the outer arcs of overlapping discs (round bumps, crisp dips, a
+flat cloud base the end puffs round into); mountain slopes sweep down in a curve
+and their snow caps follow the same curve with a soft, dripping hem; sun rays
+taper from a round end; the path is a smooth S that narrows into the distance.
+Gulls, flower stems, reeds, a rock's facet line and a clock's hands are single
+lines with no space of their own, so they add detail without adding colors.
 
 Colors (`palette.ts`): nine moods (summer, golden hour, spring, autumn,
 seaside; cozy, sage, coastal and lavender rooms) give each part of the scene a
@@ -2628,6 +2642,9 @@ few drawing-order hints where size would mislead (steam and smoke pale, leaves
 green, a sunflower's petals golden round a brown disk). The key is settled at
 six to eight distinct colors, all used, listed in pencil-box order; a scene
 that cannot be keyed that way is refused, never padded.
+Rocks, fruit, a plant's pot, a lamp shade and a clock face keep their
+everyday colors (gray, red, terracotta, a warm shade, a pale face) in every
+mood unless the mood names its own.
 
 Spaces and numbers (`paint.ts`): the page is printed to a grid at 96 dpi at
 its real line weights and every enclosed space measured. Each subject drawing
@@ -2651,7 +2668,9 @@ matches the numbers. A failed design is dealt again; if nothing passes, the
 page says so plainly.
 
 Uniqueness and variety: each page stamps `subject|version|composition|mood`,
-the composition recording what was actually drawn. A new page takes the
+the composition recording what was actually drawn. Newer scene parts (birds,
+pond, rocks, palm, plant, lamp, clock) are added at the end of the composition,
+so a page printed before them still reads back, with them absent. A new page takes the
 theme's least-used subject in the book (and not the previous page's setting
 when it can), a version the book has not printed, the book's least-used mood
 (never the previous page's), and a composition as far as possible from the page

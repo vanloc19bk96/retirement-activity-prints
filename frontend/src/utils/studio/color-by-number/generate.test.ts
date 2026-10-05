@@ -352,6 +352,32 @@ describe('color-by-number compositions', () => {
     }
   })
 
+  it('reads a key printed before the newer scene parts as the same scene without them', () => {
+    const legacy = 'meadow.rounded.center.false.right.false.2.ridge.false.none.round.false.false.false.0.0.0.none.false.none.false.false.none.none'
+    const c = parseCompositionKey(legacy)!
+    expect(c).not.toBeNull()
+    expect(isValidComposition(c)).toBe(true)
+    expect(c.clouds).toBe(2)
+    expect([c.birds, c.rocks, c.pond, c.palm, c.plant, c.lamp, c.clock]).toEqual([0, 0, false, false, false, false, false])
+    expect(compositionKey(c).startsWith(`${legacy}.`)).toBe(true)
+  })
+
+  it('deals every kind of tree and every newer prop somewhere', () => {
+    const rng = createRng(5)
+    const seen = new Set<string>()
+    for (const subject of SG_SUBJECTS) {
+      for (const palette of CBN_PALETTES.filter((p) => p.setting === (settingFor(subject) === 'room' ? 'indoor' : 'outdoor'))) {
+        const c = dealComposition({ subject, palette, rng, richness: 2, budget: 6, aspect: 1 })
+        if (c.trees !== 'none') seen.add(`tree:${c.tree}`)
+        for (const prop of ['pond', 'palm', 'plant', 'lamp', 'clock'] as const) if (c[prop]) seen.add(prop)
+        if (c.birds > 0) seen.add('birds')
+        if (c.rocks > 0) seen.add('rocks')
+      }
+    }
+    for (const want of ['round', 'oak', 'pine', 'poplar', 'fruit', 'bush'].map((t) => `tree:${t}`)) expect(seen, want).toContain(want)
+    for (const want of ['pond', 'palm', 'plant', 'lamp', 'clock', 'birds', 'rocks']) expect(seen, want).toContain(want)
+  })
+
   it('steers clear of compositions it is asked to avoid', () => {
     const subject = SG_SUBJECTS.find((s) => s.id === 'motorhome')!
     const palette = CBN_PALETTES[0]!
