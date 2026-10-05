@@ -36,7 +36,9 @@ import type {
   StudioGenerateProgress,
   StudioGenerateContext,
   StudioFabricObject,
+  StudioPageOutput,
   StudioPrefetchContext,
+  StudioTemplateDefinition,
 } from '@/types/studio-template.types'
 import {
   collectReferencedFontFamiliesFromFabricCanvasJson,
@@ -46,12 +48,55 @@ import {
   STUDIO_UNIQUE_CONTENT_ATTEMPTS,
   STUDIO_UNIQUE_CONTENT_REMOTE_ATTEMPTS,
   claimUniqueStudioOutputs,
+  studioBuildFailure,
 } from '@/utils/studio/studio-unique-content'
 import {
   collectStudioContentLabels,
   withStudioContentHash,
 } from '@/utils/studio/studio-content-history'
 import type { StudioWritePageOptions } from '@/utils/studio/studio-events'
+
+/**
+ * Layouts tried on one AI payload before another payload is paid for.
+ *
+ * Whether a sheet builds is mostly the layout seed's luck (a hidden-message
+ * grid that will not close, a crossword that will not interlock), not the
+ * words. Re-rolling the layout on the copy already fetched costs milliseconds;
+ * re-asking the writer costs a call against a per-minute quota.
+ */
+const STUDIO_LAYOUT_RESEEDS_PER_PAYLOAD = 12
+
+/**
+ * Fresh AI payloads tried after a sheet's layouts all failed on the first.
+ * Twelve layouts failing twice over is the settings talking, not bad luck, and
+ * every further payload is a paid call.
+ */
+const STUDIO_REMOTE_FAILED_PAYLOADS = 2
+
+/**
+ * The same sheet at each easier level, nearest first.
+ *
+ * A book is built at one trim for every game in it, and a 5 x 8 interior is too
+ * small for some games' default level. A book run then prints the game a level
+ * down instead of dropping it, which is what the seller would have done by
+ * hand; a single sheet never does this, because there the level is the
+ * seller's own choice and the error says what to change.
+ */
+function easierLevelConfigs(def: StudioTemplateDefinition, config: StudioConfig): StudioConfig[] {
+  const field = def.configSchema.find((f) => f.key === 'level' && f.type === 'select')
+  const options = field?.options ?? []
+  const current = options.findIndex((opt) => opt.value === (config.level ?? field?.default))
+  if (current <= 0) return []
+  return options
+    .slice(0, current)
+    .reverse()
+    .map((opt) => ({ ...config, level: opt.value }))
+}
+
+/** A layout seed derived from the claimed one, so a retry stays reproducible. */
+function layoutReseed(seed: number, attempt: number): number {
+  return attempt === 0 ? seed : (seed + attempt * 0x9e37_79b1) >>> 0
+}
 
 export type StudioWritePage = (
   pageIndex: number,
@@ -153,6 +198,8 @@ export async function runStudioGenerateOnce(options: {
    * Sizes the KDP gutter; a single sheet estimates its own.
    */
   projectedPageCount?: number
+  /** Book runs: a game that cannot build at its level tries the easier ones. */
+  easierLevelFallback?: boolean
 }): Promise<StudioGenerateResult | null> {
   const {
     req,
@@ -172,6 +219,7 @@ export async function runStudioGenerateOnce(options: {
     reservedPageCount = 0,
     setProgress,
     projectedPageCount = 0,
+    easierLevelFallback = false,
   } = options
   const writeOpts: StudioWritePageOptions | undefined = deferLiveSync
     ? { syncLive: false }
@@ -215,18 +263,19 @@ export async function runStudioGenerateOnce(options: {
 
   // Seed-invariant sheets never vary by seed — fingerprint retries
   // would exhaust and skip every duplicate instance in a book/bulk run.
-  const claimed = await claimUniqueStudioOutputs({
+  const claimFor = (sheetConfig: StudioConfig) => claimUniqueStudioOutputs({
     usedSeeds,
     usedFingerprints: def.seedInvariant ? undefined : usedFingerprints,
     // Each remote attempt is a paid call against a per-minute quota.
     maxAttempts: def.prefetch
       ? STUDIO_UNIQUE_CONTENT_REMOTE_ATTEMPTS
       : STUDIO_UNIQUE_CONTENT_ATTEMPTS,
+    maxFailedAttempts: def.prefetch ? STUDIO_REMOTE_FAILED_PAYLOADS : undefined,
     namespace: def.key,
     isAborted: () => signal.aborted,
     build: async (seed) => {
       if (signal.aborted) return 'aborted'
-      const attemptConfig: StudioConfig = { ...pageConfig, seed }
+      const attemptConfig: StudioConfig = { ...sheetConfig, seed }
 
       let remoteData: unknown
       if (def.prefetch) {
@@ -250,25 +299,48 @@ export async function runStudioGenerateOnce(options: {
       }
 
       const attemptInstanceId = `${def.key}-${req.startPageIndex}-${seed}`
-      const ctx: StudioGenerateContext = {
-        pageWidth,
-        pageHeight,
-        margin: firstMargin,
-        seed,
-        instanceId: attemptInstanceId,
-        ownerKey,
-        ownerSalt,
-        remoteData,
+      // A local template gets a fresh seed from the claim loop on every failed
+      // draw; an AI one re-rolls its layout here first, on the copy it has.
+      const layoutTries = def.prefetch ? STUDIO_LAYOUT_RESEEDS_PER_PAYLOAD : 1
+      let outputs: StudioPageOutput[] = []
+      for (let i = 0; i < layoutTries; i++) {
+        const layoutSeed = layoutReseed(seed, i)
+        const ctx: StudioGenerateContext = {
+          pageWidth,
+          pageHeight,
+          margin: firstMargin,
+          seed: layoutSeed,
+          instanceId: attemptInstanceId,
+          ownerKey,
+          ownerSalt,
+          remoteData,
+        }
+        resetObjectCounter()
+        const layoutConfig = i === 0 ? attemptConfig : { ...attemptConfig, seed: layoutSeed }
+        outputs = def.generate(layoutConfig, ctx)
+        if (!studioBuildFailure(outputs)) break
       }
-
-      resetObjectCounter()
-      return def.generate(attemptConfig, ctx)
+      return outputs
     },
   })
+
+  let claimed = await claimFor(pageConfig)
+  if (!claimed.ok && claimed.reason === 'failed' && easierLevelFallback) {
+    for (const easier of easierLevelConfigs(def, pageConfig)) {
+      if (signal.aborted) return null
+      const retry = await claimFor(easier)
+      if (retry.ok || retry.reason !== 'failed') {
+        claimed = retry
+        break
+      }
+    }
+  }
 
   if (!claimed.ok) {
     if (claimed.reason === 'exhausted') {
       setError('Could not generate a unique puzzle. Try fewer pages or different settings.')
+    } else if (claimed.reason === 'failed') {
+      setError(claimed.message)
     }
     return null
   }

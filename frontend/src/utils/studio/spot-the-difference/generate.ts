@@ -54,6 +54,7 @@ function errorPage(ctx: StudioGenerateContext, config: StudioConfig, tag: Studio
   const header = drawHeaderOverFullWidth(contentBox(ctx), config, tag, '')
   return {
     pageRole: 'single',
+    buildFailed: message,
     objects: [
       ...header.objects,
       buildText(

@@ -57,6 +57,7 @@ function errorPage(
   const header = drawHeader(wordSearchContentBox(ctx), config, tag, instruction)
   return {
     pageRole: 'single',
+    buildFailed: message,
     objects: [
       ...header.objects,
       buildText(

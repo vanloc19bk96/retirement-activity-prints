@@ -48,6 +48,7 @@ function errorPage(ctx: StudioGenerateContext, config: StudioConfig, tag: Studio
   const header = drawHeader(mazeContentBox(ctx), config, tag, '')
   return {
     pageRole: 'single',
+    buildFailed: message,
     objects: [
       ...header.objects,
       buildText(

@@ -255,7 +255,14 @@ export function useStudioBookBuilder() {
     const skipped = result.instancesSkipped ?? 0
     const duplicated = result.instancesDuplicated ?? 0
     const parts = [`Added ${result.instancesCompleted ?? 0} games to your book.`]
-    if (skipped > 0) parts.push(`${skipped} skipped (content failed).`)
+    if (skipped > 0) {
+      const reasons = result.skipReasons ?? []
+      parts.push(
+        reasons.length > 0
+          ? `${skipped} skipped. ${reasons.join(' ')}`
+          : `${skipped} skipped (content failed).`,
+      )
+    }
     // Never let a repeat reach print unannounced — the seller has to know
     // which pages to redraw before the file goes to KDP.
     if (duplicated > 0) {

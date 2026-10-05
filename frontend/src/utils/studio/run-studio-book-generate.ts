@@ -2,7 +2,7 @@ import { getStudioTemplate } from '@/constants/studio-templates'
 import { estimateBookPlanPages } from '@/utils/studio/studio-book-plan'
 import { STUDIO_BULK_MAX_BOOK_PAGES } from '@/utils/studio/studio-bulk-allocate'
 import { runStudioGenerateOnce, type StudioWritePage } from '@/utils/studio/run-studio-generate'
-import { bumpStudioGameTitle } from '@/utils/studio/studio-instance-pages'
+import { bumpStudioGameTitle, studioGameName } from '@/utils/studio/studio-instance-pages'
 import { collectStudioContentHashes } from '@/utils/studio/studio-content-history'
 import { dispatchStudioGenerationDone } from '@/utils/studio/studio-events'
 import { yieldToMainThread } from '@/utils/yield-to-main-thread'
@@ -76,6 +76,7 @@ export async function runStudioBookGenerate(options: {
   let instancesCompleted = 0
   let instancesSkipped = 0
   let instancesDuplicated = 0
+  const skipReasons = new Set<string>()
   const usedSeeds = new Set<number>()
   const usedFingerprints = collectStudioContentHashes(
     canvasStateStore,
@@ -83,8 +84,12 @@ export async function runStudioBookGenerate(options: {
   )
   // Per-game errors are collected but only surfaced if the whole book fails.
   let lastError: string | null = null
+  // The current game's own error, so a skip names its reason, not an earlier one.
+  let gameError: string | null = null
   const captureError = (message: string | null) => {
-    if (message) lastError = message
+    if (!message) return
+    lastError = message
+    gameError = message
   }
 
   const finish = (): StudioGenerateResult | null => {
@@ -105,6 +110,7 @@ export async function runStudioBookGenerate(options: {
       instancesCompleted,
       instancesSkipped,
       instancesDuplicated,
+      skipReasons: [...skipReasons],
     }
   }
 
@@ -119,6 +125,7 @@ export async function runStudioBookGenerate(options: {
       continue
     }
 
+    gameError = null
     const isFirst = allPageIndices.length === 0
     const title = showTitle ? nextTitle : ''
     const config = { ...item.config, showTitle, title }
@@ -143,6 +150,7 @@ export async function runStudioBookGenerate(options: {
       usedSeeds,
       usedFingerprints,
       deferLiveSync: true,
+      easierLevelFallback: true,
       // Every sheet gets the gutter of the finished book, not of the book so far.
       projectedPageCount: req.interiorPageCount + estimatedInsert,
     })
@@ -151,6 +159,7 @@ export async function runStudioBookGenerate(options: {
 
     if (!result) {
       instancesSkipped += 1
+      skipReasons.add(`${studioGameName(def)}: ${gameError ?? 'content failed'}`)
       setProgress({ completed: i + 1, total, countKind: 'instance' })
       await yieldToMainThread()
       continue

@@ -35,6 +35,7 @@ function errorPage(
   const header = drawHeader(atoZContentBox(ctx), config, tag, instruction)
   return {
     pageRole: 'single',
+    buildFailed: message,
     objects: [
       ...header.objects,
       buildText(

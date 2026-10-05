@@ -52,6 +52,7 @@ function errorPage(
   const header = drawHeader(cbnContentBox(ctx), { ...config, title: cbnTitleFor(config.title, name) }, tag, instruction)
   return {
     pageRole: 'single',
+    buildFailed: message,
     objects: [
       ...header.objects,
       buildText(

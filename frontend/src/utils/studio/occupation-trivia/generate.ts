@@ -35,6 +35,7 @@ function errorPage(
   const header = drawHeader(otContentBox(ctx), config, tag, instructionFor(config))
   return {
     pageRole: 'single',
+    buildFailed: message,
     objects: [
       ...header.objects,
       buildText(

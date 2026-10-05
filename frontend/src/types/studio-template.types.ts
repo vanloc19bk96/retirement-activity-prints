@@ -247,6 +247,13 @@ export interface StudioPageOutput {
    * Use when the key should omit study/reference content.
    */
   answerSourceObjects?: StudioFabricObject[]
+  /**
+   * Set when the page is an apology instead of a puzzle ("Could not fill the
+   * grid…"). The runner treats it as a failed draw and tries another seed, so
+   * an unlucky build never lands in a book; the message is what the seller
+   * sees if every draw fails.
+   */
+  buildFailed?: string
 }
 
 export type StudioGenerator = (
@@ -394,6 +401,8 @@ export interface StudioGenerateResult {
   instancesCompleted?: number
   /** Book: games skipped because their content failed to generate. */
   instancesSkipped?: number
+  /** Book: why games were skipped, one line per distinct reason. */
+  skipReasons?: string[]
   /** True when this sheet repeats content already in the book. */
   isDuplicate?: boolean
   /** Book/bulk: how many written games repeat content already in the book. */

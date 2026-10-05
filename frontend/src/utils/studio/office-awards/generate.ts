@@ -51,6 +51,7 @@ function errorPage(
   const header = drawHeader(oaContentBox(ctx), { ...config, title: oaTitleFor(config.title, name) }, tag, instruction)
   return {
     pageRole: 'single',
+    buildFailed: message,
     objects: [
       ...header.objects,
       buildText(

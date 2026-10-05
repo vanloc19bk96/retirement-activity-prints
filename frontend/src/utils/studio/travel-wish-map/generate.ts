@@ -44,6 +44,7 @@ function errorPage(
   const header = drawHeader(twmContentBox(ctx), config, tag, instructionFor(config))
   return {
     pageRole: 'single',
+    buildFailed: message,
     objects: [
       ...header.objects,
       buildText(

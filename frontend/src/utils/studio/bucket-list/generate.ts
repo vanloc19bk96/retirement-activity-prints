@@ -43,6 +43,7 @@ function errorPage(
   const header = drawHeader(blContentBox(ctx), config, tag, instructionFor(config))
   return {
     pageRole: 'single',
+    buildFailed: message,
     objects: [
       ...header.objects,
       buildText(

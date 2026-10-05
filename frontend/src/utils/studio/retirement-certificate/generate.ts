@@ -79,6 +79,7 @@ function errorPage(ctx: StudioGenerateContext, config: StudioConfig, tag: Studio
   const safe = crSafeBox(ctx)
   return {
     pageRole: 'single',
+    buildFailed: message,
     objects: [
       buildText(
         {

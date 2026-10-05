@@ -47,6 +47,7 @@ function errorPage(
   const header = drawHeader(wordokuContentBox(ctx), config, tag, instruction)
   return {
     pageRole: 'single',
+    buildFailed: message,
     objects: [
       ...header.objects,
       buildText(

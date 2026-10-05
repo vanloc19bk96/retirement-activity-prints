@@ -68,6 +68,7 @@ function errorPage(
   )
   return {
     pageRole: 'single',
+    buildFailed: message,
     objects: [
       ...header.objects,
       buildText(

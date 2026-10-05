@@ -36,6 +36,7 @@ function errorPage(
   const header = drawHeader(fifContentBox(ctx), config, tag, fifInstructions(config).words)
   return {
     pageRole: 'single',
+    buildFailed: message,
     objects: [
       ...header.objects,
       buildText(

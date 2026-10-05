@@ -39,6 +39,7 @@ function errorPage(ctx: StudioGenerateContext, config: StudioConfig, tag: Studio
   const header = drawHeader(driveContentBox(ctx), config, tag, instruction)
   return {
     pageRole: 'single',
+    buildFailed: message,
     objects: [
       ...header.objects,
       buildText(

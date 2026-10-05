@@ -121,11 +121,24 @@ function netNewCells(grid: CellGrid, word: string, r: number, c: number, dir: Di
  *
  * Landing exactly on zero, or leaving at least one whole word's worth, is the
  * only pair of outcomes that keeps the endgame solvable by construction.
+ *
+ * "One whole word" becomes "every word the page still owes" while the bank is
+ * short of the level's floor. Taking the biggest bite every time used to close a
+ * small grid in five or six long words, one short of a publishable page, and
+ * the whole fill was thrown away: on a 6 x 9 classic page that was most of the
+ * sheets that came back as "Could not fill the grid".
  */
-function isAllowedNet(net: number, remaining: number, minLetters: number): boolean {
+interface FillBudget {
+  minLetters: number
+  /** Words the bank still needs after this one to reach the level's floor. */
+  owedAfter: number
+}
+
+function isAllowedNet(net: number, remaining: number, budget: FillBudget): boolean {
   if (net <= 0 || net > remaining) return false
   const next = remaining - net
-  return next === 0 || next >= minLetters
+  if (next === 0) return budget.owedAfter === 0
+  return next >= budget.minLetters * Math.max(1, budget.owedAfter)
 }
 
 function writeWithUndo(
@@ -165,13 +178,13 @@ function sampleHit(
   entry: WordEntry,
   dirs: readonly Dir[],
   remaining: number,
-  minLetters: number,
+  budget: FillBudget,
   rng: StudioRng,
 ): Hit | null {
   let best: Hit | null = null
   for (const start of sampleStarts(entry.token, grid.size, dirs, rng, FILL_SAMPLE)) {
     const net = netNewCells(grid, entry.token, start.r, start.c, start.dir)
-    if (!isAllowedNet(net, remaining, minLetters)) continue
+    if (!isAllowedNet(net, remaining, budget)) continue
     // A placement that finishes the grid is always taken; otherwise take the
     // one that claims the most, so the bank stays as short as the page planned.
     if (net === remaining) return { entry, ...start, net }
@@ -201,23 +214,23 @@ function firstHit(options: {
   unused: readonly WordEntry[]
   dirs: readonly Dir[]
   remaining: number
-  minLetters: number
+  budget: FillBudget
   rng: StudioRng
   banned: string | null
   /** The remainder is within one word's reach — hunt for a placement that closes it. */
   wantExact: boolean
 }): Hit | null {
-  const { grid, unused, dirs, remaining, minLetters, rng, banned, wantExact } = options
+  const { grid, unused, dirs, remaining, budget, rng, banned, wantExact } = options
   for (const entry of unused) {
     if (entry.token === banned) continue
     if (wantExact) {
       const hit =
         exactHit(grid, entry, dirs, remaining) ??
-        sampleHit(grid, entry, dirs, remaining, minLetters, rng)
+        sampleHit(grid, entry, dirs, remaining, budget, rng)
       if (hit) return hit
       continue
     }
-    const hit = sampleHit(grid, entry, dirs, remaining, minLetters, rng)
+    const hit = sampleHit(grid, entry, dirs, remaining, budget, rng)
     if (hit) return hit
   }
   return null
@@ -239,7 +252,8 @@ interface FilledGrid {
  *
  * `maxWords` is the budget the page reserved bank rows for. Exceeding it is not
  * a worse-looking page, it is a word list printed over the write-in rules, so
- * the search backtracks instead.
+ * the search backtracks instead. `minWords` is the floor below it: the fill
+ * leaves room for that many words rather than finishing short of it.
  */
 function greedyFill(options: {
   pool: readonly WordEntry[]
@@ -247,19 +261,23 @@ function greedyFill(options: {
   dirs: readonly Dir[]
   messageLength: number
   maxWords: number
+  minWords: number
   minLetters: number
   rng: StudioRng
 }): FilledGrid | null {
-  const { pool, size, dirs, messageLength, maxWords, minLetters, rng } = options
+  const { pool, size, dirs, messageLength, maxWords, minWords, minLetters, rng } = options
   const grid = emptyGrid(size)
   const unused = rng
     .shuffle(pool.filter((entry) => entry.token.length <= size))
     .sort((a, b) => b.token.length - a.token.length)
   const stack: { hit: Hit; undo: UndoCell[] }[] = []
   const longest = unused[0]?.token.length ?? 0
+  // A big grid takes three times the words of a small one, and every one of
+  // them is a step the backtracker may have to spend twice.
+  const maxSteps = Math.max(MAX_STEPS, maxWords * 16)
   let banned: string | null = null
 
-  for (let step = 0; step < MAX_STEPS; step++) {
+  for (let step = 0; step < maxSteps; step++) {
     const remaining = emptyCount(grid) - messageLength
     if (remaining === 0) {
       return {
@@ -274,6 +292,7 @@ function greedyFill(options: {
       }
     }
 
+    const owedAfter = Math.max(0, minWords - stack.length - 1)
     const hit =
       stack.length >= maxWords
         ? null
@@ -282,10 +301,10 @@ function greedyFill(options: {
             unused,
             dirs,
             remaining,
-            minLetters,
+            budget: { minLetters, owedAfter },
             rng,
             banned,
-            wantExact: remaining <= longest,
+            wantExact: owedAfter === 0 && remaining <= longest,
           })
 
     if (hit) {
@@ -380,6 +399,7 @@ export function tryBuildHiddenMessagePuzzle(options: {
       dirs,
       messageLength: message.letters.length,
       maxWords,
+      minWords: level.minWords,
       minLetters: level.minLetters,
       rng,
     })

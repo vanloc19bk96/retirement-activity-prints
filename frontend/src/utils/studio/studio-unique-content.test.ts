@@ -219,4 +219,48 @@ describe('claimUniqueStudioOutputs', () => {
     })
     expect(result).toEqual({ ok: false, reason: 'error' })
   })
+
+  it('redraws an error page on a fresh seed instead of claiming it', async () => {
+    const seeds: number[] = []
+    const result = await claimUniqueStudioOutputs({
+      build: async (seed) => {
+        seeds.push(seed)
+        if (seeds.length < 3) return [{ ...pageWithText('sorry'), buildFailed: 'Could not fill the grid.' }]
+        return [pageWithText('puzzle')]
+      },
+    })
+    expect(result.ok).toBe(true)
+    expect(result.ok && result.outputs[0]!.buildFailed).toBeFalsy()
+    expect(new Set(seeds).size).toBe(3)
+  })
+
+  it('reports the failure once every draw comes back as an error page', async () => {
+    let calls = 0
+    const result = await claimUniqueStudioOutputs({
+      maxAttempts: 5,
+      build: async () => {
+        calls += 1
+        return [{ ...pageWithText('sorry'), buildFailed: 'Page too small.' }]
+      },
+    })
+    expect(result).toEqual({ ok: false, reason: 'failed', message: 'Page too small.' })
+    expect(calls).toBe(5)
+  })
+
+  it('stops after maxFailedAttempts error pages', async () => {
+    let calls = 0
+    const usedFingerprints = new Set<string>()
+    const result = await claimUniqueStudioOutputs({
+      usedFingerprints,
+      maxAttempts: 4,
+      maxFailedAttempts: 2,
+      build: async () => {
+        calls += 1
+        return [{ ...pageWithText('sorry'), buildFailed: 'Page too small.' }]
+      },
+    })
+    expect(result).toEqual({ ok: false, reason: 'failed', message: 'Page too small.' })
+    expect(calls).toBe(2)
+    expect(usedFingerprints.size).toBe(0)
+  })
 })

@@ -34,6 +34,7 @@ function errorPage(
   const header = drawHeader(wyrContentBox(ctx), config, tag, instructionFor(config))
   return {
     pageRole: 'single',
+    buildFailed: message,
     objects: [
       ...header.objects,
       buildText(
