@@ -2501,13 +2501,14 @@ Every page is drawn in the browser (no AI, no images). A scene is data
 (`scene.ts`): a fixed backdrop (walls, floor, hills, sea, a dock, a ship's
 rail) and parts placed on it, each a drawing from a pool per slot — the
 Studio's shared retirement drawings, those Dot to Dot and Shaped Maze drew,
-and 39 drawn for this game (`elements.ts`: window, picture, wall clock,
+and 42 drawn for this game (`elements.ts`: window, picture, wall clock,
 shelf of books, side table, tea table, rug, vase, floor and hanging lamps,
 cookies, cake, easel, footstool, slippers, a pile of books, sun, cloud,
 birds, kite, trees, pine, bush, fence, flowers, sand trap, picnic blanket,
 doormat, front door, hanging basket, ducks, beach umbrella, sandcastle,
-bucket, beach ball, life ring, campfire, signpost, tackle box) — 92 kinds in
-all (`props.ts`). Scalloped outlines (clouds, tree crowns, the bush, the
+bucket, beach ball, life ring, campfire, signpost, tackle box, and line-art
+versions of the library's sleeping cat, bicycle and fishing rod, which
+read poorly as bare outlines) — 91 kinds in all (`props.ts`). Scalloped outlines (clouds, tree crowns, the bush, the
 hanging basket's greenery) are traced exactly along the outer arcs of
 overlapping discs (`bumpRing`), so they print as true arcs meeting in crisp
 dips with a flat base: a cloud has a few big puffs, a bush a dome of many

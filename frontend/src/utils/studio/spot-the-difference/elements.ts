@@ -467,14 +467,16 @@ const pendant = subject('sd-pendant', 'Hanging Lamp', 'home', 'indoor', 'none', 
 
 const slippers = subject('sd-slippers', 'Slippers', 'home', 'indoor', 'none', { pair: 2, pom: 2 }, (k) =>
   sketch((s) => {
-    // Side on, toe to the right: a low sole and a rounded cover over the front half.
-    const one = (x: number) => {
-      s.add(rect(x - 20, 25, 40, 7, 3.5))
-      s.add(blob([x - 6, 27], [x - 3, 17], [x + 8, 13], [x + 17, 17], [x + 21, 25], [x + 10, 27]))
-      if (k.pom === 1) s.add(circle(x + 7, 13, 5))
+    // Seen from above, toes up, as slippers are always drawn: a foot-shaped
+    // sole and a puffy cover over the toes, the pair splayed a little.
+    const one = (x: number, turn: number) => {
+      const at = (r: Ring) => rotate(r, turn, x, 60)
+      s.add(at(blob([x, 6], [x + 9, 10], [x + 11, 24], [x + 9, 40], [x + 8, 54], [x, 60], [x - 8, 54], [x - 9, 40], [x - 11, 24], [x - 9, 10])))
+      s.add(at(blob([x - 12.5, 31], [x - 12, 16], [x - 7, 6], [x, 3], [x + 7, 6], [x + 12, 16], [x + 12.5, 31], [x, 35])))
+      if (k.pom === 1) s.add(at(circle(x, 20, 5.5)))
     }
-    one(26)
-    if (k.pair === 1) one(66)
+    one(16, -7)
+    if (k.pair === 1) one(46, 7)
   }),
 )
 
@@ -928,6 +930,117 @@ const tackleBox = subject('sd-tackle', 'Tackle Box', 'hobbies', 'outdoor', 'none
   }),
 )
 
+/* ------------------------------------------------------------------ *
+ * Line-art versions of library subjects
+ *
+ * The shared library draws these for colouring, where a mosaic fills them
+ * in; as plain outlines at scene size they did not read (a cat that was a
+ * ball and a bean, a bicycle whose chainring looked like a third wheel).
+ * ------------------------------------------------------------------ */
+
+/** A closed sleeping eye: a short downward arc. */
+const sleepyEye = (x: number, y: number) => discArc([x, y - 2.5, 3.5], Math.PI * 0.15, Math.PI * 0.85)
+
+const cat = subject('sd-cat', 'Sleeping Cat', 'home', 'indoor', 'none', { cushion: 3, coat: 3 }, (k) =>
+  sketch((s) => {
+    // What it sleeps on, every one standing on y = 100 with its top near y = 84.
+    if (k.cushion === 1) s.add(rect(2, 70, 128, 30, 15))
+    else if (k.cushion === 2) {
+      s.add(rect(4, 82, 124, 18, 4))
+      s.add(rect(4, 90, 124, 10, [0, 4]))
+    } else s.add(rect(6, 82, 120, 18, 9))
+    // Curled up facing left: a rounded back, the tail round the front, the head on its paws.
+    s.add(blob([40, 86], [40, 66], [58, 51], [86, 46], [110, 53], [121, 70], [115, 87]))
+    if (k.coat === 1) for (const [x, y] of [[76, 52], [90, 51], [104, 57]] as const) s.add(leaf(x, y, x - 3, y + 13, 6))
+    else if (k.coat === 2) s.add(blob([84, 54], [98, 54], [104, 63], [92, 69], [80, 63]))
+    s.add(band(curve([117, 80], [108, 91], [84, 94], [60, 92]), 8, true))
+    s.add(ellipse(28, 85, 8, 4.5))
+    s.add(ellipse(45, 86, 8, 4.5))
+    s.add(blob([21, 60], [22, 40], [36, 52]))
+    s.add(blob([40, 52], [53, 41], [55, 60]))
+    s.add(ellipse(37, 67, 19, 16))
+    for (const x of [30, 44]) s.stroke(sleepyEye(x, 68))
+    s.part(poly([35, 73], [39, 73], [37, 75.5]))
+    // A pet bed's front rim, in front of the cat.
+    if (k.cushion === 1) s.add(rect(0, 86, 132, 14, 7))
+  }),
+)
+
+const bicycle = subject('sd-bicycle', 'Bicycle', 'hobbies', 'outdoor', 'grass', { basket: 2, spokes: 2, frame: 2 }, (k) =>
+  sketch((s) => {
+    const R = 24
+    const wheels: XY[] = [
+      [28, 74],
+      [112, 74],
+    ]
+    // Wheels: tyre and rim, spokes if any.
+    for (const [cx, cy] of wheels) {
+      s.add(circle(cx, cy, R, 56))
+      s.add(circle(cx, cy, R - 5, 56))
+      if (k.spokes === 1)
+        for (let i = 0; i < 8; i++) {
+          const a = (i * Math.PI) / 4
+          s.stroke(path([cx + 4 * Math.cos(a), cy + 4 * Math.sin(a)], [cx + (R - 5) * Math.cos(a), cy + (R - 5) * Math.sin(a)]))
+        }
+    }
+    // Frame tubes: a straight top tube, or a step-through frame's low swoop.
+    s.add(rod(28, 74, 64, 78, 5))
+    s.add(rod(28, 74, 56, 42, 5))
+    s.add(rod(64, 78, 56, 38, 5.5))
+    s.add(rod(64, 78, 99, 44, 5.5))
+    if (k.frame === 1) s.add(band(curve([59, 58], [76, 66], [98, 48]), 5.5, true))
+    else s.add(rod(57, 44, 99, 42, 5.5))
+    s.add(rod(100, 42, 112, 74, 5))
+    s.add(rod(98, 34, 101, 48, 7))
+    // Handlebar and saddle.
+    s.add(rod(98, 34, 96, 26, 4.5))
+    s.add(band(curve([84, 27], [92, 23], [103, 25]), 4.5, true))
+    s.add(blob([44, 35], [53, 31], [65, 32], [61, 38], [48, 38]))
+    // Crank and pedal, then the hubs.
+    s.add(rod(64, 78, 58, 89, 4))
+    s.add(rect(52, 88, 12, 4.5, 2))
+    s.add(circle(64, 78, 7.5))
+    for (const [cx, cy] of wheels) s.part(circle(cx, cy, 3.5))
+    // A wicker basket on the handlebar.
+    if (k.basket === 1) {
+      s.add(rect(101, 26, 26, 18, [1, 5]))
+      s.add(rect(99, 22, 30, 6, 2))
+    }
+  }),
+)
+
+/** A fish hanging by its mouth from (x, y), head up. */
+function hungFish(s: { add: (r: Ring) => unknown; part: (r: Ring) => unknown }, x: number, y: number) {
+  s.add(blob([x, y + 40], [x + 10, y + 58], [x, y + 52], [x - 10, y + 58]))
+  s.add(blob([x, y], [x + 9, y + 9], [x + 12, y + 24], [x + 6, y + 40], [x, y + 44], [x - 6, y + 40], [x - 12, y + 24], [x - 9, y + 9]))
+  s.add(leaf(x + 4, y + 24, x + 15, y + 30, 6))
+  s.add(blob([x - 9, y + 13], [x, y + 17], [x + 9, y + 13], [x, y + 15]))
+  s.part(circle(x - 3, y + 8, 2.2, 16))
+}
+
+const fishing = subject('sd-fishing', 'Fishing Rod', 'hobbies', 'outdoor', 'none', { rod: 2, bobber: 2, fish: 2 }, (k) =>
+  sketch((s) => {
+    // A straight rod, or one bent under the catch.
+    const tip: XY = k.rod === 1 ? [104, 12] : [100, 8]
+    const pole = k.rod === 1 ? curve([24, 124], [48, 78], [72, 38], [92, 16], tip) : curve([24, 124], [62, 64], tip)
+    const x = tip[0]
+    s.stroke(path(tip, [x, k.fish === 1 ? 72 : 76]))
+    if (k.fish === 1) hungFish(s, x, 72)
+    else s.stroke(curve([x, 76], [x, 84], [x - 4, 88], [x - 8, 84]))
+    if (k.bobber === 1) {
+      s.add(ellipse(x, 48, 4.5, 10))
+      s.add(sliceY(ellipse(x, 48, 4.5, 10), 37, 46))
+    } else {
+      s.add(circle(x, 48, 7))
+      s.add(sliceY(circle(x, 48, 7), 48, 56))
+    }
+    s.add(band(pole, 4.5, true))
+    s.add(rod(12, 142, 30, 116, 10))
+    s.add(circle(36, 112, 9))
+    s.part(circle(36, 112, 3))
+  }),
+)
+
 /** Every element this game draws itself. */
 export const SD_ELEMENTS: readonly SgSubject[] = [
   windowPane,
@@ -969,4 +1082,7 @@ export const SD_ELEMENTS: readonly SgSubject[] = [
   campfire,
   signpost,
   tackleBox,
+  cat,
+  bicycle,
+  fishing,
 ]

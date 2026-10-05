@@ -149,7 +149,7 @@ function homeTouches(s: SdStage, floor: number, pendant = 0.65) {
     s.rng.shuffle([
       { kinds: ['sd-slippers'], h: s.size(0.08), chance: 0.75 },
       { kinds: ['sd-books', 'yarn-basket'], h: s.size(0.12), chance: 0.75 },
-      { kinds: ['sleeping-cat', 'sd-footstool'], h: s.size(0.12), chance: 0.4 },
+      { kinds: ['sd-cat', 'sd-footstool'], h: s.size(0.12), chance: 0.4 },
     ]),
     { x0: s.x(0.06), x1: s.x(0.94), y: front, depth: 40, gap: inch(0.5) },
   )
@@ -197,7 +197,7 @@ const livingRoom: SdRecipe = {
       30,
     )
     sideTableTop(s, placed)
-    if (rug && s.chance(0.7)) s.put({ kind: 'sleeping-cat', cx: (partBounds(rug).minX + partBounds(rug).maxX) / 2, y: floor + s.H * 0.21, h: s.size(0.14), depth: 36 })
+    if (rug && s.chance(0.7)) s.put({ kind: 'sd-cat', cx: (partBounds(rug).minX + partBounds(rug).maxX) / 2, y: floor + s.H * 0.21, h: s.size(0.14), depth: 36 })
     homeTouches(s, floor)
   },
 }
@@ -233,7 +233,7 @@ const readingNook: SdRecipe = {
       30,
     )
     sideTableTop(s, placed, ['book-and-glasses', 'table-lamp', 'sd-vase'])
-    if (s.chance(0.5)) s.put({ kind: 'sleeping-cat', cx: s.x(0.2 + s.rng.next() * 0.6), y: floor + s.H * 0.22, h: s.size(0.13), depth: 36 })
+    if (s.chance(0.5)) s.put({ kind: 'sd-cat', cx: s.x(0.2 + s.rng.next() * 0.6), y: floor + s.H * 0.22, h: s.size(0.13), depth: 36 })
     homeTouches(s, floor, 0.4)
   },
 }
@@ -272,7 +272,7 @@ const teaTime: SdRecipe = {
     row(
       s,
       [
-        { kinds: ['sleeping-cat', 'yarn-basket'], h: s.size(0.14), chance: 0.8 },
+        { kinds: ['sd-cat', 'yarn-basket'], h: s.size(0.14), chance: 0.8 },
         { kinds: ['houseplant', 'flower-pot'], h: s.size(0.3), chance: 0.7 },
       ],
       Math.min(s.y(0.95), floor + s.H * 0.1),
@@ -354,7 +354,7 @@ const frontPorch: SdRecipe = {
         { kinds: ['rocking-chair', 'armchair', 'park-bench'], h: s.H * 0.38 },
         { kinds: ['flower-pot', 'houseplant'], h: s.size(0.22) },
         { kinds: ['watering-can', 'lantern'], h: s.size(0.16), chance: 0.85 },
-        { kinds: ['sleeping-cat', 'sd-doormat'], h: s.size(0.1), chance: 0.8 },
+        { kinds: ['sd-cat', 'sd-doormat'], h: s.size(0.1), chance: 0.8 },
         { kinds: ['flower-pot', 'sd-vase', 'yarn-basket'], h: s.size(0.18), chance: 0.6 },
       ],
       floor + s.H * 0.1,
@@ -494,13 +494,13 @@ const picnic: SdRecipe = {
     ])
     const bb = blanket ? partBounds(blanket) : null
     if (bb) {
-      s.row(s.rng.shuffle([{ kinds: ['bicycle', 'sd-signpost'], h: s.H * 0.26 }, { kinds: ['sd-flowers', 'watering-can', 'sd-ball'], h: s.size(0.13), chance: 0.7 }]), {
+      s.row(s.rng.shuffle([{ kinds: ['sd-bicycle', 'sd-signpost'], h: s.H * 0.26 }, { kinds: ['sd-flowers', 'watering-can', 'sd-ball'], h: s.size(0.13), chance: 0.7 }]), {
         x0: s.x(0.04),
         x1: bb.minX - inch(0.1),
         y: s.y(0.93),
         depth: 30,
       })
-      s.row(s.rng.shuffle([{ kinds: ['sd-flowers', 'songbird', 'sd-bush'], h: s.size(0.14) }, { kinds: ['bicycle', 'deck-chair'], h: s.H * 0.26, chance: 0.6 }]), {
+      s.row(s.rng.shuffle([{ kinds: ['sd-flowers', 'songbird', 'sd-bush'], h: s.size(0.14) }, { kinds: ['sd-bicycle', 'deck-chair'], h: s.H * 0.26, chance: 0.6 }]), {
         x0: bb.maxX + inch(0.1),
         x1: s.x(0.96),
         y: s.y(0.93),
@@ -613,7 +613,7 @@ const fishingDock: SdRecipe = {
     s.row(
       s.rng.shuffle([
         { kinds: ['deck-chair'], h: s.H * 0.3 },
-        { kinds: ['fishing'], h: s.H * 0.34 },
+        { kinds: ['sd-fishing'], h: s.H * 0.34 },
         { kinds: ['sd-tackle', 'picnic-basket', 'lantern'], h: s.size(0.13) },
         { kinds: ['sd-bucket', 'sun-hat', 'coffee-mug'], h: s.size(0.1), chance: 0.8 },
       ]),
@@ -682,11 +682,11 @@ const campsite: SdRecipe = {
     row(
       s,
       [
-        { kinds: ['tent', 'camping-tent'], h: s.H * 0.28 },
+        { kinds: ['tent'], h: s.H * 0.28 },
         { kinds: ['sd-campfire'], h: s.size(0.16) },
         { kinds: ['deck-chair'], h: s.H * 0.26 },
         { kinds: ['lantern', 'picnic-basket', 'sd-bucket'], h: s.size(0.13), chance: 0.85 },
-        { kinds: ['bicycle', 'sd-signpost'], h: s.H * 0.24, chance: 0.6 },
+        { kinds: ['sd-bicycle', 'sd-signpost'], h: s.H * 0.24, chance: 0.6 },
         { kinds: ['coffee-mug', 'kettle', 'sd-flowers'], h: s.size(0.1), chance: 0.5 },
       ],
       s.y(0.94),
