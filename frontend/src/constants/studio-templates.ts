@@ -9,6 +9,7 @@ import {
 } from '@/constants/studio.constants'
 import { STUDIO_CATEGORIES } from '@/constants/studio-categories'
 import { STARTER_STUDIO_TEMPLATE_KEYS } from '@/constants/studio-plan-access'
+import { studioFixedPageTitle } from '@/utils/studio/studio-instance-pages'
 import { sudokuTemplate } from '@/utils/studio/sudoku/generate'
 import { wordokuTemplate } from '@/utils/studio/wordoku/generate'
 import { farewellLogicGridTemplate } from '@/utils/studio/farewell-logic-grid/generate'
@@ -162,14 +163,15 @@ function withCommonFields(def: StudioTemplateDefinition): StudioTemplateDefiniti
   const available = def.hidesInstructionsToggle
     ? STUDIO_COMMON_FIELDS.filter((field) => field.key !== 'showInstructions')
     : STUDIO_COMMON_FIELDS
-  const commonFields = def.defaultPageTitle
+  const fixedTitle = studioFixedPageTitle(def)
+  const commonFields = fixedTitle
     ? available.map((field) =>
         field.key === 'title'
           ? {
               ...field,
               help:
                 def.pageTitleHelp ??
-                `Leave blank to use “${def.defaultPageTitle}”, or type your own heading.`,
+                `Leave blank to use “${fixedTitle}”, or type your own heading.`,
             }
           : field,
       )

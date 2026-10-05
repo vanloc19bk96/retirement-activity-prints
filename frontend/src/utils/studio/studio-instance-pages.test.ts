@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CanvasStateStore } from '@/utils/canvas-state-store'
+import { STUDIO_TEMPLATES, getStudioTemplate } from '@/constants/studio-templates'
 import {
   bumpStudioGameTitle,
   countStudioPuzzleInstances,
@@ -12,6 +13,8 @@ import {
   resolveStudioInsertStartPageIndex,
   resolveStudioInstancePageSpan,
   resolveStudioReplaceStartPageIndex,
+  studioFixedPageTitle,
+  studioGameName,
   studioGameOrdinalAtPageIndex,
   studioGameTitleAtPageIndex,
   toStudioSolutionTitle,
@@ -367,6 +370,32 @@ describe('withStudioGameName', () => {
     expect(withStudioGameName('', 'Sudoku')).toBe('')
     expect(withStudioGameName(undefined, 'Sudoku')).toBe('')
     expect(withStudioGameName('Game 2: Sudoku', 'Sudoku')).toBe('Game 2: Sudoku')
+  })
+})
+
+describe('studioFixedPageTitle', () => {
+  it('numbers every game and keeps a heading only on keepsake pages', () => {
+    for (const def of STUDIO_TEMPLATES) {
+      if (def.category === 'keepsake') {
+        expect(studioFixedPageTitle(def), def.key).toBeTruthy()
+      } else {
+        expect(studioFixedPageTitle(def), def.key).toBeNull()
+      }
+    }
+  })
+})
+
+describe('studioGameName', () => {
+  it('prefers the game heading over the card label', () => {
+    const fallen = getStudioTemplate('fallen-phrase')!
+    expect(withStudioGameName('Game 3', studioGameName(fallen))).toBe('Game 3: Fallen Phrase')
+    const quote = getStudioTemplate('quote-coloring')!
+    expect(studioGameName(quote)).toBe('Color the Saying')
+  })
+
+  it('falls back to the label', () => {
+    const crossword = getStudioTemplate('crossword')!
+    expect(withStudioGameName('Game 1', studioGameName(crossword))).toBe('Game 1: Crossword')
   })
 })
 

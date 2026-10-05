@@ -7,6 +7,7 @@ import {
   bumpStudioGameTitle,
   nextStudioGameTitle,
   resolveStudioGeneratePlacement,
+  studioFixedPageTitle,
 } from '@/utils/studio/studio-instance-pages'
 import { clampStudioConfigToSchema, resolveStudioConfigField } from '@/utils/studio/studio-config-fields'
 import { resolveStudioMarginForPage } from '@/utils/studio/studio-margin'
@@ -55,7 +56,7 @@ export function useStudioTemplateConfigForm(template: StudioTemplateDefinition) 
     [pageDimensions.widthPixels, pageDimensions.heightPixels, marginGuide],
   )
 
-  const fixedPageTitle = template.defaultPageTitle?.trim() || null
+  const fixedPageTitle = studioFixedPageTitle(template)
   const [config, setConfig] = useState<StudioConfig>(() => {
     const defaults = buildDefaultConfig(template)
     if (defaults.showTitle !== true) return defaults

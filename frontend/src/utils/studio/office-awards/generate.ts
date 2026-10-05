@@ -128,8 +128,6 @@ export const officeAwardsTemplate: StudioTemplateDefinition = {
   pageCount: 1,
   producesAnswerKey: false,
   defaultPageTitle: OA_DEFAULT_TITLE,
-  pageTitleHelp:
-    'Leave as “Office Awards” (with the retiree’s name set below, it reads “Linda’s Farewell Office Awards”) or type your own heading.',
   prefetch: officeAwardsPrefetch,
   validateConfig: validateOaConfig,
   thumbnail: `<svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg">

@@ -277,8 +277,9 @@ export interface StudioTemplateDefinition {
   /** Custom canvas-edit tip; used when `showsCanvasEditHint` is true. */
   canvasEditHint?: string
   /**
-   * Fixed default for Page title text (e.g. cryptogram).
-   * When set, the form uses this instead of auto “Game N”, until the user edits.
+   * The page's own heading. A game prints it after its number (“Game 3: Fallen
+   * Phrase”); a keepsake page prints it instead of the “Game N” series, until
+   * the user edits. Without it a game is named after its label.
    */
   defaultPageTitle?: string
   /**

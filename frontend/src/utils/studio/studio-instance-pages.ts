@@ -2,7 +2,10 @@ import {
   STUDIO_GAME_TITLE_PREFIX,
   STUDIO_SOLUTION_TITLE_PREFIX,
 } from '@/constants/studio.constants'
-import type { StudioFabricObject } from '@/types/studio-template.types'
+import type {
+  StudioFabricObject,
+  StudioTemplateDefinition,
+} from '@/types/studio-template.types'
 import type { CanvasStateStore } from '@/utils/canvas-state-store'
 
 export interface StudioPuzzlePage {
@@ -248,6 +251,24 @@ export function isStudioAutoGameTitle(title: unknown): boolean {
   return new RegExp(`^${STUDIO_GAME_TITLE_PREFIX}\\s+\\d+(?::.*)?$`, 'i').test(
     String(title ?? '').trim(),
   )
+}
+
+/**
+ * The heading a template prints instead of the “Game N” series. Only keepsake
+ * pages keep one: a certificate or a signature page is not a numbered game, so
+ * every puzzle and party game numbers alike (“Game 3: Fallen Phrase”).
+ */
+export function studioFixedPageTitle(def: StudioTemplateDefinition): string | null {
+  if (def.category !== 'keepsake') return null
+  return def.defaultPageTitle?.trim() || null
+}
+
+/**
+ * Name a numbered page prints after “Game N”: the game's own heading when it
+ * has one (“Color the Saying”, not the card label “Quote Coloring Page”).
+ */
+export function studioGameName(def: StudioTemplateDefinition): string {
+  return def.defaultPageTitle?.trim() || def.label
 }
 
 /**

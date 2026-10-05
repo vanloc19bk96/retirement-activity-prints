@@ -15,6 +15,7 @@ import {
   findStudioInstanceEndPageIndex,
   findStudioInstanceStartPageIndex,
   resolveStudioInstancePageSpan,
+  studioGameName,
   withStudioGameName,
 } from '@/utils/studio/studio-instance-pages'
 import { yieldToMainThread } from '@/utils/yield-to-main-thread'
@@ -209,7 +210,7 @@ export async function runStudioGenerateOnce(options: {
   // “Game 3” prints as “Game 3: Crossword” so a reader can find a game by name.
   const pageConfig: StudioConfig = {
     ...req.config,
-    title: withStudioGameName(req.config.title, def.label),
+    title: withStudioGameName(req.config.title, studioGameName(def)),
   }
 
   // Seed-invariant sheets never vary by seed — fingerprint retries

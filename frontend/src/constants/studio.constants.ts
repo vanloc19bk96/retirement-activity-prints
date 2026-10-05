@@ -154,7 +154,7 @@ export const STUDIO_COMMON_FIELDS: StudioConfigField[] = [
     label: 'Title text',
     type: 'text',
     default: '',
-    help: 'Leave blank and pages are numbered for you: Game 1, Game 2… Answer pages match, as “Solution Game 1”.',
+    help: 'Leave blank and pages are numbered for you, with the game’s name: “Game 1: Word Search”, “Game 2: Crossword”… Answer pages match, as “Solution Game 1: Word Search”.',
     visibleWhen: (config) => config.showTitle === true,
   },
   {
