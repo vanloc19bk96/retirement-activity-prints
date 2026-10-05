@@ -11,6 +11,7 @@ import { createRng } from '../studio-rng'
 import { assertGeneratorEntropy, assertObjectsInSafeMargin, runGeneratorContractTests } from '../studio-generator-test'
 import { sgVariantKey, sgVariants } from '../stained-glass/content'
 import { sgSubjectById } from '../stained-glass/subjects'
+import { distToRing } from '../stained-glass/geometry'
 import { dotToDotTemplate } from './generate'
 import { DTD_CONFIG_SCHEMA } from './config'
 import {
@@ -32,7 +33,7 @@ import {
   type DtdLevel,
 } from './content'
 import { DTD_PART_KEY, buildDtdPicture } from './draw'
-import { DTD_NUMBER_FLOOR_PX, checkDtdDrawnPage, runDtdKdpPreflight } from './kdp-preflight'
+import { DTD_NUMBER_FLOOR_PX, checkDtdDrawnPage, pathAnchors, runDtdKdpPreflight } from './kdp-preflight'
 import { dtdPanelInBody, dtdPrintNote } from './layout'
 import { traceOutline } from './outline'
 import { buildPuzzle, isSimpleLoop, type DtdPuzzle } from './puzzle'
@@ -237,11 +238,13 @@ describe('dot-to-dot pages', () => {
             expect(t.fill).toBe(STUDIO_INK)
             expect(t.fontSize).toBe(rules.numberSize)
           }
-          // The finished outline is hidden, and joins every dot in order.
+          // The finished outline is hidden, and follows the picture's curves
+          // (more points than dots), not straight chords between them.
           const outline = partsOf(picture!, 'outline')
           expect(outline).toHaveLength(1)
           expect(outline[0]!.visible).toBe(false)
-          expect((outline[0]!.path ?? []).filter((c) => c[0] === 'M' || c[0] === 'L')).toHaveLength(n)
+          expect(pathAnchors(outline[0]!.path ?? []).length).toBeGreaterThan(n)
+          expect((outline[0]!.path ?? []).some((c) => c[0] === 'C')).toBe(true)
         }
       }
     }
@@ -366,6 +369,43 @@ describe('dot-to-dot quality gates', () => {
     expect(checkDtdDrawnPage({ picture, box: panel, puzzle, numberSize: level.rules.numberSize })).toEqual([])
     const dropped = { ...picture, objects: picture.objects!.filter((o) => !(o.data?.[DTD_PART_KEY] === 'number' && o.text === '9')) }
     expect(checkDtdDrawnPage({ picture: dropped, box: panel, puzzle, numberSize: level.rules.numberSize }).join(' ')).toMatch(/9/)
+  })
+
+  it('draws the answer as the picture’s own smooth outline, through every dot in order', () => {
+    for (const subjectId of ['teapot', 'coffee-mug', 'teacup']) {
+      const { design, puzzle, panel, level } = build('classic', subjectId)
+      const tag = { templateKey: DTD_TEMPLATE_KEY, instanceId: 't', pageRole: 'single' as const }
+      const picture = buildDtdPicture({ puzzle, rules: level.rules, box: panel, tag, label: 'x', canonical: 'x', name: design.subject.name })
+      const path = partsOf(picture, 'outline')[0]!.path ?? []
+      // Starts on dot 1 and passes through each dot as one of its points, in number order.
+      const anchors = pathAnchors(path)
+      let k = 0
+      for (const a of anchors) if (k < puzzle.dots.length && Math.hypot(a.x - puzzle.dots[k]!.x, a.y - puzzle.dots[k]!.y) < 0.02) k++
+      expect(k, subjectId).toBe(puzzle.dots.length)
+      expect(Math.hypot(anchors[0]!.x - puzzle.dots[0]!.x, anchors[0]!.y - puzzle.dots[0]!.y)).toBeLessThan(0.02)
+      // Every stretch of the curve stays on the true silhouette.
+      let x = 0
+      let y = 0
+      let worst = 0
+      for (const c of path) {
+        if (c[0] === 'M') (x = Number(c[1])), (y = Number(c[2]))
+        if (c[0] !== 'C') continue
+        const [x1, y1, x2, y2, x3, y3] = c.slice(1).map(Number) as number[]
+        for (let s = 1; s < 8; s++) {
+          const t = s / 8
+          const u = 1 - t
+          const p = {
+            x: u * u * u * x + 3 * u * u * t * x1! + 3 * u * t * t * x2! + t * t * t * x3!,
+            y: u * u * u * y + 3 * u * u * t * y1! + 3 * u * t * t * y2! + t * t * t * y3!,
+          }
+          worst = Math.max(worst, distToRing(p, puzzle.contour))
+        }
+        ;(x = x3!), (y = y3!)
+      }
+      expect(worst, subjectId).toBeLessThan(1)
+      // The group is centred on the curve's real extent, so nothing shifts when Fabric loads it.
+      expect(checkDtdDrawnPage({ picture, box: panel, puzzle, numberSize: level.rules.numberSize })).toEqual([])
+    }
   })
 
   it('never offers a subject the picker cannot trace', () => {

@@ -149,10 +149,27 @@ export function runDtdKdpPreflight(options: {
   return { ok: errors.length === 0, errors: [...new Set(errors)] }
 }
 
+/** Every point a path's line runs through (each M, L or C ends on one), in order. */
+export function pathAnchors(path: readonly (readonly (string | number)[])[]): Pt[] {
+  return path
+    .filter((c) => c[0] === 'M' || c[0] === 'L' || c[0] === 'C')
+    .map((c) => ({ x: Number(c[c.length - 2]), y: Number(c[c.length - 1]) }))
+}
+
+/** True when the line starts on dot 1 and runs through every dot in number order. */
+function joinsDotsInOrder(path: readonly (readonly (string | number)[])[], puzzle: DtdPuzzle): boolean {
+  const anchors = pathAnchors(path)
+  const on = (a: Pt, k: number) => Math.abs(a.x - puzzle.dots[k]!.x) < 0.02 && Math.abs(a.y - puzzle.dots[k]!.y) < 0.02
+  if (!anchors[0] || !on(anchors[0], 0)) return false
+  let k = 1
+  for (const a of anchors.slice(1)) if (k < puzzle.dots.length && on(a, k)) k++
+  return k === puzzle.dots.length
+}
+
 /**
  * The page as drawn: one group holding black lines at print weights, filled
  * black dots, the numbers 1 to N once each in black lining digits (each on
- * its dot's spot), and the hidden outline joining the dots in order.
+ * its dot's spot), and the hidden outline running through the dots in order.
  */
 export function checkDtdDrawnPage(options: { picture: StudioFabricObject; box: Box; puzzle: DtdPuzzle; numberSize: number }): string[] {
   const { picture, box, puzzle, numberSize } = options
@@ -172,11 +189,7 @@ export function checkDtdDrawnPage(options: { picture: StudioFabricObject; box: B
       if (part === 'outline') {
         outlines++
         if (child.visible !== false || child.studioRole !== 'answer') errors.push('The finished outline shows on the puzzle page.')
-        const corners = (child.path ?? []).filter((c) => c[0] === 'M' || c[0] === 'L')
-        const matches =
-          corners.length === n &&
-          corners.every((c, i) => Math.abs(Number(c[1]) - puzzle.dots[i]!.x) < 0.02 && Math.abs(Number(c[2]) - puzzle.dots[i]!.y) < 0.02)
-        if (!matches) errors.push('The answer outline does not join the dots in order.')
+        if (!joinsDotsInOrder(child.path ?? [], puzzle)) errors.push('The answer outline does not join the dots in order.')
       } else if (part !== 'details' || child.strokeWidth !== DTD_INK_WIDTH.detail) errors.push('The picture holds an unexpected line.')
       continue
     }
