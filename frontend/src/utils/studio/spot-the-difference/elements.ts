@@ -46,29 +46,112 @@ export function sliceY(ring: readonly Pt[], top: number, bottom: number): Ring {
 /** A ring squeezed (or stretched) sideways about x = cx. */
 const scaleX = (ring: readonly Pt[], f: number, cx: number): Ring => ring.map((p) => pt(cx + (p.x - cx) * f, p.y))
 
+/** A disc: centre x, centre y, radius. */
+type Disc = readonly [number, number, number]
+
+/** Where two overlapping circles cross: the crossing farther from `o`. */
+function crossing(a: Disc, b: Disc, o: XY): Pt {
+  const [x0, y0, r0] = a
+  const [x1, y1, r1] = b
+  const dx = x1 - x0
+  const dy = y1 - y0
+  const d = Math.hypot(dx, dy)
+  const along = (d * d + r0 * r0 - r1 * r1) / (2 * d)
+  const h = Math.sqrt(Math.max(0, r0 * r0 - along * along))
+  const mx = x0 + (dx * along) / d
+  const my = y0 + (dy * along) / d
+  const p = pt(mx - (dy * h) / d, my + (dx * h) / d)
+  const q = pt(mx + (dy * h) / d, my - (dx * h) / d)
+  return Math.hypot(p.x - o[0], p.y - o[1]) >= Math.hypot(q.x - o[0], q.y - o[1]) ? p : q
+}
+
+/** A circle's points from angle `a0` round to `a1` (radians, clockwise on the page), about 3° apart. */
+function discArc([cx, cy, r]: Disc, a0: number, a1: number): Pt[] {
+  const n = Math.max(2, Math.ceil((a1 - a0) / (Math.PI / 60)))
+  return Array.from({ length: n + 1 }, (_, i) => {
+    const a = a0 + ((a1 - a0) * i) / n
+    return pt(cx + r * Math.cos(a), cy + r * Math.sin(a))
+  })
+}
+
+const angleAt = (c: Disc, p: Pt) => Math.atan2(p.y - c[1], p.x - c[0])
+
+/** `a` turned by whole turns into (from, from + 2π]. */
+function past(a: number, from: number): number {
+  let x = a
+  while (x <= from) x += Math.PI * 2
+  while (x > from + Math.PI * 2) x -= Math.PI * 2
+  return x
+}
+
 /**
- * One clean outline round a cluster of overlapping discs (a cloud, a bush):
- * traced by rays from `o`, which must lie inside the cluster, so it is one
- * closed shape with no inner arcs. `base` flattens the bottom.
+ * A scalloped outline traced along the outer arcs of overlapping discs, each
+ * disc overlapping only its neighbours: true arcs meeting in crisp dips, the
+ * way a cloud or a leafy crown is drawn by hand.
+ *
+ * With `base`, the discs run left to right over the top and the outline
+ * closes with a flat bottom at `base` (the first and last disc should reach
+ * it, ideally just touching, so the ends round smoothly into the base).
+ * Without, the discs run clockwise all the way round and the outline closes
+ * on itself.
  */
-export function puffRing(discs: readonly (readonly [number, number, number])[], o: XY, base?: number, stepsRound = 96): Ring {
+export function bumpRing(discs: readonly Disc[], base?: number): Ring {
+  const n = discs.length
+  const open = base !== undefined
+  const o: XY = open
+    ? [discs.reduce((t, d) => t + d[0], 0) / n, base]
+    : [discs.reduce((t, d) => t + d[0], 0) / n, discs.reduce((t, d) => t + d[1], 0) / n]
   const out: Pt[] = []
-  for (let i = 0; i < stepsRound; i++) {
-    const a = Math.PI + (i / stepsRound) * Math.PI * 2
-    const dx = Math.cos(a)
-    const dy = Math.sin(a)
-    let reach = 0
-    for (const [cx, cy, r] of discs) {
-      const ox = cx - o[0]
-      const oy = cy - o[1]
-      const along = ox * dx + oy * dy
-      const disc = along * along - (ox * ox + oy * oy) + r * r
-      if (disc >= 0) reach = Math.max(reach, along + Math.sqrt(disc))
+  discs.forEach((c, i) => {
+    const onBase = (side: -1 | 1) => {
+      const s = Math.asin(Math.max(-1, Math.min(1, (base! - c[1]) / c[2])))
+      return side < 0 ? Math.PI - s : s
     }
-    const y = o[1] + dy * reach
-    out.push(pt(o[0] + dx * reach, base === undefined ? y : Math.min(y, base)))
-  }
+    const a0 =
+      open && i === 0 ? onBase(-1) : angleAt(c, crossing(discs[(i - 1 + n) % n]!, c, o))
+    const a1 = past(open && i === n - 1 ? onBase(1) : angleAt(c, crossing(c, discs[(i + 1) % n]!, o)), a0)
+    const arc = discArc(c, a0, a1)
+    // Each arc ends where the next begins: keep that point once.
+    out.push(...(open && i === n - 1 ? arc : arc.slice(0, -1)))
+  })
   return out
+}
+
+/**
+ * `n` discs of radius `r` set along a dome `2 × halfWidth` wide and `height`
+ * tall standing on `base` at `cx`, for `bumpRing(…, base)`: the end discs just
+ * touch the base. Keep the discs no more than ~1.8 r apart and over r apart
+ * two along, so each overlaps only its neighbours.
+ */
+function domeDiscs(cx: number, base: number, halfWidth: number, height: number, n: number, r: number): Disc[] {
+  const a = halfWidth - r
+  const b = height - r
+  const from = Math.asin(r / b)
+  return Array.from({ length: n }, (_, i) => {
+    const t = from + ((Math.PI - 2 * from) * i) / (n - 1)
+    return [cx - a * Math.cos(t), base - b * Math.sin(t), r] as const
+  })
+}
+
+/** `n` discs of radius `r` clockwise round an ellipse (from the top), for a closed `bumpRing`. */
+function ovalDiscs(cx: number, cy: number, rx: number, ry: number, n: number, r: number): Disc[] {
+  return Array.from({ length: n }, (_, i) => {
+    const t = -Math.PI / 2 + (i / n) * Math.PI * 2
+    return [cx + rx * Math.cos(t), cy + ry * Math.sin(t), r] as const
+  })
+}
+
+/** A pointed leaf from its stalk (x0, y0) to its tip (x1, y1), `width` across at its widest. */
+function leaf(x0: number, y0: number, x1: number, y1: number, width: number): Ring {
+  const len = Math.hypot(x1 - x0, y1 - y0)
+  const nx = -(y1 - y0) / len
+  const ny = (x1 - x0) / len
+  const side = (sign: number) =>
+    steps(13, 0, 1 / 12).map((t) => {
+      const bulge = sign * (width / 2) * Math.sin(Math.PI * t) ** 0.85
+      return pt(x0 + (x1 - x0) * t + nx * bulge, y0 + (y1 - y0) * t + ny * bulge)
+    })
+  return [...side(1), ...side(-1).reverse().slice(1, -1)]
 }
 
 /** A straight top from x0 to x1 at `top`, with `n` round scallops hanging to `hem`. */
@@ -272,8 +355,8 @@ const vase = subject('sd-vase', 'Vase of Flowers', 'home', 'indoor', 'none', { v
     const set = heads[k.blooms] ?? heads[0]!
     for (const [x, y] of set) s.add(band(path([40, 56], [x, y + 6]), 3.5))
     if (k.leaves === 1) {
-      s.add(blob([40, 54], [26, 44], [22, 36], [34, 40]))
-      s.add(blob([40, 54], [54, 42], [60, 36], [48, 46]))
+      s.add(leaf(39, 54, 20, 38, 10))
+      s.add(leaf(41, 54, 60, 38, 10))
     }
     set.forEach(([x, y], i) => {
       s.add(flowerHead(x, y, 10, i * 20))
@@ -384,10 +467,11 @@ const pendant = subject('sd-pendant', 'Hanging Lamp', 'home', 'indoor', 'none', 
 
 const slippers = subject('sd-slippers', 'Slippers', 'home', 'indoor', 'none', { pair: 2, pom: 2 }, (k) =>
   sketch((s) => {
+    // Side on, toe to the right: a low sole and a rounded cover over the front half.
     const one = (x: number) => {
-      s.add(ellipse(x, 30, 22, 9))
-      s.add(sliceY(ellipse(x + 6, 30, 15, 14), 16, 30))
-      if (k.pom === 1) s.add(circle(x + 10, 17, 5))
+      s.add(rect(x - 20, 25, 40, 7, 3.5))
+      s.add(blob([x - 6, 27], [x - 3, 17], [x + 8, 13], [x + 17, 17], [x + 21, 25], [x + 10, 27]))
+      if (k.pom === 1) s.add(circle(x + 7, 13, 5))
     }
     one(26)
     if (k.pair === 1) one(66)
@@ -435,60 +519,79 @@ const sun = subject('sd-sun', 'Sun', 'garden', 'outdoor', 'none', { rays: 3 }, (
   }),
 )
 
-const CLOUD_PUFFS: readonly (readonly (readonly [number, number, number])[])[] = [
+/**
+ * A cloud's bumps, left to right: big ones in the middle, the end ones just
+ * touching the flat base (y = 45), so each end rounds smoothly into it.
+ */
+const CLOUD_PUFFS: readonly (readonly Disc[])[] = [
   [
-    [30, 34, 14],
-    [50, 25, 18],
-    [70, 34, 13],
+    [20, 33, 12],
+    [46, 23, 19],
+    [74, 30, 15],
   ],
   [
-    [22, 36, 11],
-    [38, 26, 15],
-    [58, 23, 16],
-    [76, 35, 11],
+    [16, 35, 10],
+    [34, 25, 15],
+    [58, 20, 18],
+    [82, 32, 13],
   ],
   [
-    [18, 37, 10],
-    [32, 28, 13],
-    [50, 21, 16],
-    [67, 27, 13],
-    [82, 37, 10],
+    [12, 37, 8],
+    [26, 28, 12],
+    [45, 21, 16],
+    [65, 24, 15],
+    [84, 34, 11],
   ],
 ]
 
 const cloud = subject('sd-cloud', 'Cloud', 'garden', 'outdoor', 'none', { puffs: 3 }, (k) =>
   sketch((s) => {
-    s.add(puffRing(CLOUD_PUFFS[k.puffs] ?? CLOUD_PUFFS[0]!, [50, 36], 45))
+    s.add(bumpRing(CLOUD_PUFFS[k.puffs] ?? CLOUD_PUFFS[0]!, 45))
   }),
 )
 
-/** A gull's two wings, one band. */
-function gull(x: number, y: number, size: number, deep: boolean): Ring {
-  const lift = deep ? 0.62 : 0.36
-  return band(curve([x - size, y - size * 0.1], [x - size * 0.5, y - size * lift], [x, y], [x + size * 0.5, y - size * lift], [x + size, y - size * 0.1]), 3.5, true)
+/** A gull in flight: two arched wings meeting in a point, one line. */
+function gull(x: number, y: number, size: number, deep: boolean): Pt[] {
+  const lift = deep ? 0.55 : 0.32
+  const wing = (dir: number) => curve([x + dir * size, y - size * 0.05], [x + dir * size * 0.5, y - size * lift], [x + dir * size * 0.12, y - size * 0.12], [x, y])
+  return [...wing(-1), ...wing(1).reverse().slice(1)]
 }
 
 const birds = subject('sd-birds', 'Birds', 'garden', 'outdoor', 'none', { count: 2, wings: 2 }, (k) =>
   sketch((s) => {
-    const flock: XY[] = k.count === 1 ? [[16, 24], [46, 12], [76, 26]] : [[20, 24], [58, 14]]
-    const sizes = [13, 11, 9]
-    flock.forEach(([x, y], i) => s.add(gull(x, y, sizes[i]!, k.wings === 1)))
+    const flock: XY[] = k.count === 1 ? [[16, 26], [46, 12], [78, 24]] : [[22, 24], [60, 14]]
+    const sizes = [14, 12, 10]
+    flock.forEach(([x, y], i) => s.stroke(gull(x, y, sizes[i]!, k.wings === 1)))
   }),
 )
 
+/** A bow on a kite's tail: two rounded wings and a knot. */
+function bow(s: { add: (r: Ring) => unknown; part: (r: Ring) => unknown }, x: number, y: number) {
+  s.add(blob([x, y], [x - 6, y - 5], [x - 10, y - 5], [x - 10, y + 5], [x - 6, y + 5]))
+  s.add(blob([x, y], [x + 6, y - 5], [x + 10, y - 5], [x + 10, y + 5], [x + 6, y + 5]))
+  s.part(circle(x, y, 2.5, 20))
+}
+
 const kite = subject('sd-kite', 'Kite', 'hobbies', 'outdoor', 'none', { bows: 3, shape: 2 }, (k) =>
   sketch((s) => {
-    const tail = curve([50, 70], [42, 90], [56, 110], [46, 132])
-    s.add(band(tail, 2.5))
+    // The classic kite (cross spar a third of the way down) or a square-set diamond.
+    const [top, left, bottom, right] =
+      k.shape === 1
+        ? ([[50, 0], [12, 42], [50, 84], [88, 42]] as const)
+        : ([[50, 0], [18, 30], [50, 88], [82, 30]] as const)
+    const tail = curve([50, bottom[1]], [40, bottom[1] + 16], [58, bottom[1] + 36], [42, bottom[1] + 56], [56, bottom[1] + 76], [48, bottom[1] + 86])
+    s.stroke(tail)
+    // Four panels meeting at the spars: each spar prints as one clean line.
+    const mid: XY = [50, left[1]]
+    s.add(poly(top, left, mid))
+    s.add(poly(top, mid, right))
+    s.add(poly(left, bottom, mid))
+    s.add(poly(mid, bottom, right))
     const n = 2 + k.bows
     for (let i = 0; i < n; i++) {
-      const p = tail[Math.round(((i + 1) / (n + 1)) * (tail.length - 1))]!
-      s.add(poly([p.x - 8, p.y - 5], [p.x, p.y], [p.x - 8, p.y + 5]))
-      s.add(poly([p.x + 8, p.y - 5], [p.x, p.y], [p.x + 8, p.y + 5]))
+      const p = tail[Math.round(((i + 0.6) / (n + 0.1)) * (tail.length - 1))]!
+      bow(s, p.x, p.y)
     }
-    s.add(k.shape === 1 ? poly([50, 0], [90, 48], [50, 70], [10, 48]) : poly([50, 0], [78, 30], [50, 72], [22, 30]))
-    s.add(rod(50, 3, 50, 68, 3))
-    s.add(k.shape === 1 ? rod(16, 48, 84, 48, 3) : rod(25, 30, 75, 30, 3))
   }),
 )
 
@@ -496,27 +599,36 @@ const kite = subject('sd-kite', 'Kite', 'hobbies', 'outdoor', 'none', { bows: 3,
  * Garden and grounds
  * ------------------------------------------------------------------ */
 
+/** A broad tree's crown: big round lobes, clockwise from the top, balanced either side of x = 50. */
+const TREE_LOBES: readonly Disc[] = [
+  [50, 22, 20],
+  [74, 34, 18],
+  [80, 60, 17],
+  [63, 80, 16],
+  [37, 80, 16],
+  [20, 60, 17],
+  [26, 34, 18],
+]
+
 const tree = subject('sd-tree', 'Tree', 'garden', 'outdoor', 'grass', { crown: 3, fruit: 2, branch: 2 }, (k) =>
   sketch((s) => {
-    if (k.branch === 1) s.add(rod(50, 118, 74, 98, 7))
-    s.add(poly([43, 150], [57, 150], [54, 86], [46, 86]))
-    const crown =
+    // Two boughs forking up into the crown, either side alike.
+    if (k.branch === 1) {
+      s.add(band(curve([50, 122], [41, 106], [33, 84]), 8, true))
+      s.add(band(curve([50, 122], [59, 106], [67, 84]), 8, true))
+    }
+    // The trunk flares into roots at the foot; its top is hidden in the crown.
+    const side = (dir: number) => curve([50 + dir * 15, 150], [50 + dir * 7, 145], [50 + dir * 5.5, 130], [50 + dir * 5.5, 100], [50 + dir * 6.5, 74])
+    s.add([...side(-1), ...side(1).reverse()])
+    // Round and leafy, broad and lobed, or tall and narrow like a poplar.
+    s.add(
       k.crown === 1
-        ? puffRing(
-            [
-              [26, 62, 22],
-              [44, 38, 26],
-              [70, 44, 24],
-              [76, 70, 18],
-              [50, 74, 22],
-            ],
-            [50, 58],
-          )
+        ? bumpRing(TREE_LOBES)
         : k.crown === 2
-          ? ellipse(50, 52, 32, 50)
-          : circle(50, 54, 42)
-    s.add(crown)
-    if (k.fruit === 1) for (const [x, y] of [[34, 48], [62, 40], [56, 72]] as const) s.add(circle(x, y, 5.5))
+          ? bumpRing(ovalDiscs(50, 56, 26, 44, 14, 10))
+          : bumpRing(ovalDiscs(50, 52, 33, 33, 11, 12)),
+    )
+    if (k.fruit === 1) for (const [x, y] of [[56, 30], [34, 48], [62, 64]] as const) s.add(circle(x, y, 5.5))
   }),
 )
 
@@ -536,33 +648,28 @@ const pine = subject('sd-pine', 'Pine Tree', 'garden', 'outdoor', 'grass', { tie
   }),
 )
 
-const BUSH_LOBES: readonly (readonly (readonly [number, number, number])[])[] = [
-  [
-    [26, 40, 22],
-    [50, 30, 26],
-    [74, 40, 22],
-  ],
-  [
-    [20, 42, 18],
-    [38, 30, 22],
-    [62, 30, 22],
-    [80, 42, 18],
-  ],
-  [
-    [16, 44, 15],
-    [32, 32, 18],
-    [50, 25, 20],
-    [68, 32, 18],
-    [84, 44, 15],
-  ],
+/** A bush's leafy edge: how many scallops round the dome, and how big. */
+const BUSH_LOBES: readonly (readonly [number, number])[] = [
+  [7, 12],
+  [9, 10],
+  [11, 8.5],
 ]
 
+/**
+ * A rounded shrub on the ground: a dome with a close leafy edge (many small
+ * scallops, where a cloud has a few big puffs and a flat underside) and
+ * sprigs of leaves inside, so it never reads as a cloud fallen to the grass.
+ */
 const bush = subject('sd-bush', 'Bush', 'garden', 'outdoor', 'grass', { lobes: 3, flowers: 2 }, (k) =>
   sketch((s) => {
-    s.add(puffRing(BUSH_LOBES[k.lobes] ?? BUSH_LOBES[0]!, [50, 44], 60))
-    // A few leaves drawn in, so a bush on the grass never reads as a cloud.
-    if (k.flowers === 0) for (const [x, y, a] of [[30, 44, -30], [50, 34, 20], [68, 46, -20], [46, 52, 40]] as const) s.add(ellipse(x, y, 7, 3.5, a))
-    if (k.flowers === 1) for (const [x, y] of [[32, 36], [56, 26], [70, 44]] as const) s.add(flowerHead(x, y, 6.5, x))
+    const [n, r] = BUSH_LOBES[k.lobes] ?? BUSH_LOBES[0]!
+    s.add(bumpRing(domeDiscs(50, 60, 49, 50, n, r), 60))
+    if (k.flowers === 1) for (const [x, y] of [[30, 40], [54, 26], [70, 44]] as const) s.add(flowerHead(x, y, 7, x))
+    else
+      for (const [x, y] of [[26, 46], [48, 30], [70, 38], [56, 54], [36, 58]] as const) {
+        s.add(leaf(x, y, x - 8, y - 9, 6))
+        s.add(leaf(x, y, x + 8, y - 9, 6))
+      }
   }),
 )
 
@@ -590,8 +697,8 @@ const flowers = subject('sd-flowers', 'Flowers', 'garden', 'outdoor', 'grass', {
     const heads = all.slice(0, 2 + k.heads)
     for (const [x, y] of heads) s.add(band(path([x, 60], [x, y + 6]), 3.5))
     if (k.leaves === 1) {
-      s.add(blob([30, 60], [14, 48], [12, 40], [26, 46]))
-      s.add(blob([50, 60], [66, 46], [72, 40], [60, 52]))
+      s.add(leaf(19, 56, 4, 38, 9))
+      s.add(leaf(41, 56, 56, 38, 9))
     }
     heads.forEach(([x, y], i) => {
       s.add(flowerHead(x, y, 10, i * 17))
@@ -672,11 +779,12 @@ const hangingBasket = subject('sd-hanging', 'Hanging Basket', 'garden', 'outdoor
     const vines = k.vines === 1 ? [24, 50, 76] : [30, 70]
     vines.forEach((x, i) => {
       const len = i % 2 === 0 ? 100 : 90
-      s.add(band(curve([x, 56], [x - 6, 70], [x + 5, 84], [x, len]), 6, true))
-      s.add(ellipse(x - 8, len - 20, 8, 4.5, -30))
-      s.add(ellipse(x + 8, len - 8, 8, 4.5, 30))
+      s.stroke(curve([x, 50], [x - 6, 66], [x + 5, 82], [x, len]))
+      s.add(leaf(x, len - 24, x - 13, len - 32, 7))
+      s.add(leaf(x, len - 12, x + 13, len - 20, 7))
+      s.add(leaf(x, len, x - 6, len - 12, 6))
     })
-    s.add(puffRing([[24, 36, 13], [42, 26, 15], [60, 26, 15], [76, 36, 13]], [50, 36], 44))
+    s.add(bumpRing(domeDiscs(50, 42, 36, 24, 5, 8), 42))
     if (k.blooms === 1) for (const x of [30, 50, 70]) s.add(flowerHead(x, 28, 8, x))
     s.add(blob([14, 38], [86, 38], [80, 56], [50, 64], [20, 56]))
     s.add(rect(12, 36, 76, 7, 3))
@@ -716,9 +824,11 @@ const sandcastle = subject('sd-sandcastle', 'Sandcastle', 'travel', 'outdoor', '
       s.add(rect(x - 11, 30, 22, 50))
       s.add(poly([x - 14, 32], [x, 14], [x + 14, 32]))
     }
-    const teeth: XY[] = [[4, 100], [4, 58]]
-    for (let x = 4; x < 96; x += 12) teeth.push([x, 52], [x + 6, 52], [x + 6, 58], [x + 12, 58])
-    teeth.push([96, 58], [96, 100])
+    // Battlements: eight merlons and seven gaps, the same at either end.
+    const teeth: XY[] = [[4, 100]]
+    const w = 92 / 15
+    for (let i = 0; i < 15; i += 2) teeth.push([4 + i * w, 52], [4 + (i + 1) * w, 52], ...(i < 14 ? ([[4 + (i + 1) * w, 58], [4 + (i + 2) * w, 58]] as XY[]) : []))
+    teeth.push([96, 100])
     s.add(poly(...teeth))
     if (k.door === 1) s.add(rect(42, 78, 16, 22, [8, 0]))
   }),
@@ -765,7 +875,11 @@ const lifeRing = subject('sd-life-ring', 'Life Ring', 'travel', 'outdoor', 'none
 const campfire = subject('sd-campfire', 'Campfire', 'travel', 'outdoor', 'grass', { logs: 2, flames: 3, stones: 2 }, (k) =>
   sketch((s) => {
     const tongues: XY[] = k.flames === 0 ? [[50, 12]] : k.flames === 1 ? [[40, 22], [60, 14]] : [[34, 26], [50, 10], [66, 24]]
-    for (const [x, y] of tongues) s.add(blob([x, y], [x + 10, y + 26], [x + 12, 70], [x, 78], [x - 12, 70], [x - 10, y + 26]))
+    // Flames: a full round base drawn up into a tip that flicks to one side.
+    for (const [x, y] of tongues) {
+      const h = 78 - y
+      s.add(blob([x + 3, y], [x + 6, y + h * 0.3], [x + 13, y + h * 0.62], [x + 9, y + h * 0.9], [x, 78], [x - 9, y + h * 0.9], [x - 13, y + h * 0.62], [x - 4, y + h * 0.38]))
+    }
     s.add(rod(12, 90, 88, 70, 12))
     s.add(rod(12, 70, 88, 90, 12))
     if (k.logs === 1) s.add(rod(24, 92, 76, 92, 11))
@@ -790,9 +904,11 @@ const signpost = subject('sd-signpost', 'Signpost', 'travel', 'outdoor', 'grass'
 function duck(s: { add: (r: Ring) => unknown }, x: number, y: number, size: number) {
   const f = size / 40
   const at = (dx: number, dy: number) => [x + dx * f, y + dy * f] as const
-  s.add(blob(at(-22, -2), at(-18, -14), at(-4, -16), at(14, -12), at(20, -2), at(0, 2), at(-16, 2)))
-  s.add(poly(at(22, -22), at(32, -19), at(22, -16)))
-  s.add(circle(x + 14 * f, y - 22 * f, 8 * f))
+  // Body with the tail tipped up behind and a round breast in front.
+  s.add(blob(at(-25, -15), at(-17, -10), at(-2, -13), at(14, -11), at(21, -3), at(13, 2), at(-12, 2), at(-21, -4)))
+  s.add(blob(at(-12, -7), at(-2, -10), at(9, -7), at(-1, -3)))
+  s.add(blob(at(19, -24), at(30, -22), at(31, -19), at(20, -17)))
+  s.add(circle(x + 14 * f, y - 21 * f, 8 * f))
 }
 
 const ducks = subject('sd-ducks', 'Ducks', 'garden', 'outdoor', 'water', { ducklings: 3 }, (k) =>

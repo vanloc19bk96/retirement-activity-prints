@@ -2507,7 +2507,13 @@ cookies, cake, easel, footstool, slippers, a pile of books, sun, cloud,
 birds, kite, trees, pine, bush, fence, flowers, sand trap, picnic blanket,
 doormat, front door, hanging basket, ducks, beach umbrella, sandcastle,
 bucket, beach ball, life ring, campfire, signpost, tackle box) — 92 kinds in
-all (`props.ts`). Recipes (`scenes.ts`) pack parts in rows along floors,
+all (`props.ts`). Scalloped outlines (clouds, tree crowns, the bush, the
+hanging basket's greenery) are traced exactly along the outer arcs of
+overlapping discs (`bumpRing`), so they print as true arcs meeting in crisp
+dips with a flat base: a cloud has a few big puffs, a bush a dome of many
+small scallops with leaf sprigs, a tree a balanced crown over a flared
+trunk. Birds and the kite's tail are single lines, not outlined bands.
+Recipes (`scenes.ts`) pack parts in rows along floors,
 table tops and the ground with dealt gaps, versions and facing; things in
 one plane never overlap, the sky's sun, clouds and birds keep clear of
 everything, and nothing prints under 0.36 in. Both pictures render from the
