@@ -145,24 +145,27 @@ function homeTouches(s: SdStage, floor: number, pendant = 0.65) {
   }
   const front = Math.min(s.y(0.955), floor + s.H * 0.2)
   if (front - floor < s.H * 0.14) return
+  // Never a second cat, dog or basket: only things the room does not hold yet.
+  const fresh = (kinds: readonly string[]) => kinds.filter((k) => !s.parts.some((p) => p.kind === k))
+  const items: SdRowItem[] = [
+    { kinds: fresh(['sd-slippers']), h: s.size(0.08), chance: 0.75 },
+    { kinds: fresh(['sd-books', 'yarn-basket']), h: s.size(0.12), chance: 0.75 },
+    { kinds: fresh(['sd-cat', 'sd-footstool', 'sd-dog']), h: s.size(0.12), chance: 0.45 },
+  ]
   s.row(
-    s.rng.shuffle([
-      { kinds: ['sd-slippers'], h: s.size(0.08), chance: 0.75 },
-      { kinds: ['sd-books', 'yarn-basket'], h: s.size(0.12), chance: 0.75 },
-      { kinds: ['sd-cat', 'sd-footstool'], h: s.size(0.12), chance: 0.4 },
-    ]),
+    s.rng.shuffle(items.filter((item) => item.kinds.length > 0)),
     { x0: s.x(0.06), x1: s.x(0.94), y: front, depth: 40, gap: inch(0.5) },
   )
 }
 
-const TABLETOP = ['teacup', 'coffee-mug', 'book-and-glasses', 'sd-vase', 'vintage-radio', 'table-lamp', 'houseplant', 'teapot']
+const TABLETOP = ['teacup', 'coffee-mug', 'book-and-glasses', 'sd-vase', 'vintage-radio', 'table-lamp', 'houseplant', 'teapot', 'sd-candles', 'sd-fruit', 'sd-cactus', 'sd-photo']
 const CUPS = ['teacup', 'coffee-mug', 'book-and-glasses']
 
 function sideTableTop(s: SdStage, placed: readonly SdPart[], first: readonly string[] = TABLETOP) {
   s.onTop(find(placed, ['sd-side-table']), [
     { kinds: first, h: s.size(0.2) },
     { kinds: CUPS, h: s.size(0.12), chance: 0.8 },
-    { kinds: ['sd-vase', 'sd-cookies', 'teacup'], h: s.size(0.14), chance: 0.4 },
+    { kinds: ['sd-vase', 'sd-cookies', 'teacup', 'sd-photo', 'sd-cactus'], h: s.size(0.14), chance: 0.4 },
   ])
 }
 
@@ -177,8 +180,8 @@ const livingRoom: SdRecipe = {
       [
         { ...onWall(['sd-window'], s.H * 0.44, s.y(0.36)), removable: false },
         onWall(['sd-picture', 'sd-clock'], s.size(0.2), s.y(0.3)),
-        onWall(['sd-shelf', 'sd-clock', 'sd-picture'], s.size(0.2), s.y(0.3), 0.85),
-        onWall(['sd-clock', 'sd-picture'], s.size(0.18), s.y(0.26), 0.4),
+        onWall(['sd-shelf', 'sd-clock', 'sd-picture', 'sd-mirror'], s.size(0.2), s.y(0.3), 0.85),
+        onWall(['sd-clock', 'sd-picture', 'sd-shelf', 'sd-mirror'], s.size(0.18), s.y(0.26), 0.5),
       ],
       0,
       10,
@@ -187,11 +190,13 @@ const livingRoom: SdRecipe = {
     const placed = row(
       s,
       [
-        { kinds: ['armchair', 'rocking-chair'], h: s.H * 0.44 },
+        { kinds: ['armchair', 'rocking-chair', 'sd-sofa'], h: s.H * 0.44, maxW: s.W * 0.32 },
         { kinds: ['sd-side-table'], h: s.H * 0.28 },
-        { kinds: ['houseplant', 'sd-floor-lamp'], h: s.H * 0.42 },
-        { kinds: ['yarn-basket', 'sd-footstool'], h: s.size(0.15), chance: 0.8 },
+        { kinds: ['houseplant', 'sd-floor-lamp', 'sd-tall-clock'], h: s.H * 0.42 },
+        { kinds: ['yarn-basket', 'sd-footstool', 'sd-dog'], h: s.size(0.15), chance: 0.8 },
         { kinds: ['flower-pot', 'sd-vase', 'gramophone'], h: s.size(0.2), chance: 0.5 },
+        // A fireplace against the wall, in its own place along the room so nothing hides it.
+        { kinds: ['sd-fireplace'], h: s.H * 0.4, y: floor + s.H * 0.015, chance: 0.45 },
       ],
       floor + s.H * 0.1,
       30,
@@ -214,7 +219,9 @@ const readingNook: SdRecipe = {
         onWall(['sd-shelf'], s.size(0.22), s.y(0.24)),
         { ...onWall(['sd-window'], s.H * 0.46, s.y(0.38)), removable: false },
         onWall(['sd-shelf', 'sd-picture'], s.size(0.2), s.y(0.3), 0.8),
-        onWall(['sd-clock'], s.size(0.18), s.y(0.22), 0.5),
+        onWall(['sd-clock', 'sd-mirror'], s.size(0.18), s.y(0.22), 0.5),
+        // A bookcase standing against the wall behind the furniture.
+        { kinds: ['sd-bookcase'], h: s.H * 0.5, y: floor + s.H * 0.01, chance: 0.4 },
       ],
       0,
       10,
@@ -223,7 +230,7 @@ const readingNook: SdRecipe = {
     const placed = row(
       s,
       [
-        { kinds: ['sd-floor-lamp'], h: s.H * 0.62 },
+        { kinds: ['sd-floor-lamp', 'sd-tall-clock'], h: s.H * 0.6 },
         { kinds: ['armchair', 'rocking-chair'], h: s.H * 0.44 },
         { kinds: ['sd-side-table'], h: s.H * 0.28 },
         { kinds: ['sd-footstool', 'yarn-basket'], h: s.size(0.14), chance: 0.9 },
@@ -232,7 +239,7 @@ const readingNook: SdRecipe = {
       floor + s.H * 0.1,
       30,
     )
-    sideTableTop(s, placed, ['book-and-glasses', 'table-lamp', 'sd-vase'])
+    sideTableTop(s, placed, ['book-and-glasses', 'table-lamp', 'sd-vase', 'sd-candles', 'sd-photo'])
     if (s.chance(0.5)) s.put({ kind: 'sd-cat', cx: s.x(0.2 + s.rng.next() * 0.6), y: floor + s.H * 0.22, h: s.size(0.13), depth: 36 })
     homeTouches(s, floor, 0.4)
   },
@@ -250,7 +257,7 @@ const teaTime: SdRecipe = {
         { ...onWall(['sd-window'], s.H * 0.38, s.y(0.25)), removable: false },
         onWall(['sd-clock', 'sd-picture'], s.size(0.19), s.y(0.2)),
         onWall(['sd-picture', 'sd-shelf'], s.size(0.18), s.y(0.22), 0.7),
-        onWall(['sd-clock', 'sd-picture'], s.size(0.16), s.y(0.2), 0.4),
+        onWall(['sd-clock', 'sd-picture', 'sd-mirror'], s.size(0.16), s.y(0.2), 0.4),
       ],
       0,
       10,
@@ -264,7 +271,7 @@ const teaTime: SdRecipe = {
       { kinds: ['teapot', 'kettle'], h: s.size(0.3) },
       { kinds: ['teacup'], h: s.size(0.16) },
       { kinds: ['sd-cake', 'fresh-pie', 'sd-cookies'], h: s.size(0.2) },
-      { kinds: ['sd-vase'], h: s.size(0.32), chance: 0.8 },
+      { kinds: ['sd-vase', 'sd-candles'], h: s.size(0.32), chance: 0.8 },
       { kinds: ['teacup', 'coffee-mug'], h: s.size(0.16), chance: 0.8 },
       { kinds: ['sd-cookies', 'book-and-glasses', 'fresh-pie'], h: s.size(0.12), chance: 0.5 },
     ])
@@ -272,7 +279,7 @@ const teaTime: SdRecipe = {
     row(
       s,
       [
-        { kinds: ['sd-cat', 'yarn-basket'], h: s.size(0.14), chance: 0.8 },
+        { kinds: ['sd-cat', 'yarn-basket', 'sd-dog'], h: s.size(0.14), chance: 0.8 },
         { kinds: ['houseplant', 'flower-pot'], h: s.size(0.3), chance: 0.7 },
       ],
       Math.min(s.y(0.95), floor + s.H * 0.1),
@@ -294,7 +301,7 @@ const hobbyCorner: SdRecipe = {
         onWall(['sd-picture'], s.size(0.22), s.y(0.28)),
         onWall(['sd-shelf'], s.size(0.2), s.y(0.26)),
         onWall(['sd-window'], s.size(0.36), s.y(0.34), 0.8),
-        onWall(['sd-clock', 'sd-picture'], s.size(0.18), s.y(0.24), 0.4),
+        onWall(['sd-clock', 'sd-picture', 'sd-mirror'], s.size(0.18), s.y(0.24), 0.4),
       ],
       0,
       10,
@@ -311,7 +318,7 @@ const hobbyCorner: SdRecipe = {
       floor + s.H * 0.1,
       30,
     )
-    sideTableTop(s, placed, ['gramophone', 'vintage-camera', 'vintage-radio'])
+    sideTableTop(s, placed, ['gramophone', 'vintage-camera', 'vintage-radio', 'sd-cactus'])
     homeTouches(s, floor)
   },
 }
@@ -354,7 +361,7 @@ const frontPorch: SdRecipe = {
         { kinds: ['rocking-chair', 'armchair', 'park-bench'], h: s.H * 0.38 },
         { kinds: ['flower-pot', 'houseplant'], h: s.size(0.22) },
         { kinds: ['watering-can', 'lantern'], h: s.size(0.16), chance: 0.85 },
-        { kinds: ['sd-cat', 'sd-doormat'], h: s.size(0.1), chance: 0.8 },
+        { kinds: ['sd-cat', 'sd-doormat', 'sd-dog'], h: s.size(0.1), chance: 0.8 },
         { kinds: ['flower-pot', 'sd-vase', 'yarn-basket'], h: s.size(0.18), chance: 0.6 },
       ],
       floor + s.H * 0.1,
@@ -375,7 +382,7 @@ const garden: SdRecipe = {
     row(
       s,
       [
-        { kinds: ['garden-shed', 'sd-tree'], h: s.H * 0.46 },
+        { kinds: ['garden-shed', 'sd-tree', 'sd-arch'], h: s.H * 0.46 },
         { kinds: ['sd-fence'], h: s.size(0.17), maxW: s.W * 0.28 },
         { kinds: ['sd-bush', 'sd-tree', 'sd-pine'], h: s.H * 0.3, chance: 0.8 },
       ],
@@ -389,9 +396,9 @@ const garden: SdRecipe = {
         { kinds: ['wheelbarrow'], h: s.size(0.2) },
         { kinds: ['sunflower'], h: s.H * 0.34 },
         { kinds: ['watering-can', 'flower-pot'], h: s.size(0.17) },
-        { kinds: ['birdhouse', 'birdbath'], h: s.H * 0.3, chance: 0.85 },
+        { kinds: ['birdhouse', 'birdbath', 'sd-feeder'], h: s.H * 0.3, chance: 0.85 },
         { kinds: ['sd-flowers', 'flower-pot'], h: s.size(0.14), chance: 0.8 },
-        { kinds: ['songbird', 'sd-flowers'], h: s.size(0.12), chance: 0.4 },
+        { kinds: ['songbird', 'sd-flowers', 'sd-snail'], h: s.size(0.12), chance: 0.4 },
       ],
       s.y(0.94),
       30,
@@ -414,7 +421,7 @@ const patio: SdRecipe = {
       [
         { kinds: ['sd-bush', 'sd-tree'], h: s.H * 0.3 },
         { kinds: ['sd-fence', 'sd-bush'], h: s.size(0.17), maxW: s.W * 0.28, chance: 0.8 },
-        { kinds: ['sd-bush', 'sd-pine', 'birdhouse'], h: s.H * 0.28, chance: 0.7 },
+        { kinds: ['sd-bush', 'sd-pine', 'birdhouse', 'sd-arch'], h: s.H * 0.28, chance: 0.7 },
       ],
       ground,
       20,
@@ -425,14 +432,14 @@ const patio: SdRecipe = {
       [
         { kinds: ['deck-chair'], h: s.H * 0.32 },
         { kinds: ['sd-side-table'], h: s.H * 0.28 },
-        { kinds: ['flower-pot', 'birdbath'], h: s.size(0.24) },
+        { kinds: ['flower-pot', 'birdbath', 'sd-feeder'], h: s.size(0.24) },
         { kinds: ['deck-chair', 'watering-can'], h: s.H * 0.28, chance: 0.7 },
         { kinds: ['sd-flowers', 'flower-pot'], h: s.size(0.14), chance: 0.7 },
       ],
       s.y(0.94),
       30,
     )
-    sideTableTop(s, placed, ['coffee-mug', 'teapot', 'sd-vase', 'fresh-pie'])
+    sideTableTop(s, placed, ['coffee-mug', 'teapot', 'sd-vase', 'fresh-pie', 'sd-fruit'])
   },
 }
 
@@ -446,7 +453,7 @@ const backyard: SdRecipe = {
       s,
       [
         { kinds: ['sd-tree'], h: s.H * 0.46 },
-        { kinds: ['sd-fence'], h: s.size(0.17), maxW: s.W * 0.28, chance: 0.85 },
+        { kinds: ['sd-fence', 'sd-washing'], h: s.size(0.2), maxW: s.W * 0.34, chance: 0.85 },
         { kinds: ['sd-pine', 'sd-bush', 'garden-shed'], h: s.H * 0.34, chance: 0.7 },
       ],
       ground,
@@ -456,10 +463,10 @@ const backyard: SdRecipe = {
     row(
       s,
       [
-        { kinds: ['hammock', 'park-bench'], h: s.H * 0.28 },
+        { kinds: ['hammock', 'park-bench', 'sd-picnic-table'], h: s.H * 0.28, maxW: s.W * 0.34 },
         { kinds: ['deck-chair'], h: s.H * 0.28 },
-        { kinds: ['birdbath', 'birdhouse', 'sunflower'], h: s.H * 0.3, chance: 0.85 },
-        { kinds: ['picnic-basket', 'watering-can', 'sd-ball'], h: s.size(0.14), chance: 0.85 },
+        { kinds: ['birdbath', 'birdhouse', 'sunflower', 'sd-feeder'], h: s.H * 0.3, chance: 0.85 },
+        { kinds: ['picnic-basket', 'watering-can', 'sd-ball', 'sd-dog'], h: s.size(0.14), chance: 0.85 },
         { kinds: ['sd-flowers'], h: s.size(0.13), chance: 0.7 },
       ],
       s.y(0.94),
@@ -489,7 +496,7 @@ const picnic: SdRecipe = {
     const blanket = s.put({ kind: 'sd-blanket', cx: blanketAt, y: s.y(0.93), h: s.H * 0.17, maxW: s.W * 0.5, depth: 25, removable: false, overlap: true })
     s.onTop(blanket, [
       { kinds: ['picnic-basket'], h: s.size(0.2) },
-      { kinds: ['fresh-pie', 'sd-cake', 'teapot'], h: s.size(0.14) },
+      { kinds: ['fresh-pie', 'sd-cake', 'teapot', 'sd-fruit', 'sd-bread'], h: s.size(0.14) },
       { kinds: ['coffee-mug', 'teacup', 'sun-hat', 'book-and-glasses'], h: s.size(0.11), chance: 0.85 },
     ])
     const bb = blanket ? partBounds(blanket) : null
@@ -500,7 +507,7 @@ const picnic: SdRecipe = {
         y: s.y(0.93),
         depth: 30,
       })
-      s.row(s.rng.shuffle([{ kinds: ['sd-flowers', 'songbird', 'sd-bush'], h: s.size(0.14) }, { kinds: ['sd-bicycle', 'deck-chair'], h: s.H * 0.26, chance: 0.6 }]), {
+      s.row(s.rng.shuffle([{ kinds: ['sd-flowers', 'songbird', 'sd-bush', 'sd-cool-box'], h: s.size(0.14) }, { kinds: ['sd-bicycle', 'deck-chair'], h: s.H * 0.26, chance: 0.6 }]), {
         x0: bb.maxX + inch(0.1),
         x1: s.x(0.96),
         y: s.y(0.93),
@@ -527,7 +534,7 @@ const golf: SdRecipe = {
       20,
     )
     sky(s, 0.52, ['sd-birds'])
-    s.row(s.rng.shuffle([{ kinds: ['sd-bunker'], h: s.H * 0.08, maxW: s.W * 0.28 }, { kinds: ['sd-flowers', 'sd-bush'], h: s.size(0.12), chance: 0.5 }]), {
+    s.row(s.rng.shuffle([{ kinds: ['sd-bunker'], h: s.size(0.08), maxW: s.W * 0.28 }, { kinds: ['sd-flowers', 'sd-bush'], h: s.size(0.12), chance: 0.5 }]), {
       x0: s.x(0.1),
       x1: s.x(0.9),
       y: ground + s.H * 0.12,
@@ -563,11 +570,11 @@ const beach: SdRecipe = {
     row(
       s,
       [
-        { kinds: ['sd-umbrella'], h: s.H * 0.5 },
+        { kinds: ['sd-umbrella', 'sd-palm'], h: s.H * 0.5 },
         { kinds: ['deck-chair'], h: s.H * 0.28 },
-        { kinds: ['sd-sandcastle', 'picnic-basket'], h: s.size(0.18) },
+        { kinds: ['sd-sandcastle', 'picnic-basket', 'sd-cool-box'], h: s.size(0.18) },
         { kinds: ['sd-bucket', 'sd-ball'], h: s.size(0.13) },
-        { kinds: ['sun-hat', 'picnic-basket', 'suitcase'], h: s.size(0.11), chance: 0.7 },
+        { kinds: ['sun-hat', 'picnic-basket', 'suitcase', 'sd-flip-flops'], h: s.size(0.11), chance: 0.7 },
       ],
       s.y(0.95),
       30,
@@ -578,8 +585,8 @@ const beach: SdRecipe = {
     s.row(
       s.rng.shuffle([
         { kinds: ['sd-sandcastle'], h: s.size(0.16) },
-        { kinds: ['sd-ball', 'sd-bucket'], h: s.size(0.11) },
-        { kinds: ['sd-bucket', 'sun-hat'], h: s.size(0.1), chance: 0.6 },
+        { kinds: ['sd-ball', 'sd-bucket', 'sd-crab'], h: s.size(0.11) },
+        { kinds: ['sd-bucket', 'sun-hat', 'sd-shells'], h: s.size(0.1), chance: 0.6 },
       ]),
       { x0: s.x(0.08), x1: s.x(0.92), y: shore + s.H * 0.16, depth: 24 },
     )
@@ -614,12 +621,14 @@ const fishingDock: SdRecipe = {
       s.rng.shuffle([
         { kinds: ['deck-chair'], h: s.H * 0.3 },
         { kinds: ['sd-fishing'], h: s.H * 0.34 },
-        { kinds: ['sd-tackle', 'picnic-basket', 'lantern'], h: s.size(0.13) },
+        { kinds: ['sd-tackle', 'picnic-basket', 'lantern', 'sd-cool-box'], h: s.size(0.13) },
         { kinds: ['sd-bucket', 'sun-hat', 'coffee-mug'], h: s.size(0.1), chance: 0.8 },
       ]),
       { x0: s.x(dx0), x1: s.x(dx1), y: deck - thick * 0.6, depth: 30 },
     )
-    scatter(s, ['fishing-boat', 'sailboat'], 1, { ...open, minY: s.y(0.84), maxY: s.y(0.86) }, s.size(0.26), 26)
+    // A boat out on the water, or a canoe: long and low, so it is dealt shorter.
+    if (s.chance(0.35)) scatter(s, ['sd-canoe'], 1, { ...open, minY: s.y(0.86), maxY: s.y(0.88) }, s.size(0.1), 26)
+    else scatter(s, ['fishing-boat', 'sailboat'], 1, { ...open, minY: s.y(0.84), maxY: s.y(0.86) }, s.size(0.26), 26)
     scatter(s, ['sd-ducks'], 1, { ...open, minY: s.y(0.66), maxY: s.y(0.74) }, s.size(0.1), 26)
     scatter(s, ['sd-birds'], s.fullness > 0 ? 1 : 0, { ...open, minY: s.y(0.44), maxY: s.y(0.56) }, s.size(0.1), 26)
   },
@@ -685,8 +694,9 @@ const campsite: SdRecipe = {
         { kinds: ['tent'], h: s.H * 0.28 },
         { kinds: ['sd-campfire'], h: s.size(0.16) },
         { kinds: ['deck-chair'], h: s.H * 0.26 },
-        { kinds: ['lantern', 'picnic-basket', 'sd-bucket'], h: s.size(0.13), chance: 0.85 },
+        { kinds: ['lantern', 'picnic-basket', 'sd-bucket', 'sd-backpack'], h: s.size(0.13), chance: 0.85 },
         { kinds: ['sd-bicycle', 'sd-signpost'], h: s.H * 0.24, chance: 0.6 },
+        { kinds: ['sd-stump', 'sd-cool-box'], h: s.size(0.11), chance: 0.5 },
         { kinds: ['coffee-mug', 'kettle', 'sd-flowers'], h: s.size(0.1), chance: 0.5 },
       ],
       s.y(0.94),
@@ -714,7 +724,7 @@ const sightseeing: SdRecipe = {
       [
         { kinds: ['sd-signpost'], h: s.H * 0.42 },
         { kinds: ['park-bench'], h: s.H * 0.22 },
-        { kinds: ['suitcase'], h: s.size(0.16) },
+        { kinds: ['suitcase', 'sd-backpack'], h: s.size(0.16) },
         { kinds: ['vintage-camera', 'binoculars', 'sun-hat'], h: s.size(0.1), chance: 0.85 },
         { kinds: ['sd-tree', 'sd-pine'], h: s.H * 0.36, chance: 0.75 },
         { kinds: ['sd-flowers', 'picnic-basket', 'sd-bush'], h: s.size(0.14), chance: 0.5 },
@@ -725,22 +735,156 @@ const sightseeing: SdRecipe = {
   },
 }
 
+/* ------------------------------------------------------------------ *
+ * A kitchen, a vegetable patch, a row of beach huts
+ * ------------------------------------------------------------------ */
+
+const bakingDay: SdRecipe = {
+  id: 'baking-day',
+  name: 'Baking day',
+  group: 'home',
+  build(s) {
+    const floor = room(s, 0.8)
+    row(
+      s,
+      [
+        { ...onWall(['sd-window'], s.H * 0.36, s.y(0.3)), removable: false },
+        onWall(['sd-cupboard'], s.size(0.22), s.y(0.24)),
+        onWall(['sd-utensils'], s.size(0.17), s.y(0.3)),
+        onWall(['sd-clock', 'sd-picture'], s.size(0.17), s.y(0.22), 0.35),
+      ],
+      0,
+      10,
+    )
+    // The counter along the wall, laid out for baking.
+    const counter = s.put({ kind: 'sd-counter', cx: s.x(0.5 + (s.rng.next() - 0.5) * 0.12), y: floor + s.H * 0.04, h: s.H * 0.3, maxW: s.W * 0.66, depth: 30, removable: false })
+    s.onTop(counter, [
+      { kinds: ['sd-mixing-bowl'], h: s.size(0.11) },
+      { kinds: ['sd-bread', 'fresh-pie'], h: s.size(0.09) },
+      { kinds: ['sd-jars'], h: s.size(0.14) },
+      { kinds: ['sd-cake', 'sd-cookies', 'sd-fruit'], h: s.size(0.12), chance: 0.85 },
+      { kinds: ['kettle', 'teapot', 'houseplant'], h: s.size(0.15), chance: 0.6 },
+    ])
+    // Either side of the counter: a plant, a stool or a basket.
+    const cb = counter ? partBounds(counter) : null
+    if (cb) {
+      const side = (x0: number, x1: number) =>
+        s.row(s.rng.shuffle([{ kinds: ['houseplant', 'flower-pot', 'sd-floor-lamp'], h: s.size(0.3), chance: 0.7 }, { kinds: ['sd-footstool', 'yarn-basket'], h: s.size(0.14), chance: 0.4 }]), {
+          x0,
+          x1,
+          y: floor + s.H * 0.06,
+          depth: 30,
+        })
+      side(s.x(0.04), cb.minX - inch(0.1))
+      side(cb.maxX + inch(0.1), s.x(0.96))
+    }
+    homeTouches(s, floor, 0.35)
+  },
+}
+
+const vegetablePatch: SdRecipe = {
+  id: 'vegetable-patch',
+  name: 'Vegetable patch',
+  group: 'outdoors',
+  build(s) {
+    const ground = land(s, 0.46)
+    row(
+      s,
+      [
+        { kinds: ['garden-shed', 'sd-tree'], h: s.H * 0.42 },
+        { kinds: ['sd-scarecrow'], h: s.H * 0.38 },
+        { kinds: ['sd-fence', 'sd-bush'], h: s.size(0.16), maxW: s.W * 0.26, chance: 0.75 },
+      ],
+      ground,
+      20,
+    )
+    sky(s, 0.46, ['sd-birds', 'butterfly'])
+    // Raised beds across the middle of the plot.
+    s.row(
+      [
+        { kinds: ['sd-veg-bed'], h: s.size(0.12), maxW: s.W * 0.38 },
+        { kinds: ['sd-veg-bed'], h: s.size(0.12), maxW: s.W * 0.38, chance: 0.8 },
+      ],
+      { x0: s.x(0.06), x1: s.x(0.94), y: ground + s.H * 0.15, depth: 24, gap: inch(0.3) },
+    )
+    row(
+      s,
+      [
+        { kinds: ['wheelbarrow'], h: s.size(0.2) },
+        { kinds: ['sd-pumpkins'], h: s.size(0.15) },
+        { kinds: ['sd-tools'], h: s.H * 0.24 },
+        { kinds: ['sd-crate', 'watering-can'], h: s.size(0.14) },
+        { kinds: ['watering-can', 'sd-snail', 'sd-flowers'], h: s.size(0.11), chance: 0.6 },
+      ],
+      s.y(0.95),
+      30,
+    )
+  },
+}
+
+const beachHuts: SdRecipe = {
+  id: 'beach-huts',
+  name: 'Beach huts',
+  group: 'travel',
+  build(s) {
+    const horizon = sea(s, 0.34, 1)
+    const shore = horizon + s.H * 0.08
+    s.wave(shore, s.H * 0.01, s.W * 0.9, 15)
+    // A row of huts along the top of the beach, a palm or an umbrella between them.
+    row(
+      s,
+      [
+        { kinds: ['sd-beach-hut'], h: s.H * 0.34 },
+        { kinds: ['sd-beach-hut'], h: s.H * 0.34 },
+        { kinds: ['sd-beach-hut', 'sd-palm'], h: s.H * 0.4, chance: 0.7 },
+        { kinds: ['sd-palm', 'sd-umbrella'], h: s.H * 0.44, chance: 0.6 },
+      ],
+      shore + s.H * 0.2,
+      20,
+    )
+    sky(s, 0.32, ['sd-birds', 'sd-kite'])
+    // Things left on the sand between the huts and the front.
+    s.row(
+      s.rng.shuffle([
+        { kinds: ['sd-sandcastle', 'sd-ball'], h: s.size(0.12) },
+        { kinds: ['sd-shells', 'sd-crab', 'sd-bucket'], h: s.size(0.08), chance: 0.7 },
+      ]),
+      { x0: s.x(0.1), x1: s.x(0.9), y: s.y(0.76), depth: 24, gap: inch(0.4) },
+    )
+    row(
+      s,
+      [
+        { kinds: ['deck-chair'], h: s.H * 0.26 },
+        { kinds: ['sd-cool-box', 'picnic-basket'], h: s.size(0.12) },
+        { kinds: ['sd-sandcastle', 'sd-bucket'], h: s.size(0.14) },
+        { kinds: ['sd-crab', 'sd-shells', 'sd-flip-flops'], h: s.size(0.09) },
+        { kinds: ['sd-ball', 'sun-hat', 'sd-shells'], h: s.size(0.1), chance: 0.7 },
+      ],
+      s.y(0.95),
+      30,
+    )
+  },
+}
+
 export const SD_RECIPES: readonly SdRecipe[] = [
   livingRoom,
   readingNook,
   teaTime,
   hobbyCorner,
+  bakingDay,
   frontPorch,
   garden,
   patio,
   backyard,
   picnic,
   golf,
+  vegetablePatch,
   beach,
   fishingDock,
   cruiseDeck,
   campsite,
   sightseeing,
+  beachHuts,
 ]
 
 const RECIPE_INDEX = new Map(SD_RECIPES.map((r) => [r.id, r]))

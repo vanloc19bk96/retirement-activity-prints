@@ -317,7 +317,12 @@ export class SdStage {
     for (const item of items) {
       const chance = item.chance ?? 1
       if (chance < 1 && !this.chance(chance)) continue
-      const kind = sdProp(this.rng.pick(item.kinds))
+      // A row prefers things it does not hold yet: three clocks on one wall is a muddle, not a room.
+      // An optional choice with nothing new to offer is left out; a single kind asked twice (a pair
+      // of hanging baskets, two deck chairs) is meant as a pair.
+      const fresh = item.kinds.filter((id) => !plans.some((p) => p.kind.id === id))
+      if (fresh.length === 0 && chance < 1 && item.kinds.length > 1) continue
+      const kind = sdProp(this.rng.pick(fresh.length > 0 ? fresh : item.kinds))
       if (!kind) continue
       const knobs = this.dealKnobs(kind)
       const b = kindDrawing(kind, knobs).bounds

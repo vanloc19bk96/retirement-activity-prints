@@ -2472,8 +2472,9 @@ Pages: 1 · Answer key: yes · AI content: no
 
 ### Spot the Differences: Retirement Edition (`spot-the-difference`)
 Two copies of one retirement scene, one above the other, the same size, in
-clean black line art: a cozy living room, a tea table, a front porch, a
-garden, a beach day, a fishing dock. One picture has 5 to 10 deliberate
+clean black line art: a cozy living room, a tea table, a kitchen on baking
+day, a front porch, a vegetable patch, a beach day, a row of beach huts, a
+fishing dock. One picture has 5 to 10 deliberate
 differences; the reader circles them. The instruction names the count, and a
 row of tick circles under the pictures ("Found: ○ ○ ○") shows it even with
 the instruction off. The answer page is the same two pictures with every
@@ -2483,10 +2484,11 @@ teacup").
 
 Settings: scenes and differences.
 - Scenes: A mix of everything; At home (living room, reading nook, tea time,
-  hobby corner); Porch, garden & outdoors (front porch, garden, patio coffee,
-  backyard afternoon, picnic in the park, a round of golf); Travel & the
-  seaside (beach day, fishing dock, cruise deck, RV campsite, sightseeing
-  trip). 15 scenes; the help line names them.
+  hobby corner, baking day); Porch, garden & outdoors (front porch, garden,
+  patio coffee, backyard afternoon, picnic in the park, a round of golf,
+  vegetable patch); Travel & the seaside (beach day, fishing dock, cruise
+  deck, RV campsite, sightseeing trip, beach huts). 18 scenes; the help line
+  names them.
 - Differences: Relaxed (5–6, bold: each change at least 0.3 in across and
   0.6 in of changed line), Classic (6–8; 0.26 in, 0.45 in) or Challenging
   (8–10, some subtler; 0.2 in, 0.32 in). A page hides as many as its scene
@@ -2501,14 +2503,26 @@ Every page is drawn in the browser (no AI, no images). A scene is data
 (`scene.ts`): a fixed backdrop (walls, floor, hills, sea, a dock, a ship's
 rail) and parts placed on it, each a drawing from a pool per slot — the
 Studio's shared retirement drawings, those Dot to Dot and Shaped Maze drew,
-and 42 drawn for this game (`elements.ts`: window, picture, wall clock,
+and 77 drawn for this game. `elements.ts`: window, picture, wall clock,
 shelf of books, side table, tea table, rug, vase, floor and hanging lamps,
 cookies, cake, easel, footstool, slippers, a pile of books, sun, cloud,
 birds, kite, trees, pine, bush, fence, flowers, sand trap, picnic blanket,
 doormat, front door, hanging basket, ducks, beach umbrella, sandcastle,
 bucket, beach ball, life ring, campfire, signpost, tackle box, and line-art
 versions of the library's sleeping cat, bicycle and fishing rod, which
-read poorly as bare outlines) — 91 kinds in all (`props.ts`). Scalloped outlines (clouds, tree crowns, the bush, the
+read poorly as bare outlines. `elements-home.ts`: sofa, fireplace (mantel
+candlesticks or clock, fire, fire guard), grandfather clock, bookcase, a dog
+lying on its mat, candlesticks, fruit bowl, potted cactus, photo frame, wall
+mirror, and a kitchen (counter, wall cupboard, utensil rail, mixing bowl,
+bread on its board, storage jars). `elements-outdoor.ts`: rose arch, bird
+feeder, raised vegetable bed (cabbages, carrot tops or tomatoes on canes),
+pumpkins, scarecrow, snail, garden tools in the soil, washing line, picnic
+table, crate of fruit, palm tree, beach hut, seashells, crab, flip-flops,
+cool box, canoe, backpack, tree stump. Shared shapes (scalloped outlines,
+leaves, flowers, hems) live in `element-kit.ts`. 126 kinds in all
+(`props.ts`). Each was checked drawn at print size, every version, to read
+as the thing it is; all are plain geometry with no text, logos, brands or
+characters, and nothing traced. Scalloped outlines (clouds, tree crowns, the bush, the
 hanging basket's greenery) are traced exactly along the outer arcs of
 overlapping discs (`bumpRing`), so they print as true arcs meeting in crisp
 dips with a flat base: a cloud has a few big puffs, a bush a dome of many
@@ -2516,7 +2530,10 @@ small scallops with leaf sprigs, a tree a balanced crown over a flared
 trunk. Birds and the kite's tail are single lines, not outlined bands.
 Recipes (`scenes.ts`) pack parts in rows along floors,
 table tops and the ground with dealt gaps, versions and facing; things in
-one plane never overlap, the sky's sun, clouds and birds keep clear of
+one plane never overlap; a row prefers things it does not hold yet (never
+three clocks on one wall) and an optional choice with nothing new is left
+out, while a slot of one kind asked twice is a pair on purpose (two hanging
+baskets); a room never gets a second cat, dog or basket; the sky's sun, clouds and birds keep clear of
 everything, and nothing prints under 0.36 in. Both pictures render from the
 one scene: every shape is white paper with a black edge laid back to front,
 and what prints is each edge nothing later covers (`render.ts`), parts at

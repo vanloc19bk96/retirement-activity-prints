@@ -227,9 +227,31 @@ describe('spot the differences: scenes', () => {
     }
   })
 
+  it('puts every drawing it makes into the catalogue, with a name the answer key can print', () => {
+    for (const e of SD_ELEMENTS) {
+      const kind = sdProp(e.id)
+      expect(kind, e.id).toBeDefined()
+      expect(kind!.label, e.id).toMatch(/^[a-z][a-z -]+$/)
+      for (const v of sgVariants(e).filter((x) => !x.mirrored)) {
+        const b = kindDrawing(kind!, v.knobs).bounds
+        expect(b.maxX - b.minX, `${e.id} ${JSON.stringify(v.knobs)}`).toBeGreaterThan(10)
+        expect(b.maxY - b.minY, `${e.id} ${JSON.stringify(v.knobs)}`).toBeGreaterThan(10)
+      }
+    }
+    expect(new Set(SD_ELEMENTS.map((e) => e.id)).size).toBe(SD_ELEMENTS.length)
+    expect(SD_PROPS.length).toBeGreaterThanOrEqual(120)
+  })
+
+  it('deals every kind somewhere: no drawing sits in the catalogue unused', () => {
+    const dealt = new Set<string>()
+    const panel: Bounds = { minX: 0, minY: 0, maxX: 520, maxY: 310 }
+    for (const recipe of SD_RECIPES) for (let seed = 0; seed < 40; seed++) for (const p of dealScene(recipe, panel, createRng(seed * 17 + 3), 2).parts) dealt.add(p.kind)
+    for (const e of SD_ELEMENTS) expect(dealt.has(e.id), e.id).toBe(true)
+  })
+
   it('keeps every standing element on its feet whatever its knobs', () => {
     for (const e of SD_ELEMENTS) {
-      if (['sd-hanging', 'sd-pendant', 'sd-sun', 'sd-cloud', 'sd-birds', 'sd-kite', 'sd-picture', 'sd-clock', 'sd-shelf', 'sd-window'].includes(e.id)) continue
+      if (['sd-hanging', 'sd-pendant', 'sd-sun', 'sd-cloud', 'sd-birds', 'sd-kite', 'sd-picture', 'sd-clock', 'sd-shelf', 'sd-window', 'sd-mirror', 'sd-utensils', 'sd-cupboard'].includes(e.id)) continue
       const kind = sdProp(e.id)!
       const feet = new Set(sgVariants(e).filter((v) => !v.mirrored).map((v) => Math.round(kindDrawing(kind, v.knobs).bounds.maxY)))
       expect(Math.max(...feet) - Math.min(...feet), e.id).toBeLessThanOrEqual(3)
