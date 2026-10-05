@@ -103,7 +103,7 @@ export async function careerNumbersPrefetch(
       const pick = pickCbnSet(pool, size)
       // A whole set is in hand: another call would only spend quota.
       if (pick.picks) break
-      ask = cbnShortfall(pick.taken, size)
+      ask = cbnShortfall(pick.taken, size, workplace)
     }
     try {
       const remote = await generateCareerNumbers(
@@ -122,7 +122,7 @@ export async function careerNumbersPrefetch(
         },
         signal,
       )
-      pool = cleanCbnPool(remote?.questions, { avoid: printed, keep: pool, distance })
+      pool = cleanCbnPool(remote?.questions, { avoid: printed, keep: pool, distance, workplace })
       if (pool.length === 0) lastError = new Error(CBN_AI_EMPTY_MESSAGE)
     } catch (error) {
       if (signal.aborted) throw error

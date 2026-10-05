@@ -35,7 +35,10 @@ Everything here is printed and sold on KDP, so a question only survives whole:
 Variety is structural. Every question gets its own brief -- a theme, one of
 its details, a tone (playful or nostalgic) and a question shape (a career
 total, a typical day or week, a best guess, a tally, a busiest day) --
-sampled by seed from 28 themes and about 190 details. A set plans different
+sampled by seed from 28 themes and about 190 details -- or, for a named kind
+of work, from that workplace's own rewrite of the themes that belong to it
+(workplace-themes.json), so a trades set counts brews from the flask and
+jobs finished, never staplers or reply-all. A set plans different
 themes, about two in five nostalgic, capped per group (one drinks question,
 one meetings question, one commute question), always opening its plan with
 one question about the road to retirement, plus spares for the gates on both
@@ -264,25 +267,55 @@ class Slot:
         return facets[self.facet % len(facets)].replace("{distance}", distance_unit(distance))
 
 
+def _facets(raw: Mapping[str, Any]) -> Mapping[str, Tuple[str, ...]]:
+    return {tone: tuple(str(f) for f in raw.get(tone, [])) for tone in TONES}
+
+
 @lru_cache(maxsize=1)
-def themes() -> Tuple[Theme, ...]:
+def _workplace_themes() -> Mapping[str, Any]:
+    return load_config(GAME, "workplace-themes")
+
+
+@lru_cache(maxsize=None)
+def themes(workplace: str = "any") -> Tuple[Theme, ...]:
+    """The themes a set for this kind of work plans from, in prompt.json's order.
+
+    Any kind of work takes every theme in its everyday wording. A named
+    workplace takes only the themes it rewrites in its own words -- its own
+    label for the brief, its own details -- plus the road to retirement,
+    which every working life shares. So every brief a trades set sends is
+    already about the van, the site or the tools, and none can ask about the
+    stapler; the workplace line in the prompt only sets the voice.
+    """
+    own = section(_workplace_themes(), workplace) if workplace != "any" else None
     out: List[Theme] = []
     for key, raw in section(_config(), "themes").items():
-        out.append(
-            Theme(
-                key=str(key),
-                label=str(raw["label"]),
-                group=str(raw["group"]),
-                weight=int(raw["weight"]),
-                facets={tone: tuple(str(f) for f in raw.get(tone, [])) for tone in TONES},
-            )
+        theme = Theme(
+            key=str(key),
+            label=str(raw["label"]),
+            group=str(raw["group"]),
+            weight=int(raw["weight"]),
+            facets=_facets(raw),
         )
+        if own is None or (key == anchor_theme() and key not in own):
+            out.append(theme)
+        elif key in own:
+            rewrite = section(own, key)
+            out.append(
+                Theme(
+                    key=theme.key,
+                    label=str(rewrite.get("label", theme.label)),
+                    group=theme.group,
+                    weight=theme.weight,
+                    facets=_facets(rewrite),
+                )
+            )
     return tuple(out)
 
 
-@lru_cache(maxsize=1)
-def _theme_index() -> Mapping[str, Theme]:
-    return {theme.key: theme for theme in themes()}
+@lru_cache(maxsize=None)
+def _theme_index(workplace: str = "any") -> Mapping[str, Theme]:
+    return {theme.key: theme for theme in themes(workplace)}
 
 
 def anchor_theme() -> str:
@@ -311,7 +344,7 @@ def _weighted(rng: random.Random, pool: Sequence[Theme]) -> Theme:
     return rng.choices(list(pool), weights=[theme.weight for theme in pool], k=1)[0]
 
 
-def plan_themes(size: int, seed: int) -> List[Tuple[Theme, str]]:
+def plan_themes(size: int, seed: int, workplace: str = "any") -> List[Tuple[Theme, str]]:
     """The set's themes and tones, then the spares'.
 
     About two in five questions are nostalgic, the rest playful, shuffled by
@@ -319,10 +352,10 @@ def plan_themes(size: int, seed: int) -> List[Tuple[Theme, str]]:
     takes a theme the set has not used yet where one is open, drawn by
     weight, never past its group's share -- so a set cannot be three coffee
     questions and four meeting ones. Spares come from themes the set does not
-    use yet, tones alternating.
+    use yet, tones alternating. Only the workplace's own themes are drawn.
     """
     rng = random.Random(seed)
-    pool = list(themes())
+    pool = list(themes(workplace))
     tones = ["nostalgic"] * nostalgic_target(size) + ["playful"] * (size - nostalgic_target(size))
     rng.shuffle(tones)
     used: Counter[str] = Counter()
@@ -334,7 +367,7 @@ def plan_themes(size: int, seed: int) -> List[Tuple[Theme, str]]:
         used[theme.key] += 1
         groups[theme.group] += 1
 
-    anchor = _theme_index().get(anchor_theme())
+    anchor = _theme_index(workplace).get(anchor_theme())
     if anchor is not None and tones and anchor.has(tones[0]):
         take(anchor, tones.pop(0))
     for tone in tones:
@@ -393,11 +426,12 @@ def plan_slots(req: CareerNumbersRequest) -> List[Slot]:
 
     A top-up names its own themes (those the client's set does not use yet),
     how many questions it wants and, when the set is short of one, the tone;
-    otherwise the full set plus spares.
+    otherwise the full set plus spares. A named theme the workplace does not
+    have is ignored, so an older client cannot ask a school set about the van.
     """
     rng = random.Random(req.seed * 5 + 3)
     if req.themes:
-        index = _theme_index()
+        index = _theme_index(req.workplace)
         named: List[Theme] = []
         for key in req.themes:
             theme = index.get(key)
@@ -414,7 +448,7 @@ def plan_slots(req: CareerNumbersRequest) -> List[Slot]:
         # A top-up follows a first call that used the leading details.
         return _assign(order, rng, facet_start=1 + req.seed % 3)
     size = min(req.questions, _limit("maxItems"))
-    return _assign(plan_themes(size, req.seed), rng)
+    return _assign(plan_themes(size, req.seed, req.workplace), rng)
 
 
 # ---------------------------------------------------------------- text keys

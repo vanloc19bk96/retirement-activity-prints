@@ -24,6 +24,7 @@ import {
   CBN_SUBJECT_WORDS,
   CBN_SYNONYMS,
   CBN_THEMES,
+  CBN_WORKPLACE_THEMES,
   CBN_WORKPLACES,
   cbnMemoryLabel,
   cbnSetProblem,
@@ -67,6 +68,15 @@ const config = JSON.parse(readFileSync(PROMPT, 'utf-8')) as Record<string, unkno
   themes: Record<string, { group: string }>
 }
 
+const WORKPLACE_THEMES = JSON.parse(
+  readFileSync(
+    fileURLToPath(
+      new URL('../../../../../backend/app/data/studio/career-by-the-numbers/workplace-themes.json', import.meta.url),
+    ),
+    'utf-8',
+  ),
+) as Record<string, Record<string, unknown>>
+
 const pool = (): CbnQuestion[] => cleanCbnPool(CBN_FIXTURE.questions)
 
 describe('career-by-the-numbers lists mirror the service', () => {
@@ -103,6 +113,17 @@ describe('career-by-the-numbers lists mirror the service', () => {
       Object.entries(config.distances).map(([k, d]) => [k, d.label, d.unit]),
     )
     expect(Math.max(...CBN_COUNTS)).toBeLessThanOrEqual(CBN_LIMITS.maxItems)
+  })
+
+  it('lets each kind of work use the themes the service plans for it', () => {
+    for (const workplace of CBN_WORKPLACES.map((w) => w.value)) {
+      const own = WORKPLACE_THEMES[workplace]
+      const expected =
+        workplace === 'any'
+          ? Object.keys(config.themes)
+          : Object.keys(config.themes).filter((key) => key === CBN_ANCHOR_THEME || (own && key in own))
+      expect([...CBN_WORKPLACE_THEMES[workplace]], workplace).toEqual(expected)
+    }
   })
 })
 
@@ -278,6 +299,19 @@ describe('career-by-the-numbers sets', () => {
     expect(ask.tone).toBe('nostalgic')
     for (const theme of ask.themes) expect(taken.map((q) => q.theme)).not.toContain(theme)
     expect(ask.count).toBeGreaterThan(0)
+  })
+
+  it('keeps every question to the seller’s kind of work', () => {
+    const deadline = CBN_FIXTURE.questions.find((q) => q.theme === 'deadlines')!
+    expect(cleanCbnPool([deadline])).toHaveLength(1)
+    expect(cleanCbnPool([deadline], { workplace: 'healthcare' })).toEqual([])
+    const ask = cbnShortfall([], 10, 'healthcare')
+    expect(ask.themes[0]).toBe(CBN_ANCHOR_THEME)
+    expect(ask.themes).not.toContain('deadlines')
+    const set = numberCbnSet(orderCbnSet(pickCbnSet(pool(), 20).picks!, 1))
+    expect(set.some((q) => q.theme === 'deadlines')).toBe(true)
+    expect(cbnSetProblem(set, 20)).toBeNull()
+    expect(cbnSetProblem(set, 20, 'miles', 'healthcare')).toMatch(/not suitable/)
   })
 
   it('refuses a set that is short, misnumbered or tampered with', () => {

@@ -41,23 +41,23 @@
     },
     "office": {
       "label": "Office or corporate",
-      "line": "The retiree worked in an office. Desks, email, meetings, the printer and the office kitchen fit naturally, but keep the set varied -- never all screens and meetings."
+      "line": "The retiree worked in an office. Desks, email, meetings, the printer and the office kitchen fit naturally, but keep the set varied -- never all screens and meetings. Every brief below is already about this work: keep its workplace words in the question, so the retiree recognises their own job in every line rather than a question any job could ask."
     },
     "school": {
       "label": "School or college",
-      "line": "The retiree worked at a school or college. Lessons, classes, the staff room, marking, timetables, school trips, assemblies and the photocopier fit naturally. Count what a teacher or member of school staff did, never anything private about pupils or parents."
+      "line": "The retiree worked at a school or college. Lessons, classes, the staff room, marking, timetables, school trips, assemblies and the photocopier fit naturally. Count what a teacher or member of school staff did, never anything private about pupils or parents. Every brief below is already about this work: keep its workplace words in the question, so the retiree recognises their own job in every line rather than a question any job could ask."
     },
     "healthcare": {
       "label": "Hospital, clinic or care",
-      "line": "The retiree worked in healthcare or care: a hospital, clinic, practice or care home. Shifts, handovers, the rota, the staff room, patients helped and cups of tea on a long shift fit naturally. Never ask about illness, injuries, deaths, emergencies or anything medical."
+      "line": "The retiree worked in healthcare or care: a hospital, clinic, practice or care home. Shifts, handovers, the rota, the staff room, patients helped and cups of tea on a long shift fit naturally. Never ask about illness, injuries, deaths, emergencies or anything medical. Every brief below is already about this work: keep its workplace words in the question, so the retiree recognises their own job in every line rather than a question any job could ask."
     },
     "service": {
       "label": "Shop, restaurant or hotel",
-      "line": "The retiree worked in retail, hospitality or customer service: a shop, cafe, restaurant or hotel. Shifts, customers served, the till, the stockroom and opening and closing up fit naturally. Never mock customers."
+      "line": "The retiree worked in retail, hospitality or customer service: a shop, cafe, restaurant or hotel. Shifts, customers served, the till, the stockroom and opening and closing up fit naturally. Never mock customers. Every brief below is already about this work: keep its workplace words in the question, so the retiree recognises their own job in every line rather than a question any job could ask."
     },
     "trades": {
       "label": "Workshop, site or on the road",
-      "line": "The retiree worked with their hands or on the move: a workshop, building site, factory, warehouse or driving. Tools, the van, the tea break, early starts, jobs finished and distances driven fit naturally; keep email and desks rare. Never ask about safety or accidents."
+      "line": "The retiree worked with their hands or on the move: a workshop, building site, factory, warehouse or driving. Tools, the van, the tea break, early starts, jobs finished and distances driven fit naturally; keep email and desks rare. Never ask about safety or accidents. Every brief below is already about this work: keep its workplace words in the question, so the retiree recognises their own job in every line rather than a question any job could ask."
     }
   },
   "tones": {

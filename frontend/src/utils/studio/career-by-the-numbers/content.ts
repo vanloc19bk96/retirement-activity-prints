@@ -170,6 +170,28 @@ export const CBN_GROUP_MAX: Readonly<Record<string, number>> = {
   'time-off': 2,
 }
 
+const CBN_ALL_THEMES = Object.keys(CBN_THEMES)
+
+/**
+ * The themes a set for each kind of work may use. Any kind of work takes
+ * every theme; a named workplace only the themes workplace-themes.json
+ * rewrites in its own words, plus the road to retirement. So a question
+ * briefed for another kind of work (an older deploy, a mock) never prints,
+ * and a top-up never asks a hospital set about deadlines. Mirrors
+ * `themes(workplace)`.
+ */
+export const CBN_WORKPLACE_THEMES: Readonly<Record<CareerNumbersWorkplace, readonly string[]>> = {
+  any: CBN_ALL_THEMES,
+  office: CBN_ALL_THEMES,
+  school: CBN_ALL_THEMES,
+  healthcare: CBN_ALL_THEMES.filter((key) => key !== 'deadlines'),
+  service: CBN_ALL_THEMES,
+  trades: CBN_ALL_THEMES,
+}
+
+export const cbnThemeFits = (theme: string, workplace: CareerNumbersWorkplace) =>
+  CBN_WORKPLACE_THEMES[workplace].includes(theme)
+
 export const CBN_SHAPES: readonly string[] = ['career-total', 'typical', 'guess', 'tally', 'record']
 
 /** Words that give a question away as really being about a group. */
@@ -527,7 +549,6 @@ export function normalizeConcept(raw: unknown): string {
   return clean(raw).toLowerCase().slice(0, CBN_LIMITS.maxConceptChars).trim()
 }
 
-const isTheme = (key: string) => Object.prototype.hasOwnProperty.call(CBN_THEMES, key)
 export const groupOf = (theme: string) => CBN_THEMES[theme] ?? ''
 
 /** One validated question. */
@@ -540,14 +561,21 @@ export interface CbnQuestion {
   concept: string
 }
 
-/** One complete question from raw service output — or null, never a repair. */
-export function normalizeCbnItem(raw: unknown, distance: CareerNumbersDistance = 'miles'): CbnQuestion | null {
+/**
+ * One complete question from raw service output — or null, never a repair.
+ * Its theme must be one the seller's kind of work uses.
+ */
+export function normalizeCbnItem(
+  raw: unknown,
+  distance: CareerNumbersDistance = 'miles',
+  workplace: CareerNumbersWorkplace = 'any',
+): CbnQuestion | null {
   if (!raw || typeof raw !== 'object') return null
   const record = raw as Record<string, unknown>
   const theme = String(record.theme ?? '').trim()
   const tone = String(record.tone ?? '').trim() as CareerNumbersTone
   const shape = String(record.shape ?? '').trim()
-  if (!isTheme(theme) || !CBN_TONES.includes(tone) || !CBN_SHAPES.includes(shape)) return null
+  if (!cbnThemeFits(theme, workplace) || !CBN_TONES.includes(tone) || !CBN_SHAPES.includes(shape)) return null
   const question = normalizeQuestion(record.question, MAX_QUESTION_CHARS, distance)
   if (!question) return null
   const unit = normalizeUnit(record.unit, question, MAX_UNIT_CHARS, distance)
@@ -589,9 +617,14 @@ export function cbnMemoryLabel(question: string): string {
  */
 export function cleanCbnPool(
   raw: unknown,
-  options: { avoid?: readonly string[]; keep?: readonly CbnQuestion[]; distance?: CareerNumbersDistance } = {},
+  options: {
+    avoid?: readonly string[]
+    keep?: readonly CbnQuestion[]
+    distance?: CareerNumbersDistance
+    workplace?: CareerNumbersWorkplace
+  } = {},
 ): CbnQuestion[] {
-  const { avoid = [], keep = [], distance = 'miles' } = options
+  const { avoid = [], keep = [], distance = 'miles', workplace = 'any' } = options
   const avoided = avoid
     .map((label) => String(label ?? '').trim())
     .filter(Boolean)
@@ -599,7 +632,7 @@ export function cleanCbnPool(
   const out = [...keep]
   const kept: IdeaKey[] = keep.map(cbnKey)
   for (const item of Array.isArray(raw) ? raw : []) {
-    const question = normalizeCbnItem(item, distance)
+    const question = normalizeCbnItem(item, distance, workplace)
     if (!question) continue
     const key = cbnKey(question)
     if (kept.some((other) => keysRepeat(key, other))) continue
@@ -721,19 +754,22 @@ export function pickCbnSet(
 /**
  * What a top-up asks for when a pool cannot make a set: themes the set does
  * not use yet (the road to retirement first when it has none), the tone it is
- * short of, and enough questions to fill it with spares for the gates.
+ * short of, and enough questions to fill it with spares for the gates. Only
+ * themes the seller's kind of work uses are named.
  */
 export function cbnShortfall(
   taken: readonly CbnQuestion[],
   size: number,
+  workplace: CareerNumbersWorkplace = 'any',
 ): { themes: string[]; count: number; tone?: CareerNumbersTone } {
   const rules = cbnSetRules(size)
   const used = new Set(taken.map((q) => q.theme))
-  let themes = Object.keys(CBN_THEMES).filter((key) => !used.has(key))
+  const own = CBN_WORKPLACE_THEMES[workplace]
+  let themes = own.filter((key) => !used.has(key))
   if (!taken.some(isAnchor)) {
     themes = [...themes.filter((key) => key === CBN_ANCHOR_THEME), ...themes.filter((key) => key !== CBN_ANCHOR_THEME)]
   }
-  if (themes.length === 0) themes = Object.keys(CBN_THEMES)
+  if (themes.length === 0) themes = [...own]
   const nostalgic = taken.filter((q) => q.tone === 'nostalgic').length
   const playful = taken.length - nostalgic
   const tone = nostalgic < rules.minNostalgic ? 'nostalgic' : playful < rules.minPlayful ? 'playful' : undefined
@@ -815,6 +851,7 @@ export function cbnSetProblem(
   questions: readonly CbnNumbered[],
   size: number,
   distance: CareerNumbersDistance = 'miles',
+  workplace: CareerNumbersWorkplace = 'any',
 ): string | null {
   if (questions.length !== size) return `The set holds ${questions.length} questions instead of ${size}.`
   if (questions.some((q, i) => q.number !== i + 1)) return `The questions are not numbered 1 to ${size} in order.`
@@ -822,7 +859,7 @@ export function cbnSetProblem(
     if (
       normalizeQuestion(q.question, MAX_QUESTION_CHARS, distance) !== q.question ||
       normalizeUnit(q.unit, q.question, MAX_UNIT_CHARS, distance) !== q.unit ||
-      !isTheme(q.theme) ||
+      !cbnThemeFits(q.theme, workplace) ||
       !CBN_TONES.includes(q.tone)
     ) {
       return `Question ${q.number} is not suitable for a published activity book.`

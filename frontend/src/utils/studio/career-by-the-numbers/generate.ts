@@ -24,6 +24,7 @@ import {
   orderCbnSet,
   parseCbnCount,
   parseCbnDistance,
+  parseCbnWorkplace,
   parseCbnPayload,
   pickCbnSet,
 } from './content'
@@ -87,6 +88,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
   const name = parseRetireeName(config.retireeName)
   const size = parseCbnCount(config.questions)
   const distance = parseCbnDistance(config.distance)
+  const workplace = parseCbnWorkplace(config.workplace)
   const seed = Number(config.seed ?? ctx.seed ?? 1)
   const tag: StudioTag = { templateKey: CBN_TEMPLATE_KEY, instanceId: ctx.instanceId, pageRole: 'single' }
   const fail = (message: string) => [errorPage(ctx, config, tag, message)]
@@ -95,7 +97,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
   if (!layout) return fail(CBN_PAGE_TOO_SMALL_MESSAGE)
   const { plan } = layout
 
-  const pool = cleanCbnPool(parseCbnPayload(ctx.remoteData), { distance })
+  const pool = cleanCbnPool(parseCbnPayload(ctx.remoteData), { distance, workplace })
   if (pool.length === 0) return fail(CBN_AI_EMPTY_MESSAGE)
   const { picks } = pickCbnSet(pool, size, (q) => fitsRow(q, plan, font))
   if (!picks) return fail(CBN_SHORT_MESSAGE)
@@ -113,6 +115,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
     plan,
     size,
     distance,
+    workplace,
     font,
     lineW,
     columnWidth: content.width,

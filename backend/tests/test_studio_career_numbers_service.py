@@ -17,6 +17,7 @@ from app.services.studio_career_numbers_service import (
     build_prompt_for_tests,
     generate_career_numbers,
     group_cap,
+    is_unsafe,
     memory_label,
     normalize_question,
     normalize_unit,
@@ -29,9 +30,26 @@ from app.services.studio_career_numbers_service import (
     shapes,
     themes,
 )
+from app.services.prompt_data import load_config
 from app.services.studio_variety import reset_memory
 
 SERVICE = "app.services.studio_career_numbers_service"
+WORKPLACE_THEMES = {
+    key: value for key, value in load_config("career-by-the-numbers", "workplace-themes").items() if key != "_comment"
+}
+NAMED_WORKPLACES = [w for w in load_config("career-by-the-numbers")["workplaces"] if w != "any"]
+# The subject group each theme may name; every other theme names none.
+SUBJECT_GROUP = {
+    "hot-drinks": "drinks",
+    "snacks": "food",
+    "lunch": "food",
+    "meetings": "meetings",
+    "messages": "communication",
+    "phone": "communication",
+    "commute": "commute",
+    "supplies": "supplies",
+    "tech": "tech",
+}
 
 # Thirty-two valid, mutually distinct questions: (question, unit, theme, tone).
 # Mirrors CBN_FIXTURE_ITEMS in
@@ -242,6 +260,71 @@ def test_group_caps_scale_with_the_set() -> None:
 
 
 # ---------------------------------------------------------------- plan
+
+
+@pytest.mark.parametrize("workplace", NAMED_WORKPLACES)
+def test_every_workplace_rewrites_only_themes_that_exist(workplace: str) -> None:
+    rewrites = WORKPLACE_THEMES[workplace]
+    base = {theme.key: theme for theme in themes()}
+    assert set(rewrites) <= set(base), workplace
+    own = themes(workplace)
+    # Enough themes for a 20-question set to stay varied, with spares.
+    assert len(own) >= 22
+    assert sum(len(t.facets["playful"]) + len(t.facets["nostalgic"]) for t in own) >= 120
+    for theme in own:
+        assert theme.tones == ("playful", "nostalgic"), (workplace, theme.key)
+        assert theme.label and not is_unsafe(theme.label), (workplace, theme.key)
+        if theme.key == anchor_theme():
+            continue
+        assert theme.facets["playful"] and len(theme.facets["playful"]) >= 2, (workplace, theme.key)
+        for tone in theme.tones:
+            for facet in theme.facets[tone]:
+                assert facet.strip() == facet and facet, (workplace, theme.key, facet)
+                assert not is_unsafe(facet), (workplace, theme.key, facet)
+                # A detail is about its own theme: no mugs outside drinks, no pens outside supplies.
+                assert question_subjects(facet) <= {SUBJECT_GROUP.get(theme.key, "")}, (workplace, facet)
+                assert facet not in base[theme.key].facets[tone], (workplace, theme.key, facet)
+
+
+@pytest.mark.parametrize("workplace", NAMED_WORKPLACES)
+@pytest.mark.parametrize("size", [4, 6, 8, 10, 12, 15, 20])
+def test_a_named_workplace_briefs_only_its_own_work(workplace: str, size: int) -> None:
+    own = {theme.key: theme for theme in themes(workplace)}
+    generic = {
+        facet for theme in themes() if theme.key != anchor_theme() for tone in theme.tones for facet in theme.facets[tone]
+    }
+    for seed in range(12):
+        slots = plan_slots(_req(workplace=workplace, questions=size, seed=seed))
+        assert len(slots) == size + 8
+        main = slots[:size]
+        assert main[0].theme.key == anchor_theme()
+        assert Counter(slot.tone for slot in main)["nostalgic"] == nostalgic_target(size)
+        for group, count in Counter(slot.theme.group for slot in main).items():
+            assert count <= group_cap(group, size), (workplace, group)
+        for slot in slots:
+            assert slot.theme == own[slot.theme.key], (workplace, slot.theme.key)
+            if slot.theme.key != anchor_theme():
+                assert slot.facet_text() not in generic, (workplace, slot.facet_text())
+
+
+def test_a_trades_set_never_briefs_office_things() -> None:
+    for seed in range(12):
+        asks = list(enumerate(plan_slots(_req(workplace="trades", questions=20, seed=seed))))
+        brief_text = "\n".join(briefs(asks)[0]).lower()
+        for office in ("office", "stapler", "reply all", "printer", "desk", "email"):
+            assert office not in brief_text, (seed, office)
+    prompt = build_prompt_for_tests(asks, workplace="trades")
+    assert "workshop, building site" in prompt
+    assert "recognises their own job" in prompt
+
+
+def test_top_up_keeps_to_the_workplace() -> None:
+    own = {theme.key: theme for theme in themes("healthcare")}
+    assert "deadlines" not in own
+    assert plan_slots(_req(workplace="healthcare", themes=["deadlines"], count=3)) == []
+    slots = plan_slots(_req(workplace="healthcare", themes=["deadlines", "gear"], count=3))
+    assert len(slots) == 3
+    assert all(slot.theme == own["gear"] for slot in slots)
 
 
 @pytest.mark.parametrize("size", [6, 8, 10, 12, 15, 20])

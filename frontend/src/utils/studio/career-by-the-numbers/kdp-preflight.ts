@@ -1,4 +1,4 @@
-import type { CareerNumbersDistance } from '@/types/studio-career-numbers.types'
+import type { CareerNumbersDistance, CareerNumbersWorkplace } from '@/types/studio-career-numbers.types'
 import { cbnSetProblem } from './content'
 import {
   BADGE_MIN,
@@ -40,6 +40,7 @@ export function runCbnKdpPreflight(options: {
   plan: CbnPlan
   size: number
   distance: CareerNumbersDistance
+  workplace: CareerNumbersWorkplace
   font: string
   /** The one writing-line length the set prints. */
   lineW: number
@@ -47,12 +48,12 @@ export function runCbnKdpPreflight(options: {
   columnWidth: number
   usable: (page: number) => number
 }): KdpPreflightResult {
-  const { questions, pages, plan, size, distance, font, lineW, columnWidth, usable } = options
+  const { questions, pages, plan, size, distance, workplace, font, lineW, columnWidth, usable } = options
   const errors: string[] = []
   const warnings: string[] = []
   const { metrics } = plan
 
-  const content = cbnSetProblem(questions, size, distance)
+  const content = cbnSetProblem(questions, size, distance, workplace)
   if (content) errors.push(content)
 
   const rowEnd = plan.lineOffset + lineW + metrics.labelGap

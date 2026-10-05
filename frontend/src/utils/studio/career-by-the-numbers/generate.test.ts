@@ -375,6 +375,7 @@ describe('runCbnKdpPreflight', () => {
       plan: layout.plan,
       size,
       distance: 'miles',
+      workplace: 'any',
       font: FONT,
       lineW,
       columnWidth: cbnContentBox(ctx).width,

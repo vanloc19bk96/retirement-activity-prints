@@ -1,0 +1,1605 @@
+{
+  "_comment": "Career By the Numbers, per kind of work. 'Any kind of work' uses every theme in prompt.json in its everyday wording. Each named workplace below rewrites the themes that belong to that work, in its own words: a label for the brief and its own playful and nostalgic details. A set for a named workplace plans only from the themes listed here (plus the road to retirement, which every working life shares), so a workshop set never asks about staplers or reply-all and a school set never asks about the van. A theme that does not belong to a workplace is simply left out of it. Theme keys, groups and weights come from prompt.json; a detail never names a subject word of another group (no mugs outside drinks, no pens outside supplies), so the client's group caps read each question as the theme it was briefed for.",
+  "office": {
+    "hot-drinks": {
+      "label": "coffee, tea and the office kitchen",
+      "playful": [
+        "cups of coffee or tea enjoyed at your desk",
+        "trips to the office coffee machine in a typical day",
+        "office tea rounds made for the whole team",
+        "mugs left to go cold on your desk"
+      ],
+      "nostalgic": [
+        "coffees shared with a favourite colleague",
+        "cups of tea made for a colleague having a hard day"
+      ]
+    },
+    "snacks": {
+      "label": "snacks and office treats",
+      "playful": [
+        "biscuits from the office tin",
+        "cakes left in the office kitchen with a help-yourself note",
+        "snacks kept in a desk drawer"
+      ],
+      "nostalgic": [
+        "homemade treats brought in for the office",
+        "treats brought back from colleagues' holidays"
+      ]
+    },
+    "lunch": {
+      "label": "lunch at the office",
+      "playful": [
+        "sandwiches eaten at your desk",
+        "leftovers queued for at the office microwave",
+        "lunchtime walks around the block"
+      ],
+      "nostalgic": [
+        "team lunches out with colleagues",
+        "lunch breaks spent chatting in the office kitchen"
+      ]
+    },
+    "meetings": {
+      "label": "meetings and conference calls",
+      "playful": [
+        "meetings sat through over a career",
+        "meeting rooms booked over a career",
+        "video meetings where someone was still on mute",
+        "meetings that ran over time"
+      ],
+      "nostalgic": [
+        "team meetings where a great idea was born",
+        "away days or planning days with the team"
+      ]
+    },
+    "messages": {
+      "label": "emails and the inbox",
+      "playful": [
+        "emails sent over a whole career",
+        "unread emails waiting after a week away",
+        "times hitting reply all on an office-wide email"
+      ],
+      "nostalgic": [
+        "thank-you emails saved in a special folder",
+        "messages of encouragement sent to colleagues"
+      ]
+    },
+    "phone": {
+      "label": "the desk phone",
+      "playful": [
+        "calls answered at your desk in a typical day",
+        "times the desk phone rang just as you sat down",
+        "calls transferred to the wrong desk"
+      ],
+      "nostalgic": [
+        "calls that brightened a client's or colleague's day"
+      ]
+    },
+    "commute": {
+      "label": "getting to and from the office",
+      "playful": [
+        "{distance} travelled to and from the office over a career",
+        "train or bus rides to the office",
+        "laps of the office car park hunting for a space",
+        "rainy walks from the station"
+      ],
+      "nostalgic": [
+        "sunrises seen on the way to the office",
+        "familiar faces on the morning train or bus"
+      ]
+    },
+    "work-travel": {
+      "label": "business trips",
+      "playful": [
+        "business trips taken",
+        "nights spent in hotels on business trips",
+        "conferences or trade shows attended",
+        "airport departure lounges waited in"
+      ],
+      "nostalgic": [
+        "new cities seen thanks to business trips",
+        "interesting people met at conferences"
+      ]
+    },
+    "mornings": {
+      "label": "office mornings",
+      "playful": [
+        "times hitting snooze before an office day",
+        "office outfits laid out the night before",
+        "lift rides up to the office"
+      ],
+      "nostalgic": [
+        "good mornings said on arrival at the office",
+        "quiet early mornings in the office before everyone arrived"
+      ]
+    },
+    "weekdays": {
+      "label": "Mondays, Fridays and the office week",
+      "playful": [
+        "Monday mornings back at your desk",
+        "Friday afternoons counting down to the weekend",
+        "Monday morning catch-ups about the weekend"
+      ],
+      "nostalgic": [
+        "dress-down Fridays enjoyed with the team",
+        "fresh starts with a clear desk on a Monday"
+      ]
+    },
+    "shifts": {
+      "label": "office hours",
+      "playful": [
+        "hours spent at your desk in a typical week",
+        "evenings stayed late to finish a report",
+        "times the office lights switched off on you"
+      ],
+      "nostalgic": [
+        "days you logged off with a job well done",
+        "late evenings shared with a trusted colleague"
+      ]
+    },
+    "breaks": {
+      "label": "breaks from the desk",
+      "playful": [
+        "breaks taken away from your desk in a typical day",
+        "short walks away from the desk",
+        "crosswords tackled at break time"
+      ],
+      "nostalgic": [
+        "breaks spent laughing with colleagues",
+        "quiet breaks in the office garden or courtyard"
+      ]
+    },
+    "clock": {
+      "label": "the office clock",
+      "playful": [
+        "glances at the office clock on a slow afternoon",
+        "times saying just five more minutes at the desk",
+        "minutes early to the office on a typical day"
+      ],
+      "nostalgic": [
+        "extra minutes given to help a colleague finish on time"
+      ]
+    },
+    "projects": {
+      "label": "projects and reports",
+      "playful": [
+        "projects completed over a career",
+        "to-do lists written on a notepad",
+        "reports or presentations finished"
+      ],
+      "nostalgic": [
+        "projects that made the whole office proud",
+        "presentations that went down really well"
+      ]
+    },
+    "deadlines": {
+      "label": "deadlines",
+      "playful": [
+        "report or project deadlines met over a career",
+        "reports finished with minutes to spare",
+        "times promising a report by end of play Friday"
+      ],
+      "nostalgic": [
+        "deadlines beaten by the whole office pulling together"
+      ]
+    },
+    "paperwork": {
+      "label": "paperwork and printing",
+      "playful": [
+        "reports printed and bound",
+        "documents signed at your desk",
+        "folders filed away in the office cabinet",
+        "spreadsheets built over a career"
+      ],
+      "nostalgic": [
+        "filing cabinets finally sorted out",
+        "tidy desks left at the end of a big week"
+      ]
+    },
+    "supplies": {
+      "label": "pens and office supplies",
+      "playful": [
+        "office pens lost, borrowed or never returned",
+        "staplers borrowed from the next desk",
+        "sticky notes stuck around your monitor",
+        "paperclips or rubber bands used"
+      ],
+      "nostalgic": [
+        "trusty pens that lasted for years",
+        "notebooks filled over the years"
+      ]
+    },
+    "gear": {
+      "label": "lanyards, badges and office kit",
+      "playful": [
+        "lanyards or ID badges worn",
+        "swipe cards left at home",
+        "office chairs adjusted to just the right height"
+      ],
+      "nostalgic": [
+        "work bags that travelled with you for years",
+        "smart outfits kept for big days at the office"
+      ]
+    },
+    "coworkers": {
+      "label": "colleagues",
+      "playful": [
+        "colleagues worked alongside over the years",
+        "managers or bosses had over a career",
+        "desk neighbours over the years"
+      ],
+      "nostalgic": [
+        "new starters shown to their desk on day one",
+        "colleagues who became friends for life"
+      ]
+    },
+    "helping": {
+      "label": "helping colleagues and clients",
+      "playful": [
+        "questions answered for colleagues in a typical day",
+        "times being asked where the spare paper was kept",
+        "favours done for colleagues"
+      ],
+      "nostalgic": [
+        "new colleagues trained or shown the ropes",
+        "clients helped over a career"
+      ]
+    },
+    "chats": {
+      "label": "office chats and laughs",
+      "playful": [
+        "chats by the water cooler",
+        "office conversations about the weather",
+        "stories told across the desks"
+      ],
+      "nostalgic": [
+        "good conversations with colleagues",
+        "laughs shared across the office over the years"
+      ]
+    },
+    "celebrations": {
+      "label": "office celebrations",
+      "playful": [
+        "office birthday cakes shared",
+        "cards signed for colleagues",
+        "office parties or team outings"
+      ],
+      "nostalgic": [
+        "work anniversaries celebrated in the office",
+        "farewell gatherings for colleagues"
+      ]
+    },
+    "learning": {
+      "label": "learning on the job",
+      "playful": [
+        "training courses attended",
+        "new office systems learned",
+        "office passwords changed over a career"
+      ],
+      "nostalgic": [
+        "office skills picked up along the way",
+        "qualifications earned while working"
+      ]
+    },
+    "career-path": {
+      "label": "the career path",
+      "playful": [
+        "job titles on your office business cards",
+        "desks or offices moved into",
+        "interviews sat through in an office boardroom"
+      ],
+      "nostalgic": [
+        "promotions or new roles taken on",
+        "offices that felt like a second home"
+      ]
+    },
+    "tech": {
+      "label": "office technology",
+      "playful": [
+        "office printer jams cleared",
+        "computers used over a career",
+        "times asking IT to switch it off and on again"
+      ],
+      "nostalgic": [
+        "big changes in office technology lived through"
+      ]
+    },
+    "workspace": {
+      "label": "the desk",
+      "playful": [
+        "plants kept alive on a desk or windowsill",
+        "photos or postcards pinned up by your desk",
+        "desk ornaments or souvenirs collected"
+      ],
+      "nostalgic": [
+        "desks made to feel like home",
+        "office views enjoyed from a favourite window"
+      ]
+    },
+    "time-off": {
+      "label": "holidays and time off",
+      "playful": [
+        "holiday days enjoyed",
+        "long weekends booked on the office calendar",
+        "days off saved up for something special"
+      ],
+      "nostalgic": [
+        "trips taken with holiday saved up at the office",
+        "holidays that recharged the batteries"
+      ]
+    }
+  },
+  "school": {
+    "hot-drinks": {
+      "label": "tea, coffee and the staff room",
+      "playful": [
+        "cups of tea or coffee enjoyed in the staff room",
+        "mugs of tea left to go cold during a lesson",
+        "staff room kettle rounds made"
+      ],
+      "nostalgic": [
+        "staff room cuppas shared with a favourite colleague",
+        "hot drinks made for a colleague after a long day"
+      ]
+    },
+    "snacks": {
+      "label": "snacks and school treats",
+      "playful": [
+        "biscuits from the staff room tin",
+        "treats handed out as class rewards",
+        "cakes bought at a school bake sale"
+      ],
+      "nostalgic": [
+        "homemade cakes shared in the staff room",
+        "thank-you chocolates from a class at the end of term"
+      ]
+    },
+    "lunch": {
+      "label": "school lunches",
+      "playful": [
+        "school dinners eaten",
+        "packed lunches eaten while marking",
+        "lunch duties done in the dining hall"
+      ],
+      "nostalgic": [
+        "lunches shared with colleagues in the staff room",
+        "school dinners that brought back happy memories"
+      ]
+    },
+    "meetings": {
+      "label": "staff meetings and parents' evenings",
+      "playful": [
+        "staff meetings sat through",
+        "parents' evenings attended",
+        "training days at the start of term"
+      ],
+      "nostalgic": [
+        "staff meetings where a great idea was born",
+        "parents' evenings that ended with a warm thank you"
+      ]
+    },
+    "messages": {
+      "label": "notes and letters home",
+      "playful": [
+        "notes sent home in book bags",
+        "emails from the school office",
+        "notes left in a colleague's pigeonhole"
+      ],
+      "nostalgic": [
+        "thank-you cards from pupils over the years",
+        "letters or cards from former pupils"
+      ]
+    },
+    "phone": {
+      "label": "the school office phone",
+      "playful": [
+        "calls from the school office in a typical week",
+        "times the classroom phone rang mid-lesson",
+        "times being called to the school office"
+      ],
+      "nostalgic": [
+        "calls home with good news about a pupil"
+      ]
+    },
+    "commute": {
+      "label": "getting to and from school",
+      "playful": [
+        "{distance} travelled to and from school over a career",
+        "early drives before the school gates opened",
+        "rainy dashes across the car park to the school door"
+      ],
+      "nostalgic": [
+        "sunrises seen on the way to school",
+        "familiar faces at the school gates each morning"
+      ]
+    },
+    "work-travel": {
+      "label": "school trips",
+      "playful": [
+        "school trips led",
+        "coach rides with a class",
+        "head counts done on a school trip"
+      ],
+      "nostalgic": [
+        "places seen for the first time with a class",
+        "residential trips remembered fondly"
+      ]
+    },
+    "mornings": {
+      "label": "school mornings",
+      "playful": [
+        "times hitting snooze before a school day",
+        "registers taken in a typical week",
+        "early mornings setting up a classroom"
+      ],
+      "nostalgic": [
+        "good mornings said to a class",
+        "quiet early mornings in an empty classroom"
+      ]
+    },
+    "weekdays": {
+      "label": "terms, Mondays and Fridays",
+      "playful": [
+        "Monday mornings back in the classroom",
+        "Friday afternoons counting down to the weekend",
+        "first days of a new term"
+      ],
+      "nostalgic": [
+        "end-of-term feelings shared with colleagues",
+        "fresh starts at the beginning of a school year"
+      ]
+    },
+    "shifts": {
+      "label": "school hours and marking",
+      "playful": [
+        "hours spent marking in a typical week",
+        "evenings spent planning lessons",
+        "lessons taught in a typical week"
+      ],
+      "nostalgic": [
+        "school days that ended with the feeling of a job well done",
+        "after-school clubs run over the years"
+      ]
+    },
+    "breaks": {
+      "label": "break times",
+      "playful": [
+        "playground duties done",
+        "break times spent in the staff room",
+        "crosswords tackled at break time"
+      ],
+      "nostalgic": [
+        "break times spent laughing with colleagues",
+        "quiet breaks with a book in the school library"
+      ]
+    },
+    "clock": {
+      "label": "the school bell",
+      "playful": [
+        "school bells heard in a typical day",
+        "glances at the classroom clock in the last lesson",
+        "dashes across school to beat the bell"
+      ],
+      "nostalgic": [
+        "extra minutes given to help a pupil finish"
+      ]
+    },
+    "projects": {
+      "label": "lessons and school projects",
+      "playful": [
+        "lessons taught over a career",
+        "classroom displays put up",
+        "school plays or concerts helped with"
+      ],
+      "nostalgic": [
+        "lessons that made a whole class light up",
+        "school productions that made everyone proud"
+      ]
+    },
+    "deadlines": {
+      "label": "reports and deadlines",
+      "playful": [
+        "end-of-year reports written",
+        "marks entered just before the deadline",
+        "exam papers marked in a single weekend"
+      ],
+      "nostalgic": [
+        "deadlines beaten by pulling together as a department"
+      ]
+    },
+    "paperwork": {
+      "label": "marking and the photocopier",
+      "playful": [
+        "exercise books marked",
+        "worksheets photocopied",
+        "registers filled in"
+      ],
+      "nostalgic": [
+        "pieces of pupils' work kept as treasures",
+        "cupboards of school records finally sorted out"
+      ]
+    },
+    "supplies": {
+      "label": "red pens and classroom supplies",
+      "playful": [
+        "red pens worn out",
+        "glue sticks lost without their lids",
+        "whiteboard pens that ran dry",
+        "stickers given out for good work"
+      ],
+      "nostalgic": [
+        "trusty pencil cases that lasted for years",
+        "boxes of chalk or crayons used up over the years"
+      ]
+    },
+    "gear": {
+      "label": "lanyards, keys and classroom kit",
+      "playful": [
+        "lanyards or staff badges worn",
+        "keys on the school keyring",
+        "whistles blown on sports day"
+      ],
+      "nostalgic": [
+        "favourite cardigans or jackets worn to school",
+        "teaching bags that lasted for years"
+      ]
+    },
+    "coworkers": {
+      "label": "colleagues",
+      "playful": [
+        "colleagues worked alongside over the years",
+        "head teachers or principals had over a career",
+        "classroom assistants worked with"
+      ],
+      "nostalgic": [
+        "new teachers welcomed on their first day",
+        "colleagues who became friends for life"
+      ]
+    },
+    "helping": {
+      "label": "helping pupils",
+      "playful": [
+        "hands raised in a typical lesson",
+        "shoelaces tied or coats zipped up",
+        "lost jumpers or water bottles reunited with their owners"
+      ],
+      "nostalgic": [
+        "pupils taught over a career",
+        "student teachers trained or shown the ropes"
+      ]
+    },
+    "chats": {
+      "label": "staff room chats and stories",
+      "playful": [
+        "staff room conversations about the weather",
+        "stories read aloud to a class",
+        "jokes shared in the staff room"
+      ],
+      "nostalgic": [
+        "good conversations with colleagues",
+        "laughs shared with a class over the years"
+      ]
+    },
+    "celebrations": {
+      "label": "school celebrations",
+      "playful": [
+        "staff birthday cakes shared",
+        "sports days or summer fairs helped at",
+        "leaving cards signed for colleagues"
+      ],
+      "nostalgic": [
+        "end-of-year celebrations with the staff",
+        "graduations or leavers' assemblies attended"
+      ]
+    },
+    "learning": {
+      "label": "learning on the job",
+      "playful": [
+        "training days attended",
+        "new syllabuses or curriculums learned",
+        "classroom gadgets learned to use"
+      ],
+      "nostalgic": [
+        "teaching tips learned from colleagues",
+        "new subjects or year groups taken on"
+      ]
+    },
+    "career-path": {
+      "label": "the teaching career",
+      "playful": [
+        "classrooms moved into over a career",
+        "schools or colleges worked at",
+        "year groups taught"
+      ],
+      "nostalgic": [
+        "new school roles taken on, like head of year",
+        "schools that felt like a second home"
+      ]
+    },
+    "tech": {
+      "label": "classroom technology",
+      "playful": [
+        "photocopier jams cleared",
+        "projectors or whiteboards that refused to switch on",
+        "blackboards, whiteboards or smart boards used"
+      ],
+      "nostalgic": [
+        "big changes in classroom technology lived through"
+      ]
+    },
+    "workspace": {
+      "label": "the classroom",
+      "playful": [
+        "classroom plants kept alive",
+        "drawing pins used on classroom displays",
+        "chairs stacked at the end of the day"
+      ],
+      "nostalgic": [
+        "classrooms made to feel like home",
+        "pictures from pupils pinned on the wall"
+      ]
+    },
+    "time-off": {
+      "label": "school holidays",
+      "playful": [
+        "summer holidays enjoyed",
+        "half-term breaks taken",
+        "snow days off school"
+      ],
+      "nostalgic": [
+        "trips taken in the school holidays",
+        "summer holidays that recharged the batteries"
+      ]
+    }
+  },
+  "healthcare": {
+    "hot-drinks": {
+      "label": "tea, coffee and the staff room",
+      "playful": [
+        "cups of tea that kept you going on a long shift",
+        "staff room kettle rounds made",
+        "hot drinks left to go cold at the nurses' station"
+      ],
+      "nostalgic": [
+        "cups of tea shared with a colleague after a shift",
+        "hot drinks made for a colleague having a hard day"
+      ]
+    },
+    "snacks": {
+      "label": "snacks and thank-you treats",
+      "playful": [
+        "chocolates from thank-you boxes at the desk",
+        "biscuits from the staff room tin",
+        "snacks from the vending machine on a night shift"
+      ],
+      "nostalgic": [
+        "homemade treats shared on the ward",
+        "boxes of treats left by grateful families"
+      ]
+    },
+    "lunch": {
+      "label": "meal breaks",
+      "playful": [
+        "canteen meals eaten",
+        "packed lunches carried to a shift",
+        "meals eaten at the end of a long shift"
+      ],
+      "nostalgic": [
+        "meal breaks shared with the same friendly faces",
+        "team meals out with colleagues"
+      ]
+    },
+    "meetings": {
+      "label": "handovers and briefings",
+      "playful": [
+        "handovers given at the end of a shift",
+        "team briefings at the start of a shift",
+        "ward or team meetings attended"
+      ],
+      "nostalgic": [
+        "handovers with a colleague you trusted completely",
+        "ward huddles that set up a good shift"
+      ]
+    },
+    "messages": {
+      "label": "notes and messages",
+      "playful": [
+        "sticky notes left for the next shift",
+        "messages pinned on the staff noticeboard",
+        "notes passed between colleagues on a busy day"
+      ],
+      "nostalgic": [
+        "thank-you cards received from families",
+        "messages of encouragement left for colleagues"
+      ]
+    },
+    "phone": {
+      "label": "the phone and the bleep",
+      "playful": [
+        "phone calls answered at the desk in a typical shift",
+        "bleeps or pages answered",
+        "times the phone rang just as you sat down"
+      ],
+      "nostalgic": [
+        "calls that brightened someone's day"
+      ]
+    },
+    "commute": {
+      "label": "getting to and from a shift",
+      "playful": [
+        "{distance} travelled to and from work over a career",
+        "drives home after a night shift",
+        "laps of the staff car park hunting for a space"
+      ],
+      "nostalgic": [
+        "sunrises seen on the way home from a night shift",
+        "familiar faces passed on the way to an early shift"
+      ]
+    },
+    "work-travel": {
+      "label": "rounds and home visits",
+      "playful": [
+        "home visits made",
+        "{distance} walked on a busy shift",
+        "corridors walked in a typical shift"
+      ],
+      "nostalgic": [
+        "towns or villages got to know through home visits",
+        "people met on rounds who made you smile"
+      ]
+    },
+    "mornings": {
+      "label": "early shifts",
+      "playful": [
+        "early shifts started before sunrise",
+        "uniforms laid out the night before",
+        "times hitting snooze before an early shift"
+      ],
+      "nostalgic": [
+        "good mornings said to patients or residents",
+        "quiet early mornings before the day got busy"
+      ]
+    },
+    "weekdays": {
+      "label": "weekends, holidays and the rota",
+      "playful": [
+        "weekends worked over a career",
+        "public holidays worked",
+        "times asking what day of the week it was after nights"
+      ],
+      "nostalgic": [
+        "weekend shifts shared with a great team",
+        "fresh starts at the beginning of a new rota"
+      ]
+    },
+    "shifts": {
+      "label": "shifts and the rota",
+      "playful": [
+        "night shifts worked",
+        "long days worked in a typical month",
+        "extra shifts picked up"
+      ],
+      "nostalgic": [
+        "shifts that ended with the feeling of a job well done",
+        "night shifts shared with a trusted colleague"
+      ]
+    },
+    "breaks": {
+      "label": "breaks on shift",
+      "playful": [
+        "breaks taken on a typical shift",
+        "breaks cut short when the ward got busy",
+        "minutes in a typical break"
+      ],
+      "nostalgic": [
+        "breaks spent laughing with colleagues",
+        "quiet breaks in the hospital garden"
+      ]
+    },
+    "clock": {
+      "label": "the clock on a long shift",
+      "playful": [
+        "glances at the clock on a long night shift",
+        "minutes early for a shift on a typical day",
+        "times the clocks changed during a night shift"
+      ],
+      "nostalgic": [
+        "extra minutes given to help a colleague finish on time"
+      ]
+    },
+    "projects": {
+      "label": "patients and tasks",
+      "playful": [
+        "patients or residents looked after over a career",
+        "tasks ticked off on a busy shift",
+        "beds made over a career"
+      ],
+      "nostalgic": [
+        "residents or patients who made you smile",
+        "days the whole team felt proud"
+      ]
+    },
+    "paperwork": {
+      "label": "charts, notes and forms",
+      "playful": [
+        "admission or discharge forms filled in",
+        "charts or records signed off over a career",
+        "care notes written up at the end of a shift"
+      ],
+      "nostalgic": [
+        "rotas or records kept neat for the whole team",
+        "cupboards or stockrooms finally sorted out"
+      ]
+    },
+    "supplies": {
+      "label": "pens, gloves and ward supplies",
+      "playful": [
+        "pens clipped to a uniform and never seen again",
+        "pairs of gloves used in a typical shift",
+        "labels or sticky notes used"
+      ],
+      "nostalgic": [
+        "trusty pens that lasted for years"
+      ]
+    },
+    "gear": {
+      "label": "uniforms, badges and work shoes",
+      "playful": [
+        "pairs of comfy work shoes worn out",
+        "uniforms or scrubs worn",
+        "hospital ID badges worn"
+      ],
+      "nostalgic": [
+        "fob watches or badges kept as keepsakes",
+        "uniforms that held happy memories"
+      ]
+    },
+    "coworkers": {
+      "label": "colleagues",
+      "playful": [
+        "colleagues worked alongside over the years",
+        "managers or team leaders had over a career",
+        "names learned on a busy ward or unit"
+      ],
+      "nostalgic": [
+        "new starters welcomed on their first shift",
+        "colleagues who became friends for life"
+      ]
+    },
+    "helping": {
+      "label": "helping patients and families",
+      "playful": [
+        "questions answered in a typical shift",
+        "times being asked the way to a ward or clinic",
+        "favours done for colleagues"
+      ],
+      "nostalgic": [
+        "students or new staff shown the ropes",
+        "patients, residents or families helped over a career"
+      ]
+    },
+    "chats": {
+      "label": "conversations and laughs",
+      "playful": [
+        "conversations about the weather with patients",
+        "chats at the nurses' station",
+        "stories told on a night shift"
+      ],
+      "nostalgic": [
+        "good conversations with residents or patients",
+        "laughs shared with the team over the years"
+      ]
+    },
+    "celebrations": {
+      "label": "celebrations at work",
+      "playful": [
+        "staff birthday cakes shared",
+        "cards signed for colleagues",
+        "team nights out"
+      ],
+      "nostalgic": [
+        "milestones celebrated on the ward",
+        "residents' birthdays celebrated"
+      ]
+    },
+    "learning": {
+      "label": "learning on the job",
+      "playful": [
+        "refresher training sessions attended",
+        "new systems or equipment learned",
+        "hospital system passwords changed"
+      ],
+      "nostalgic": [
+        "care skills learned on the job",
+        "nursing or care qualifications earned"
+      ]
+    },
+    "career-path": {
+      "label": "the career path",
+      "playful": [
+        "wards, clinics or homes worked in",
+        "grades or job titles held in care",
+        "interviews sat through for a new post"
+      ],
+      "nostalgic": [
+        "new posts or teams joined",
+        "wards or homes that felt like a second home"
+      ]
+    },
+    "tech": {
+      "label": "technology at work",
+      "playful": [
+        "computers or systems used over a career",
+        "times rebooting a ward computer",
+        "door codes or keypads learned"
+      ],
+      "nostalgic": [
+        "big changes in healthcare technology lived through"
+      ]
+    },
+    "workspace": {
+      "label": "the staff room and station",
+      "playful": [
+        "magnets or postcards on the staff room fridge",
+        "photos pinned up in the staff room",
+        "plants kept alive at the desk or reception"
+      ],
+      "nostalgic": [
+        "staff rooms made to feel like home",
+        "stations or receptions kept cheerful for everyone"
+      ]
+    },
+    "time-off": {
+      "label": "holidays and days off",
+      "playful": [
+        "holiday days enjoyed",
+        "days off swapped with a colleague",
+        "weekends off finally landed on the rota"
+      ],
+      "nostalgic": [
+        "trips taken with time off",
+        "holidays that recharged the batteries"
+      ]
+    }
+  },
+  "service": {
+    "hot-drinks": {
+      "label": "coffee, tea and the staff kettle",
+      "playful": [
+        "cups of coffee or tea grabbed between customers",
+        "drinks made for the team before opening",
+        "brews left to go cold behind the counter"
+      ],
+      "nostalgic": [
+        "cuppas shared with a favourite coworker after closing",
+        "hot drinks made for a coworker on a busy day"
+      ]
+    },
+    "snacks": {
+      "label": "snacks and staff treats",
+      "playful": [
+        "staff snacks kept behind the counter",
+        "treats from the bakery counter at closing time",
+        "biscuits from the staff room tin"
+      ],
+      "nostalgic": [
+        "homemade treats shared before opening",
+        "boxes of treats from grateful regulars"
+      ]
+    },
+    "lunch": {
+      "label": "staff meals",
+      "playful": [
+        "staff meals eaten",
+        "lunches eaten standing up out the back",
+        "meal breaks taken after the rush"
+      ],
+      "nostalgic": [
+        "staff meals shared with the team",
+        "lunch breaks with the same friendly faces"
+      ]
+    },
+    "meetings": {
+      "label": "team briefings",
+      "playful": [
+        "briefings before the doors opened",
+        "team huddles before a busy shift",
+        "staff meetings attended over a career"
+      ],
+      "nostalgic": [
+        "team huddles that set up a great day",
+        "briefings where a good idea was born"
+      ]
+    },
+    "messages": {
+      "label": "notes and messages",
+      "playful": [
+        "notes left for the next shift",
+        "messages pinned on the staff noticeboard",
+        "order slips scribbled in a typical shift"
+      ],
+      "nostalgic": [
+        "thank-you cards from regular customers",
+        "messages of encouragement left for coworkers"
+      ]
+    },
+    "phone": {
+      "label": "the phone",
+      "playful": [
+        "phone calls answered in a typical shift",
+        "bookings or orders taken over the phone",
+        "times the phone rang during the rush"
+      ],
+      "nostalgic": [
+        "calls that brightened a customer's day"
+      ]
+    },
+    "commute": {
+      "label": "getting to and from work",
+      "playful": [
+        "{distance} travelled to and from work over a career",
+        "late journeys home after closing",
+        "bus rides to an early shift"
+      ],
+      "nostalgic": [
+        "sunrises seen on the way to an early shift",
+        "familiar faces passed on the way to open up"
+      ]
+    },
+    "work-travel": {
+      "label": "on your feet",
+      "playful": [
+        "{distance} walked on a busy shift",
+        "trips to the stockroom in a typical shift",
+        "deliveries carried out to customers"
+      ],
+      "nostalgic": [
+        "new places seen thanks to the job",
+        "interesting customers met from far away"
+      ]
+    },
+    "mornings": {
+      "label": "opening up",
+      "playful": [
+        "shutters or doors opened first thing",
+        "early deliveries met before opening",
+        "uniforms laid out the night before"
+      ],
+      "nostalgic": [
+        "good mornings said to the first customer of the day",
+        "quiet early mornings before the doors opened"
+      ]
+    },
+    "weekdays": {
+      "label": "weekends and busy days",
+      "playful": [
+        "Saturdays worked over a career",
+        "busy weekends worked",
+        "public holiday weekends worked"
+      ],
+      "nostalgic": [
+        "weekend shifts shared with a great team",
+        "fresh starts with a quiet Monday shop"
+      ]
+    },
+    "shifts": {
+      "label": "shifts",
+      "playful": [
+        "early, late or weekend shifts worked",
+        "hours on your feet in a typical week",
+        "extra shifts picked up"
+      ],
+      "nostalgic": [
+        "shifts that ended with the feeling of a job well done",
+        "closing shifts shared with a trusted coworker"
+      ]
+    },
+    "breaks": {
+      "label": "breaks",
+      "playful": [
+        "breaks taken on a typical shift",
+        "breaks cut short by a sudden rush",
+        "minutes in a typical break"
+      ],
+      "nostalgic": [
+        "breaks spent laughing out the back",
+        "quiet breaks with a book in the stockroom"
+      ]
+    },
+    "clock": {
+      "label": "opening and closing time",
+      "playful": [
+        "glances at the clock before closing time",
+        "minutes early for a shift on a typical day",
+        "last customers served just before closing"
+      ],
+      "nostalgic": [
+        "extra minutes given to help a customer find just the right thing"
+      ]
+    },
+    "projects": {
+      "label": "customers and orders",
+      "playful": [
+        "customers served in a typical day",
+        "orders taken over a career",
+        "tables cleared or rooms made up in a typical shift"
+      ],
+      "nostalgic": [
+        "regular customers who became friendly faces",
+        "days the whole team felt proud"
+      ]
+    },
+    "deadlines": {
+      "label": "the rush",
+      "playful": [
+        "evening or weekend rushes worked",
+        "orders sent out just in time",
+        "shelves restocked just before opening"
+      ],
+      "nostalgic": [
+        "rushes handled by pulling together as a team"
+      ]
+    },
+    "paperwork": {
+      "label": "receipts, labels and stocktaking",
+      "playful": [
+        "receipts handed over",
+        "stocktakes counted",
+        "labels stuck on shelves or stock"
+      ],
+      "nostalgic": [
+        "stockrooms finally sorted out"
+      ]
+    },
+    "supplies": {
+      "label": "the till and counter supplies",
+      "playful": [
+        "till rolls changed",
+        "pens borrowed from the counter and never returned",
+        "carrier bags or boxes packed"
+      ],
+      "nostalgic": [
+        "trusty notepads that lasted for years"
+      ]
+    },
+    "gear": {
+      "label": "uniforms, aprons and name badges",
+      "playful": [
+        "aprons or uniforms worn",
+        "name badges worn",
+        "pairs of comfy work shoes worn out"
+      ],
+      "nostalgic": [
+        "name badges kept as keepsakes",
+        "uniforms that held happy memories"
+      ]
+    },
+    "coworkers": {
+      "label": "coworkers",
+      "playful": [
+        "coworkers on the shop floor or in the kitchen over the years",
+        "shift managers or supervisors had over a career",
+        "names on the staff rota learned"
+      ],
+      "nostalgic": [
+        "new starters shown round on their first shift",
+        "shift partners who became friends for life"
+      ]
+    },
+    "helping": {
+      "label": "helping customers",
+      "playful": [
+        "times being asked which aisle something was in",
+        "directions given to customers",
+        "questions answered in a typical shift"
+      ],
+      "nostalgic": [
+        "customers helped over a career",
+        "new staff trained or shown the ropes"
+      ]
+    },
+    "chats": {
+      "label": "chats with customers and coworkers",
+      "playful": [
+        "conversations about the weather with customers",
+        "chats with regulars",
+        "stories told out the back"
+      ],
+      "nostalgic": [
+        "good conversations with regular customers",
+        "laughs shared with coworkers over the years"
+      ]
+    },
+    "celebrations": {
+      "label": "celebrations at work",
+      "playful": [
+        "birthday cakes shared with the team",
+        "cards signed behind the counter for coworkers",
+        "staff parties after closing"
+      ],
+      "nostalgic": [
+        "milestones celebrated after closing",
+        "special occasions served for customers"
+      ]
+    },
+    "learning": {
+      "label": "learning on the job",
+      "playful": [
+        "new tills or systems learned",
+        "training sessions attended",
+        "menus or product ranges learned"
+      ],
+      "nostalgic": [
+        "customer service skills learned on the job",
+        "certificates or awards earned"
+      ]
+    },
+    "career-path": {
+      "label": "the career path",
+      "playful": [
+        "shops, cafés or hotels worked at",
+        "job titles on your name badge over the years",
+        "first shifts at a new shop, café or hotel"
+      ],
+      "nostalgic": [
+        "keys to the shop or restaurant entrusted to you",
+        "shops, cafés or hotels that felt like a second home"
+      ]
+    },
+    "tech": {
+      "label": "tills and technology",
+      "playful": [
+        "tills or card machines used over a career",
+        "times switching the card machine off and on again",
+        "barcode scanners used"
+      ],
+      "nostalgic": [
+        "big changes at the till lived through"
+      ]
+    },
+    "workspace": {
+      "label": "behind the counter",
+      "playful": [
+        "counters wiped down in a typical shift",
+        "shelves or window displays arranged",
+        "plants kept alive behind the counter"
+      ],
+      "nostalgic": [
+        "shop floors or dining rooms made to feel welcoming",
+        "window displays that drew a crowd"
+      ]
+    },
+    "time-off": {
+      "label": "holidays and days off",
+      "playful": [
+        "holiday days enjoyed",
+        "days off swapped with a coworker",
+        "weekends off finally landed on the rota"
+      ],
+      "nostalgic": [
+        "trips taken once the busy season was over",
+        "quiet weeks off after a busy season"
+      ]
+    }
+  },
+  "trades": {
+    "hot-drinks": {
+      "label": "brews and the flask",
+      "playful": [
+        "brews made from a flask or kettle on site",
+        "rounds of tea made for the whole crew",
+        "mugs of tea left to go cold on a workbench"
+      ],
+      "nostalgic": [
+        "brews shared with a favourite workmate",
+        "cuppas offered by kind customers on a job"
+      ]
+    },
+    "snacks": {
+      "label": "snacks on the job",
+      "playful": [
+        "breakfast rolls eaten on an early start",
+        "biscuits from the tin in the canteen or cabin",
+        "snacks kept in the van or cab"
+      ],
+      "nostalgic": [
+        "homemade treats shared with the crew",
+        "treats from grateful customers on a job"
+      ]
+    },
+    "lunch": {
+      "label": "lunch on site or on the road",
+      "playful": [
+        "sandwiches eaten in the van or cab",
+        "lunch boxes packed for a day on site",
+        "canteen dinners eaten"
+      ],
+      "nostalgic": [
+        "lunches shared with the crew",
+        "lunch breaks with the same friendly faces"
+      ]
+    },
+    "meetings": {
+      "label": "briefings and job talks",
+      "playful": [
+        "morning briefings before the shift",
+        "job plans talked through in the yard",
+        "briefings held around the back of the van"
+      ],
+      "nostalgic": [
+        "briefings that set the crew up for a good day",
+        "job talks where a clever fix was born"
+      ]
+    },
+    "messages": {
+      "label": "notes and messages",
+      "playful": [
+        "notes left on the workbench for the next shift",
+        "messages from the boss about the next job",
+        "measurements scribbled on scrap paper"
+      ],
+      "nostalgic": [
+        "thank-you cards from happy customers",
+        "messages of encouragement left for workmates"
+      ]
+    },
+    "phone": {
+      "label": "the phone on the job",
+      "playful": [
+        "calls taken from the cab or site in a typical day",
+        "times the phone rang with your hands full",
+        "customer calls about a job"
+      ],
+      "nostalgic": [
+        "calls that brightened a customer's day"
+      ]
+    },
+    "commute": {
+      "label": "getting to the yard, site or depot",
+      "playful": [
+        "{distance} driven to the yard, site or depot over a career",
+        "early drives before the roads got busy",
+        "traffic jams sat in with the van"
+      ],
+      "nostalgic": [
+        "sunrises seen from the cab or the site",
+        "familiar faces passed on the way to work"
+      ]
+    },
+    "work-travel": {
+      "label": "on the road",
+      "playful": [
+        "{distance} driven in the van or truck over a career",
+        "jobs or deliveries done in a typical day",
+        "nights away for a job"
+      ],
+      "nostalgic": [
+        "towns worked in over the years",
+        "interesting people met on the road"
+      ]
+    },
+    "mornings": {
+      "label": "early starts",
+      "playful": [
+        "early starts on site before sunrise",
+        "vans or trucks loaded first thing",
+        "frosty windscreens scraped before work"
+      ],
+      "nostalgic": [
+        "quiet early mornings on site before the crew arrived",
+        "good mornings said in the yard"
+      ]
+    },
+    "weekdays": {
+      "label": "Mondays, Fridays and Saturday jobs",
+      "playful": [
+        "Monday mornings back on the tools",
+        "Friday finishes counted down to",
+        "Saturday jobs taken on"
+      ],
+      "nostalgic": [
+        "Friday feelings shared with the crew",
+        "fresh starts on a new job on a Monday"
+      ]
+    },
+    "shifts": {
+      "label": "hours and shifts",
+      "playful": [
+        "early, late or night shifts worked in a factory or depot",
+        "extra hours on site to finish a job",
+        "winter days on site that started and ended in the dark"
+      ],
+      "nostalgic": [
+        "days that ended with tools packed away and a job well done",
+        "jobs shared with a trusted workmate"
+      ]
+    },
+    "breaks": {
+      "label": "breaks on the job",
+      "playful": [
+        "breaks sat on the tailgate in a typical day",
+        "breaks spent in the van or canteen",
+        "crosswords tackled at break time"
+      ],
+      "nostalgic": [
+        "breaks spent laughing with the crew",
+        "quiet breaks in the cab with a newspaper"
+      ]
+    },
+    "clock": {
+      "label": "clocking in and knocking off",
+      "playful": [
+        "times clocking in or out",
+        "glances at the clock near knocking-off time",
+        "last-minute dashes to the yard before it closed"
+      ],
+      "nostalgic": [
+        "extra minutes given to help a workmate finish on time"
+      ]
+    },
+    "projects": {
+      "label": "jobs finished",
+      "playful": [
+        "jobs signed off on site or in the workshop over a career",
+        "houses, buildings or machines worked on",
+        "loads delivered or shifted"
+      ],
+      "nostalgic": [
+        "finished jobs you still drive past with a smile",
+        "buildings or work still pointed out with pride"
+      ]
+    },
+    "deadlines": {
+      "label": "rush jobs",
+      "playful": [
+        "rush jobs squeezed in at the end of the day",
+        "jobs finished before the customer got home",
+        "loads delivered with minutes to spare"
+      ],
+      "nostalgic": [
+        "big jobs handed over on time by pulling together as a crew"
+      ]
+    },
+    "paperwork": {
+      "label": "job sheets and delivery notes",
+      "playful": [
+        "job sheets or delivery notes signed",
+        "timesheets filled in",
+        "drawings or plans read on a job"
+      ],
+      "nostalgic": [
+        "logbooks or job diaries kept over the years"
+      ]
+    },
+    "supplies": {
+      "label": "screws, tape and site supplies",
+      "playful": [
+        "screws, nails or bolts dropped and never found",
+        "rolls of tape used",
+        "pencils lost from behind your ear",
+        "pairs of work gloves worn through"
+      ],
+      "nostalgic": [
+        "trusty pencils or notebooks that lasted for years"
+      ]
+    },
+    "gear": {
+      "label": "tools, boots and overalls",
+      "playful": [
+        "pairs of work boots worn out",
+        "tools borrowed and never returned",
+        "overalls or hi-vis jackets worn"
+      ],
+      "nostalgic": [
+        "tools or tricks of the trade passed on to an apprentice",
+        "favourite tools kept for years"
+      ]
+    },
+    "coworkers": {
+      "label": "workmates",
+      "playful": [
+        "workmates worked alongside over the years",
+        "bosses or supervisors had over a career",
+        "crews or teams worked in"
+      ],
+      "nostalgic": [
+        "apprentices or new starters welcomed",
+        "workmates who became friends for life"
+      ]
+    },
+    "helping": {
+      "label": "lending a hand",
+      "playful": [
+        "times lending a hand to a workmate on a tricky job",
+        "quick fixes done for neighbours or customers",
+        "questions answered for a newcomer"
+      ],
+      "nostalgic": [
+        "apprentices trained or shown the ropes",
+        "customers helped out of a tricky spot"
+      ]
+    },
+    "chats": {
+      "label": "chats, jokes and the radio",
+      "playful": [
+        "chats over a tailgate or workbench",
+        "songs sung along to on the work radio",
+        "jokes shared on the way to a job"
+      ],
+      "nostalgic": [
+        "good conversations with workmates",
+        "laughs shared with the crew over the years"
+      ]
+    },
+    "celebrations": {
+      "label": "celebrations with the crew",
+      "playful": [
+        "birthday cakes shared in the canteen",
+        "cards signed for workmates",
+        "end-of-job celebrations"
+      ],
+      "nostalgic": [
+        "milestones celebrated with the crew",
+        "send-offs for retiring workmates"
+      ]
+    },
+    "learning": {
+      "label": "learning the trade",
+      "playful": [
+        "new machines or tools learned",
+        "training courses attended",
+        "machine manuals read or skimmed"
+      ],
+      "nostalgic": [
+        "trade skills learned on the job",
+        "tickets, cards or trade qualifications earned"
+      ]
+    },
+    "career-path": {
+      "label": "the working life",
+      "playful": [
+        "vans or trucks driven over a career",
+        "workshops, sites or depots worked at",
+        "first days on a new site or in a new workshop"
+      ],
+      "nostalgic": [
+        "new skills or roles taken on",
+        "workshops or yards that felt like a second home"
+      ]
+    },
+    "tech": {
+      "label": "machines and gadgets",
+      "playful": [
+        "machines, forklifts or vehicles operated",
+        "power tools or gadgets that changed the job",
+        "times switching a machine off and on again"
+      ],
+      "nostalgic": [
+        "big changes in tools or machines lived through"
+      ]
+    },
+    "workspace": {
+      "label": "the van, cab or workbench",
+      "playful": [
+        "calendars pinned up in the workshop or cab",
+        "radios kept in the workshop or van",
+        "workbenches tidied"
+      ],
+      "nostalgic": [
+        "vans, cabs or workshops made to feel like home",
+        "workbenches kept just the way you liked"
+      ]
+    },
+    "time-off": {
+      "label": "holidays and time off",
+      "playful": [
+        "holiday days enjoyed",
+        "long weekends away from the tools",
+        "weeks off when the works shut down"
+      ],
+      "nostalgic": [
+        "trips taken in the works holiday fortnight",
+        "holidays that recharged the batteries"
+      ]
+    }
+  }
+}
