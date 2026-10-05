@@ -266,6 +266,29 @@ describe('pages', () => {
     expect([...names].sort()).toEqual(US_STATE_GROUPS.flatMap((g) => g.names).sort())
   })
 
+  it.each(MODES)('%s prints only the destinations and headings the form chose', (mode) => {
+    const groups = TWM_MODES.find((m) => m.value === mode)!.groups
+    const ownTitles = new Set(groups.map((g) => g.title))
+    const otherTitles = TWM_MODES.flatMap((m) => m.groups.map((g) => g.title)).filter((t) => !ownTitles.has(t))
+    const headingOf = (text: string) => text.replace(/ \((continued|cont\.)\)$/, '')
+    for (const seed of [1, 42, 777]) {
+      for (const [w, h] of TRIMS) {
+        clearStudioRecentContent()
+        const pages = generate(cfg(mode), kdpCtx(w, h, seed))
+        const entries = pages.flatMap((p) => flatten(p.objects).filter((o) => o.data?.[TWM_GROUP_KEY] !== undefined))
+        expect(entries).toHaveLength(twmEntryCount(mode))
+        for (const entry of entries) {
+          const group = groups.find((g) => g.key === entry.data?.[TWM_GROUP_KEY])
+          expect(group, `${mode} ${w}x${h} seed ${seed}`).toBeDefined()
+          expect(group!.names).toContain(clean(entry.text))
+        }
+        const headings = allTexts(pages).map(headingOf)
+        for (const title of ownTitles) expect(headings).toContain(title)
+        for (const title of otherTitles) expect(headings).not.toContain(title)
+      }
+    }
+  })
+
   it('keeps every page titled, the how-to on the first only, and headings with their entries', () => {
     const pages = generate(cfg('states'), kdpCtx(6, 9))
     expect(pages.length).toBeGreaterThan(4)
