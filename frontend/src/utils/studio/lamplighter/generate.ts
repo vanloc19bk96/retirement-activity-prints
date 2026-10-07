@@ -147,12 +147,9 @@ export const lamplighterTemplate: StudioTemplateDefinition = {
       <text x="46" y="15.2">0</text>
       <text x="30" y="23.2">1</text>
     </g>
-    <g fill="#fff" stroke="currentColor" stroke-width="0.5">
-      <circle cx="30" cy="17.4" r="1.5"/>
-      <circle cx="42" cy="25.4" r="1.5"/>
-    </g>
-    <g fill="currentColor">
-      <path d="M29.3 18.9h1.4v1h-1.4zM41.3 26.9h1.4v1h-1.4z"/>
+    <g fill="#fff" stroke="currentColor" stroke-width="0.6">
+      <circle cx="30" cy="18" r="1.3"/>
+      <circle cx="42" cy="26" r="1.3"/>
     </g>
     <rect x="16" y="4" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5"/>
   </svg>`,

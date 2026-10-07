@@ -145,15 +145,11 @@ export const gardenPlotsTemplate: StudioTemplateDefinition = {
       <rect x="16" y="4" width="32" height="32"/>
       <path d="M32 4v8h-8v8h-8M24 20v16M40 12v8h8M24 12h16"/>
     </g>
-    <g stroke="currentColor" stroke-width="0.5">
-      <g fill="#fff"><circle cx="28" cy="6.6" r="1.4"/><circle cx="30.2" cy="8.2" r="1.4"/><circle cx="29.4" cy="10.6" r="1.4"/><circle cx="26.6" cy="10.6" r="1.4"/><circle cx="25.8" cy="8.2" r="1.4"/></g>
-      <circle cx="28" cy="8.6" r="1" fill="currentColor"/>
-      <g fill="#fff"><circle cx="44" cy="14.6" r="1.4"/><circle cx="46.2" cy="16.2" r="1.4"/><circle cx="45.4" cy="18.6" r="1.4"/><circle cx="42.6" cy="18.6" r="1.4"/><circle cx="41.8" cy="16.2" r="1.4"/></g>
-      <circle cx="44" cy="16.6" r="1" fill="currentColor"/>
-      <g fill="#fff"><circle cx="20" cy="22.6" r="1.4"/><circle cx="22.2" cy="24.2" r="1.4"/><circle cx="21.4" cy="26.6" r="1.4"/><circle cx="18.6" cy="26.6" r="1.4"/><circle cx="17.8" cy="24.2" r="1.4"/></g>
-      <circle cx="20" cy="24.6" r="1" fill="currentColor"/>
-      <g fill="#fff"><circle cx="36" cy="30.6" r="1.4"/><circle cx="38.2" cy="32.2" r="1.4"/><circle cx="37.4" cy="34.6" r="1.4"/><circle cx="34.6" cy="34.6" r="1.4"/><circle cx="33.8" cy="32.2" r="1.4"/></g>
-      <circle cx="36" cy="32.6" r="1" fill="currentColor"/>
+    <g stroke="currentColor" stroke-width="0.6">
+      <circle cx="28" cy="8" r="2.5" fill="#fff"/><circle cx="28" cy="8" r="0.9" fill="currentColor"/>
+      <circle cx="44" cy="16" r="2.5" fill="#fff"/><circle cx="44" cy="16" r="0.9" fill="currentColor"/>
+      <circle cx="20" cy="24" r="2.5" fill="#fff"/><circle cx="20" cy="24" r="0.9" fill="currentColor"/>
+      <circle cx="36" cy="32" r="2.5" fill="#fff"/><circle cx="36" cy="32" r="0.9" fill="currentColor"/>
     </g>
   </svg>`,
   configSchema: GP_CONFIG_SCHEMA,

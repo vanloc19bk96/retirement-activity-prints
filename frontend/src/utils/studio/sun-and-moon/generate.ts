@@ -142,23 +142,17 @@ export const sunAndMoonTemplate: StudioTemplateDefinition = {
     </g>
     <path d="M24 4V36M32 4V36M40 4V36M16 12H48M16 20H48M16 28H48" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.45"/>
     <rect x="16" y="4" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.4"/>
-    <g stroke="currentColor" stroke-width="0.6" fill="#fff">
-      <circle cx="20" cy="8" r="1.9"/>
-      <circle cx="36" cy="16" r="1.9"/>
-      <circle cx="28" cy="32" r="1.9"/>
-      <circle cx="44" cy="32" r="1.9"/>
-    </g>
-    <g stroke="currentColor" stroke-width="0.7" stroke-linecap="round">
-      <path d="M20 4.9V5.6M20 10.4V11.1M16.9 8H17.6M22.4 8H23.1"/>
-      <path d="M36 12.9V13.6M36 18.4V19.1M32.9 16H33.6M38.4 16H39.1"/>
-      <path d="M28 28.9V29.6M28 34.4V35.1M24.9 32H25.6M30.4 32H31.1"/>
-      <path d="M44 28.9V29.6M44 34.4V35.1M40.9 32H41.6M46.4 32H47.1"/>
+    <g stroke="currentColor" stroke-width="0.8" fill="#fff">
+      <circle cx="20" cy="8" r="2.4"/>
+      <circle cx="36" cy="16" r="2.4"/>
+      <circle cx="28" cy="32" r="2.4"/>
+      <circle cx="44" cy="32" r="2.4"/>
     </g>
     <g fill="currentColor">
-      <path d="M30.56 8.85A2.7 2.7 0 1 1 27.61 5.33A2.3 2.3 0 1 0 30.56 8.85Z"/>
-      <path d="M46.56 24.85A2.7 2.7 0 1 1 43.61 21.33A2.3 2.3 0 1 0 46.56 24.85Z"/>
-      <path d="M22.56 32.85A2.7 2.7 0 1 1 19.61 29.33A2.3 2.3 0 1 0 22.56 32.85Z"/>
-      <path d="M22.56 16.85A2.7 2.7 0 1 1 19.61 13.33A2.3 2.3 0 1 0 22.56 16.85Z"/>
+      <circle cx="28" cy="8" r="2.8"/>
+      <circle cx="44" cy="24" r="2.8"/>
+      <circle cx="20" cy="32" r="2.8"/>
+      <circle cx="20" cy="16" r="2.8"/>
     </g>
     <g fill="#fff"><circle cx="40" cy="8" r="1.7"/><circle cx="32" cy="24" r="1.7"/></g>
     <g stroke="currentColor" stroke-width="0.6">

@@ -141,19 +141,20 @@ export const happyCampersTemplate: StudioTemplateDefinition = {
       <path d="M28 10v20M32 10v20M36 10v20M40 10v20M24 14h20M24 18h20M24 22h20M24 26h20" stroke-width="0.3" opacity="0.6"/>
       <rect x="24" y="10" width="20" height="20" stroke-width="1"/>
     </g>
+    <path d="M26 13v0.9M38 13v0.9M26 25v0.9M42 25v0.9M34 29v0.9" fill="none" stroke="currentColor" stroke-width="0.7" stroke-linecap="round"/>
     <g fill="currentColor" fill-opacity="0.3" stroke="currentColor" stroke-width="0.4" stroke-linejoin="round">
-      <path d="M26 10.5l1.5 2.4h-0.8l1.1 1.8h-3.6l1.1-1.8h-0.8z"/>
-      <path d="M38 10.5l1.5 2.4h-0.8l1.1 1.8h-3.6l1.1-1.8h-0.8z"/>
-      <path d="M26 22.5l1.5 2.4h-0.8l1.1 1.8h-3.6l1.1-1.8h-0.8z"/>
-      <path d="M42 22.5l1.5 2.4h-0.8l1.1 1.8h-3.6l1.1-1.8h-0.8z"/>
-      <path d="M34 26.5l1.5 2.4h-0.8l1.1 1.8h-3.6l1.1-1.8h-0.8z"/>
+      <circle cx="26" cy="11.6" r="1.4"/>
+      <circle cx="38" cy="11.6" r="1.4"/>
+      <circle cx="26" cy="23.6" r="1.4"/>
+      <circle cx="42" cy="23.6" r="1.4"/>
+      <circle cx="34" cy="27.6" r="1.4"/>
     </g>
     <g fill="none" stroke="currentColor" stroke-width="0.5" stroke-linejoin="round">
-      <path d="M28.3 13.6l1.7-3 1.7 3zM29.4 13.6l0.6-1.3 0.6 1.3"/>
-      <path d="M36.3 17.6l1.7-3 1.7 3zM37.4 17.6l0.6-1.3 0.6 1.3"/>
-      <path d="M24.3 21.6l1.7-3 1.7 3zM25.4 21.6l0.6-1.3 0.6 1.3"/>
-      <path d="M36.3 25.6l1.7-3 1.7 3zM37.4 25.6l0.6-1.3 0.6 1.3"/>
-      <path d="M28.3 29.6l1.7-3 1.7 3zM29.4 29.6l0.6-1.3 0.6 1.3"/>
+      <path d="M28.3 13.6l1.7-3 1.7 3z"/>
+      <path d="M36.3 17.6l1.7-3 1.7 3z"/>
+      <path d="M24.3 21.6l1.7-3 1.7 3z"/>
+      <path d="M36.3 25.6l1.7-3 1.7 3z"/>
+      <path d="M28.3 29.6l1.7-3 1.7 3z"/>
     </g>
   </svg>`,
   configSchema: HC_CONFIG_SCHEMA,
