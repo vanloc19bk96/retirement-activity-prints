@@ -53,7 +53,6 @@ function clueNumber(n: number, x: number, y: number, size: number, tag: StudioTa
         originY: 'center',
         // Fabric's default multiplier centres a lone glyph off its axis.
         lineHeight: 1,
-        editable: false,
       },
       tag,
       'prompt',

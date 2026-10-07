@@ -161,7 +161,6 @@ export function buildSdPicture(options: {
           originX: 'center',
           originY: 'center',
           lineHeight: 1,
-          editable: false,
         },
         tag,
         'answer',
@@ -193,7 +192,7 @@ export function buildSdTally(options: { count: number; box: Box; tag: StudioTag;
   const cy = box.top + box.height / 2
   const parts: StudioFabricObject[] = [
     {
-      ...buildText({ left: x0, top: cy, text: caption, fontFamily, fontSize: size, width: captionW, originY: 'center', lineHeight: 1, editable: false }, tag, 'prompt'),
+      ...buildText({ left: x0, top: cy, text: caption, fontFamily, fontSize: size, width: captionW, originY: 'center', lineHeight: 1 }, tag, 'prompt'),
       data: { [SD_PART_KEY]: 'tally-caption' },
     },
   ]
@@ -256,7 +255,6 @@ export function buildSdLegend(options: { labels: readonly string[]; box: Box; la
           fontSize: layout.size,
           width: hugTextBoxWidth(text, layout.size, layout.colWidth, { fontFamily }),
           lineHeight: 1.1,
-          editable: false,
         },
         tag,
         'answer',

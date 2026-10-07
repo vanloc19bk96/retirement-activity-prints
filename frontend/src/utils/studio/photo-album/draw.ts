@@ -68,7 +68,6 @@ function numberText(options: { value: number; cx: number; cy: number; size: numb
         originY: 'center',
         // Fabric's default multiplier centres a lone line of digits off its axis.
         lineHeight: 1,
-        editable: false,
       },
       tag,
       'prompt',
@@ -236,7 +235,6 @@ export function buildPaPuzzle(options: {
             width: Math.min(caption.lineRight - caption.lineLeft, paTextWidth(name, PA_NAME_SIZE, paTextSpec(font, 700))),
             textAlign: 'center',
             originX: 'center',
-            editable: false,
           },
           tag,
           'answer',

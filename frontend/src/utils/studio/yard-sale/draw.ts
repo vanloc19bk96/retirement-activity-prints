@@ -129,7 +129,6 @@ function numberText(options: { value: number; cx: number; cy: number; size: numb
         originY: 'center',
         // Fabric's default multiplier centres a lone line of digits off its axis.
         lineHeight: 1,
-        editable: false,
       },
       tag,
       'prompt',

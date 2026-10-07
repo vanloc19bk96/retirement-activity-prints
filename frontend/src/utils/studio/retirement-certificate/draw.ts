@@ -518,7 +518,6 @@ function drawSealParts(
           lineHeight: 1,
           textAlign: 'center',
           originX: 'center',
-          editable: false,
         },
         ctx.tag,
         'decoration',

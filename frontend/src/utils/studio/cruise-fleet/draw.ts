@@ -237,7 +237,6 @@ function countNumber(n: number, x: number, y: number, size: number, tag: StudioT
         originY: 'center',
         // Fabric's default multiplier centres a lone glyph off its axis.
         lineHeight: 1,
-        editable: false,
       },
       tag,
       'prompt',

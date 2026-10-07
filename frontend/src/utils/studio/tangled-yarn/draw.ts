@@ -126,7 +126,6 @@ function ballParts(options: { cx: number; cy: number; radius: number; letter: st
           originY: 'center',
           // Fabric's default multiplier centres a lone glyph off its axis.
           lineHeight: 1,
-          editable: false,
         },
         tag,
         'prompt',

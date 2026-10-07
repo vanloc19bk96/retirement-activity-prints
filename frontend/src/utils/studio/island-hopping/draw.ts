@@ -125,7 +125,6 @@ function numberText(n: number, x: number, y: number, size: number, tag: StudioTa
         originY: 'center',
         // Fabric's default multiplier centres a lone glyph off its axis.
         lineHeight: 1,
-        editable: false,
       },
       tag,
       'prompt',
@@ -288,7 +287,7 @@ export function buildIhPuzzle(options: {
   parts.push(
     part(
       buildText(
-        { left: r2(x + icon / 2), top: r2(midY), text: '2', fontFamily: STUDIO_DIGIT_FONT, fontSize: Math.round(icon * 0.55), fontWeight: 700, width: icon, textAlign: 'center', originX: 'center', originY: 'center', lineHeight: 1, editable: false },
+        { left: r2(x + icon / 2), top: r2(midY), text: '2', fontFamily: STUDIO_DIGIT_FONT, fontSize: Math.round(icon * 0.55), fontWeight: 700, width: icon, textAlign: 'center', originX: 'center', originY: 'center', lineHeight: 1 },
         tag,
         'prompt',
       ),

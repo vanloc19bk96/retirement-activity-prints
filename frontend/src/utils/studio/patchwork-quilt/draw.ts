@@ -269,7 +269,6 @@ function numberText(value: number, cx: number, cy: number, size: number, tag: St
         originY: 'center',
         // Fabric's default multiplier centres a lone glyph off its axis.
         lineHeight: 1,
-        editable: false,
       },
       tag,
       'prompt',

@@ -75,7 +75,6 @@ function numberText(options: { value: number; cx: number; cy: number; size: numb
       originY: 'center',
       // Fabric's default multiplier centres a lone line of digits off its axis.
       lineHeight: 1,
-      editable: false,
     },
     tag,
     role,
@@ -100,7 +99,6 @@ function clueText(options: { text: string; left: number; top: number; size: numb
         width: gnTextWidth(text, size, gnDigitSpec()),
         textAlign: 'left',
         lineHeight: 1,
-        editable: false,
       },
       tag,
       'prompt',

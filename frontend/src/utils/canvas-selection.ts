@@ -1,4 +1,4 @@
-import { ActiveSelection, Group, type Canvas, type FabricObject } from 'fabric'
+import { ActiveSelection, Group, IText, type Canvas, type FabricObject } from 'fabric'
 
 const registeredCanvases = new Set<Canvas>()
 
@@ -70,6 +70,11 @@ export function ungroupActiveSelection(canvas: Canvas): void {
   // Once released onto the canvas they must accept pointer hits again.
   for (const object of objects) {
     object.set({ selectable: true, evented: true })
+    // Pages saved from older Studio puzzles carry non-editable clue text.
+    // Released onto the canvas, unlocked text must be editable again.
+    if (object instanceof IText && !object.lockMovementX) {
+      object.set({ editable: true })
+    }
   }
 
   canvas.discardActiveObject()

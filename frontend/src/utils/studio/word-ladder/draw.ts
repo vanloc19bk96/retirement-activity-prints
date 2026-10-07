@@ -44,7 +44,6 @@ function letter(options: { ch: string; x: number; y: number; size: number; tag: 
         originY: 'center',
         // Fabric's default multiplier centres a lone glyph off its axis.
         lineHeight: 1,
-        editable: false,
       },
       tag,
       role,

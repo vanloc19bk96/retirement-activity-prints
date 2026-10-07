@@ -86,7 +86,6 @@ function number(n: number, x: number, y: number, size: number, tag: StudioTag): 
         originY: 'center',
         // Fabric's default multiplier centres a lone glyph off its axis.
         lineHeight: 1,
-        editable: false,
       },
       tag,
       'prompt',
@@ -141,7 +140,6 @@ export function buildCbnKey(options: { layout: CbnKeyLayout; tag: StudioTag; fon
         originX: 'center',
         originY: 'center',
         lineHeight: 1,
-        editable: false,
       },
       tag,
       'prompt',
@@ -186,7 +184,6 @@ export function buildCbnKey(options: { layout: CbnKeyLayout; tag: StudioTag; fon
           width: hugTextBoxWidth(color.name, name, box.left + box.width - x, { fontFamily }),
           originY: 'center',
           lineHeight: 1,
-          editable: false,
         },
         tag,
         'prompt',
