@@ -35,10 +35,10 @@ import { SM_BLANK, SM_MOON, SM_NONE, SM_OPPOSITE, SM_SAME, SM_SUN } from './solv
  * and moons, the rest hidden for the answer page, and the legend.
  *
  * Black on white with one pale gray, so it prints the same on any interior.
- * A sun is a white disc ringed in black with eight black rays; a moon a
- * solid black crescent — told apart at a glance, even at arm's length, and
- * easy to copy with a pencil (a ring, a crescent). On the answer page a sun
- * or a moon stands in every square.
+ * Kept plain for older hands, since the reader draws one in every square:
+ * a sun is an empty ring, a moon the same round filled in. Told apart at a
+ * glance, even at arm's length, and one pencil stroke each. On the answer
+ * page a sun or a moon stands in every square.
  */
 
 /** Marks the objects a Sun & Moon page draws, for checks and the editor. */
@@ -119,66 +119,20 @@ const circle = (cx: number, cy: number, r: number, steps = 36): Pt[] =>
     return [cx + r * Math.cos(a), cy + r * Math.sin(a)] as const
   })
 
-/** The sun's disc. */
-const SUN_DISC: readonly Pt[] = circle(0.5, 0.5, 0.27)
-/** Eight short rays, one straight up: [inner end, outer end], kept inside the box with their round caps. */
-const SUN_RAYS: readonly (readonly [Pt, Pt])[] = Array.from({ length: 8 }, (_, k) => {
-  const a = -Math.PI / 2 + (k * Math.PI) / 4
-  const at = (r: number): Pt => [0.5 + r * Math.cos(a), 0.5 + r * Math.sin(a)]
-  return [at(0.37), at(0.46)] as const
-})
-
-/** Points round a circle from one angle to another, the way that passes `via`. */
-function arc(cx: number, cy: number, r: number, from: number, to: number, via: number, steps: number): Pt[] {
-  const norm = (a: number) => ((a % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)
-  let sweep = norm(to - from)
-  // Counter-clockwise does not pass `via`: go the other way round.
-  if (norm(via - from) > sweep) sweep -= 2 * Math.PI
-  return Array.from({ length: steps + 1 }, (_, k) => {
-    const a = from + (sweep * k) / steps
-    return [cx + r * Math.cos(a), cy + r * Math.sin(a)] as const
-  })
-}
-
-/**
- * The moon: a disc with a smaller one taken out of its upper right, leaving
- * a fat crescent that opens towards the top right corner.
- */
-const MOON: readonly Pt[] = (() => {
-  const R = 0.42
-  const r = 0.36
-  const d = 0.22
-  const turn = (-40 * Math.PI) / 180
-  const ux = Math.cos(turn)
-  const uy = Math.sin(turn)
-  const [ax, ay] = [0.5, 0.5]
-  const [bx, by] = [ax + d * ux, ay + d * uy]
-  // Where the two circles cross.
-  const along = (R * R - r * r + d * d) / (2 * d)
-  const h = Math.sqrt(R * R - along * along)
-  const p1: Pt = [ax + along * ux - h * uy, ay + along * uy + h * ux]
-  const p2: Pt = [ax + along * ux + h * uy, ay + along * uy - h * ux]
-  const away = Math.atan2(-uy, -ux)
-  const outer = arc(ax, ay, R, Math.atan2(p1[1] - ay, p1[0] - ax), Math.atan2(p2[1] - ay, p2[0] - ax), away, 40)
-  const inner = arc(bx, by, r, Math.atan2(p2[1] - by, p2[0] - bx), Math.atan2(p1[1] - by, p1[0] - bx), away, 32)
-  return [...outer, ...inner.slice(1, -1)]
-})()
+/** The sun: an empty ring. */
+const SUN_DISC: readonly Pt[] = circle(0.5, 0.5, 0.36)
+/** The moon: the same round, filled in. */
+const MOON: readonly Pt[] = circle(0.5, 0.5, 0.38)
 
 const iconBox = (cx: number, cy: number, side: number): Box => ({ left: cx - side / 2, top: cy - side / 2, width: side, height: side })
 
-/** A sun or a moon in `box`: a sun is its disc and its rays, a moon one crescent. */
+/** A sun or a moon in `box`: a sun is an empty ring, a moon a filled disc. */
 function symbolParts(options: { value: number; box: Box; tag: StudioTag; role: StudioRole; name: string; extra?: Record<string, unknown> }): StudioFabricObject[] {
   const { value, box, tag, role, name, extra = {} } = options
-  // Heavy enough that a ringed sun weighs about what a solid moon does on the page.
-  const weight = Math.max(STUDIO_STROKE_NORMAL, Math.round(box.width * 0.07 * 2) / 2)
+  // Heavy enough that a ring weighs about what a filled disc does on the page.
+  const weight = Math.max(STUDIO_STROKE_NORMAL, Math.round(box.width * 0.08 * 2) / 2)
   if (value === SM_SUN) {
-    const place = ([u, v]: Pt): [number, number] => [box.left + u * box.width, box.top + v * box.height]
-    const rays: Command[] = SUN_RAYS.flatMap(([from, to]) => [['M', ...place(from)], ['L', ...place(to)]] as Command[])
-    const rayWeight = Math.max(STUDIO_STROKE_NORMAL, Math.round(box.width * 0.09 * 2) / 2)
-    return [
-      part(pathOf({ commands: shapeCommands([SUN_DISC], box), fill: STUDIO_PAPER, stroke: STUDIO_INK, strokeWidth: weight, tag, role }), `${name}-sun`, extra),
-      part(pathOf({ commands: rays, fill: 'transparent', stroke: STUDIO_INK, strokeWidth: rayWeight, tag, role }), `${name}-rays`, extra),
-    ]
+    return [part(pathOf({ commands: shapeCommands([SUN_DISC], box), fill: STUDIO_PAPER, stroke: STUDIO_INK, strokeWidth: weight, tag, role }), `${name}-sun`, extra)]
   }
   return [part(pathOf({ commands: shapeCommands([MOON], box), fill: STUDIO_INK, stroke: STUDIO_INK, strokeWidth: 1, tag, role }), `${name}-moon`, extra)]
 }

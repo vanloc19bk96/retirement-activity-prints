@@ -506,7 +506,7 @@ describe('sun-and-moon pages', () => {
     expect(tints.length).toBe(given.length)
     expect(tints.every((t) => t.fill === SM_GIVEN_TINT)).toBe(true)
     expect(given.every((g) => g.visible !== false && g.studioRole === 'prompt')).toBe(true)
-    const hidden = [...partsOf(puzzle, 'answer-sun'), ...partsOf(puzzle, 'answer-moon'), ...partsOf(puzzle, 'answer-rays')]
+    const hidden = [...partsOf(puzzle, 'answer-sun'), ...partsOf(puzzle, 'answer-moon')]
     expect(hidden.every((h) => h.visible === false && h.studioRole === 'answer')).toBe(true)
     const marks = partsOf(puzzle, 'sign-mark')
     expect(marks.length).toBeGreaterThan(0)
@@ -523,8 +523,8 @@ describe('sun-and-moon pages', () => {
     const puzzleGroup = puzzleOf(out[0]!.objects)!
     const blanks = partsOf(puzzleGroup, 'answer-sun').length + partsOf(puzzleGroup, 'answer-moon').length
     const answers = out.flatMap((p) => harvestAnswers(p.objects))
-    // A moon is one crescent; a sun is its disc and its rays.
-    expect(answers.length).toBe(blanks + partsOf(puzzleGroup, 'answer-rays').length)
+    // A sun or a moon is one shape.
+    expect(answers.length).toBe(blanks)
     const key = buildAnswerKeyFromOutputs(out, STUDIO_INK)
     const puzzle = puzzleOf(key)!
     const suns = partsOf(puzzle, 'answer-sun')

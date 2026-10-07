@@ -32,8 +32,9 @@ import { LAMP_FLOOR, isLampNumber } from './solver'
  * frame, the lit house hidden for the answer page, and the legend.
  *
  * The puzzle page is black on white — nothing on the floor but the lines,
- * so pencilled lamps and dots read clearly. On the answer page every lamp
- * is a light bulb on its square and nothing else is added, so the answer
+ * so pencilled lamps and dots read clearly. A lamp is a plain ring, the
+ * easiest mark for an older hand to pencil in; on the answer page every
+ * lamp is that ring on its square and nothing else is added, so the answer
  * stays as plain to read as the puzzle. Black and white only, so it prints
  * the same on any interior.
  */
@@ -110,54 +111,18 @@ function pathOf(options: {
  * The lamp, in a unit square
  * ------------------------------------------------------------------ */
 
-/** The glass: a round bulb narrowing to its neck. */
-const GLASS: readonly Pt[] = (() => {
-  const cx = 0.5
-  const cy = 0.4
-  const r = 0.21
-  // Where the neck, 0.14 wide, meets the round: this far round from level.
-  const meet = Math.acos(0.07 / r)
-  // From the lower left of the round, over the top, to the lower right (canvas y runs down).
-  const from = Math.PI - meet
-  const sweep = Math.PI + 2 * meet
-  const out: Pt[] = []
-  for (let k = 0; k <= 24; k++) {
-    const a = from + (k / 24) * sweep
-    out.push([cx + r * Math.cos(a), cy + r * Math.sin(a)])
-  }
-  out.push([0.56, 0.66], [0.44, 0.66])
-  return out
-})()
-
-/** The screw base under the glass. */
-const BASE: readonly Pt[] = [
-  [0.42, 0.67],
-  [0.58, 0.67],
-  [0.58, 0.77],
-  [0.54, 0.82],
-  [0.46, 0.82],
-  [0.42, 0.77],
-]
-
-/** Short rays round the top of the glass. */
-const RAYS: readonly (readonly Pt[])[] = [-150, -115, -90, -65, -30].map((deg) => {
-  const a = (deg * Math.PI) / 180
-  return [
-    [0.5 + 0.28 * Math.cos(a), 0.4 + 0.28 * Math.sin(a)],
-    [0.5 + 0.38 * Math.cos(a), 0.4 + 0.38 * Math.sin(a)],
-  ] as const
+/** A lamp is a plain ring: the easiest mark to pencil in, and plainly not a dot. */
+const RING: readonly Pt[] = Array.from({ length: 40 }, (_, k) => {
+  const a = (k / 40) * Math.PI * 2
+  return [0.5 + 0.3 * Math.cos(a), 0.5 + 0.3 * Math.sin(a)] as const
 })
 
 const inBox = (box: Box, shape: readonly Pt[]): Pt[] => shape.map(([u, v]) => [box.left + u * box.width, box.top + v * box.height] as const)
 
-/** A lamp: a white bulb on a screw base, rays round its top. */
+/** A lamp: a white ring, drawn bold. */
 export function lampIconParts(box: Box, tag: StudioTag, role: StudioRole, name: string, extra: Record<string, unknown> = {}): StudioFabricObject[] {
-  const weight = box.width >= 36 ? STUDIO_STROKE_NORMAL : STUDIO_STROKE_HAIRLINE
-  return [
-    part(pathOf({ lines: [inBox(box, GLASS)], close: true, fill: STUDIO_PAPER, strokeWidth: weight, tag, role }), name, extra),
-    part(pathOf({ lines: [inBox(box, BASE)], close: true, fill: STUDIO_INK, strokeWidth: weight, tag, role }), `${name}-base`, extra),
-    part(pathOf({ lines: RAYS.map((ray) => inBox(box, ray)), close: false, fill: 'transparent', strokeWidth: weight, tag, role }), `${name}-rays`, extra),
-  ]
+  const weight = Math.max(STUDIO_STROKE_NORMAL, Math.round(box.width * 0.07 * 2) / 2)
+  return [part(pathOf({ lines: [inBox(box, RING)], close: true, fill: STUDIO_PAPER, strokeWidth: weight, tag, role }), name, extra)]
 }
 
 /* ------------------------------------------------------------------ *
@@ -294,7 +259,7 @@ export function buildLampPuzzle(options: {
     parts.push(numberText(value, grid.left + (col + 0.5) * cell, grid.top + (row + 0.5) * cell, numberSize, STUDIO_PAPER, tag, 'number', { row, col }))
   }
 
-  // The lamps, hidden until the answer page: each bulb on its own square.
+  // The lamps, hidden until the answer page: each ring on its own square.
   for (const at of lamps) {
     const row = Math.floor(at / n)
     const col = at % n

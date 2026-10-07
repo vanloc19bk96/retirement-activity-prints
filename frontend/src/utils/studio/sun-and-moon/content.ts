@@ -92,7 +92,7 @@ export const smLevelSpec = (level: SmLevel): SmLevelSpec => SM_LEVELS.find((l) =
  * ------------------------------------------------------------------ */
 
 export const SM_HOW_TO =
-  'Draw a sun or a moon in every square. Every row and column is half suns, half moons, with never three alike side by side.'
+  'Draw a sun (an empty circle) or a moon (a filled-in circle) in every square. Every row and column is half suns, half moons, with never three alike side by side.'
 
 /** Gentle adds the first trick every sun-and-moon solver learns. */
 export const SM_GENTLE_TIP = 'Tip: two suns together? Moons go at both ends.'

@@ -35,8 +35,9 @@ import type { GpBuilt } from './puzzle'
  * Black on white with light gray tints, so it prints the same on any
  * interior. The walls carry the puzzle — the tints only help the eye find a
  * bed — so a garden still reads if the grays print pale. The flower the
- * reader plants is shown once, in the legend; on the answer page a flower
- * blooms in every planted square.
+ * reader plants is kept plain for older hands, a ring with a dot in it,
+ * and is shown once, in the legend; on the answer page a flower blooms in
+ * every planted square.
  */
 
 /** Marks the objects a Garden Plots page draws, for checks and the editor. */
@@ -114,18 +115,15 @@ const ellipse = (cx: number, cy: number, rx: number, ry: number, turn: number, s
     return [cx + x * Math.cos(turn) - y * Math.sin(turn), cy + x * Math.sin(turn) + y * Math.cos(turn)] as const
   })
 
-/** Five round petals, one pointing straight up. */
-const PETALS: readonly (readonly Pt[])[] = Array.from({ length: 5 }, (_, k) => {
-  const turn = -Math.PI / 2 + (k * 2 * Math.PI) / 5
-  return ellipse(0.5 + 0.25 * Math.cos(turn), 0.5 + 0.25 * Math.sin(turn), 0.2, 0.135, turn)
-})
-const HEART: readonly Pt[] = ellipse(0.5, 0.5, 0.13, 0.13, 0)
+/** The bloom: one plain round, so the flower is two pencil marks (a ring and a dot). */
+const BLOOM: readonly Pt[] = ellipse(0.5, 0.5, 0.36, 0.36, 0)
+const HEART: readonly Pt[] = ellipse(0.5, 0.5, 0.12, 0.12, 0)
 
-/** A flower: white petals round a solid heart. */
+/** A flower: a white ring round a solid heart. */
 function flowerParts(box: Box, tag: StudioTag, role: StudioRole, name: string, extra: Record<string, unknown> = {}): StudioFabricObject[] {
   const weight = box.width >= 36 ? STUDIO_STROKE_NORMAL : STUDIO_STROKE_HAIRLINE
   return [
-    part(shapePath({ shapes: PETALS, box, fill: STUDIO_PAPER, strokeWidth: weight, tag, role }), name, extra),
+    part(shapePath({ shapes: [BLOOM], box, fill: STUDIO_PAPER, strokeWidth: weight, tag, role }), name, extra),
     part(shapePath({ shapes: [HEART], box, fill: STUDIO_INK, strokeWidth: weight, tag, role }), `${name}-heart`, extra),
   ]
 }

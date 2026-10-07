@@ -425,18 +425,16 @@ describe('lamplighter pages', () => {
     const dx = puzzle.left + puzzle.width! / 2
     const dy = puzzle.top + puzzle.height! / 2
     let checked = 0
-    for (const name of ['lamp', 'lamp-base', 'lamp-rays']) {
-      for (const o of partsOf(puzzle, name)) {
-        const cellLeft = plan.grid.left + Number(o.data?.col) * plan.cell
-        const cellTop = plan.grid.top + Number(o.data?.row) * plan.cell
-        expect(o.left + dx - o.width! / 2).toBeGreaterThanOrEqual(cellLeft - 0.5)
-        expect(o.left + dx + o.width! / 2).toBeLessThanOrEqual(cellLeft + plan.cell + 0.5)
-        expect(o.top + dy - o.height! / 2).toBeGreaterThanOrEqual(cellTop - 0.5)
-        expect(o.top + dy + o.height! / 2).toBeLessThanOrEqual(cellTop + plan.cell + 0.5)
-        checked++
-      }
+    for (const o of partsOf(puzzle, 'lamp')) {
+      const cellLeft = plan.grid.left + Number(o.data?.col) * plan.cell
+      const cellTop = plan.grid.top + Number(o.data?.row) * plan.cell
+      expect(o.left + dx - o.width! / 2).toBeGreaterThanOrEqual(cellLeft - 0.5)
+      expect(o.left + dx + o.width! / 2).toBeLessThanOrEqual(cellLeft + plan.cell + 0.5)
+      expect(o.top + dy - o.height! / 2).toBeGreaterThanOrEqual(cellTop - 0.5)
+      expect(o.top + dy + o.height! / 2).toBeLessThanOrEqual(cellTop + plan.cell + 0.5)
+      checked++
     }
-    expect(checked).toBe(built.lamps.length * 3)
+    expect(checked).toBe(built.lamps.length)
   })
 
   it('stacks the legend rather than shrinking the house on a narrow panel', () => {
@@ -492,11 +490,9 @@ describe('lamplighter pages', () => {
     expect(numbers.every((t) => t.visible !== false && t.fontWeight === 700 && t.fill === STUDIO_PAPER)).toBe(true)
     const bulbs = partsOf(puzzle, 'lamp')
     expect(bulbs.length).toBeGreaterThan(5)
-    const hidden = ['lamp', 'lamp-base', 'lamp-rays'].flatMap((name) => partsOf(puzzle, name))
-    expect(hidden).toHaveLength(bulbs.length * 3)
-    expect(hidden.every((o) => o.visible === false && o.studioRole === 'answer' && o.type === 'path')).toBe(true)
+    expect(bulbs.every((o) => o.visible === false && o.studioRole === 'answer' && o.type === 'path')).toBe(true)
     // Only the lamps wait for the answer page: no light beams or halos cross the floor.
-    expect(puzzle.objects!.filter((o) => o.studioRole === 'answer')).toHaveLength(hidden.length)
+    expect(puzzle.objects!.filter((o) => o.studioRole === 'answer')).toHaveLength(bulbs.length)
     expect(partsOf(puzzle, 'beam')).toEqual([])
     expect(partsOf(puzzle, 'halo')).toEqual([])
     const texts = partsOf(puzzle, 'legend-text').map((t) => t.text)

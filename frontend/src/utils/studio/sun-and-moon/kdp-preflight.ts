@@ -105,9 +105,9 @@ function walk(obj: StudioFabricObject, visit: (o: StudioFabricObject) => void): 
  * The drawn page, checked against the grid it was drawn from: pale gray
  * behind every printed square and no other, every printed sun and moon in
  * its own square and showing, every other square's answer waiting hidden,
- * a sun whole with its rays, every sign on its own line and no other, the
- * lines and the frame whole, the sign naming the day, and the legend
- * showing = between two suns and × between a sun and a moon.
+ * every sign on its own line and no other, the lines and the frame whole,
+ * the sign naming the day, and the legend showing = between two suns and ×
+ * between a sun and a moon.
  */
 export function checkSmDrawnPage(options: { puzzle: StudioFabricObject; built: SmBuilt; day: SmDay }): string[] {
   const { puzzle: group, built, day } = options
@@ -117,8 +117,6 @@ export function checkSmDrawnPage(options: { puzzle: StudioFabricObject; built: S
   const tinted = new Set<number>()
   const shown = new Map<number, number>()
   const hidden = new Map<number, number>()
-  let rays = 0
-  let suns = 0
   const marks: string[] = []
   let discs = 0
   let rules = 0
@@ -137,12 +135,8 @@ export function checkSmDrawnPage(options: { puzzle: StudioFabricObject; built: S
       const into = given ? shown : hidden
       if (into.has(at)) errors.push('A square holds two suns or moons.')
       into.set(at, value)
-      if (value === SM_SUN) suns++
       if (given && (o.visible === false || o.studioRole !== 'prompt')) errors.push('A printed sun or moon is hidden.')
       if (!given && (o.visible !== false || o.studioRole !== 'answer')) errors.push('An answer shows on the puzzle page.')
-    } else if (role === 'given-rays' || role === 'answer-rays') {
-      rays++
-      if (role === 'answer-rays' && (o.visible !== false || o.studioRole !== 'answer')) errors.push('An answer shows on the puzzle page.')
     } else if (role === 'sign-mark') {
       marks.push(`${o.data?.row},${o.data?.col},${o.data?.dir},${o.data?.sign}`)
       if (o.visible === false) errors.push('A sign is hidden on the puzzle page.')
@@ -163,7 +157,6 @@ export function checkSmDrawnPage(options: { puzzle: StudioFabricObject; built: S
     if (drawn !== answer[i]) errors.push(given ? 'A printed square shows the wrong sun or moon.' : 'An answer is missing or wrong on the answer page.')
     if ((given ? hidden : shown).has(i)) errors.push('A square is drawn both printed and hidden.')
   }
-  if (rays !== suns) errors.push('A sun is drawn without its rays.')
   const expected = smSignsOf(built)
     .map(([row, col, dir, value]) => `${row},${col},${dir},${value === 1 ? 'same' : 'opposite'}`)
     .sort()
