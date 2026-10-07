@@ -36,10 +36,11 @@ import type { HcBuilt } from './puzzle'
  * legend.
  *
  * Black on white with soft gray fills, so it prints the same on any
- * interior. Trees are drawn in two kinds (a pine and a round leafy tree) so
- * the field reads as a campground, not a chart; both are plainly trees. The
- * tent the reader draws is shown once, in the legend, so they know what to
- * pencil in; on the answer page every tent is drawn in its square.
+ * interior. Kept plain for older eyes and hands: every tree is the same
+ * round tree on a trunk, and a tent is just a triangle, so the mark the
+ * reader pencils in is three strokes and can never be mistaken for a tree.
+ * The tent is shown once, in the legend; on the answer page every tent is
+ * drawn in its square.
  */
 
 /** Marks the objects a Happy Campers page draws, for checks and the editor. */
@@ -121,72 +122,27 @@ function iconPath(options: {
  * The drawings, in a unit square
  * ------------------------------------------------------------------ */
 
-const PINE: readonly Pt[] = [
-  [0.5, 0.03],
-  [0.76, 0.34],
-  [0.64, 0.34],
-  [0.87, 0.6],
-  [0.74, 0.6],
-  [0.96, 0.86],
-  [0.56, 0.86],
-  [0.56, 0.99],
-  [0.44, 0.99],
-  [0.44, 0.86],
-  [0.04, 0.86],
-  [0.26, 0.6],
-  [0.13, 0.6],
-  [0.36, 0.34],
-  [0.24, 0.34],
-]
-
-const TRUNK: readonly Pt[] = [
-  [0.44, 0.6],
-  [0.56, 0.6],
-  [0.56, 0.99],
-  [0.44, 0.99],
-]
-
-/** A leafy crown: a circle with six soft scallops. */
-const CROWN: readonly Pt[] = Array.from({ length: 60 }, (_, k) => {
-  const a = (k / 60) * Math.PI * 2
-  const r = 0.36 * (1 + 0.07 * Math.cos(6 * a))
-  return [0.5 + r * Math.cos(a), 0.41 + r * Math.sin(a)] as const
+/** A plain round tree: a circle on a short trunk. */
+const CROWN: readonly Pt[] = Array.from({ length: 48 }, (_, k) => {
+  const a = (k / 48) * Math.PI * 2
+  return [0.5 + 0.36 * Math.cos(a), 0.41 + 0.36 * Math.sin(a)] as const
 })
 
-const TENT_BODY: readonly Pt[] = [
-  [0.05, 0.9],
-  [0.5, 0.14],
-  [0.95, 0.9],
-]
-const TENT_LINES: readonly (readonly Pt[])[] = [
-  // The door flaps, the pole's tip, the ground.
-  [
-    [0.36, 0.9],
-    [0.5, 0.52],
-    [0.64, 0.9],
-  ],
-  [
-    [0.5, 0.14],
-    [0.5, 0.04],
-  ],
-  [
-    [0, 0.9],
-    [1, 0.9],
-  ],
+const TRUNK: readonly Pt[] = [
+  [0.43, 0.6],
+  [0.57, 0.6],
+  [0.57, 0.99],
+  [0.43, 0.99],
 ]
 
-export type HcTreeKind = 'pine' | 'leafy'
+/** A tent is a plain triangle: the easiest mark to pencil in a square. */
+const TENT: readonly Pt[] = [
+  [0.08, 0.9],
+  [0.5, 0.1],
+  [0.92, 0.9],
+]
 
-/** The tree drawn on a square: pines and leafy trees mixed by the grid's own digest. */
-export function hcTreeKind(signature: string, index: number): HcTreeKind {
-  const digit = parseInt(signature[index % Math.max(1, signature.length)] ?? '0', 16)
-  return (Number.isNaN(digit) ? index : digit + index) % 2 === 0 ? 'pine' : 'leafy'
-}
-
-function treeParts(kind: HcTreeKind, box: Box, tag: StudioTag, name: string, extra: Record<string, unknown>): StudioFabricObject[] {
-  if (kind === 'pine') {
-    return [part(iconPath({ shapes: [PINE], box, fill: TREE_FILL, strokeWidth: STUDIO_STROKE_HAIRLINE, tag, role: 'prompt' }), name, extra)]
-  }
+function treeParts(box: Box, tag: StudioTag, name: string, extra: Record<string, unknown>): StudioFabricObject[] {
   // Trunk first, so the crown covers its top.
   return [
     part(iconPath({ shapes: [TRUNK], box, fill: TREE_FILL, strokeWidth: STUDIO_STROKE_HAIRLINE, tag, role: 'prompt' }), 'trunk'),
@@ -195,7 +151,7 @@ function treeParts(kind: HcTreeKind, box: Box, tag: StudioTag, name: string, ext
 }
 
 function tentPart(box: Box, tag: StudioTag, role: StudioRole, name: string, extra: Record<string, unknown> = {}): StudioFabricObject {
-  return part(iconPath({ shapes: [TENT_BODY], open: TENT_LINES, box, fill: STUDIO_PAPER, strokeWidth: STUDIO_STROKE_NORMAL, tag, role }), name, extra)
+  return part(iconPath({ shapes: [TENT], box, fill: STUDIO_PAPER, strokeWidth: STUDIO_STROKE_NORMAL, tag, role }), name, extra)
 }
 
 const iconBox = (cx: number, cy: number, side: number): Box => ({ left: cx - side / 2, top: cy - side / 2, width: side, height: side })
@@ -323,7 +279,7 @@ export function buildHcPuzzle(options: {
     const r = Math.floor(i / puzzle.cols)
     const c = i % puzzle.cols
     const box = iconBox(grid.left + (c + 0.5) * cell, grid.top + (r + 0.5) * cell, side)
-    if (puzzle.trees[i]) parts.push(...treeParts(hcTreeKind(built.signature, i), box, tag, 'tree', { row: r, col: c }))
+    if (puzzle.trees[i]) parts.push(...treeParts(box, tag, 'tree', { row: r, col: c }))
     else if (tents[i]) parts.push(tentPart(box, tag, 'answer', 'tent', { row: r, col: c }))
   }
 
@@ -342,7 +298,7 @@ export function buildHcPuzzle(options: {
   const midY = legend.top + legend.height / 2
   const textTop = midY - hcLineHeight(plan.legendSize) / 2
   let x = legend.left
-  parts.push(...treeParts('pine', iconBox(x + HC_LEGEND_ICON / 2, midY, HC_LEGEND_ICON), tag, 'legend-tree', {}))
+  parts.push(...treeParts(iconBox(x + HC_LEGEND_ICON / 2, midY, HC_LEGEND_ICON), tag, 'legend-tree', {}))
   x += HC_LEGEND_ICON + HC_LEGEND_ICON_GAP
   const treeWidth = hcTextWidth(treeWord, plan.legendSize, hcLegendSpec(font))
   parts.push(part(buildText({ left: r2(x), top: r2(textTop), text: treeWord, fontFamily: font, fontSize: plan.legendSize, lineHeight: 1, width: treeWidth }, tag, 'prompt'), 'legend-text'))

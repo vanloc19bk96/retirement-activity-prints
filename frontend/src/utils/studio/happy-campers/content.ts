@@ -75,7 +75,7 @@ export const hcLevelSpec = (level: HcLevel): HcLevelSpec => HC_LEVELS.find((l) =
  * ------------------------------------------------------------------ */
 
 export const HC_INSTRUCTION =
-  'Pitch one tent beside every tree: above, below, left or right of it. Tents never touch, not even corner to corner. The numbers tell how many tents go in each row and column.'
+  'Draw a tent (a simple triangle) beside every tree: above, below, left or right of it. Tents never touch, not even corner to corner. The numbers tell how many tents go in each row and column.'
 
 /** Gentle adds the tip every Tents & Trees solver learns first. */
 export const HC_GENTLE_TIP = 'Tip: dot the squares where no tent can go.'
