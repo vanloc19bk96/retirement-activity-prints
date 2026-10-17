@@ -4,6 +4,7 @@ import { Bold, Italic, Underline } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FontFamilySelect } from '@/components/ui/font-family-select'
 import type { TextToolbarState, TextToolbarStyle } from '@/types/text-toolbar.types'
+import { fontSizePixelsToPoints, fontSizePointsToPixels } from '@/utils/font-size-points'
 import { ToolbarHintButton } from './ToolbarHintButton'
 
 type ToolbarTextSettingsPopoverProps = {
@@ -39,18 +40,18 @@ export function ToolbarTextSettingsPopover({
         </ToolbarHintButton>
 
         <>
-        <ToolbarHintButton hint="Font size">
+        <ToolbarHintButton hint="Font size (pt)">
           <label>
-            <span className="sr-only">Font size</span>
+            <span className="sr-only">Font size in points</span>
             <input
               className="h-8 w-16 rounded-md border border-input bg-background px-2 text-sm text-foreground"
               type="number"
               min={1}
-              step={1}
-              value={textSelection.fontSize}
+              step={0.5}
+              value={fontSizePixelsToPoints(textSelection.fontSize)}
               disabled={isSettingsDisabled}
-              onChange={(e) => onFontSizeChange?.(Number(e.target.value))}
-              aria-label="Font size"
+              onChange={(e) => onFontSizeChange?.(fontSizePointsToPixels(Number(e.target.value)))}
+              aria-label="Font size in points"
             />
           </label>
         </ToolbarHintButton>
