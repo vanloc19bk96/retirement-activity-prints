@@ -5,6 +5,7 @@ import {
 } from '@/constants/studio-templates'
 import { createRng } from '@/utils/studio/studio-rng'
 import { WF_TEMPLATE_KEY } from '@/utils/studio/weeks-of-firsts/content'
+import { CR_TEMPLATE_KEY } from '@/utils/studio/retirement-certificate/content'
 import { estimateStudioInstancePageCount } from '@/utils/studio/studio-bulk-allocate'
 import { clampStudioBulkQuantity } from '@/utils/studio/studio-bulk'
 import type {
@@ -97,7 +98,8 @@ function isKeepsakeItem(item: StudioBookPlanItem): boolean {
  * Move keepsake pages (a certificate, a well-wishes page) behind every game.
  * They are not numbered games, so a random order that dropped one between
  * Game 4 and Game 5 read as a gap in the series. Keepsakes take turns by key so
- * two copies of the same page do not sit side by side.
+ * two copies of the same page do not sit side by side, and the certificate
+ * closes the book: it is the page a retiree is handed at the end.
  */
 export function withKeepsakesLast(plan: StudioBookPlanItem[]): StudioBookPlanItem[] {
   const games = plan.filter((item) => !isKeepsakeItem(item))
@@ -110,6 +112,8 @@ export function withKeepsakesLast(plan: StudioBookPlanItem[]): StudioBookPlanIte
     else byKey.set(item.templateKey, [item])
   }
   const keepsakes: StudioBookPlanItem[] = []
+  const certificates = byKey.get(CR_TEMPLATE_KEY) ?? []
+  byKey.delete(CR_TEMPLATE_KEY)
   const queues = [...byKey.values()]
   while (queues.some((q) => q.length > 0)) {
     for (const q of queues) {
@@ -117,7 +121,7 @@ export function withKeepsakesLast(plan: StudioBookPlanItem[]): StudioBookPlanIte
       if (next) keepsakes.push(next)
     }
   }
-  return [...games, ...keepsakes]
+  return [...games, ...keepsakes, ...certificates]
 }
 
 export interface StudioBookChosenOptions {
