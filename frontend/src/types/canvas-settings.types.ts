@@ -18,8 +18,8 @@ export const AMAZON_KDP_PAGE_SIZES = [
 
 export type PageSizeLabel = (typeof AMAZON_KDP_PAGE_SIZES)[number]
 
-/** Default trim for new users — most common Amazon size for this book type. */
-export const DEFAULT_PAGE_SIZE_LABEL: PageSizeLabel = '7.5 x 9.25 in'
+/** Default trim for new users — US Letter, the size most people print at home. */
+export const DEFAULT_PAGE_SIZE_LABEL: PageSizeLabel = '8.5 x 11 in'
 
 /** Trim sizes selectable on Starter plan; others stay visible but disabled in UI. */
 export const STARTER_ALLOWED_PAGE_SIZE_LABELS = [

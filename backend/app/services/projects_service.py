@@ -8,7 +8,7 @@ PROJECT_SCHEMA_NAME = "retirement_activity_prints"
 PROJECTS_TABLE_NAME = "projects"
 
 DEFAULT_PROJECT_SETTINGS = {
-    "pageSizeLabel": "7.5 x 9.25 in",
+    "pageSizeLabel": "8.5 x 11 in",
     "addBleed": False,
     "showVisualGuide": True,
     "fitDroppedImagesToPage": True,
