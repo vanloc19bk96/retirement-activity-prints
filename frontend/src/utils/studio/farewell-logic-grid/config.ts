@@ -9,6 +9,18 @@ export function instructionFor(config: StudioConfig): string {
   return config.showInstructions === false ? '' : lgInstruction()
 }
 
+/**
+ * How the answer page marks its grid. Checks alone is the original look;
+ * many solvers keep their own grid in X and O (or X and checks) and compare
+ * square by square, so they ask for the key in the same marks.
+ */
+export type LgAnswerMarks = 'check' | 'check-x' | 'o-x'
+export const DEFAULT_LG_ANSWER_MARKS: LgAnswerMarks = 'check'
+
+export function parseLgAnswerMarks(value: unknown): LgAnswerMarks {
+  return value === 'check-x' || value === 'o-x' ? value : DEFAULT_LG_ANSWER_MARKS
+}
+
 const LEVEL_BLURBS: Record<string, string> = {
   gentle: 'Plain, direct clues for a relaxed first puzzle.',
   classic: 'A satisfying mix of clue types.',
@@ -16,7 +28,7 @@ const LEVEL_BLURBS: Record<string, string> = {
 }
 
 /**
- * One question: how hard the reasoning is.
+ * Two questions: how hard the reasoning is, and how the answer grid is marked.
  *
  * What the form deliberately does not ask:
  *
@@ -49,5 +61,17 @@ export const LG_CONFIG_SCHEMA: StudioConfigField[] = [
       })
       return `${LEVEL_BLURBS[level.value]} ${note}`
     },
+  },
+  {
+    key: 'answerMarks',
+    label: 'Answer grid marks',
+    type: 'select',
+    default: DEFAULT_LG_ANSWER_MARKS,
+    options: [
+      { label: 'Checkmarks', value: 'check' },
+      { label: 'Checkmarks and X', value: 'check-x' },
+      { label: 'O and X', value: 'o-x' },
+    ],
+    help: 'How the answer page marks its grid. With X, every square that is not a match is crossed out, so a reader can compare their grid square by square.',
   },
 ]

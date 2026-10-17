@@ -5,10 +5,12 @@ import {
   STUDIO_RULE,
   STUDIO_STROKE_BOLD,
   STUDIO_STROKE_HAIRLINE,
+  STUDIO_STROKE_NORMAL,
 } from '@/constants/studio.constants'
 import { toNonBreakingSpaces, unionObjectBounds } from '../studio-layout'
-import { buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
-import { buildCheckMark } from '../studio-check-mark'
+import { buildCircle, buildGroup, buildPolyline, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import { STUDIO_CHECK_MARK_SOURCE, buildCheckMark } from '../studio-check-mark'
+import type { LgAnswerMarks } from './config'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import { measureRunWidth, type FontSpec } from '../studio-text-metrics'
 import { LG_PEOPLE_TITLE } from './content'
@@ -114,6 +116,69 @@ function label(
   }
 }
 
+const LG_RING_SOURCE = 'lg-ring-mark'
+const LG_CROSS_SOURCE = 'lg-cross-mark'
+
+/** One mark in a `size` square, as an answer group tagged with its kind. */
+function markGroup(
+  parts: StudioFabricObject[],
+  box: { left: number; top: number; size: number },
+  source: string,
+  tag: StudioTag,
+): StudioFabricObject {
+  const group = buildGroup(parts, { left: box.left, top: box.top, width: box.size, height: box.size }, tag, 'answer')
+  return { ...group, data: { ...(group.data ?? {}), source } }
+}
+
+/**
+ * Stroke of a match beside X marks: heavier than a lone check, so among a
+ * block of X's the one match is what the eye lands on.
+ */
+const matchStroke = (size: number) => Math.max(STUDIO_STROKE_BOLD, Math.round(size * 0.17))
+
+/** An O for a match, drawn as a stroked ring (never a typed letter, which reads as a zero). */
+function ringMark(box: { left: number; top: number; size: number }, tag: StudioTag): StudioFabricObject {
+  const strokeWidth = matchStroke(box.size)
+  const ring = buildCircle(
+    {
+      left: box.left + box.size / 2,
+      top: box.top + box.size / 2,
+      radius: Math.round(box.size * 0.4 - strokeWidth / 2),
+      stroke: STUDIO_INK,
+      strokeWidth,
+      strokeUniform: true,
+    },
+    tag,
+    'structure',
+  )
+  return markGroup([ring], box, LG_RING_SOURCE, tag)
+}
+
+/** An X for a ruled-out square: two strokes, smaller and lighter than the match so the match leads. */
+function crossMark(box: { left: number; top: number; size: number }, tag: StudioTag): StudioFabricObject {
+  const strokeWidth = Math.max(STUDIO_STROKE_NORMAL, Math.round(box.size * 0.08))
+  const a = box.size * 0.3
+  const b = box.size * 0.7
+  const stroke = (points: { x: number; y: number }[]) =>
+    buildPolyline(
+      { left: box.left, top: box.top, points, stroke: STUDIO_INK, strokeWidth, strokeUniform: true, strokeLineCap: 'round' },
+      tag,
+      'structure',
+    )
+  return markGroup(
+    [stroke([{ x: a, y: a }, { x: b, y: b }]), stroke([{ x: b, y: a }, { x: a, y: b }])],
+    box,
+    LG_CROSS_SOURCE,
+    tag,
+  )
+}
+
+/** Whether an answer object is the grid's mark for a true match (a check or an O). */
+export const isLgMatchMark = (obj: StudioFabricObject) =>
+  obj.data?.source === STUDIO_CHECK_MARK_SOURCE || obj.data?.source === LG_RING_SOURCE
+
+export const isLgCrossMark = (obj: StudioFabricObject) => obj.data?.source === LG_CROSS_SOURCE
+
 /**
  * The deduction grid: a staircase of n x n blocks, one per pair of groups,
  * with People and the later categories down the side and the categories
@@ -122,8 +187,9 @@ function label(
  * Blocks are separated by bold rules and cells by fine ones — weight, never
  * colour — and every label sits in its own ruled slot so the eye can run from
  * a name straight along its row. Column labels are the only sideways text,
- * set to read upward from the grid. On the answer page a check marks the one
- * cell per row that is true in each block.
+ * set to read upward from the grid. On the answer page a check (or an O)
+ * marks the one cell per row that is true in each block, and with `marks`
+ * asking for it an X fills every other cell, the way solvers keep their own.
  */
 export function drawLgGrid(options: {
   puzzle: LgPuzzle
@@ -133,8 +199,9 @@ export function drawLgGrid(options: {
   font: string
   tag: StudioTag
   answers: boolean
+  marks?: LgAnswerMarks
 }): StudioFabricObject {
-  const { puzzle, geometry: g, left, top, font, tag, answers } = options
+  const { puzzle, geometry: g, left, top, font, tag, answers, marks = 'check' } = options
   const { n, K } = puzzle.shape
   const N = n * g.cell
   const gx = left + GRID_EDGE
@@ -231,23 +298,28 @@ export function drawLgGrid(options: {
   if (answers) {
     const { solution } = puzzle
     const size = Math.round(g.cell * 0.72)
+    const crosses = marks !== 'check'
     rows.forEach((rowGroup, i) => {
       cols.slice(0, K - i).forEach((colGroup, j) => {
-        for (let p = 0; p < n; p++) {
-          const u = solution[rowGroup]![p]!
-          const v = solution[colGroup]![p]!
-          parts.push(
-            buildCheckMark(
-              {
-                left: Math.round(x0 + j * N + v * g.cell + (g.cell - size) / 2),
-                top: Math.round(y0 + i * N + u * g.cell + (g.cell - size) / 2),
-                size,
-                stroke: STUDIO_INK,
-              },
-              tag,
-              'answer',
-            ),
-          )
+        // Which column in this block is true for each row value.
+        const match = new Map<number, number>()
+        for (let p = 0; p < n; p++) match.set(solution[rowGroup]![p]!, solution[colGroup]![p]!)
+        for (let u = 0; u < n; u++) {
+          for (let v = 0; v < n; v++) {
+            const hit = match.get(u) === v
+            if (!hit && !crosses) continue
+            const box = {
+              left: Math.round(x0 + j * N + v * g.cell + (g.cell - size) / 2),
+              top: Math.round(y0 + i * N + u * g.cell + (g.cell - size) / 2),
+              size,
+            }
+            if (!hit) parts.push(crossMark(box, tag))
+            else if (marks === 'o-x') parts.push(ringMark(box, tag))
+            else {
+              const strokeWidth = crosses ? matchStroke(size) : undefined
+              parts.push(buildCheckMark({ ...box, stroke: STUDIO_INK, strokeWidth }, tag, 'answer'))
+            }
+          }
         }
       })
     })
@@ -275,9 +347,12 @@ export function pushBlock(
   else objects.push(...parts)
 }
 
-/** Checks the answer grid carries: one per person in every block. */
+/** Matches the answer grid marks: one per person in every block. */
 export const expectedCheckCount = (puzzle: LgPuzzle) =>
   (puzzle.shape.n * puzzle.shape.K * (puzzle.shape.K + 1)) / 2
+
+/** X marks a crossed-out answer grid carries: every square of every block but the matches. */
+export const expectedCrossCount = (puzzle: LgPuzzle) => expectedCheckCount(puzzle) * (puzzle.shape.n - 1)
 
 /**
  * The scene name in bold and the story under it, grouped as one block. The

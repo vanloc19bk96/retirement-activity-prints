@@ -1,7 +1,14 @@
 import type { StudioFabricObject } from '@/types/studio-template.types'
 import { objectExtent } from '../studio-object-bounds'
 import { harvestAnswers } from '../studio-answer-key'
-import { expectedCheckCount, groupLabels, solutionRows } from './draw'
+import {
+  expectedCheckCount,
+  expectedCrossCount,
+  groupLabels,
+  isLgCrossMark,
+  isLgMatchMark,
+  solutionRows,
+} from './draw'
 import type { LgLevel } from './levels'
 import { CELL_MIN, CLUE_FONT_MIN, LABEL_FONT_MIN, MAX_CLUE_LINES } from './layout'
 import type { LgLaidOut } from './pages'
@@ -24,7 +31,8 @@ const clean = (text: unknown) => String(text ?? '').replace(/ /g, ' ')
  * every clue true of it), then the print: every clue set once, in order and
  * word for word; nothing outside the safe area; type and squares above their
  * floors; and an answer page that states exactly the stored answer, with one
- * check per person in every block of its grid. Any failure is a refund.
+ * match per person in every block of its grid (and, when the seller asked for
+ * X marks, an X in every other square). Any failure is a refund.
  */
 export function runLgKdpPreflight(options: {
   puzzle: LgPuzzle
@@ -70,9 +78,13 @@ export function runLgKdpPreflight(options: {
   const key = laid.outputs[laid.outputs.length - 1]?.answerSourceObjects ?? []
   if (!inside(key)) errors.push('Something on the answer page sits outside the safe area.')
   const answers = harvestAnswers(key)
-  const checks = answers.filter((o) => o.type === 'group').length
+  const checks = answers.filter(isLgMatchMark).length
+  const crosses = answers.filter(isLgCrossMark).length
   if (laid.answerGrid && checks !== expectedCheckCount(puzzle)) {
     errors.push('The answer grid does not mark exactly one match per person in every block.')
+  }
+  if (laid.answerGrid && crosses !== (laid.marks === 'check' ? 0 : expectedCrossCount(puzzle))) {
+    errors.push('The answer grid does not cross out every square that is not a match.')
   }
   if (!laid.answerGrid) warnings.push('The answer page lists the answer without its grid.')
 

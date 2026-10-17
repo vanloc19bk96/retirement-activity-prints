@@ -17,7 +17,8 @@ import {
   runGeneratorContractTests,
 } from '../studio-generator-test'
 import { farewellLogicGridTemplate } from './generate'
-import { instructionFor } from './config'
+import { instructionFor, parseLgAnswerMarks, type LgAnswerMarks } from './config'
+import { isLgCrossMark, isLgMatchMark } from './draw'
 import {
   LG_CATEGORIES,
   LG_DEFAULT_TITLE,
@@ -99,10 +100,13 @@ describe('farewell-logic-grid registry', () => {
     expect(STUDIO_ANSWER_INK_MONO_TEMPLATES.has('farewell-logic-grid')).toBe(true)
   })
 
-  it('asks only for a level', () => {
+  it('asks only for a level and the answer grid marks', () => {
     const own = farewellLogicGridTemplate.configSchema.map((f) => f.key)
-    expect(own).toEqual(['level'])
+    expect(own).toEqual(['level', 'answerMarks'])
     expect(parseLgLevel(undefined).value).toBe('classic')
+    expect(parseLgAnswerMarks(undefined)).toBe('check')
+    expect(parseLgAnswerMarks('nonsense')).toBe('check')
+    expect(base.answerMarks).toBe('check')
   })
 })
 
@@ -217,6 +221,42 @@ describe('farewell-logic-grid pages', () => {
       })
     }
   }
+
+  it('marks the answer grid with checks, checks and X, or O and X, as asked', () => {
+    const ctx = kdpCtx(6, 9)
+    const sources = (marks: LgAnswerMarks) => {
+      const pages = generate({ ...base, level: 'classic', answerMarks: marks }, ctx)
+      expect(pages.some((p) => p.buildFailed)).toBe(false)
+      return harvestAnswers(pages[pages.length - 1]!.answerSourceObjects!)
+    }
+    const { n, K } = planLgPage({ page: ctx, config: base, instruction: instructionFor(base), font: FONT, level: parseLgLevel('classic') })!.shape
+    const matches = (n * K * (K + 1)) / 2
+    const kinds = (answers: StudioFabricObject[]) => answers.map((o) => String(o.data?.source ?? ''))
+
+    const plain = sources('check')
+    expect(plain.filter(isLgMatchMark)).toHaveLength(matches)
+    expect(plain.filter(isLgCrossMark)).toHaveLength(0)
+
+    const checkX = sources('check-x')
+    expect(checkX.filter(isLgMatchMark)).toHaveLength(matches)
+    expect(checkX.filter(isLgCrossMark)).toHaveLength(matches * (n - 1))
+    expect(new Set(kinds(checkX.filter(isLgMatchMark)))).toEqual(new Set(['studio-check-mark']))
+
+    const oX = sources('o-x')
+    expect(oX.filter(isLgMatchMark)).toHaveLength(matches)
+    expect(oX.filter(isLgCrossMark)).toHaveLength(matches * (n - 1))
+    expect(new Set(kinds(oX.filter(isLgMatchMark)))).toEqual(new Set(['lg-ring-mark']))
+
+    // The marks never reach the puzzle pages, and an O stays an open ring on the key.
+    const pages = generate({ ...base, level: 'classic', answerMarks: 'o-x' }, ctx)
+    for (const page of pages) expect(harvestAnswers(page.objects)).toHaveLength(0)
+    const key = buildAnswerPage(pages[pages.length - 1]!.answerSourceObjects!, STUDIO_ANSWER_INK_MONO, {
+      contentWidth: ctx.pageWidth - ctx.margin.left - ctx.margin.right,
+    })
+    const rings = walk(key).filter((o) => o.type === 'circle')
+    expect(rings).toHaveLength(matches)
+    for (const ring of rings) expect(ring.fill).toBe('transparent')
+  })
 
   it('keeps rotated labels inside the grid and the grid inside the page', () => {
     const ctx = kdpCtx(6, 9)

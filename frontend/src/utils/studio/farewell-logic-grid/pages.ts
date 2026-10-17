@@ -20,6 +20,7 @@ import {
   type LgSetClue,
   type LgSolutionLayout,
 } from './draw'
+import { parseLgAnswerMarks, type LgAnswerMarks } from './config'
 import {
   CELL_COMFORT,
   CELL_MIN,
@@ -71,6 +72,8 @@ export interface LgLaidOut {
   plan: LgPagePlan
   answerGrid: LgGridGeometry | null
   solution: LgSolutionLayout
+  /** How the answer grid is marked. */
+  marks: LgAnswerMarks
 }
 
 /** This puzzle's write-in chart as set under the grid; 0 when it prints as a list. */
@@ -167,6 +170,7 @@ export function layoutLgPuzzle(options: {
   tag: StudioTag
 }): LgLaidOut | null {
   const { puzzle, config, ctx, font, instruction, tag } = options
+  const marks = parseLgAnswerMarks(config.answerMarks)
   const content = lgContentBox(ctx)
   const blockLeft = Math.round(content.left + (content.width - options.plan.blockWidth) / 2)
   const labels = puzzleGridLabels(puzzle)
@@ -374,11 +378,12 @@ export function layoutLgPuzzle(options: {
         font,
         tag,
         answers: true,
+        marks,
       }),
     )
   }
   const last = outputs.length - 1
   outputs[last] = { ...outputs[last]!, answerSourceObjects: keyObjects }
 
-  return { outputs, content, cluePages, grid, gridBox, chart, answerGrid, solution, plan }
+  return { outputs, content, cluePages, grid, gridBox, chart, answerGrid, solution, plan, marks }
 }
