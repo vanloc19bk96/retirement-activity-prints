@@ -204,8 +204,8 @@ export function SettingPanel(): JSX.Element {
             role="note"
             className="rounded-md border border-amber-500/40 bg-amber-500/10 px-2.5 py-2 text-[11px] leading-snug text-amber-700 dark:text-amber-400"
           >
-            7.5 × 9.25 in is the most common size for this type of book on Amazon. Smaller sizes can
-            make the pages harder to read.
+            8.5 × 11 in (US Letter) is the most common size for this type of book on Amazon. Smaller
+            sizes can make the pages harder to read.
           </p>
           {pageSizeOptionsError && (
             <p className="text-xs text-destructive">Failed to load page sizes: {pageSizeOptionsError}</p>
