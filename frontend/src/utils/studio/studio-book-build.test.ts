@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { buildDefaultConfig } from '@/constants/studio-templates'
-import type { StudioGenerateContext, StudioTemplateDefinition } from '@/types/studio-template.types'
+import type {
+  StudioFabricObject,
+  StudioGenerateContext,
+  StudioTemplateDefinition,
+} from '@/types/studio-template.types'
 import { calculateMarginGuide } from '@/types/canvas-settings.types'
 import { STUDIO_BOOK_TEMPLATES } from './studio-book-plan'
 import { resolveStudioMarginForPage } from './studio-margin'
 import { resetObjectCounter } from './studio-fabric-builders'
 import { studioBuildFailure } from './studio-unique-content'
+import { studioFixedPageTitle, studioUnnumberedGameTitle } from './studio-instance-pages'
 import { BL_FIXTURE } from './bucket-list/fixture'
 import { CBN_FIXTURE } from './career-by-the-numbers/fixture'
 import { FIXTURE_PAIRS } from './crossword/fixture'
@@ -132,6 +137,37 @@ describe('every book game builds at its defaults', () => {
         }
       }
       expect(failures).toEqual([])
+    })
+  }
+})
+
+function collectTexts(objects: readonly StudioFabricObject[], out: string[] = []): string[] {
+  for (const obj of objects) {
+    const text = (obj as { text?: unknown }).text
+    if (typeof text === 'string') out.push(text)
+    const children = (obj as { objects?: StudioFabricObject[] }).objects
+    if (children) collectTexts(children, out)
+  }
+  return out
+}
+
+/**
+ * With "Number pages Game N" off, a book run stamps the game's bare name, and
+ * the seller expects to see it printed: only the number goes away. Keepsakes
+ * draw their own heading either way, so they are left out.
+ */
+describe('every book game prints its name when unnumbered', () => {
+  for (const def of STUDIO_BOOK_TEMPLATES.filter((t) => studioFixedPageTitle(t) === null)) {
+    it(def.key, { timeout: 60_000 }, async () => {
+      const title = studioUnnumberedGameTitle(def)
+      const config = { ...buildDefaultConfig(def), seed: 1000, showTitle: true, title }
+      const remote = await remoteFor(def, config)
+      resetObjectCounter()
+      const outputs = def.generate(config, kdpCtx(8.5, 11, 1000, remote))
+      const puzzle = outputs.find((out) => out.pageRole !== 'answers') ?? outputs[0]!
+      // Headings print with no-break spaces so a short name never wraps.
+      const printed = collectTexts(puzzle.objects).join('\n').replace(/ /g, ' ')
+      expect(printed).toContain(title)
     })
   }
 })
