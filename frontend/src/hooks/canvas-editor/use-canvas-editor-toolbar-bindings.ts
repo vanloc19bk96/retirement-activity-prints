@@ -52,8 +52,8 @@ import {
   deleteSelectionAction,
   pasteSelectionAction,
   bringToFrontSelectionAction,
-  fireCanvasObjectModified,
   fireCanvasObjectsModified,
+  fireTextTargetsModified,
   groupSelectionAction,
   sendToBackSelectionAction,
   toggleLockSelectionAction,
@@ -71,7 +71,7 @@ type UseCanvasEditorToolbarBindingsArgs = {
   requestRender: () => void
 
   getActiveCanvas: () => Canvas | null
-  getActiveTextObject: () => any | null
+  getActiveTextTargets: () => any[]
   getActiveShapeTargets: () => any[]
   getActiveRectTargets: () => any[]
 
@@ -126,7 +126,7 @@ export function useCanvasEditorToolbarBindings(args: UseCanvasEditorToolbarBindi
     shapeSelection,
     requestRender,
     getActiveCanvas,
-    getActiveTextObject,
+    getActiveTextTargets,
     getActiveShapeTargets,
     getActiveRectTargets,
     setIsSelectionLocked,
@@ -206,10 +206,10 @@ export function useCanvasEditorToolbarBindings(args: UseCanvasEditorToolbarBindi
 
       const loadPromise = kickOffFontFamilyLoading(fontFamily)
 
-      const textTarget = getActiveTextObject()
-      if (!textTarget) return
-      applyFontFamilyToTextTarget(textTarget, canvasFamily)
-      fireCanvasObjectModified(canvas, textTarget)
+      const textTargets = getActiveTextTargets()
+      if (textTargets.length === 0) return
+      for (const target of textTargets) applyFontFamilyToTextTarget(target, canvasFamily)
+      fireTextTargetsModified(canvas, textTargets)
 
       requestRender()
       setTextSelection((prev) => (prev ? { ...prev, fontFamily } : prev))
@@ -218,11 +218,13 @@ export function useCanvasEditorToolbarBindings(args: UseCanvasEditorToolbarBindi
       void loadPromise.then(async () => {
         clearFontFamilyCharWidthCaches(canvasFamily, option?.value)
 
-        const refreshedTextTarget = getActiveTextObject()
-        if (refreshedTextTarget) {
-          applyFontFamilyToTextTarget(refreshedTextTarget, canvasFamily)
-          await refreshFabricEditableTextMetricsAfterFontsReady(refreshedTextTarget)
-          fireCanvasObjectModified(canvas, refreshedTextTarget)
+        const refreshedTextTargets = getActiveTextTargets()
+        if (refreshedTextTargets.length > 0) {
+          for (const target of refreshedTextTargets) {
+            applyFontFamilyToTextTarget(target, canvasFamily)
+            await refreshFabricEditableTextMetricsAfterFontsReady(target)
+          }
+          fireTextTargetsModified(canvas, refreshedTextTargets)
         }
 
         requestRender()
@@ -230,7 +232,7 @@ export function useCanvasEditorToolbarBindings(args: UseCanvasEditorToolbarBindi
     },
     [
       getActiveCanvas,
-      getActiveTextObject,
+      getActiveTextTargets,
       requestRender,
       setTextSelection,
     ],
@@ -241,23 +243,25 @@ export function useCanvasEditorToolbarBindings(args: UseCanvasEditorToolbarBindi
       const canvas = getActiveCanvas()
       if (!canvas || getActiveLockState(canvas)) return
 
-      const target = getActiveTextObject()
-      if (!target) return
-      stripPerCharacterFontFamilyFromFabricText(target)
-      // Capture wrap state before metrics change — after a size bump a tight
-      // instruction can look multi-line and must still expand to one line.
-      const shouldRefit = shouldRefitFabricTextboxToUnwrappedLine(target)
-      const rawFontSize = effectiveFontSizeToRawFontSize(effectiveFontSize, target)
-      target.set?.('fontSize', rawFontSize)
-      applyFabricTextboxWidthAfterMetricChange(target, shouldRefit)
-      target.dirty = true
-      target.setCoords?.()
+      const textTargets = getActiveTextTargets()
+      if (textTargets.length === 0) return
+      for (const target of textTargets) {
+        stripPerCharacterFontFamilyFromFabricText(target)
+        // Capture wrap state before metrics change — after a size bump a tight
+        // instruction can look multi-line and must still expand to one line.
+        const shouldRefit = shouldRefitFabricTextboxToUnwrappedLine(target)
+        const rawFontSize = effectiveFontSizeToRawFontSize(effectiveFontSize, target)
+        target.set?.('fontSize', rawFontSize)
+        applyFabricTextboxWidthAfterMetricChange(target, shouldRefit)
+        target.dirty = true
+        target.setCoords?.()
+      }
       requestRender()
-      fireCanvasObjectModified(canvas, target)
+      fireTextTargetsModified(canvas, textTargets)
       setTextSelection((prev) => (prev ? { ...prev, fontSize: effectiveFontSize } : prev))
       recordPropertyChangeHistorySnapshot(canvas)
     },
-    [getActiveCanvas, getActiveTextObject, requestRender, setTextSelection],
+    [getActiveCanvas, getActiveTextTargets, requestRender, setTextSelection],
   )
 
   const onTextColorChange = useCallback(
@@ -265,18 +269,20 @@ export function useCanvasEditorToolbarBindings(args: UseCanvasEditorToolbarBindi
       const canvas = getActiveCanvas()
       if (!canvas || getActiveLockState(canvas)) return
 
-      const target = getActiveTextObject()
-      if (!target) return
+      const textTargets = getActiveTextTargets()
+      if (textTargets.length === 0) return
       const nextColor = textColor.trim()
       if (!nextColor) return
-      stripPerCharacterFillFromFabricText(target)
-      target.set?.('fill', nextColor)
+      for (const target of textTargets) {
+        stripPerCharacterFillFromFabricText(target)
+        target.set?.('fill', nextColor)
+      }
       requestRender()
-      fireCanvasObjectModified(canvas, target)
+      fireTextTargetsModified(canvas, textTargets)
       setTextSelection((prev) => (prev ? { ...prev, textColor: nextColor } : prev))
       recordPropertyChangeHistorySnapshot(canvas)
     },
-    [getActiveCanvas, getActiveTextObject, requestRender, setTextSelection],
+    [getActiveCanvas, getActiveTextTargets, requestRender, setTextSelection],
   )
 
   const onToggleTextStyle = useCallback(
@@ -284,48 +290,56 @@ export function useCanvasEditorToolbarBindings(args: UseCanvasEditorToolbarBindi
       const canvas = getActiveCanvas()
       if (!canvas || getActiveLockState(canvas)) return
 
-      const target = getActiveTextObject()
-      if (!target) return
+      const textTargets = getActiveTextTargets()
+      const first = textTargets[0]
+      if (!first) return
 
+      // The first text decides the new state, so a mixed selection ends uniform.
       if (style === 'bold') {
-        const nextBold = !(target.fontWeight === 'bold' || target.fontWeight === 700)
-        const shouldRefit = shouldRefitFabricTextboxToUnwrappedLine(target)
-        stripPerCharacterTextStyleFromFabricText(target)
-        target.set?.('fontWeight', nextBold ? 'bold' : 'normal')
-        applyFabricTextboxWidthAfterMetricChange(target, shouldRefit)
-        target.dirty = true
-        target.setCoords?.()
+        const nextBold = !(first.fontWeight === 'bold' || first.fontWeight === 700)
+        for (const target of textTargets) {
+          const shouldRefit = shouldRefitFabricTextboxToUnwrappedLine(target)
+          stripPerCharacterTextStyleFromFabricText(target)
+          target.set?.('fontWeight', nextBold ? 'bold' : 'normal')
+          applyFabricTextboxWidthAfterMetricChange(target, shouldRefit)
+          target.dirty = true
+          target.setCoords?.()
+        }
         requestRender()
-        fireCanvasObjectModified(canvas, target)
+        fireTextTargetsModified(canvas, textTargets)
         setTextSelection((prev) => (prev ? { ...prev, isBold: nextBold } : prev))
         recordPropertyChangeHistorySnapshot(canvas)
         return
       }
 
       if (style === 'italic') {
-        const nextItalic = target.fontStyle !== 'italic'
-        const shouldRefit = shouldRefitFabricTextboxToUnwrappedLine(target)
-        stripPerCharacterTextStyleFromFabricText(target)
-        target.set?.('fontStyle', nextItalic ? 'italic' : 'normal')
-        applyFabricTextboxWidthAfterMetricChange(target, shouldRefit)
-        target.dirty = true
-        target.setCoords?.()
+        const nextItalic = first.fontStyle !== 'italic'
+        for (const target of textTargets) {
+          const shouldRefit = shouldRefitFabricTextboxToUnwrappedLine(target)
+          stripPerCharacterTextStyleFromFabricText(target)
+          target.set?.('fontStyle', nextItalic ? 'italic' : 'normal')
+          applyFabricTextboxWidthAfterMetricChange(target, shouldRefit)
+          target.dirty = true
+          target.setCoords?.()
+        }
         requestRender()
-        fireCanvasObjectModified(canvas, target)
+        fireTextTargetsModified(canvas, textTargets)
         setTextSelection((prev) => (prev ? { ...prev, isItalic: nextItalic } : prev))
         recordPropertyChangeHistorySnapshot(canvas)
         return
       }
 
-      const nextUnderline = !Boolean(target.underline)
-      stripPerCharacterTextStyleFromFabricText(target)
-      target.set?.('underline', nextUnderline)
+      const nextUnderline = !Boolean(first.underline)
+      for (const target of textTargets) {
+        stripPerCharacterTextStyleFromFabricText(target)
+        target.set?.('underline', nextUnderline)
+      }
       requestRender()
-      fireCanvasObjectModified(canvas, target)
+      fireTextTargetsModified(canvas, textTargets)
       setTextSelection((prev) => (prev ? { ...prev, isUnderline: nextUnderline } : prev))
       recordPropertyChangeHistorySnapshot(canvas)
     },
-    [getActiveCanvas, getActiveTextObject, requestRender, setTextSelection],
+    [getActiveCanvas, getActiveTextTargets, requestRender, setTextSelection],
   )
 
   const onStrokeWidthChange = useCallback(

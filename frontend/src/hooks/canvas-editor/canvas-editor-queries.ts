@@ -1,6 +1,7 @@
 import { ActiveSelection, Group, type Canvas } from 'fabric'
 
 import { isFabricActiveSelection } from '@/utils/fabric-active-selection'
+import { collectFabricTextObjects } from '@/utils/fabric-selection'
 import { isLucideIconGroup } from '@/utils/lucide-fabric'
 import { isPhosphorIconGroup } from '@/utils/phosphor-fabric'
 import { isStudioShapeGroup } from '@/utils/studio-shape-group'
@@ -20,13 +21,10 @@ function isShapeObjectTarget(target: any): boolean {
   return !isTextObjectType(target.type) && !isImageObjectType(target.type)
 }
 
-export function readActiveTextObject(canvas: Canvas | null): any | null {
-  if (!canvas) return null
-
-  const target = canvas.getActiveObject?.() as any
-  if (!target) return null
-  if (!isTextObjectType(target.type)) return null
-  return target
+/** Every text the active selection reaches, including texts inside groups. */
+export function readActiveTextTargets(canvas: Canvas | null): any[] {
+  if (!canvas) return []
+  return collectFabricTextObjects(canvas.getActiveObject?.())
 }
 
 export function readActiveImageObject(canvas: Canvas | null): any | null {

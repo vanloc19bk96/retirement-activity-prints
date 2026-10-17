@@ -56,6 +56,19 @@ const isTextTarget = (obj: unknown): boolean => {
   return TEXT_OBJECT_TYPES.includes(String(type) as (typeof TEXT_OBJECT_TYPES)[number])
 }
 
+/**
+ * Every text object a selection reaches: the text itself, or each text inside a
+ * group / multi-selection (nested groups included). A word search grid is one
+ * group of letter textboxes, so the text toolbar must style them together.
+ */
+export function collectFabricTextObjects(target: unknown): any[] {
+  if (!target) return []
+  if (isTextTarget(target)) return [target]
+  const children = (target as { getObjects?: () => unknown[] }).getObjects?.()
+  if (!Array.isArray(children)) return []
+  return children.flatMap(collectFabricTextObjects)
+}
+
 const isImageTarget = (obj: unknown): boolean => String((obj as any)?.type ?? '') === 'image'
 
 const isGroupTarget = (obj: unknown): boolean => obj instanceof Group && !(obj instanceof ActiveSelection)
@@ -220,12 +233,25 @@ export function getFabricTextScale(target: { scaleX?: number; scaleY?: number })
   return textScale > 0 ? textScale : 1
 }
 
+/** Text scale including every parent group, so a letter in a scaled grid reads its printed size. */
+export function getFabricTextScaleInGroups(
+  target: { scaleX?: number; scaleY?: number; group?: unknown },
+): number {
+  let scale = getFabricTextScale(target)
+  let parent = target.group as { scaleX?: number; scaleY?: number; group?: unknown } | undefined
+  while (parent) {
+    scale *= getFabricTextScale(parent)
+    parent = parent.group as typeof parent
+  }
+  return scale
+}
+
 /** Convert toolbar “visual” font size to raw Fabric `fontSize` while preserving object scale. */
 export function effectiveFontSizeToRawFontSize(
   effectiveFontSize: number,
-  target: { scaleX?: number; scaleY?: number },
+  target: { scaleX?: number; scaleY?: number; group?: unknown },
 ): number {
-  const textScale = getFabricTextScale(target)
+  const textScale = getFabricTextScaleInGroups(target)
   return Math.max(1, effectiveFontSize / textScale)
 }
 
@@ -278,7 +304,8 @@ const readSelectionInfo = (
     }
   }
 
-  if (!isTextTarget(target)) {
+  const textTarget = collectFabricTextObjects(target)[0]
+  if (!textTarget) {
     const isImage = isImageTarget(target)
     const isShape = !isImage && isShapeSelectionTarget(target)
     const isLucideIconSelection = selectionIncludesLucideIcon(target)
@@ -301,16 +328,17 @@ const readSelectionInfo = (
     }
   }
 
-  const rawFontFamily = typeof target.fontFamily === 'string' ? target.fontFamily : undefined
+  // A group or multi-selection shows the first text's style; edits apply to all.
+  const rawFontFamily = typeof textTarget.fontFamily === 'string' ? textTarget.fontFamily : undefined
   const fontFamily = normalizeFontFamilyForToolbar(rawFontFamily) ?? rawFontFamily
-  const rawFontSize = typeof target.fontSize === 'number' ? target.fontSize : undefined
-  const textScale = getFabricTextScale(target)
+  const rawFontSize = typeof textTarget.fontSize === 'number' ? textTarget.fontSize : undefined
+  const textScale = getFabricTextScaleInGroups(textTarget)
   const fontSize =
     typeof rawFontSize === 'number' ? Math.max(1, Math.round(rawFontSize * textScale)) : undefined
-  const fontWeight = target.fontWeight
-  const fontStyle = target.fontStyle
-  const underline = target.underline
-  const textColor = readFillColor(target)
+  const fontWeight = textTarget.fontWeight
+  const fontStyle = textTarget.fontStyle
+  const underline = textTarget.underline
+  const textColor = readFillColor(textTarget)
 
   return {
     hasSelection: true,
@@ -319,7 +347,7 @@ const readSelectionInfo = (
     isImage: false,
     isShape: false,
     isLucideIconSelection: false,
-    textAlign: readTextParagraphAlign(target),
+    textAlign: readTextParagraphAlign(textTarget),
     fontFamily,
     fontSize,
     textColor,

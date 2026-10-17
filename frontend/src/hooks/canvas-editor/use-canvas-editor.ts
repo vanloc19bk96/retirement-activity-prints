@@ -9,7 +9,7 @@ import {
 import {
   readActiveRectTargets,
   readActiveShapeTargets,
-  readActiveTextObject,
+  readActiveTextTargets,
 } from './canvas-editor-queries'
 import { useCanvasEditorPageRowBindings } from './use-canvas-editor-page-row-bindings'
 import { useCanvasEditorToolbarBindings } from './use-canvas-editor-toolbar-bindings'
@@ -151,7 +151,7 @@ export function useCanvasEditor(options?: UseCanvasEditorOptions): CanvasEditorB
     getActiveCanvas()?.requestRenderAll?.()
   }, [getActiveCanvas])
 
-  const getActiveTextObject = useCallback((): any | null => readActiveTextObject(getActiveCanvas()), [getActiveCanvas])
+  const getActiveTextTargets = useCallback(() => readActiveTextTargets(getActiveCanvas()), [getActiveCanvas])
   const getActiveShapeTargets = useCallback(() => readActiveShapeTargets(getActiveCanvas()), [getActiveCanvas])
   const getActiveRectTargets = useCallback(() => readActiveRectTargets(getActiveCanvas()), [getActiveCanvas])
 
@@ -164,7 +164,7 @@ export function useCanvasEditor(options?: UseCanvasEditorOptions): CanvasEditorB
     shapeSelection,
     requestRender,
     getActiveCanvas,
-    getActiveTextObject,
+    getActiveTextTargets,
     getActiveShapeTargets,
     getActiveRectTargets,
     setIsSelectionLocked,

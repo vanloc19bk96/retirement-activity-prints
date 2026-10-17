@@ -7,7 +7,7 @@ import { deleteActiveSelection, getActiveSelectionTargets, groupActiveSelection,
 import { bringActiveSelectionToFront, sendActiveSelectionToBack } from '@/utils/canvas-z-order'
 import type { FabricTextParagraphAlign } from '@/utils/alignment-events'
 import { getFabricCanvasHistoryManager } from '@/utils/fabric-canvas-history'
-import { isTextObjectType } from './canvas-editor-helpers'
+import { collectFabricTextObjects } from '@/utils/fabric-selection'
 
 /** Fabric doesn't broadcast modified for z-order / lock / align; tell history explicitly. */
 function recordCanvasHistorySnapshot(canvas: Canvas): void {
@@ -24,6 +24,26 @@ export function fireCanvasObjectsModified(canvas: Canvas, targets: unknown[]): v
   for (const target of targets) {
     fireCanvasObjectModified(canvas, target)
   }
+}
+
+/**
+ * Texts inside a group (a word search grid) have no canvas listener of their
+ * own: repaint their parents and report the change on the selected object.
+ */
+export function fireTextTargetsModified(canvas: Canvas, textTargets: any[]): void {
+  for (const target of textTargets) {
+    let parent = target.group
+    while (parent) {
+      parent.dirty = true
+      parent = parent.group
+    }
+  }
+  const active = canvas.getActiveObject?.()
+  if (active && !textTargets.includes(active)) {
+    fireCanvasObjectModified(canvas, active)
+    return
+  }
+  fireCanvasObjectsModified(canvas, textTargets)
 }
 
 function isActiveObjectLocked(canvas: Canvas): boolean {
@@ -70,17 +90,15 @@ export function applyTextParagraphAlignAction(args: ApplyTextParagraphAlignArgs)
   const canvas = args.getActiveCanvas()
   if (!canvas || isActiveObjectLocked(canvas)) return
 
-  const targets = getActiveSelectionTargets(canvas)
-  const textTargets = targets.filter((t) => isTextObjectType((t as { type?: unknown }).type))
+  const textTargets = collectFabricTextObjects(canvas.getActiveObject?.())
   if (textTargets.length === 0) return
 
   for (const obj of textTargets) {
-    const o = obj as { set?: (props: Record<string, unknown>) => void; setCoords?: () => void; initDimensions?: () => void }
-    o.set?.({ textAlign: args.textAlign })
-    o.initDimensions?.()
-    o.setCoords?.()
-    canvas.fire('object:modified', { target: obj })
+    obj.set?.({ textAlign: args.textAlign })
+    obj.initDimensions?.()
+    obj.setCoords?.()
   }
+  fireTextTargetsModified(canvas, textTargets)
 
   canvas.requestRenderAll()
 }
