@@ -220,22 +220,43 @@ export function findStudioInstanceEndPageIndex(
 }
 
 /**
- * Unique studio puzzle instances in the book (excludes answer-key pages).
- * Study + recall share one instanceId → count as one game.
+ * Whether a template's pages take a place in the “Game N” series. Keepsakes
+ * (a certificate) do not: the caller passes the registry's answer, which this
+ * module cannot import without a cycle.
+ */
+export type StudioNumberedTemplate = (templateKey: string) => boolean
+
+const EVERY_TEMPLATE_NUMBERED: StudioNumberedTemplate = () => true
+
+/** Instance ids on pages before `endPageIndex` that count as numbered games. */
+function collectNumberedInstanceIds(
+  store: CanvasStateStore,
+  endPageIndex: number,
+  isNumbered: StudioNumberedTemplate,
+): Set<string> {
+  const ids = new Set<string>()
+  for (let pageIndex = 0; pageIndex < endPageIndex; pageIndex++) {
+    walkStudioObjects(readPageObjects(store, pageIndex), (obj) => {
+      if (!obj.studioInstanceId) return
+      if (obj.studioPageRole === 'answers') return
+      if (obj.studioTemplateKey && !isNumbered(obj.studioTemplateKey)) return
+      ids.add(obj.studioInstanceId)
+    })
+  }
+  return ids
+}
+
+/**
+ * Unique studio puzzle instances in the book (excludes answer-key pages, and
+ * keepsakes when `isNumbered` says so). Study + recall share one instanceId →
+ * count as one game.
  */
 export function countStudioPuzzleInstances(
   store: CanvasStateStore,
   pageCount: number,
+  isNumbered: StudioNumberedTemplate = EVERY_TEMPLATE_NUMBERED,
 ): number {
-  const ids = new Set<string>()
-  for (let pageIndex = 0; pageIndex < pageCount; pageIndex++) {
-    walkStudioObjects(readPageObjects(store, pageIndex), (obj) => {
-      if (!obj.studioInstanceId) return
-      if (obj.studioPageRole === 'answers') return
-      ids.add(obj.studioInstanceId)
-    })
-  }
-  return ids.size
+  return collectNumberedInstanceIds(store, pageCount, isNumbered).size
 }
 
 /** Format a default Page title, e.g. "Game 3". */
@@ -269,6 +290,14 @@ export function studioFixedPageTitle(def: StudioTemplateDefinition): string | nu
  */
 export function studioGameName(def: StudioTemplateDefinition): string {
   return def.defaultPageTitle?.trim() || def.label
+}
+
+/**
+ * Heading for a game page printed without its number: the game's name with
+ * the label's subtitle dropped, as it prints after “Game N:” (“Country Fence”).
+ */
+export function studioUnnumberedGameTitle(def: StudioTemplateDefinition): string {
+  return studioGameName(def).split(':')[0]!.trim()
 }
 
 /**
@@ -321,33 +350,28 @@ export function toStudioSolutionTitle(puzzleTitle: string): string {
 export function studioGameOrdinalAtPageIndex(
   store: CanvasStateStore,
   pageIndex: number,
+  isNumbered: StudioNumberedTemplate = EVERY_TEMPLATE_NUMBERED,
 ): number {
   if (pageIndex <= 0) return 1
-  const ids = new Set<string>()
-  for (let i = 0; i < pageIndex; i++) {
-    walkStudioObjects(readPageObjects(store, i), (obj) => {
-      if (!obj.studioInstanceId) return
-      if (obj.studioPageRole === 'answers') return
-      ids.add(obj.studioInstanceId)
-    })
-  }
-  return ids.size + 1
+  return collectNumberedInstanceIds(store, pageIndex, isNumbered).size + 1
 }
 
 /** Default Page title when replacing the puzzle at `pageIndex`. */
 export function studioGameTitleAtPageIndex(
   store: CanvasStateStore,
   pageIndex: number,
+  isNumbered: StudioNumberedTemplate = EVERY_TEMPLATE_NUMBERED,
 ): string {
-  return formatStudioGameTitle(studioGameOrdinalAtPageIndex(store, pageIndex))
+  return formatStudioGameTitle(studioGameOrdinalAtPageIndex(store, pageIndex, isNumbered))
 }
 
 /** Default Page title: next game ordinal (1-based), skipping solution pages. */
 export function nextStudioGameTitle(
   store: CanvasStateStore,
   pageCount: number,
+  isNumbered: StudioNumberedTemplate = EVERY_TEMPLATE_NUMBERED,
 ): string {
-  return formatStudioGameTitle(countStudioPuzzleInstances(store, pageCount) + 1)
+  return formatStudioGameTitle(countStudioPuzzleInstances(store, pageCount, isNumbered) + 1)
 }
 
 /**

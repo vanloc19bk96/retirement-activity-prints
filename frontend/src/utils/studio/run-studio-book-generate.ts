@@ -2,7 +2,12 @@ import { getStudioTemplate } from '@/constants/studio-templates'
 import { estimateBookPlanPages } from '@/utils/studio/studio-book-plan'
 import { STUDIO_BULK_MAX_BOOK_PAGES } from '@/utils/studio/studio-bulk-allocate'
 import { runStudioGenerateOnce, type StudioWritePage } from '@/utils/studio/run-studio-generate'
-import { bumpStudioGameTitle, studioGameName } from '@/utils/studio/studio-instance-pages'
+import {
+  bumpStudioGameTitle,
+  studioFixedPageTitle,
+  studioGameName,
+  studioUnnumberedGameTitle,
+} from '@/utils/studio/studio-instance-pages'
 import { collectStudioContentHashes } from '@/utils/studio/studio-content-history'
 import { dispatchStudioGenerationDone } from '@/utils/studio/studio-events'
 import { yieldToMainThread } from '@/utils/yield-to-main-thread'
@@ -66,6 +71,7 @@ export async function runStudioBookGenerate(options: {
   }
 
   const total = req.plan.length
+  // "Game N" numbering. Every page prints a title either way.
   const showTitle = req.showTitle
   let nextTitle = showTitle ? String(req.titleStart ?? '') : ''
   let pageCount = req.interiorPageCount
@@ -127,8 +133,13 @@ export async function runStudioBookGenerate(options: {
 
     gameError = null
     const isFirst = allPageIndices.length === 0
-    const title = showTitle ? nextTitle : ''
-    const config = { ...item.config, showTitle, title }
+    // A keepsake prints its own heading and takes no number, so a certificate
+    // can move anywhere in the book without leaving a gap in the series. With
+    // numbering off, a game still prints its name, just without "Game N".
+    const fixedTitle = studioFixedPageTitle(def)
+    const numbered = showTitle && fixedTitle === null
+    const title = fixedTitle ?? (showTitle ? nextTitle : studioUnnumberedGameTitle(def))
+    const config = { ...item.config, showTitle: true, title }
 
     const result = await runStudioGenerateOnce({
       req: {
@@ -174,7 +185,7 @@ export async function runStudioBookGenerate(options: {
     writeCursor = Math.max(maxIndex + 1, writeCursor + result.pagesAdded)
     instancesCompleted += 1
     if (result.isDuplicate) instancesDuplicated += 1
-    if (showTitle) nextTitle = bumpStudioGameTitle(nextTitle) ?? nextTitle
+    if (numbered) nextTitle = bumpStudioGameTitle(nextTitle) ?? nextTitle
 
     setProgress({ completed: i + 1, total, countKind: 'instance' })
     await yieldToMainThread()

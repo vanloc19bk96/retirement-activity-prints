@@ -86,7 +86,38 @@ export function buildRandomBookPlan(options: StudioBookRandomOptions): StudioBoo
     previousKey = def.key
     plan.push({ templateKey: def.key, config: buildDefaultConfig(def) })
   }
-  return plan
+  return withKeepsakesLast(plan)
+}
+
+function isKeepsakeItem(item: StudioBookPlanItem): boolean {
+  return getStudioTemplate(item.templateKey)?.category === 'keepsake'
+}
+
+/**
+ * Move keepsake pages (a certificate, a well-wishes page) behind every game.
+ * They are not numbered games, so a random order that dropped one between
+ * Game 4 and Game 5 read as a gap in the series. Keepsakes take turns by key so
+ * two copies of the same page do not sit side by side.
+ */
+export function withKeepsakesLast(plan: StudioBookPlanItem[]): StudioBookPlanItem[] {
+  const games = plan.filter((item) => !isKeepsakeItem(item))
+  if (games.length === plan.length) return plan
+  const byKey = new Map<string, StudioBookPlanItem[]>()
+  for (const item of plan) {
+    if (!isKeepsakeItem(item)) continue
+    const copies = byKey.get(item.templateKey)
+    if (copies) copies.push(item)
+    else byKey.set(item.templateKey, [item])
+  }
+  const keepsakes: StudioBookPlanItem[] = []
+  const queues = [...byKey.values()]
+  while (queues.some((q) => q.length > 0)) {
+    for (const q of queues) {
+      const next = q.shift()
+      if (next) keepsakes.push(next)
+    }
+  }
+  return [...games, ...keepsakes]
 }
 
 export interface StudioBookChosenOptions {
@@ -105,8 +136,12 @@ export function buildChosenBookPlan(options: StudioBookChosenOptions): StudioBoo
       plan.push({ templateKey: row.templateKey, config: { ...row.config } })
     }
   }
+  // Sequential keeps the seller's own order, keepsakes included; a shuffle
+  // still ends on them, as a random mix does.
   const ordered =
-    options.order === 'shuffle' ? createRng(options.seed).shuffle(plan) : plan
+    options.order === 'shuffle'
+      ? withKeepsakesLast(createRng(options.seed).shuffle(plan))
+      : plan
   return ordered.slice(0, STUDIO_BOOK_MAX_GAMES)
 }
 

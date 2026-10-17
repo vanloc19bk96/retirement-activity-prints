@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { buildDefaultConfig, getStudioTemplate } from '@/constants/studio-templates'
+import {
+  buildDefaultConfig,
+  getStudioTemplate,
+  isStudioNumberedTemplate,
+} from '@/constants/studio-templates'
 import { useStudioGenerate } from '@/hooks/studio/use-studio-generate'
 import { useStudioTarget } from '@/context/StudioTargetContext'
 import { useCanvasSettings } from '@/context/CanvasSettingsContext'
@@ -37,6 +41,8 @@ import type {
   StudioConfigField,
   StudioConfigLayoutContext,
 } from '@/types/studio-template.types'
+
+const BOOK_PAGE_HEADER: StudioPageHeader = { showTitle: true }
 
 function clampGameCount(value: number): number {
   const n = Math.round(Number(value))
@@ -88,8 +94,8 @@ export function useStudioBookBuilder() {
   const [categories, setCategories] = useState<StudioCategory[]>([])
   const [rows, setRows] = useState<StudioBookGameRow[]>(() => [createRow(firstTemplateKey())])
   const [order, setOrder] = useState<StudioBookOrder>('sequential')
-  // On by default — whole-book runs number pages as "Game N" so KDP interiors
-  // stay labeled. Sellers can turn it off if a title would shrink puzzle count.
+  // On by default: whole-book runs number pages as "Game N". Off, each page
+  // still prints its game's name, just without the number.
   const [showTitle, setShowTitle] = useState(true)
   const [note, setNote] = useState<string | null>(null)
 
@@ -101,17 +107,22 @@ export function useStudioBookBuilder() {
   }, [mode, gameCount, seed, categories, rows, order])
 
   const gameTotal = plan.length
+  // Keepsakes print their own heading and take no number.
+  const numberedTotal = useMemo(
+    () => plan.filter((item) => isStudioNumberedTemplate(item.templateKey)).length,
+    [plan],
+  )
   const estimatedPages = useMemo(() => estimateBookPlanPages(plan), [plan])
   const overBudget = interiorPageCount + estimatedPages > STUDIO_BULK_MAX_BOOK_PAGES
   const chosenTotal = mode === 'choose' ? countBookRowsTotal(rows) : gameTotal
 
   const titlePreview = useMemo(() => {
-    if (!showTitle || gameTotal < 1) return null
+    if (!showTitle || numberedTotal < 1) return null
     return formatStudioBulkTitleRange(
-      nextStudioGameTitle(canvasStateStore, interiorPageCount),
-      gameTotal,
+      nextStudioGameTitle(canvasStateStore, interiorPageCount, isStudioNumberedTemplate),
+      numberedTotal,
     )
-  }, [showTitle, gameTotal, canvasStateStore, interiorPageCount])
+  }, [showTitle, numberedTotal, canvasStateStore, interiorPageCount])
 
   // Block a run on an invalid game config. Variant-field messages belong in the
   // Customize dialog — only point the seller there from the main list.
@@ -148,10 +159,10 @@ export function useStudioBookBuilder() {
 
   /**
    * Every game is generated with this header, whatever its own config says, so
-   * layout-aware bounds must be measured with it — "Number pages Game N" costs
-   * a title line, and a max resolved without one reads an item too high.
+   * layout-aware bounds must be measured with it. Every page prints a title
+   * line, numbered or not, and a max resolved without one reads an item too high.
    */
-  const pageHeader = useMemo<StudioPageHeader>(() => ({ showTitle }), [showTitle])
+  const pageHeader = BOOK_PAGE_HEADER
 
   const clampRowConfig = (
     schema: readonly StudioConfigField[],
@@ -172,7 +183,7 @@ export function useStudioBookBuilder() {
     return config === row.config ? row : { ...row, config }
   }
 
-  // Trim size, margins, or the "Game N" toggle changed — re-fit every game.
+  // Trim size or margins changed: re-fit every game.
   useEffect(() => {
     setRows((prev) => {
       let changed = false
@@ -241,7 +252,7 @@ export function useStudioBookBuilder() {
       interiorPageCount,
     })
     const titleStart = showTitle
-      ? nextStudioGameTitle(canvasStateStore, interiorPageCount)
+      ? nextStudioGameTitle(canvasStateStore, interiorPageCount, isStudioNumberedTemplate)
       : undefined
     const result = await generateBook({
       plan,

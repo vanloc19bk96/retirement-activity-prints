@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { getStudioTemplate } from '@/constants/studio-templates'
 import {
   STUDIO_BOOK_MAX_GAMES,
   buildChosenBookPlan,
@@ -54,6 +55,34 @@ describe('buildRandomBookPlan', () => {
     )
     expect(plan.length).toBe(6)
     for (const item of plan) expect(allowed.has(item.templateKey)).toBe(true)
+  })
+})
+
+describe('keepsakes in a book', () => {
+  const isKeepsake = (key: string) => getStudioTemplate(key)?.category === 'keepsake'
+
+  it('closes a random mix with its keepsakes, after every game', () => {
+    for (const seed of [1, 42, 1337, 90210, 555]) {
+      const keys = keysOf(buildRandomBookPlan({ gameCount: 64, seed, categories: [] }))
+      const firstKeepsake = keys.findIndex(isKeepsake)
+      expect(firstKeepsake).toBeGreaterThan(0)
+      expect(keys.slice(firstKeepsake).every(isKeepsake)).toBe(true)
+    }
+  })
+
+  it('ends a shuffled chosen book on its keepsakes, but keeps a sequential order as chosen', () => {
+    const game = getEligibleBookTemplates({ categories: [] }).find((def) => def.category !== 'keepsake')!
+    const rows: StudioBookGameRow[] = [
+      { id: 'cert', templateKey: 'retirement-certificate', quantity: 1, config: {} },
+      { id: 'game', templateKey: game.key, quantity: 5, config: {} },
+    ]
+    for (const seed of [1, 2, 3]) {
+      const keys = keysOf(buildChosenBookPlan({ rows, order: 'shuffle', seed }))
+      expect(keys.at(-1)).toBe('retirement-certificate')
+    }
+    expect(keysOf(buildChosenBookPlan({ rows, order: 'sequential', seed: 1 }))[0]).toBe(
+      'retirement-certificate',
+    )
   })
 })
 

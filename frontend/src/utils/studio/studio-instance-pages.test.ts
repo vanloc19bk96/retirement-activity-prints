@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import type { CanvasStateStore } from '@/utils/canvas-state-store'
-import { STUDIO_TEMPLATES, getStudioTemplate } from '@/constants/studio-templates'
+import {
+  STUDIO_TEMPLATES,
+  getStudioTemplate,
+  isStudioNumberedTemplate,
+} from '@/constants/studio-templates'
 import {
   bumpStudioGameTitle,
   countStudioPuzzleInstances,
@@ -17,6 +21,7 @@ import {
   studioGameName,
   studioGameOrdinalAtPageIndex,
   studioGameTitleAtPageIndex,
+  studioUnnumberedGameTitle,
   toStudioSolutionTitle,
   withStudioGameName,
 } from './studio-instance-pages'
@@ -288,6 +293,18 @@ describe('countStudioPuzzleInstances / nextStudioGameTitle', () => {
     expect(countStudioPuzzleInstances(store, 3)).toBe(1)
     expect(nextStudioGameTitle(store, 3)).toBe('Game 2')
   })
+
+  it('gives a keepsake page no number, so moving it leaves no gap', () => {
+    const certificate = { ...studioObj('cert', 'single'), studioTemplateKey: 'retirement-certificate' }
+    const store = makeStore({
+      0: [{ ...studioObj('a', 'single'), studioTemplateKey: 'crossword' }],
+      1: [certificate],
+      2: [{ ...studioObj('b', 'single'), studioTemplateKey: 'crossword' }],
+    })
+    expect(countStudioPuzzleInstances(store, 3, isStudioNumberedTemplate)).toBe(2)
+    expect(nextStudioGameTitle(store, 3, isStudioNumberedTemplate)).toBe('Game 3')
+    expect(studioGameOrdinalAtPageIndex(store, 2, isStudioNumberedTemplate)).toBe(2)
+  })
 })
 
 describe('studioGameTitleAtPageIndex', () => {
@@ -381,6 +398,17 @@ describe('studioFixedPageTitle', () => {
       } else {
         expect(studioFixedPageTitle(def), def.key).toBeNull()
       }
+    }
+  })
+})
+
+describe('studioUnnumberedGameTitle', () => {
+  it('prints the game name alone, without its subtitle', () => {
+    expect(studioUnnumberedGameTitle(getStudioTemplate('crossword')!)).toBe('Crossword')
+    expect(studioUnnumberedGameTitle(getStudioTemplate('quote-coloring')!)).toBe('Color the Saying')
+    for (const def of STUDIO_TEMPLATES) {
+      expect(studioUnnumberedGameTitle(def)).not.toContain(':')
+      expect(studioUnnumberedGameTitle(def)).not.toBe('')
     }
   })
 })

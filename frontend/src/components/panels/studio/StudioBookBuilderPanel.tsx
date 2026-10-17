@@ -15,6 +15,7 @@ const MODE_OPTIONS: { value: StudioBookMode; label: string }[] = [
 const TITLE_FIELD: StudioConfigField = {
   key: 'showTitle',
   label: 'Number pages “Game N”',
+  help: 'Off keeps each game’s name as its title, without the number. Keepsakes are never numbered.',
   type: 'toggle',
   default: true,
 }

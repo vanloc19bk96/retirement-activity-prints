@@ -376,7 +376,10 @@ export interface StudioBookGenerateRequest {
   /** First game uses this mode (reuse an empty page 0); the rest always insert. */
   mode: 'insert' | 'replace'
   interiorPageCount: number
-  /** Auto-number pages as "Game N" across the whole book. */
+  /**
+   * Auto-number game pages as "Game N" across the whole book. Off, each page
+   * prints its game's name alone. Keepsakes print their own heading either way.
+   */
   showTitle: boolean
   /** First "Game N" title when `showTitle` is on. */
   titleStart?: string

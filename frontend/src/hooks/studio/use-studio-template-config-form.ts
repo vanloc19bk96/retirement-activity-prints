@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { buildDefaultConfig } from '@/constants/studio-templates'
+import { buildDefaultConfig, isStudioNumberedTemplate } from '@/constants/studio-templates'
 import { useStudioGenerate } from '@/hooks/studio/use-studio-generate'
 import { useStudioTarget } from '@/context/StudioTargetContext'
 import { useCanvasSettings } from '@/context/CanvasSettingsContext'
@@ -63,7 +63,7 @@ export function useStudioTemplateConfigForm(template: StudioTemplateDefinition) 
     return {
       ...defaults,
       title:
-        fixedPageTitle ?? nextStudioGameTitle(canvasStateStore, interiorPageCount),
+        fixedPageTitle ?? nextStudioGameTitle(canvasStateStore, interiorPageCount, isStudioNumberedTemplate),
     }
   })
   const [isTitleCustomized, setIsTitleCustomized] = useState(false)
@@ -128,7 +128,7 @@ export function useStudioTemplateConfigForm(template: StudioTemplateDefinition) 
         return
       }
       const autoTitle =
-        fixedPageTitle ?? nextStudioGameTitle(canvasStateStore, interiorPageCount)
+        fixedPageTitle ?? nextStudioGameTitle(canvasStateStore, interiorPageCount, isStudioNumberedTemplate)
       setIsTitleCustomized(false)
       setConfig((c) => clampConfig({ ...c, showTitle: true, title: autoTitle }))
       return
@@ -141,12 +141,12 @@ export function useStudioTemplateConfigForm(template: StudioTemplateDefinition) 
     // Fixed-title templates keep their default until the user edits.
     if (fixedPageTitle && !isTitleCustomized) return fixedPageTitle
     if (!isTitleCustomized) {
-      return nextStudioGameTitle(canvasStateStore, interiorPageCount)
+      return nextStudioGameTitle(canvasStateStore, interiorPageCount, isStudioNumberedTemplate)
     }
     // Cleared heading falls back to the auto series, as the field help promises.
     const typed = String(config.title ?? '').trim()
     if (typed) return typed
-    return fixedPageTitle ?? nextStudioGameTitle(canvasStateStore, interiorPageCount)
+    return fixedPageTitle ?? nextStudioGameTitle(canvasStateStore, interiorPageCount, isStudioNumberedTemplate)
   }
 
   const handleGenerate = async () => {
@@ -170,7 +170,11 @@ export function useStudioTemplateConfigForm(template: StudioTemplateDefinition) 
       ...c,
       title:
         bumpStudioGameTitle(title) ??
-        nextStudioGameTitle(canvasStateStore, interiorPageCount + result.pageIndices.length),
+        nextStudioGameTitle(
+          canvasStateStore,
+          interiorPageCount + result.pageIndices.length,
+          isStudioNumberedTemplate,
+        ),
     }))
   }
 

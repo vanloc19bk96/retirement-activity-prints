@@ -189,6 +189,15 @@ export function getStudioTemplate(key: string): StudioTemplateDefinition | undef
   return TEMPLATE_INDEX.get(key)
 }
 
+/**
+ * Whether a template's pages take a “Game N” number. A keepsake prints its own
+ * heading, so it neither wears a number nor uses one up for the next game.
+ */
+export function isStudioNumberedTemplate(key: string): boolean {
+  const def = getStudioTemplate(key)
+  return !def || studioFixedPageTitle(def) === null
+}
+
 if (import.meta.env.DEV) {
   const seen = new Set<string>()
   for (const t of RAW_TEMPLATES) {
