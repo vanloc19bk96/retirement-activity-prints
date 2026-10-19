@@ -64,10 +64,19 @@ function revealVisibleTree(obj: StudioFabricObject): StudioFabricObject {
  */
 const SELF_PAINTED_ANSWER_GROUPS = new Set(['phosphor-icon', 'playing-card'])
 
+/**
+ * Set true in an answer object's `data` when it carries its own ink -- e.g. a
+ * gray ring that must not read as one more black line of the picture.
+ */
+export const STUDIO_ANSWER_OWN_INK_KEY = 'answerOwnInk'
+
 function revealAnswerObject(
   obj: StudioFabricObject,
   answerInk: string,
 ): StudioFabricObject {
+  if (obj.data?.[STUDIO_ANSWER_OWN_INK_KEY] === true) {
+    return { ...revealVisibleTree(obj), studioPageRole: 'answers' }
+  }
   if (isFabricType(obj, 'group') && obj.objects) {
     if (SELF_PAINTED_ANSWER_GROUPS.has(String(obj.data?.source ?? ''))) {
       return {

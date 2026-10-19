@@ -3,7 +3,7 @@ import { DPI } from '@/types/canvas-settings.types'
 import { STUDIO_INK } from '@/constants/studio.constants'
 import { sdOverlap, type SdBookEntry, type SdGroupChoice, type SdLevelSpec } from './content'
 import { SD_MARK_GAP, SD_MARK_OVERHANG, checkPair, markBounds, pictureParts, sdPairLines, type SdDifference } from './differences'
-import { SD_PART_KEY } from './draw'
+import { SD_PART_KEY, SD_RING_INK } from './draw'
 import { inkShare, type SdLines } from './render'
 import { sdGroupRecipes, sdRecipeById } from './scenes'
 import { growBounds, overlaps, partBounds, SD_FRAME_CLEAR, type SdScene } from './scene'
@@ -154,7 +154,7 @@ export function checkSdDrawnPage(options: { objects: readonly StudioFabricObject
     walk(picture.objects ?? [], (o) => {
       const part = o.data?.[SD_PART_KEY]
       if (o.type === 'path') {
-        if (o.stroke !== STUDIO_INK || (o.fill && o.fill !== 'transparent')) errors.push('A line is not plain black ink.')
+        if (o.stroke !== (part === 'ring' ? SD_RING_INK : STUDIO_INK) || (o.fill && o.fill !== 'transparent')) errors.push(part === 'ring' ? 'An answer ring is not gray.' : 'A line is not plain black ink.')
         if (part === 'ring') {
           rings.push(Number(o.data?.n))
           if (o.visible !== false || o.studioRole !== 'answer') errors.push('An answer ring shows on the puzzle page.')

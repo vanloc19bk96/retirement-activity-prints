@@ -27,7 +27,7 @@ import {
   type SdLevel,
 } from './content'
 import { candidateChanges, checkPair, chooseDifferences, inMark, measureChange, sdPairLines } from './differences'
-import { SD_PART_KEY } from './draw'
+import { SD_PART_KEY, SD_RING_INK } from './draw'
 import { SD_ELEMENTS } from './elements'
 import { checkSdDrawnPage, runSdKdpPreflight } from './kdp-preflight'
 import { sdCrowdedWarning, sdPrintNote } from './layout'
@@ -299,7 +299,8 @@ describe('spot the differences: pages', () => {
     const key = buildAnswerKeyFromOutputs(out, STUDIO_INK)
     const rings = collect(key, 'ring')
     expect(rings).toHaveLength(n * 2)
-    expect(rings.every((r) => r.visible === true && r.stroke === STUDIO_INK)).toBe(true)
+    expect(rings.every((r) => r.visible === true && r.stroke === SD_RING_INK)).toBe(true)
+    expect(collect(key, 'number').every((t) => t.fill === STUDIO_INK)).toBe(true)
     const legend = collect(key, 'legend')
     expect(legend).toHaveLength(n)
     expect(legend.map((l) => Number(String(l.text).split('.')[0]))).toEqual(Array.from({ length: n }, (_, i) => i + 1))

@@ -1,7 +1,8 @@
 ﻿import type { StudioFabricObject, StudioRole } from '@/types/studio-template.types'
 import { DPI } from '@/types/canvas-settings.types'
-import { STUDIO_DIGIT_FONT, STUDIO_INK, STUDIO_PAPER } from '@/constants/studio.constants'
+import { STUDIO_DIGIT_FONT, STUDIO_INK, STUDIO_PAPER, STUDIO_RULE_MEDIUM } from '@/constants/studio.constants'
 import { STUDIO_CANONICAL_KEY } from '../_shared/uniqueness'
+import { STUDIO_ANSWER_OWN_INK_KEY } from '../studio-answer-key'
 import { buildCircle, buildGroup, buildText, nextObjectId, type StudioTag } from '../studio-fabric-builders'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import type { Box } from '../studio-layout'
@@ -18,7 +19,8 @@ import { overlaps } from './scene'
  * Each picture is one group: its frame, its line art as one path per print
  * weight (so a scene of a hundred shapes is a handful of objects in the
  * editor and the export), and, hidden, the answer rings with a numbered
- * badge on each â€” revealed on the answer page, in black. Nothing is filled;
+ * badge on each â€” revealed on the answer page, the rings in gray and the
+ * numbers in black. Nothing is filled;
  * the badges alone are white discs, so a number reads over the lines.
  * Strokes are uniform, so resizing a picture in the editor keeps its weights.
  */
@@ -28,6 +30,8 @@ export const SD_PART_KEY = 'sdPart'
 
 /** The answer ring's weight: 1.7 pt, heavier than any line in the scene. */
 export const SD_RING_WIDTH = 2.25
+/** The answer ring's ink: gray, so it never reads as one more black outline of the picture. */
+export const SD_RING_INK = STUDIO_RULE_MEDIUM
 /** The numbered badge on each ring. */
 export const SD_BADGE_R = 0.1 * DPI
 export const SD_BADGE_SIZE = 13
@@ -37,8 +41,8 @@ const TALLY_STEP = 0.3 * DPI
 
 const r2 = (n: number) => Math.round(n * 100) / 100
 
-function path(lines: readonly (readonly Pt[])[], options: { width: number; closed: boolean; tag: StudioTag; role: StudioRole; part: string; data?: Record<string, unknown> }): StudioFabricObject | null {
-  const { width, closed, tag, role, part, data } = options
+function path(lines: readonly (readonly Pt[])[], options: { width: number; closed: boolean; tag: StudioTag; role: StudioRole; part: string; ink?: string; data?: Record<string, unknown> }): StudioFabricObject | null {
+  const { width, closed, tag, role, part, ink = STUDIO_INK, data } = options
   const cmds: (string | number)[][] = []
   let minX = Infinity
   let minY = Infinity
@@ -66,7 +70,7 @@ function path(lines: readonly (readonly Pt[])[], options: { width: number; close
     originX: 'center',
     originY: 'center',
     fill: 'transparent',
-    stroke: STUDIO_INK,
+    stroke: ink,
     strokeWidth: width,
     strokeUniform: true,
     strokeLineCap: 'round',
@@ -137,7 +141,7 @@ export function buildSdPicture(options: {
   }
   const placedMarks = marks.map((m) => shiftMark(m, dx, dy))
   placedMarks.forEach((m, i) => {
-    const ring = path([ellipseRing(m.cx, m.cy, m.rx, m.ry, 64)], { width: SD_RING_WIDTH, closed: true, tag, role: 'answer', part: 'ring', data: { n: i + 1 } })
+    const ring = path([ellipseRing(m.cx, m.cy, m.rx, m.ry, 64)], { width: SD_RING_WIDTH, closed: true, tag, role: 'answer', part: 'ring', ink: SD_RING_INK, data: { n: i + 1, [STUDIO_ANSWER_OWN_INK_KEY]: true } })
     if (ring) parts.push(ring)
   })
   const room: Box = { left: dx - SD_MARK_OVERHANG, top: dy - SD_MARK_OVERHANG, width: box.width + SD_MARK_OVERHANG * 2, height: box.height + SD_MARK_OVERHANG * 2 }
