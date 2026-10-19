@@ -2572,7 +2572,13 @@ on a 48-per-inch grid: a cell counts only where one picture has ink and the
 other none within the level's tolerance (0.05–0.07 in), so a hairline shift
 is not a difference and a missing cup is. It must change enough line, be
 big enough and not too big (never over 42–60% of the picture's height), and
-its answer ring is fitted to the changed ink it measured. Differences are
+its answer ring is fitted to the changed ink it measured. When only part of
+a thing changed (a cloud's lobe, a plant's leaves, a clock's hands), the ring
+grows to hold the whole thing, both versions of it (its ink is what each
+picture shows with it and not without it), so a ring never cuts through an
+object; it stays on the changed ink only when the whole-thing ring would not
+fit the frame, or would be both wider than 42% of the picture's height and
+over 3 times the change's own ring (the panes of a window). Differences are
 dealt weighted by the level (Relaxed favours whole things left out or
 swapped; Challenging favours knobs), one per part, at most half of one
 kind, every ring clear of every other; a few dealt orders are tried, then a

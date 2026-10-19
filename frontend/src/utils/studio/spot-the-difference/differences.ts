@@ -3,7 +3,7 @@ import type { StudioRng } from '../studio-rng'
 import type { Bounds } from '../stained-glass/geometry'
 import type { SdFairness } from './content'
 import { sdProp, sdSize } from './props'
-import { SD_RASTER_SCALE, cellsToLineInches, compareInk, sceneLines, type SdLines } from './render'
+import { SD_RASTER_SCALE, cellsToLineInches, compareInk, sceneLines, type SdChangeMap, type SdLines } from './render'
 import { growBounds, kindDrawing, overlaps, partBounds, partFits, type SdPart, type SdScene } from './scene'
 
 /**
@@ -220,14 +220,72 @@ export function measureChange(scene: SdScene, change: SdChange, fair: SdFairness
   if (ink < fair.minLine) return null
   if (extent < inch(fair.minExtent)) return null
   if (extent > fair.maxExtentShare * (p.maxY - p.minY)) return null
+  const cells = changedCells(map)
+  const mark = fitMark(box, cells, p)
+  if (!mark) return null
+  return { ...change, box, ink, mark: wholeMark(scene, change, { window, before, after }, tolerance, cells, mark) ?? mark }
+}
+
+/** How much bigger (in area) a ring round the whole thing may be than the ring round its changed ink. */
+export const SD_WHOLE_MARK_GROWTH = 3
+/** A ring round the whole thing no wider than this share of the picture's height is always small enough. */
+export const SD_WHOLE_MARK_SPAN = 0.42
+
+/** The changed cells' centres, canvas px. */
+function changedCells(map: SdChangeMap): { x: number; y: number }[] {
   const s = map.w / (map.box.maxX - map.box.minX)
   const cells: { x: number; y: number }[] = []
   for (let i = 0; i < map.changed.length; i++) {
     if (map.changed[i]) cells.push({ x: map.box.minX + ((i % map.w) + 0.5) / s, y: map.box.minY + (Math.floor(i / map.w) + 0.5) / s })
   }
-  const mark = fitMark(box, cells, p)
-  if (!mark) return null
-  return { ...change, box, ink, mark }
+  return cells
+}
+
+/**
+ * A ring round the whole changed thing, both versions of it, not just the ink
+ * that differs: a clock whose hands moved is ringed whole, never cut through
+ * its face. Its ink is what each picture shows with the thing that it does
+ * not show without it. Null when that ring would not fit the frame, or would
+ * be both big and much bigger than the change (the panes of a whole window)
+ * so that it points at nothing.
+ */
+function wholeMark(
+  scene: SdScene,
+  change: SdChange,
+  drawn: { window: Bounds; before: SdLines; after: SdLines },
+  tolerance: number,
+  changed: readonly { x: number; y: number }[],
+  inkMark: SdMark,
+): SdMark | null {
+  // Taken out: the changed ink is the whole thing already.
+  if (!change.to) return null
+  // The ring round the change already holds both versions' every corner.
+  const from = partBounds(scene.parts.find((p) => p.id === change.part)!)
+  const to = partBounds(change.to)
+  const corners = [from, to].flatMap((b) => [[b.minX, b.minY], [b.maxX, b.minY], [b.minX, b.maxY], [b.maxX, b.maxY]] as const)
+  if (corners.every(([x, y]) => inMark(inkMark, x, y))) return null
+  const { window, before, after } = drawn
+  const without = sceneLines(scene, pictureParts(scene, [{ ...change, to: null }]).b, window)
+  const cells = [...changed, ...changedCells(compareInk(without, before, window, tolerance)), ...changedCells(compareInk(without, after, window, tolerance))]
+  const box = cells.reduce<Bounds>(
+    (b, c) => ({ minX: Math.min(b.minX, c.x), minY: Math.min(b.minY, c.y), maxX: Math.max(b.maxX, c.x), maxY: Math.max(b.maxY, c.y) }),
+    { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity },
+  )
+  // The ellipse of the box's shape scaled just enough to hold the farthest cell, then the pad's air.
+  const cx = (box.minX + box.maxX) / 2
+  const cy = (box.minY + box.maxY) / 2
+  let a = Math.max(1, (box.maxX - box.minX) / 2)
+  let b = Math.max(1, (box.maxY - box.minY) / 2)
+  if (a > b * 2.5) b = a / 2.5
+  if (b > a * 2.5) a = b / 2.5
+  const k = Math.sqrt(Math.max(...cells.map((c) => ((c.x - cx) / a) ** 2 + ((c.y - cy) / b) ** 2)))
+  const half = 0.5 / SD_RASTER_SCALE
+  const mark = { cx, cy, rx: Math.max(MARK_MIN_R, a * k + half + MARK_PAD), ry: Math.max(MARK_MIN_R, b * k + half + MARK_PAD) }
+  const room = growBounds(scene.panel, SD_MARK_OVERHANG)
+  const mb = markBounds(mark)
+  if (mb.minX < room.minX || mb.maxX > room.maxX || mb.minY < room.minY || mb.maxY > room.maxY) return null
+  const small = 2 * Math.max(mark.rx, mark.ry) <= SD_WHOLE_MARK_SPAN * (scene.panel.maxY - scene.panel.minY)
+  return small || mark.rx * mark.ry <= inkMark.rx * inkMark.ry * SD_WHOLE_MARK_GROWTH ? mark : null
 }
 
 /* ------------------------------------------------------------------ *
