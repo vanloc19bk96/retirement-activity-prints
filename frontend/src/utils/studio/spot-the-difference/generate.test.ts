@@ -26,14 +26,15 @@ import {
   sdPageLabel,
   type SdLevel,
 } from './content'
-import { candidateChanges, checkPair, chooseDifferences, inMark, measureChange, sdPairLines } from './differences'
+import { SD_SWAP_SIZE_RATIO, candidateChanges, checkPair, chooseDifferences, inMark, measureChange, sdPairLines } from './differences'
 import { SD_PART_KEY, SD_RING_INK } from './draw'
 import { SD_ELEMENTS } from './elements'
 import { checkSdDrawnPage, runSdKdpPreflight } from './kdp-preflight'
 import { sdCrowdedWarning, sdPrintNote } from './layout'
-import { SD_PROPS, sdProp } from './props'
+import { SD_PROPS, sdProp, sdSize } from './props'
+import { SD_INK_WIDTH, SD_LINE_WIDTH } from './render'
 import { SD_RECIPES, dealScene, sdGroupRecipes, sdRecipeById } from './scenes'
-import { kindDrawing, partBounds } from './scene'
+import { SD_FLAT_KINDS, kindDrawing, partBounds, partsMayOverlap, partsTouch, type SdPart } from './scene'
 import { sdSceneEntry } from './variety'
 
 const FONT = 'PT Serif'
@@ -147,7 +148,7 @@ describe('spot the differences: registry and form', () => {
     expect(buildDefaultConfig(spotTheDifferenceTemplate).theme).toBe('mix')
   })
 
-  it('names each groupâ€™s scenes', () => {
+  it('names each group’s scenes', () => {
     const theme = SD_CONFIG_SCHEMA.find((f) => f.key === 'theme')!
     for (const g of SD_GROUPS) {
       const help = theme.helpWhen!({ theme: g.value })
@@ -162,7 +163,7 @@ describe('spot the differences: registry and form', () => {
     expect(sdPrintNote({ page: layout(3, 3.5), config: base, minExtent: 0.26 })).toMatch(/too small/)
   })
 
-  it('gets harder with more, subtler differences â€” never with smaller ones than a fifth of an inch', () => {
+  it('gets harder with more, subtler differences, never with smaller ones than a fifth of an inch', () => {
     const [relaxed, classic, challenging] = LEVELS.map((l) => sdLevelSpec(l).fairness)
     for (const f of [relaxed!, classic!, challenging!]) {
       expect(f.count[0]).toBeGreaterThanOrEqual(5)
@@ -249,6 +250,75 @@ describe('spot the differences: scenes', () => {
     for (const e of SD_ELEMENTS) expect(dealt.has(e.id), e.id).toBe(true)
   })
 
+  it('lets nothing overlap anything it does not stand on', () => {
+    const panel: Bounds = { minX: 0, minY: 0, maxX: 520, maxY: 300 }
+    for (const recipe of SD_RECIPES) {
+      for (let seed = 0; seed < 4; seed++) {
+        const parts = dealScene(recipe, panel, createRng(seed * 41 + 5), 2).parts
+        for (let i = 0; i < parts.length; i++) {
+          for (let j = i + 1; j < parts.length; j++) {
+            const [a, b] = [parts[i]!, parts[j]!]
+            if (partsMayOverlap(a, b)) continue
+            expect(partsTouch(a, b, 0), `${recipe.id} seed ${seed}: ${a.kind} and ${b.kind}`).toBe(false)
+          }
+        }
+      }
+    }
+  })
+
+  it('sizes things by how big they are: nothing on a table is taller than the table', () => {
+    expect(sdSize('teacup')).toBeLessThan(sdSize('teapot'))
+    expect(sdSize('teapot')).toBeLessThan(sdSize('sd-side-table'))
+    expect(sdSize('sd-cool-box')).toBeLessThan(sdSize('deck-chair'))
+    const panel: Bounds = { minX: 0, minY: 0, maxX: 520, maxY: 300 }
+    const tall = (p: SdPart) => partBounds(p).maxY - partBounds(p).minY
+    let checked = 0
+    for (const recipe of SD_RECIPES) {
+      for (let seed = 0; seed < 4; seed++) {
+        const parts = dealScene(recipe, panel, createRng(seed * 23 + 9), 1).parts
+        for (const part of parts) {
+          const base = parts.find((p) => p.id === part.on)
+          if (!base || SD_FLAT_KINDS.has(base.kind)) continue
+          checked++
+          expect(tall(part), `${recipe.id}: ${part.kind} on ${base.kind}`).toBeLessThanOrEqual(tall(base) * 1.05)
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(20)
+  })
+
+  it('swaps a thing only for one of about its size', () => {
+    const panel: Bounds = { minX: 0, minY: 0, maxX: 520, maxY: 300 }
+    for (const recipe of SD_RECIPES) {
+      const rng = createRng(77)
+      const scene = dealScene(recipe, panel, rng, 1)
+      for (const c of candidateChanges(scene, rng)) {
+        if (c.kind !== 'swap') continue
+        const from = scene.parts.find((p) => p.id === c.part)!
+        const ratio = sdSize(c.to!.kind) / sdSize(from.kind)
+        expect(ratio, `${recipe.id}: ${from.kind} for ${c.to!.kind}`).toBeLessThanOrEqual(SD_SWAP_SIZE_RATIO)
+        expect(ratio).toBeGreaterThanOrEqual(1 / SD_SWAP_SIZE_RATIO)
+      }
+    }
+  })
+
+  it('hangs a lamp or a basket from the ceiling or the porch beam, never from thin air', () => {
+    const panel: Bounds = { minX: 0, minY: 0, maxX: 520, maxY: 300 }
+    let hung = 0
+    for (const recipe of SD_RECIPES) {
+      for (let seed = 0; seed < 6; seed++) {
+        const scene = dealScene(recipe, panel, createRng(seed * 13 + 1), 2)
+        for (const part of scene.parts.filter((p) => p.anchor === 'top')) {
+          hung++
+          const top = partBounds(part).minY
+          const beam = scene.structure.some((s) => !s.line && Math.abs(Math.max(...s.ring.map((q) => q.y)) - top) < 1.5)
+          expect(beam, `${recipe.id}: ${part.kind}`).toBe(true)
+        }
+      }
+    }
+    expect(hung).toBeGreaterThan(5)
+  })
+
   it('keeps every standing element on its feet whatever its knobs', () => {
     for (const e of SD_ELEMENTS) {
       if (['sd-hanging', 'sd-pendant', 'sd-sun', 'sd-cloud', 'sd-birds', 'sd-kite', 'sd-picture', 'sd-clock', 'sd-shelf', 'sd-window', 'sd-mirror', 'sd-utensils', 'sd-cupboard'].includes(e.id)) continue
@@ -290,7 +360,16 @@ describe('spot the differences: pages', () => {
     }
   }, 120_000)
 
-  it('reveals every ring, number and legend line on the answer page, in black', () => {
+  it('prints every line of both pictures at one weight', () => {
+    expect(SD_INK_WIDTH.scene).toBe(SD_LINE_WIDTH)
+    expect(SD_INK_WIDTH.part).toBe(SD_LINE_WIDTH)
+    const out = generate(base, kdpCtx(8.5, 11))
+    const art = [...collect(out[0]!.objects, 'scene'), ...collect(out[0]!.objects, 'part')]
+    expect(art.length).toBeGreaterThanOrEqual(4)
+    expect(new Set(art.map((p) => p.strokeWidth))).toEqual(new Set([SD_LINE_WIDTH]))
+  })
+
+  it('reveals every ring, number and legend line on the answer page: rings in gray, numbers and list in black', () => {
     const out = generate(base, kdpCtx(6, 9))
     const answers = out.flatMap((p) => harvestAnswers(p.answerSourceObjects ?? p.objects))
     const n = collect([byPart(out[0]!.objects, 'bottom')!], 'ring').length
@@ -351,7 +430,7 @@ describe('spot the differences: pages', () => {
     }
   }, 120_000)
 
-  it('opens a sellerâ€™s next book with other scenes', () => {
+  it('opens a seller’s next book with other scenes', () => {
     const first = parseSdBook(buildBook(4, base, saltOf(9)), (id) => Boolean(sdRecipeById(id))).map((e) => e.recipe)
     // The browser still remembers the first book; the second starts elsewhere.
     const second = parseSdBook(buildBook(4, base, saltOf(9)), (id) => Boolean(sdRecipeById(id))).map((e) => e.recipe)

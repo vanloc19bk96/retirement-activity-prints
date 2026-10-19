@@ -42,7 +42,7 @@ const RECENT_WINDOW = 6
 const SCENE_KEY = studioVarietyKey(SD_TEMPLATE_KEY, 'kinds')
 const RECENT_SCENE_WINDOW = 200
 /** Scenes tried before the page gives up and says so. */
-const ATTEMPTS = 16
+const ATTEMPTS = 24
 /** Deals of one scene per attempt; the one least like the book's pages is kept. */
 const DEALS = 3
 /** A scene this like a page the book has is dealt again (if a deal left will do better). */
@@ -104,7 +104,7 @@ function puzzlePage(options: {
 /**
  * The answer page: the same two pictures at the same size, every difference
  * ringed and numbered, and under them a short list of what changed. No
- * instruction â€” a reader at the answers has already been told the rules.
+ * instruction: a reader at the answers has already been told the rules.
  */
 function answerPage(options: {
   ctx: StudioGenerateContext
@@ -242,7 +242,7 @@ export const spotTheDifferenceTemplate: StudioTemplateDefinition = {
   label: 'Spot the Differences: Retirement Edition',
   category: 'visual',
   description:
-    'Two retirement scenes â€” a front porch, a tea table, a beach day, a fishing dock â€” one above the other, with 5 to 10 deliberate differences to circle. Clear black-and-white line art sized for print; every difference is measured to be fair and easy to see. Includes an answer page with each difference circled and listed.',
+    'Two copies of a retirement scene (a front porch, a tea table, a beach day, a fishing dock), one above the other, with 5 to 10 deliberate differences to circle. Clean black-and-white line art in one even line weight, sized for print; every difference is measured to be fair and easy to see. Includes an answer page with each difference circled and listed.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: SD_DEFAULT_TITLE,

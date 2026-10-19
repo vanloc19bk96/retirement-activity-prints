@@ -15,8 +15,8 @@ import { bumpRing, discArc, domeDiscs, flowerHead, hand, leaf, ovalDiscs, scaleX
  * generic objects with no text, logos or brands, nothing traced from a photo,
  * a product or another activity book.
  *
- * Every knob is a change a reader can name â€” the clock's hands point
- * elsewhere, the fence has one picket more, the window has curtains â€” so a
+ * Every knob is a change a reader can name (the clock's hands point
+ * elsewhere, the fence has one picket more, the window has curtains), so a
  * knob dealt differently in the two pictures is one fair difference. Knobs
  * change what is added to a thing, never where the thing stands: its foot
  * (or, for things that hang, its top) is the same in every version, so a
@@ -602,12 +602,15 @@ const door = subject('sd-door', 'Front Door', 'home', 'outdoor', 'grass', { wind
       s.add(rect(15, top, 18, 136 - top, 2))
       s.add(rect(39, top, 18, 136 - top, 2))
     }
-    s.part(circle(58, 86, 3.5))
+    // The knob on the door's edge, clear of the panels.
+    s.part(circle(61, 86, 2.6))
     if (k.wreath === 1) {
       s.add(circle(36, 62, 15))
       s.add(circle(36, 62, 8))
-      s.add(poly([36, 74], [28, 84], [34, 84]))
-      s.add(poly([36, 74], [44, 84], [38, 84]))
+      // A bow at the bottom: two ribbon tails hanging down, two loops and a knot.
+      s.add(poly([34, 78], [29, 90], [33, 88], [36, 80]))
+      s.add(poly([38, 78], [43, 90], [39, 88], [36, 80]))
+      bow(s, 36, 77)
     }
   }),
 )

@@ -83,7 +83,7 @@ export interface SdLevelSpec {
 export const SD_LEVELS: readonly SdLevelSpec[] = [
   {
     value: 'relaxed',
-    label: 'Relaxed - 5 or 6 differences, big and clear',
+    label: 'Relaxed: 5 or 6 differences, big and clear',
     fairness: {
       count: [5, 6],
       tolerance: 0.07,
@@ -96,7 +96,7 @@ export const SD_LEVELS: readonly SdLevelSpec[] = [
   },
   {
     value: 'classic',
-    label: 'Classic - 7 or 8 differences',
+    label: 'Classic: 6 to 8 differences',
     fairness: {
       count: [6, 8],
       tolerance: 0.06,
@@ -109,7 +109,7 @@ export const SD_LEVELS: readonly SdLevelSpec[] = [
   },
   {
     value: 'challenging',
-    label: 'Challenging - 9 or 10 differences, some subtler',
+    label: 'Challenging: 8 to 10 differences, some subtler',
     fairness: {
       count: [8, 10],
       tolerance: 0.05,

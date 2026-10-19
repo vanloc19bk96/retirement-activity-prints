@@ -19,7 +19,7 @@ import { overlaps } from './scene'
  * Each picture is one group: its frame, its line art as one path per print
  * weight (so a scene of a hundred shapes is a handful of objects in the
  * editor and the export), and, hidden, the answer rings with a numbered
- * badge on each â€” revealed on the answer page, the rings in gray and the
+ * badge on each, revealed on the answer page: the rings in gray and the
  * numbers in black. Nothing is filled;
  * the badges alone are white discs, so a number reads over the lines.
  * Strokes are uniform, so resizing a picture in the editor keeps its weights.
@@ -185,7 +185,7 @@ export function buildSdPicture(options: {
   }
 }
 
-/** "Found:" and one circle per difference, centred in `box` â€” a place to tick each find. */
+/** "Found:" and one circle per difference, centred in `box`: a place to tick each find. */
 export function buildSdTally(options: { count: number; box: Box; tag: StudioTag; fontFamily: string }): StudioFabricObject {
   const { count, box, tag, fontFamily } = options
   const size = 16
@@ -221,7 +221,7 @@ export interface SdLegendLayout {
 const legendText = (n: number, label: string) => `${n}. ${label}`
 
 /**
- * The answer page's list â€” "1. No teacup (top)", "2. Clock changed" â€” in as
+ * The answer page's list ("1. No teacup (top)", "2. Clock changed") in as
  * many columns as fit, at the largest size (11 pt down to 9 pt) that fits
  * `box`; null when even the smallest will not, and the rings stand alone.
  */
@@ -257,7 +257,9 @@ export function buildSdLegend(options: { labels: readonly string[]; box: Box; la
           text,
           fontFamily,
           fontSize: layout.size,
-          width: hugTextBoxWidth(text, layout.size, layout.colWidth, { fontFamily }),
+          // The whole column, not a box hugging the measured text: a font that sets a hair wider
+          // than measured must never wrap an entry onto the line below it.
+          width: layout.colWidth - layout.size * 0.75,
           lineHeight: 1.1,
         },
         tag,

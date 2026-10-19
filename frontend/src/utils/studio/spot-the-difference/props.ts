@@ -29,6 +29,8 @@ export interface SdPropKind {
   turn: boolean
   /** Where things stand on it, in drawing units, before any mirroring. */
   surface?: { y: number; x0: number; x1: number }
+  /** How tall it is in life, as drawn (cm): what sizes it beside other things in a scene. */
+  cm: number
 }
 
 /**
@@ -174,6 +176,156 @@ const ENTRIES: readonly [string, string, Partial<Omit<SdPropKind, 'id' | 'label'
   ['sd-stump', 'tree stump'],
 ]
 
+/**
+ * How tall each thing is in life, as drawn, in cm: a teacup with its saucer,
+ * a cat curled on its cushion, a birdhouse on its post. A scene sizes its
+ * things from these, so a teapot is never as tall as the table it stands on
+ * and a cool box never looms over a deck chair. Sky and sea things (a cloud,
+ * a ship on the horizon) are sized by their scene instead.
+ */
+const CM: Readonly<Record<string, number>> = {
+  // Home
+  'rocking-chair': 100,
+  armchair: 95,
+  'coffee-mug': 16,
+  teacup: 14,
+  teapot: 24,
+  'book-and-glasses': 22,
+  houseplant: 60,
+  'yarn-basket': 35,
+  'sd-cat': 30,
+  'vintage-radio': 28,
+  'fresh-pie': 14,
+  'table-lamp': 50,
+  kettle: 26,
+  'porch-swing': 180,
+  'porch-rocker': 100,
+  cottage: 600,
+  'sd-window': 130,
+  'sd-picture': 45,
+  'sd-clock': 35,
+  'sd-shelf': 40,
+  'sd-side-table': 60,
+  'sd-tea-table': 75,
+  'sd-rug': 14,
+  'sd-vase': 45,
+  'sd-floor-lamp': 160,
+  'sd-cookies': 10,
+  'sd-cake': 22,
+  'sd-footstool': 40,
+  'sd-door': 210,
+  'sd-pendant': 60,
+  'sd-slippers': 26,
+  'sd-books': 16,
+  'sd-ducks': 25,
+  'sd-doormat': 8,
+  'sd-sofa': 85,
+  'sd-fireplace': 115,
+  'sd-tall-clock': 190,
+  'sd-bookcase': 180,
+  'sd-dog': 40,
+  'sd-candles': 32,
+  'sd-fruit': 24,
+  'sd-cactus': 28,
+  'sd-photo': 22,
+  'sd-mirror': 60,
+  'sd-counter': 90,
+  'sd-mixing-bowl': 22,
+  'sd-bread': 14,
+  'sd-jars': 28,
+  'sd-utensils': 45,
+  'sd-cupboard': 70,
+  // Hobbies
+  'acoustic-guitar': 100,
+  'paint-palette': 35,
+  'vintage-camera': 16,
+  gramophone: 50,
+  binoculars: 18,
+  'golf-bag': 110,
+  'golf-flag': 220,
+  'golf-cart': 190,
+  'sd-bicycle': 100,
+  'sd-easel': 170,
+  'sd-kite': 120,
+  'sd-bunker': 30,
+  'sd-tackle': 30,
+  // Garden and grounds
+  'watering-can': 40,
+  'flower-pot': 45,
+  birdhouse: 140,
+  wheelbarrow: 75,
+  sunflower: 160,
+  butterfly: 14,
+  songbird: 20,
+  'picnic-basket': 35,
+  'park-bench': 85,
+  birdbath: 80,
+  mailbox: 120,
+  'garden-shed': 250,
+  hammock: 120,
+  'sd-sun': 100,
+  'sd-cloud': 100,
+  'sd-birds': 100,
+  'sd-tree': 450,
+  'sd-pine': 600,
+  'sd-bush': 110,
+  'sd-fence': 110,
+  'sd-flowers': 50,
+  'sd-blanket': 16,
+  'sd-hanging': 60,
+  'sd-arch': 230,
+  'sd-feeder': 170,
+  'sd-veg-bed': 45,
+  'sd-pumpkins': 35,
+  'sd-scarecrow': 180,
+  'sd-snail': 14,
+  'sd-tools': 140,
+  'sd-washing': 180,
+  'sd-picnic-table': 75,
+  'sd-crate': 40,
+  // Travel and the seaside
+  sailboat: 700,
+  motorhome: 300,
+  'camper-trailer': 250,
+  suitcase: 60,
+  'cruise-ship': 2000,
+  'hot-air-balloon': 2000,
+  lighthouse: 2500,
+  'steam-train': 400,
+  'fishing-boat': 300,
+  'deck-chair': 90,
+  'sun-hat': 16,
+  lantern: 32,
+  tent: 180,
+  'sd-fishing': 200,
+  'sd-umbrella': 230,
+  'sd-sandcastle': 40,
+  'sd-bucket': 35,
+  'sd-ball': 35,
+  'sd-life-ring': 70,
+  'sd-campfire': 50,
+  'sd-signpost': 220,
+  'sd-palm': 600,
+  'sd-beach-hut': 280,
+  'sd-shells': 15,
+  'sd-crab': 15,
+  'sd-flip-flops': 26,
+  'sd-cool-box': 40,
+  'sd-canoe': 60,
+  'sd-backpack': 55,
+  'sd-stump': 50,
+}
+
+/**
+ * Sizes are squeezed towards each other (to the power 0.7): a teacup drawn
+ * true to a chair would be a speck, so small things print a little larger
+ * than life, as picture books draw them, but always in the same order.
+ */
+const SIZE_POWER = 0.7
+
+/** How big a thing prints beside others in its plane: 1 for a 1 m thing. */
+export const sdSize = (id: string) => ((INDEX.get(id)?.cm ?? 100) / 100) ** SIZE_POWER
+
 /** The drawing behind an id: this game's (or a sibling game's) own first, then the shared library. */
 function resolve(id: string): SgSubject | undefined {
   return extra.get(id) ?? sgSubjectById(id)
@@ -251,7 +403,7 @@ const NO_TURN = new Set([
 export const SD_PROPS: readonly SdPropKind[] = ENTRIES.flatMap(([id, label, options]) => {
   const subject = resolve(id)
   if (!subject) return []
-  return [{ id, label, subject, mirror: subject.mirror, turn: subject.mirror && !NO_TURN.has(id), ...options }]
+  return [{ id, label, subject, mirror: subject.mirror, turn: subject.mirror && !NO_TURN.has(id), cm: CM[id] ?? 100, ...options }]
 })
 
 const INDEX = new Map(SD_PROPS.map((p) => [p.id, p]))

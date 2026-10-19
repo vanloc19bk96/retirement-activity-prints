@@ -14,15 +14,19 @@ import {
   type Seg,
 } from '../stained-glass/geometry'
 import { rect } from '../stained-glass/subject-kit'
-import { overlaps, placedDrawing, type SdPart, type SdScene } from './scene'
+import { overlaps, placedDrawing, SD_THIN_BAR, type SdPart, type SdScene } from './scene'
 
 /**
  * A scene → the lines it prints, and a way to see what changed.
  *
  * Every shape is white paper with a black edge, laid back to front, so a
  * later shape hides whatever lies behind it: what prints is each edge where
- * nothing later covers it, clipped to the picture's frame. Parts print a
- * little heavier than the backdrop, so objects read first.
+ * nothing later covers it, clipped to the picture's frame.
+ *
+ * Every line prints at one weight, backdrop and things alike, so the picture
+ * reads as one drawing. A bar printed too thin for two outlines (a flower
+ * stem, a clock hand, a fishing rod) is drawn as one line along its middle:
+ * two outlines that close together run into a stroke twice as heavy.
  *
  * The comparison works on ink, the way a reader sees it: both pictures are
  * stamped onto a grid at print weight, and a cell counts as changed only
@@ -32,14 +36,16 @@ import { overlaps, placedDrawing, type SdPart, type SdScene } from './scene'
 
 export type SdInk = 'scene' | 'part'
 
-/** Print weights, canvas px (1 px = 0.75 pt). */
-export const SD_INK_WIDTH: Readonly<Record<SdInk, number>> = { scene: 1.25, part: 1.6 }
+/** The one line weight every picture prints, canvas px (1 px = 0.75 pt): 1.1 pt. */
+export const SD_LINE_WIDTH = 1.5
+/** Print weights, canvas px: the same for the backdrop and the things in it. */
+export const SD_INK_WIDTH: Readonly<Record<SdInk, number>> = { scene: SD_LINE_WIDTH, part: SD_LINE_WIDTH }
 /** The frame round each picture. */
 export const SD_FRAME_WIDTH = 2.5
 export const SD_FRAME_RADIUS = 0.1 * DPI
 
 interface Item {
-  pts: Ring
+  pts: readonly Pt[]
   closed: boolean
   ink: SdInk
   bounds: Bounds
@@ -59,7 +65,11 @@ function items(scene: SdScene, parts: readonly SdPart[], within?: Bounds): Item[
     units.push({
       depth: s.depth,
       order: i,
-      build: () => [{ pts: s.ring, closed: true, ink: 'scene', bounds: ringBounds(s.ring), region: toRegion(s.ring) }],
+      build: () => [
+        s.line
+          ? { pts: s.ring, closed: false, ink: 'scene', bounds: ringBounds(s.ring), region: null }
+          : { pts: s.ring, closed: true, ink: 'scene', bounds: ringBounds(s.ring), region: toRegion(s.ring) },
+      ],
     }),
   )
   parts.forEach((part, i) =>
@@ -69,13 +79,20 @@ function items(scene: SdScene, parts: readonly SdPart[], within?: Bounds): Item[
       build: () => {
         const d = placedDrawing(part)
         const out: Item[] = []
+        // Once a thing has one bar drawn as a line, its other slim bars follow (every tube of a
+        // bicycle alike), so one drawing never mixes single lines and outlined rods of a size.
+        const slim = d.pieces.some((p) => p.bar && p.bar.width < SD_THIN_BAR) ? SD_THIN_BAR * 1.5 : SD_THIN_BAR
         const stroke = (at: number) =>
           d.strokes
             .filter((s) => s.under === at)
             .forEach((s) => out.push({ pts: s.pts, closed: false, ink: 'part', bounds: ringBounds(s.pts), region: null }))
         d.pieces.forEach((piece, j) => {
           stroke(j)
-          out.push({ pts: piece.ring, closed: true, ink: 'part', bounds: ringBounds(piece.ring), region: toRegion(piece.ring) })
+          const bounds = ringBounds(piece.ring)
+          const region = toRegion(piece.ring)
+          // A thin bar prints as its middle line; its shape still hides what lies behind it.
+          if (piece.bar && piece.bar.width < slim) out.push({ pts: piece.bar.line, closed: false, ink: 'part', bounds, region })
+          else out.push({ pts: piece.ring, closed: true, ink: 'part', bounds, region })
         })
         stroke(d.pieces.length)
         return out

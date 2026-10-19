@@ -184,7 +184,8 @@ const scarecrow = subject('sd-scarecrow', 'Scarecrow', 'garden', 'outdoor', 'gra
     for (const y of [60, 72, 84, 96]) s.part(circle(40, y, 1.8, 12))
     s.add(circle(40, 36, 14))
     for (const x of [35, 45]) s.part(circle(x, 34, 2, 12))
-    s.stroke(path([33, 41], [35, 43], [37, 41.5], [40, 43.5], [43, 41.5], [45, 43], [47, 41]))
+    // A friendly smile.
+    s.stroke(curve([33, 41], [40, 45], [47, 41]))
     // A wide straw hat, or a tuft of straw.
     if (k.hat === 1) {
       s.add(rect(28, 12, 24, 14, [8, 0]))

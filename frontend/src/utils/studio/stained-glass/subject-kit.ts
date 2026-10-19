@@ -90,6 +90,23 @@ const P = (p: XY) => pt(p[0], p[1])
 
 export const poly = (...points: XY[]): Ring => points.map(P)
 
+/** A thin bar's centre line and its width, in the drawing's units. */
+export interface BarSpine {
+  line: readonly Pt[]
+  width: number
+}
+
+const SPINES = new WeakMap<readonly Pt[], BarSpine>()
+
+/**
+ * The centre line of a bar drawn by `band`, `rod` or a long, narrow `rect`.
+ *
+ * A game printing a subject small can draw a bar too thin for two outlines
+ * (a flower stem, a clock hand, a fishing rod) as one line of its usual
+ * weight, instead of two outlines run together into a heavier stroke.
+ */
+export const barSpine = (ring: readonly Pt[]): BarSpine | undefined => SPINES.get(ring)
+
 /** A rectangle; `r` rounds every corner, or `[top, bottom]` rounds the two pairs separately. */
 export function rect(x: number, y: number, w: number, h: number, r: number | readonly [number, number] = 0): Ring {
   const [top, bottom] = typeof r === 'number' ? [r, r] : r
@@ -97,12 +114,18 @@ export function rect(x: number, y: number, w: number, h: number, r: number | rea
   const rb = Math.max(0, Math.min(bottom, w / 2, h / 2))
   const corner = (cx: number, cy: number, rr: number, from: number, px: number, py: number) =>
     rr === 0 ? [pt(px, py)] : arcPoints(cx, cy, rr, from, from + 90, 6)
-  return [
+  const out = [
     ...corner(x + w - rt, y + rt, rt, 270, x + w, y),
     ...corner(x + w - rb, y + h - rb, rb, 0, x + w, y + h),
     ...corner(x + rb, y + h - rb, rb, 90, x, y + h),
     ...corner(x + rt, y + rt, rt, 180, x, y),
   ]
+  // A long, narrow rectangle is a bar: its centre line runs end to end, stopping at the centres of
+  // rounded ends (as a `rod`'s does).
+  const inset = Math.max(rt, rb)
+  if (w >= h * 2) SPINES.set(out, { line: [pt(x + inset, y + h / 2), pt(x + w - inset, y + h / 2)], width: h })
+  else if (h >= w * 2) SPINES.set(out, { line: [pt(x + w / 2, y + inset), pt(x + w / 2, y + h - inset)], width: w })
+  return out
 }
 
 export const ellipse = (cx: number, cy: number, rx: number, ry: number, rotateDeg = 0, steps = 48): Ring =>
@@ -177,13 +200,20 @@ export function band(input: readonly Pt[], width: number, round = false): Ring {
   }
   const left = offset(1)
   const right = offset(-1)
-  if (!round) return [...left, ...right.reverse()]
+  const spine = { line, width }
+  if (!round) {
+    const out = [...left, ...right.reverse()]
+    SPINES.set(out, spine)
+    return out
+  }
   const cap = (p: Pt, nrm: Pt, forward: boolean): Pt[] => {
     const base = (Math.atan2(nrm.y, nrm.x) * 180) / Math.PI
     // Sweep from the left offset round the end to the right offset.
     return forward ? arcPoints(p.x, p.y, half, base, base - 180, 8).slice(1, -1) : arcPoints(p.x, p.y, half, base + 180, base, 8).slice(1, -1)
   }
-  return [...left, ...cap(line[n - 1]!, normals[n - 1]!, true), ...right.reverse(), ...cap(line[0]!, normals[0]!, false)]
+  const out = [...left, ...cap(line[n - 1]!, normals[n - 1]!, true), ...right.reverse(), ...cap(line[0]!, normals[0]!, false)]
+  SPINES.set(out, spine)
+  return out
 }
 
 /** A rod between two points, round ends. */

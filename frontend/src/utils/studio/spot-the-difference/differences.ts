@@ -2,7 +2,7 @@
 import type { StudioRng } from '../studio-rng'
 import type { Bounds } from '../stained-glass/geometry'
 import type { SdFairness } from './content'
-import { sdProp } from './props'
+import { sdProp, sdSize } from './props'
 import { SD_RASTER_SCALE, cellsToLineInches, compareInk, sceneLines, type SdLines } from './render'
 import { growBounds, kindDrawing, overlaps, partBounds, partFits, type SdPart, type SdScene } from './scene'
 
@@ -18,7 +18,7 @@ import { growBounds, kindDrawing, overlaps, partBounds, partFits, type SdPart, t
  * well clear of any line in the other picture, is big enough to see in print
  * and not so big it gives itself away. A change hidden behind something
  * else, a knob that only thickens a line, a thing that looks the same either
- * way round â€” all measure as too small and are never used. The ring the
+ * way round: all measure as too small and are never used. The ring the
  * answer page draws is fitted to that measured ink, so the answer key is the
  * change itself, not a guess at it.
  */
@@ -88,16 +88,21 @@ export function pictureParts(scene: SdScene, changes: readonly SdChange[]): { a:
  * Candidates
  * ------------------------------------------------------------------ */
 
-/** A version of `part` with a new kind, the same printed height, standing where it stood. */
+/** Swaps only between things of about one size: a teapot for a vase, never a teacup for a lamp. */
+export const SD_SWAP_SIZE_RATIO = 1.5
+
+/** A version of `part` with a new kind, sized as that kind is beside the old one, standing where it stood. */
 function swapped(part: SdPart, kindId: string, rng: StudioRng): SdPart | null {
   const kind = sdProp(kindId)
   if (!kind) return null
+  const ratio = sdSize(kind.id) / sdSize(part.kind)
+  if (ratio > SD_SWAP_SIZE_RATIO || ratio < 1 / SD_SWAP_SIZE_RATIO) return null
   const knobs: Record<string, number> = {}
   for (const [name, count] of Object.entries(kind.subject.knobs)) knobs[name] = rng.int(0, count - 1)
   const b = kindDrawing(kind, knobs).bounds
   const old = partBounds(part)
-  const h = old.maxY - old.minY
-  const w = old.maxX - old.minX
+  const h = (old.maxY - old.minY) * ratio
+  const w = (old.maxX - old.minX) * Math.max(1, ratio)
   const k = Math.min(h / (b.maxY - b.minY), (w * 1.3) / (b.maxX - b.minX))
   return {
     ...part,
@@ -147,7 +152,7 @@ export function candidateChanges(scene: SdScene, rng: StudioRng): SdChange[] {
     }
     for (const id of rng.shuffle([...new Set(part.swaps)].filter((s) => s !== part.kind)).slice(0, 2)) {
       const to = swapped(part, id, rng)
-      if (to && sound(scene, part, to)) out.push({ part: part.id, kind: 'swap', side: 'b', to, label: `${cap(name)} / ${labelOf(to)}` })
+      if (to && sound(scene, part, to)) out.push({ part: part.id, kind: 'swap', side: 'b', to, label: `${cap(name)} swapped for ${labelOf(to)}` })
     }
   }
   return out
@@ -365,7 +370,7 @@ export function checkPair(scene: SdScene, differences: readonly SdDifference[], 
   else offending.clear()
   differences.forEach((d, i) => {
     if (cellsToLineInches(cells[i]!) < fair.minLine * 0.9) {
-      errors.push(`â€œ${d.label}â€ barely shows once both pictures are complete.`)
+      errors.push(`“${d.label}” barely shows once both pictures are complete.`)
       offending.add(d.part)
     }
   })

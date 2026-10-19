@@ -2479,8 +2479,9 @@ differences; the reader circles them. The instruction names the count, and a
 row of tick circles under the pictures ("Found: ○ ○ ○") shows it even with
 the instruction off. The answer page is the same two pictures with every
 difference ringed and numbered, and a short list of what changed ("1. No
-teacup (top)", "2. Clock changed", "3. Deck chair turned around", "4. Mug /
-teacup").
+teacup (top)", "2. Clock changed", "3. Deck chair turned around", "4. Mug
+swapped for teacup"). The rings are gray, so they never read as one more line
+of the picture; the numbers and the list are black.
 
 Settings: scenes and differences.
 - Scenes: A mix of everything; At home (living room, reading nook, tea time,
@@ -2529,15 +2530,33 @@ dips with a flat base: a cloud has a few big puffs, a bush a dome of many
 small scallops with leaf sprigs, a tree a balanced crown over a flared
 trunk. Birds and the kite's tail are single lines, not outlined bands.
 Recipes (`scenes.ts`) pack parts in rows along floors,
-table tops and the ground with dealt gaps, versions and facing; things in
-one plane never overlap; a row prefers things it does not hold yet (never
+table tops and the ground with dealt gaps, versions and facing. Every thing
+is sized by how tall it is in life, as drawn (`props.ts`, in cm, squeezed
+to the power 0.7 so small things stay printable), at its plane's scale: the
+furniture along a wall shares one scale, what stands on a table shares the
+table's (never taller than it), and the far side of a garden holds smaller
+trees. Nothing overlaps anything it does not stand on (a cup on its table,
+a cat on its rug or blanket): each part's silhouette is checked, with
+0.05 in of paper between, so a lamp never stands in front of a picture or a
+chair against a door. A thing that would collide slides along its row to the
+nearest clear spot, and the scene's main things are placed first (the
+furniture before the pictures on the wall, the golf cart before the trees
+behind it), so what is left out is decoration, never the point of the scene.
+Things that hang have something to hang from: a ceiling line indoors for the
+lamp, the porch roof's beam for the baskets; a ship's rail holds only life
+rings. A row prefers things it does not hold yet (never
 three clocks on one wall) and an optional choice with nothing new is left
 out, while a slot of one kind asked twice is a pair on purpose (two hanging
 baskets); a room never gets a second cat, dog or basket; the sky's sun, clouds and birds keep clear of
-everything, and nothing prints under 0.36 in. Both pictures render from the
-one scene: every shape is white paper with a black edge laid back to front,
-and what prints is each edge nothing later covers (`render.ts`), parts at
-1.2 pt, scenery at 0.94 pt, a 1.9 pt frame. A part keeps its anchor (its
+everything, and nothing prints under 0.36 in (nor with its shorter side
+under 0.2 in, unless it is long and low like a rug). Both pictures render
+from the one scene: every shape is white paper with a black edge laid back
+to front, and what prints is each edge nothing later covers (`render.ts`),
+every line at one weight, 1.1 pt, inside a 1.9 pt frame. A bar printing
+thinner than 1/16 in (a flower stem, a clock hand, a fishing rod, a seam in
+the siding) is drawn as one line along its middle, not two outlines run
+together into a stroke twice as heavy; once a thing has one such line, its
+other slim bars follow (every tube of a bicycle alike). A part keeps its anchor (its
 foot, or its hook) across versions, so a changed knob moves only what it
 changes — nothing else can drift between the pictures.
 
@@ -2546,7 +2565,8 @@ picture (either one), one knob set otherwise (the clock's hands, the
 fence's pickets, the window's curtains, the cloud's puffs, the cake's
 tiers), turned round (only things with a front and back: chairs, boats,
 watering cans — never a cloud or a bush), or swapped for something of a
-similar size from the same slot. A knob that would lift a foot off the
+similar size from the same slot (within 1.5 times its size, drawn at its
+own size beside the old one). A knob that would lift a foot off the
 floor is never used. Every candidate is drawn both ways and compared as ink
 on a 48-per-inch grid: a cell counts only where one picture has ink and the
 other none within the level's tolerance (0.05–0.07 in), so a hairline shift
@@ -2567,10 +2587,10 @@ there; neither picture bare nor cluttered (2–16% ink); every part wholly
 inside its frame; and not a near-copy of a page the book already prints
 (same scene, over 80% the same things and half the same changes). A change
 the full check faults is swapped for another; a scene that cannot hide
-enough is dealt again (up to 16 tries); if nothing passes, the page says so
+enough is dealt again (up to 24 tries); if nothing passes, the page says so
 plainly. The drawn page must have both pictures the same size and aligned,
-black ink only, one hidden ring and number per difference, 1 to N once
-each, and a tick circle per difference.
+line art in black ink only, one hidden gray ring and number per difference,
+1 to N once each, and a tick circle per difference.
 
 Uniqueness and variety: each page stamps `scene|things|changes` (short
 tokens). A new page takes the group's least-used scene in the book (never

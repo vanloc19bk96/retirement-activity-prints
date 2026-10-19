@@ -99,7 +99,8 @@ const hammock = subject('hammock', 'Hammock', 'garden', 'outdoor', 'grass', { st
     const dip = k.sling === 1 ? 6 : 0
     s.add(blob([12, 18], [30, 30 + dip / 2], [50, 34 + dip], [70, 30 + dip / 2], [88, 18], [84, 32], [68, 50 + dip], [50, 56 + dip], [32, 50 + dip], [16, 32]))
     s.part(band(curve([30, 40 + dip / 2], [50, 45 + dip], [70, 40 + dip / 2]), 4.5, true))
-    if (k.pillow === 1) s.add(blob([14, 16], [26, 10], [34, 20], [24, 28]))
+    // A pillow lying in the sling at the head end, not perched on the post.
+    if (k.pillow === 1) s.add(blob([17, 26], [27, 22], [35, 29], [26, 36]))
   }),
 )
 
@@ -253,7 +254,8 @@ const parkBench = subject('park-bench', 'Park Bench', 'garden', 'outdoor', 'gras
     }
     s.add(rect(14, 4, 9, 46))
     s.add(rect(77, 4, 9, 46))
-    s.add(k.back === 1 ? blob([6, 30], [8, 10], [30, 2], [50, 0], [70, 2], [92, 10], [94, 30]) : rect(6, 6, 88, 24, 5))
+    // A gently arched backrest, or a straight one: never a dome that reads as a cushion.
+    s.add(k.back === 1 ? blob([6, 30], [8, 14], [30, 8], [50, 6], [70, 8], [92, 14], [94, 30]) : rect(6, 6, 88, 24, 5))
     s.add(rect(0, 42, 100, 11, 4))
     if (k.arms === 1) {
       s.add(band(curve([3, 44], [0, 34], [8, 28], [18, 32]), 8, true))
