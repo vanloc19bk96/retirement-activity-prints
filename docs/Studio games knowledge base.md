@@ -307,7 +307,7 @@ Pages: 1 · Answer key: yes · AI content: yes
 
 ---
 
-## Logic (21 games)
+## Logic (22 games)
 
 ### Sudoku (`sudoku`)
 Classic number Sudoku for a large-print retirement book. Fill every row, column
@@ -1237,6 +1237,82 @@ necklaces before one returns, never the previous page's, and never prints
 the same board twice. A seller's next book opens at necklaces their last
 one used least recently.
 Pages: 1 · Answer key: yes (the necklace strung: cord and beads through every pearl) · AI content: no
+
+### Train Tracks: Lay the Line (`train-tracks`)
+The classic Train Tracks puzzle, a scenic ride for retirement. Each page is
+one square board of softly ruled squares in a heavy frame, with a number
+above every column and right of every row. A railway line enters the board
+through the side of one edge square and leaves through the side of another.
+The reader lays one track between them, square to square, straight or
+turning, never crossing itself, so that each row and column holds exactly
+as many track squares as its number. A few pieces are printed to start
+from, always including the two end pieces so the reader can see where the
+line comes in and goes out. Each printed piece is drawn as real track: two
+rails and three sleepers, straight or round a quarter turn. Over the board
+stands its station sign, a double-ruled board naming a scenic line a retiree
+would ride: Lakeside Line, Maple Valley Railway, Sunset Junction,
+Grandkids' Holiday Train. Under it the legend reads "Track pieces:" and
+shows the six pieces a square can hold, each drawn in its own square. The
+answer page lays the whole line: one smooth black line through every track
+square, rounding each turn and running off the board where it enters and
+leaves, with the printed pieces still on top.
+
+Settings: the level only.
+- Gentle: 6 × 6, the line covers 45% to 62% of the board, 3 to 6 pieces
+  printed. Finished by the squares, the numbers and "don't close a loop",
+  and the how-to line adds "Tip: once a row or column has all its track
+  squares, the rest of it stays empty."
+- Classic: 8 × 8, 42% to 60% of the board, 3 to 8 pieces printed. Always
+  needs "don't close it early" (the squares and numbers alone never finish
+  it).
+- Challenging: 10 × 10, 40% to 58% of the board, 3 to 10 pieces printed.
+  Always needs "what if" at least once (the Classic steps alone never finish
+  it).
+Every line crosses every row and column, enters and leaves on different
+sides of the board, and turns on more than a third of its squares. Which
+line, which route, how many pieces are printed and the square size are not
+settings. The help line reports what the trim in Settings prints (square
+and number sizes), or that the trim is too small.
+
+Every page is built in the browser (no AI). The answer comes first: the
+line is laid from a random edge square, wandering square to square without
+revisiting one, until it can leave through another side of the board with
+the level's share of the board covered, which fixes the numbers. Then the
+pieces to print: the two end pieces always; the level's own solver works
+the board, and wherever it gets stuck one of the squares it could not settle
+has its piece printed, until it finishes. Every printed piece but the ends
+is then taken back in turn and left out if the board still finishes without
+it; finally pieces are put back up to the level's minimum, but only ones
+that keep the level the level. The solver (`solver.ts`) marks every square
+as track, empty or undecided and every link between neighbouring squares as
+track, crossed or open, and works the way a reader does, one sure step at a
+time:
+- local: a track square takes two links, an empty square none, and a square
+  with room for fewer than two links is empty; a row or column whose number
+  is reached is empty elsewhere, and one with only as many undecided squares
+  as track squares missing is track in all of them; a line laid end to end
+  must be all the track there is, and then everything else is crossed off.
+- loop (every level): "don't close it early": a link joining two loose ends
+  is crossed off when it would close a loop, or join the line end to end
+  while track is still missing.
+- probe (Challenging): "what if": a link at a loose end, or an undecided
+  square, where track (or none) leads by the loop steps straight to a broken
+  rule is decided the other way.
+Every step is sound, so a board the solver finishes has exactly one line;
+the tests also check every Gentle board against a plain search.
+
+The page is planned from the level and the trim alone, before a board is
+built: squares as large as the trim allows (up to 0.8 in) and never below
+the level's floor (0.5 in, 0.45 in, 0.36 in), numbers 16 to 22 pt. Each
+board passes a preflight (one line end to end, every number and printed
+piece kept, finished by the level's own steps on exactly that line and no
+easier, both end pieces shown, large print, on the page, not a repeat) and
+a drawn check (every number right, every printed piece its piece, the hidden
+line on exactly the answer's squares, the sign naming the line, all six
+pieces in the legend). A book works through every line before one returns,
+never the previous page's, and never prints the same board twice. A
+seller's next book opens on lines their last one used least recently.
+Pages: 1 · Answer key: yes (the whole line laid, the printed pieces on top) · AI content: no
 
 ### Skyline Tour: Raise the Towers (`skyline-tour`)
 The classic Skyscrapers puzzle, set in the skylines of a retiree's travels.
@@ -4276,6 +4352,7 @@ Pages: 1 · Answer key: no · AI content: no
 | patchwork-quilt | Patchwork Quilt: Piece the Patches | logic | 1 | yes | no |
 | lamplighter | Lamplighter: Light the House | logic | 1 | yes | no |
 | string-of-pearls | String of Pearls: Thread the Necklace | logic | 1 | yes | no |
+| train-tracks | Train Tracks: Lay the Line | logic | 1 | yes | no |
 | skyline-tour | Skyline Tour: Raise the Towers | logic | 1 | yes | no |
 | country-fence | Country Fence: Fence the Pasture | logic | 1 | yes | no |
 | stepping-stones | Stepping Stones: Walk the Path | logic | 1 | yes | no |

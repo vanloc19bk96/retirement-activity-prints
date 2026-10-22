@@ -22,6 +22,7 @@ import { cruiseFleetTemplate } from '@/utils/studio/cruise-fleet/generate'
 import { patchworkQuiltTemplate } from '@/utils/studio/patchwork-quilt/generate'
 import { lamplighterTemplate } from '@/utils/studio/lamplighter/generate'
 import { stringOfPearlsTemplate } from '@/utils/studio/string-of-pearls/generate'
+import { trainTracksTemplate } from '@/utils/studio/train-tracks/generate'
 import { skylineTourTemplate } from '@/utils/studio/skyline-tour/generate'
 import { countryFenceTemplate } from '@/utils/studio/country-fence/generate'
 import { steppingStonesTemplate } from '@/utils/studio/stepping-stones/generate'
@@ -110,6 +111,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   patchworkQuiltTemplate,
   lamplighterTemplate,
   stringOfPearlsTemplate,
+  trainTracksTemplate,
   skylineTourTemplate,
   countryFenceTemplate,
   steppingStonesTemplate,

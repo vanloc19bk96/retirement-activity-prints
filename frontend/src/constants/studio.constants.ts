@@ -30,6 +30,7 @@ export const STUDIO_ANSWER_INK_MONO_TEMPLATES = new Set([
   'patchwork-quilt',
   'lamplighter',
   'string-of-pearls',
+  'train-tracks',
   'skyline-tour',
   'country-fence',
   'stepping-stones',
