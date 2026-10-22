@@ -1,12 +1,14 @@
 import {
   STUDIO_GAME_TITLE_PREFIX,
   STUDIO_SOLUTION_TITLE_PREFIX,
+  STUDIO_TITLE_SIZE,
 } from '@/constants/studio.constants'
 import type {
   StudioFabricObject,
   StudioTemplateDefinition,
 } from '@/types/studio-template.types'
 import type { CanvasStateStore } from '@/utils/canvas-state-store'
+import { fitHeaderTitle, isStudioHeaderTitle } from './studio-layout'
 
 export interface StudioPuzzlePage {
   pageIndex: number
@@ -354,6 +356,81 @@ export function studioGameOrdinalAtPageIndex(
 ): number {
   if (pageIndex <= 0) return 1
   return collectNumberedInstanceIds(store, pageIndex, isNumbered).size + 1
+}
+
+/** “Game 3”, “Game 3: Maze”, “Solution Game 3: Maze” → prefix, number, rest. */
+const NUMBERED_HEADING = new RegExp(
+  `^((?:${STUDIO_SOLUTION_TITLE_PREFIX}\\s+)?${STUDIO_GAME_TITLE_PREFIX}\\s+)(\\d+)(:.*)?$`,
+  'i',
+)
+
+/** The heading with its game number swapped, re-fitted like drawHeader fitted it. */
+function renumberHeading(obj: StudioFabricObject, ordinal: number): StudioFabricObject {
+  const text = String(obj.text ?? '').replace(/ /g, ' ').trim()
+  const match = NUMBERED_HEADING.exec(text)
+  if (!match || Number(match[2]) === ordinal) return obj
+
+  const prevSize = typeof obj.fontSize === 'number' ? obj.fontSize : STUDIO_TITLE_SIZE
+  // A heading below full size was shrunk to its column, so its width is that
+  // column; one at full size had room to spare and just hugs its new text.
+  const column =
+    prevSize < STUDIO_TITLE_SIZE && typeof obj.width === 'number' && obj.width > 0
+      ? obj.width
+      : Number.POSITIVE_INFINITY
+  const fitted = fitHeaderTitle(
+    `${match[1]}${ordinal}${match[3] ?? ''}`,
+    column,
+    obj.fontFamily != null ? String(obj.fontFamily) : undefined,
+  )
+  return {
+    ...obj,
+    text: fitted.text,
+    width: fitted.width,
+    fontSize: fitted.fontSize,
+    top: obj.top + (prevSize - fitted.fontSize) / 2,
+  }
+}
+
+/**
+ * Re-number the “Game N” headings in page order after pages were deleted or
+ * moved, answer keys (“Solution Game N”) following their game. Headings the
+ * seller typed themselves, keepsakes and keys whose game is gone are left as
+ * they are. Writes changed pages to the store and returns their indices: a
+ * mounted canvas still shows the old heading until it restores from the store.
+ */
+export function renumberStudioGameTitles(
+  store: CanvasStateStore,
+  pageCount: number,
+  isNumbered: StudioNumberedTemplate = EVERY_TEMPLATE_NUMBERED,
+): number[] {
+  const ordinals = new Map<string, number>()
+  for (const instanceId of collectNumberedInstanceIds(store, pageCount, isNumbered)) {
+    ordinals.set(instanceId, ordinals.size + 1)
+  }
+
+  const renumber = (raw: unknown): unknown => {
+    const obj = asStudioObject(raw)
+    if (!obj) return raw
+    if (isFabricType(obj, 'group') && Array.isArray(obj.objects)) {
+      const objects = obj.objects.map(renumber) as StudioFabricObject[]
+      return objects.some((child, i) => child !== obj.objects![i]) ? { ...obj, objects } : obj
+    }
+    const ordinal = obj.studioInstanceId ? ordinals.get(obj.studioInstanceId) : undefined
+    if (ordinal == null || !isStudioHeaderTitle(obj)) return obj
+    return renumberHeading(obj, ordinal)
+  }
+
+  const changed: number[] = []
+  for (let pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+    const json = store.getSerialized(pageIndex) as StoredCanvasJson | null
+    if (!Array.isArray(json?.objects)) continue
+    const objects = json.objects.map(renumber)
+    if (objects.every((obj, i) => obj === json.objects![i])) continue
+    store.setSerialized(pageIndex, { ...json, objects })
+    store.markFabricLiveUntrusted(pageIndex)
+    changed.push(pageIndex)
+  }
+  return changed
 }
 
 /** Default Page title when replacing the puzzle at `pageIndex`. */

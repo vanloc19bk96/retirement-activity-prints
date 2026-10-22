@@ -62,6 +62,8 @@ import {
   type StudioSolutionPlacement,
 } from '@/utils/studio/studio-solution-placement'
 import { resolveStudioMarginForPage } from '@/utils/studio/studio-margin'
+import { renumberStudioGameTitles } from '@/utils/studio/studio-instance-pages'
+import { isStudioNumberedTemplate } from '@/constants/studio-templates'
 import { util, type Canvas } from 'fabric'
 import {
   remeasureAllFabricEditableTextOnCanvas,
@@ -82,6 +84,22 @@ function createInteriorPageSlotKey(): string {
     return crypto.randomUUID()
   }
   return `page-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
+}
+
+/** Fresh keys remount those rows, so their canvases restore from the store. */
+function remountPageSlots(keys: string[], pageIndices: Set<number>): string[] {
+  if (pageIndices.size === 0) return keys
+  return keys.map((key, i) => (pageIndices.has(i) ? createInteriorPageSlotKey() : key))
+}
+
+function dropThumbnailUrls(
+  thumbnails: Record<number, string>,
+  pageIndices: Set<number>,
+): Record<number, string> {
+  if (pageIndices.size === 0) return thumbnails
+  const next = { ...thumbnails }
+  for (const pageIndex of pageIndices) delete next[pageIndex]
+  return next
 }
 
 /** Minimal Fabric snapshot used for pages whose canvas is not mounted yet. */
@@ -1123,13 +1141,21 @@ export const MainContent = memo(function MainContent({ onOpenAlignmentPanel, can
     canvasStateStore.suspendSave()
     syncEditorInteriorCanvasesToStore()
     canvasStateStore.deletePageAndShiftSerialized(deletedIndex, nextPageCount)
+    // A deleted game leaves no gap: the games after it move up a number.
+    const renumbered = new Set(
+      renumberStudioGameTitles(canvasStateStore, nextPageCount, isStudioNumberedTemplate),
+    )
 
     const targetIndex = Math.max(0, deletedIndex - 1)
     scrollTargetIndexRef.current = targetIndex
     resetThumbnailRuntimeState()
-    updateThumbnailUrls((prev) => remapThumbnailUrlsForDeletedPage(prev, deletedIndex))
+    updateThumbnailUrls((prev) =>
+      dropThumbnailUrls(remapThumbnailUrlsForDeletedPage(prev, deletedIndex), renumbered),
+    )
     handleActiveCanvasChange(targetIndex)
-    setInteriorPageSlotKeys((prev) => prev.filter((_, i) => i !== deletedIndex))
+    setInteriorPageSlotKeys((prev) =>
+      remountPageSlots(prev.filter((_, i) => i !== deletedIndex), renumbered),
+    )
     setSaveResumeToken((t) => t + 1)
     interiorPageCountRef.current = nextPageCount
     setPageCount(nextPageCount)
@@ -1317,10 +1343,16 @@ export const MainContent = memo(function MainContent({ onOpenAlignmentPanel, can
       canvasStateStore.suspendSave()
       syncEditorInteriorCanvasesToStore()
       canvasStateStore.swapPagesSerialized(pageIndex, targetIndex)
+      // Games that trade places trade numbers too, and so do their answer keys.
+      const renumbered = new Set(
+        renumberStudioGameTitles(canvasStateStore, settings.pageCount, isStudioNumberedTemplate),
+      )
 
       scrollTargetIndexRef.current = targetIndex
       resetThumbnailRuntimeState()
-      updateThumbnailUrls((prev) => swapThumbnailUrls(prev, pageIndex, targetIndex))
+      updateThumbnailUrls((prev) =>
+        dropThumbnailUrls(swapThumbnailUrls(prev, pageIndex, targetIndex), renumbered),
+      )
       handleActiveCanvasChange(targetIndex)
       setInteriorPageSlotKeys((prev) => {
         const next = [...prev]
@@ -1329,7 +1361,7 @@ export const MainContent = memo(function MainContent({ onOpenAlignmentPanel, can
         if (keyA === undefined || keyB === undefined) return prev
         next[pageIndex] = keyB
         next[targetIndex] = keyA
-        return next
+        return remountPageSlots(next, renumbered)
       })
       setSaveResumeToken((t) => t + 1)
     },

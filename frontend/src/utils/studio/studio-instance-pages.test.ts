@@ -13,6 +13,7 @@ import {
   isStudioAnswerKeyPage,
   isStudioAutoGameTitle,
   nextStudioGameTitle,
+  renumberStudioGameTitles,
   resolveStudioGeneratePlacement,
   resolveStudioInsertStartPageIndex,
   resolveStudioInstancePageSpan,
@@ -433,5 +434,82 @@ describe('isStudioAutoGameTitle', () => {
     expect(isStudioAutoGameTitle('Game 3: Certificate of Retirement')).toBe(true)
     expect(isStudioAutoGameTitle('Game Night')).toBe(false)
     expect(isStudioAutoGameTitle('Happy Retirement')).toBe(false)
+  })
+})
+
+describe('renumberStudioGameTitles', () => {
+  function heading(instanceId: string, text: string, pageRole: 'single' | 'answers' = 'single') {
+    return {
+      ...studioObj(instanceId, pageRole),
+      type: 'textbox',
+      text: text.replace(/ /g, ' '),
+      top: 40,
+      width: 200,
+      fontSize: 32,
+      studioRole: 'decoration',
+      data: { studioHeader: 'title' },
+    }
+  }
+
+  function makeWritableStore(pages: Record<number, object[]>) {
+    const json = new Map<number, { objects: object[] }>()
+    for (const [i, objects] of Object.entries(pages)) json.set(Number(i), { objects })
+    const store = {
+      getSerialized: (i: number) => json.get(i) ?? null,
+      setSerialized: (i: number, value: { objects: object[] }) => json.set(i, value),
+      markFabricLiveUntrusted: () => {},
+    } as unknown as CanvasStateStore
+    const titleAt = (i: number) =>
+      String(
+        (json.get(i)?.objects as Array<{ data?: unknown; text?: string }>).find((o) => o.data)?.text,
+      ).replace(/ /g, ' ')
+    return { store, titleAt }
+  }
+
+  it('closes the gap a deleted game left, keys included', () => {
+    // Game 2 was deleted; its key went with it.
+    const { store, titleAt } = makeWritableStore({
+      0: [heading('a', 'Game 1: Maze')],
+      1: [heading('c', 'Game 3: Crossword')],
+      2: [heading('d', 'Game 4')],
+      3: [heading('a', 'Solution Game 1: Maze', 'answers')],
+      4: [heading('c', 'Solution Game 3: Crossword', 'answers')],
+    })
+    expect(renumberStudioGameTitles(store, 5)).toEqual([1, 2, 4])
+    expect([0, 1, 2, 3, 4].map(titleAt)).toEqual([
+      'Game 1: Maze',
+      'Game 2: Crossword',
+      'Game 3',
+      'Solution Game 1: Maze',
+      'Solution Game 2: Crossword',
+    ])
+  })
+
+  it('follows games that swapped places', () => {
+    const { store, titleAt } = makeWritableStore({
+      0: [heading('b', 'Game 2: Sudoku')],
+      1: [heading('a', 'Game 1: Maze')],
+    })
+    expect(renumberStudioGameTitles(store, 2)).toEqual([0, 1])
+    expect([titleAt(0), titleAt(1)]).toEqual(['Game 1: Sudoku', 'Game 2: Maze'])
+  })
+
+  it('leaves typed headings, keepsakes and orphaned keys alone', () => {
+    const { store, titleAt } = makeWritableStore({
+      0: [heading('a', 'Bonus Round')],
+      1: [{ ...heading('cert', 'Game 7: Certificate'), studioTemplateKey: 'retirement-certificate' }],
+      2: [heading('gone', 'Solution Game 5', 'answers')],
+    })
+    expect(renumberStudioGameTitles(store, 3, isStudioNumberedTemplate)).toEqual([])
+    expect([0, 1, 2].map(titleAt)).toEqual(['Bonus Round', 'Game 7: Certificate', 'Solution Game 5'])
+  })
+
+  it('reaches headings inside a group', () => {
+    const { store } = makeWritableStore({
+      0: [{ ...studioObj('a', 'single'), type: 'group', objects: [heading('a', 'Game 4')] }],
+    })
+    expect(renumberStudioGameTitles(store, 1)).toEqual([0])
+    const group = store.getSerialized(0) as { objects: Array<{ objects: Array<{ text: string }> }> }
+    expect(group.objects[0]!.objects[0]!.text).toBe('Game 1')
   })
 })
