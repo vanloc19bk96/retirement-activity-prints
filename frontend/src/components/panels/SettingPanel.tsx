@@ -8,7 +8,9 @@ import type { ProjectSettings } from '@/types/projects.types'
 import {
   AMAZON_KDP_PAGE_SIZES,
   DEFAULT_PAGE_SIZE_LABEL,
+  SOLUTIONS_PER_PAGE_OPTIONS,
   type PageSizeLabel,
+  type SolutionsPerPage,
   calculateDimensionsWithBleed,
   getInsideMarginInches,
   getOutsideMarginInches,
@@ -20,6 +22,7 @@ import { projectsApi } from '@/api/projects.api'
 import type { PageSizeOption } from '@/types/projects.types'
 import { dispatchStudioArrangeSolutions } from '@/utils/studio/studio-events'
 import { toStudioSolutionPlacement } from '@/utils/studio/studio-solution-placement'
+import { cn } from '@/lib/utils'
 
 export function SettingPanel(): JSX.Element {
   const { user } = useAuthContext()
@@ -36,6 +39,9 @@ export function SettingPanel(): JSX.Element {
   const [selectedAddBleed, setSelectedAddBleed] = useState(settings.addBleed)
   const [selectedShowVisualGuide, setSelectedShowVisualGuide] = useState(settings.showVisualGuide)
   const [selectedSolutionsAtEnd, setSelectedSolutionsAtEnd] = useState(settings.solutionsAtEnd)
+  const [selectedSolutionsPerPage, setSelectedSolutionsPerPage] = useState<SolutionsPerPage>(
+    settings.solutionsPerPage,
+  )
 
   const selectablePageSizeLabels = useMemo(
     () => new Set<string>(AMAZON_KDP_PAGE_SIZES),
@@ -50,19 +56,22 @@ export function SettingPanel(): JSX.Element {
     setSelectedAddBleed(settings.addBleed)
     setSelectedShowVisualGuide(settings.showVisualGuide)
     setSelectedSolutionsAtEnd(settings.solutionsAtEnd)
+    setSelectedSolutionsPerPage(settings.solutionsPerPage)
   }, [
     selectablePageSizeLabels,
     settings.pageSizeLabel,
     settings.addBleed,
     settings.showVisualGuide,
     settings.solutionsAtEnd,
+    settings.solutionsPerPage,
   ])
 
   const hasPendingChanges =
     selectedPageSize !== settings.pageSizeLabel ||
     selectedAddBleed !== settings.addBleed ||
     selectedShowVisualGuide !== settings.showVisualGuide ||
-    selectedSolutionsAtEnd !== settings.solutionsAtEnd
+    selectedSolutionsAtEnd !== settings.solutionsAtEnd ||
+    selectedSolutionsPerPage !== settings.solutionsPerPage
 
   const previewTrimDimensions = parsePageSizeLabel(selectedPageSize)
   const previewDimensions = calculateDimensionsWithBleed(previewTrimDimensions, selectedAddBleed)
@@ -146,20 +155,24 @@ export function SettingPanel(): JSX.Element {
       addBleed: selectedAddBleed,
       showVisualGuide: selectedShowVisualGuide,
       solutionsAtEnd: selectedSolutionsAtEnd,
+      solutionsPerPage: selectedSolutionsPerPage,
       bookInfo: projectBookInfo,
     }
   }
 
   async function handleApplySettings(): Promise<void> {
     const nextSettings = buildNextSettings()
-    const hasSolutionPlacementChanged = nextSettings.solutionsAtEnd !== settings.solutionsAtEnd
+    const hasSolutionLayoutChanged =
+      nextSettings.solutionsAtEnd !== settings.solutionsAtEnd ||
+      nextSettings.solutionsPerPage !== settings.solutionsPerPage
 
     try {
       await saveSettings(nextSettings)
       applySettings(nextSettings)
-      if (hasSolutionPlacementChanged) {
+      if (hasSolutionLayoutChanged) {
         dispatchStudioArrangeSolutions({
           placement: toStudioSolutionPlacement(nextSettings.solutionsAtEnd),
+          perPage: nextSettings.solutionsPerPage,
         })
       }
 
@@ -267,6 +280,46 @@ export function SettingPanel(): JSX.Element {
               Studio solution pages are grouped after all games instead of right after each
               game. Applies to pages already in the book and to new games.
             </p>
+            <div className="space-y-1.5 pt-1">
+              <p
+                id="solutions-per-page-label"
+                className={cn(
+                  'text-xs font-medium',
+                  selectedSolutionsAtEnd ? 'text-foreground' : 'text-muted-foreground',
+                )}
+              >
+                Solutions per page
+              </p>
+              <div
+                className="flex gap-1 rounded-md bg-muted p-1"
+                role="radiogroup"
+                aria-labelledby="solutions-per-page-label"
+              >
+                {SOLUTIONS_PER_PAGE_OPTIONS.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    role="radio"
+                    aria-checked={selectedSolutionsPerPage === option}
+                    disabled={!selectedSolutionsAtEnd}
+                    onClick={() => setSelectedSolutionsPerPage(option)}
+                    className={cn(
+                      'flex-1 rounded px-2 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed',
+                      selectedSolutionsPerPage === option
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground disabled:hover:text-muted-foreground',
+                    )}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {selectedSolutionsAtEnd
+                  ? 'Two or four solutions share a page, scaled down to fit. Fewer pages in the book.'
+                  : 'Available when solutions are at the end of the book.'}
+              </p>
+            </div>
           </div>
 
         </div>

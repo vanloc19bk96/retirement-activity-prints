@@ -1,4 +1,4 @@
-import type { PageSizeLabel } from '@/types/canvas-settings.types'
+import type { PageSizeLabel, SolutionsPerPage } from '@/types/canvas-settings.types'
 import type {
   BookBindingType,
   BookReadingDirection,
@@ -20,6 +20,8 @@ export interface ProjectSettings {
   showVisualGuide: boolean
   /** Group studio solution pages at the end of the book instead of after each game. */
   solutionsAtEnd: boolean
+  /** Solutions per page once they sit at the end of the book (1, 2 or 4). */
+  solutionsPerPage: SolutionsPerPage
   bookInfo?: ProjectBookInfo
 }
 

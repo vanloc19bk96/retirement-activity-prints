@@ -1,5 +1,5 @@
 import { useState, useRef, useLayoutEffect, useEffect, useCallback, useMemo, memo } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Plus } from 'lucide-react'
 import { PageRow } from './PageRow'
 import { CanvasPageItem, MAX_EDITOR_INTERIOR_PAGES } from './CanvasPageItem'
 import { clampZoom, DEFAULT_ZOOM } from './ZoomControl'
@@ -31,7 +31,7 @@ import { createCanvasExportSource } from '@/utils/canvas-export-source'
 import { useAuthContext } from '@/context/AuthContext'
 import { useEditorMode } from '@/context/EditorModeContext'
 import { EditorZoomProvider } from '@/context/EditorZoomContext'
-import { buildEditorZoomContainerStyle } from '@/constants/editor-zoom-css'
+import { buildEditorZoomContainerStyle, EDITOR_PAGE_ROW_WIDTH_STYLE } from '@/constants/editor-zoom-css'
 import { useBook } from '@/context/BookContext'
 import { isUserOnStarterPlan } from '@/utils/user-plan'
 import { canvasesApi } from '@/api/canvases.api'
@@ -63,12 +63,9 @@ import {
   onStudioWritePage,
   onStudioGenerationDone,
 } from '@/utils/studio/studio-events'
-import {
-  invertPageOrder,
-  resolveStudioSolutionPageOrder,
-  shiftStudioPageJsonX,
-  type StudioSolutionPlacement,
-} from '@/utils/studio/studio-solution-placement'
+import { type StudioSolutionPlacement } from '@/utils/studio/studio-solution-placement'
+import { resolveStudioSolutionLayout } from '@/utils/studio/studio-solution-pack'
+import type { SolutionsPerPage } from '@/types/canvas-settings.types'
 import { resolveStudioMarginForPage } from '@/utils/studio/studio-margin'
 import { renumberStudioGameTitles } from '@/utils/studio/studio-instance-pages'
 import { isStudioNumberedTemplate } from '@/constants/studio-templates'
@@ -230,20 +227,6 @@ function swapThumbnailUrls(
 }
 
 /** Carry thumbnails along a page reorder (`order[newIndex] = oldIndex`). */
-function permuteThumbnailUrls(
-  previousUrls: Record<number, string>,
-  order: number[],
-): Record<number, string> {
-  const newIndexOf = invertPageOrder(order)
-  const nextUrls: Record<number, string> = {}
-  for (const [rawIndex, url] of Object.entries(previousUrls)) {
-    const pageIndex = Number.parseInt(rawIndex, 10)
-    if (!Number.isFinite(pageIndex)) continue
-    nextUrls[newIndexOf[pageIndex] ?? pageIndex] = url
-  }
-  return nextUrls
-}
-
 function revokeThumbnailUrl(url: string | undefined): void {
   if (!url || !url.startsWith('blob:')) return
   URL.revokeObjectURL(url)
@@ -293,6 +276,7 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
   })
   const shouldResumeStoreSaveRef = useRef(false)
   const shouldPersistNewProjectRef = useRef(false)
+  const shouldPersistArrangedSolutionsRef = useRef(false)
   const prevZoomRef = useRef(DEFAULT_ZOOM)
   const zoomLevelRef = useRef(zoomLevel)
   const zoomAnchorRef = useRef<ZoomAnchor | null>(null)
@@ -917,6 +901,18 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
     })()
   }, [saveCanvases, saveResumeToken, settings.pageCount, toast])
 
+  // Like a trim/bleed Apply: persist a settings-driven solution rearrange right
+  // away -- once the new page count is committed, or the save would still send
+  // the old one and leave folded pages behind on the server.
+  useEffect(() => {
+    if (!shouldPersistArrangedSolutionsRef.current) return
+    if (settings.pageCount !== interiorPageCountRef.current) return
+    shouldPersistArrangedSolutionsRef.current = false
+    void saveCanvases({ quiet: true }).catch(() => {
+      // Error toast already shown by saveCanvases
+    })
+  }, [saveCanvases, saveResumeToken, settings.pageCount])
+
   const checkHasUnsavedChanges = useCallback((): boolean => {
     if (isCanvasesLoading || isProjectSettingsLoading || !isCanvasHydrationSettled) {
       return false
@@ -1417,85 +1413,6 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
   )
 
   /**
-   * Move studio solution pages to `placement` in one reorder. Moved rows keep
-   * their slot keys, so they remount at the new index and restore from the store.
-   * Returns the order applied (`order[newIndex] = oldIndex`) and the new indices
-   * of pages that moved, or null when the book is already arranged.
-   */
-  const arrangeStudioSolutionPages = useCallback(
-    (placement: StudioSolutionPlacement): { order: number[]; moved: Set<number> } | null => {
-      syncEditorInteriorCanvasesToStore()
-      const order = resolveStudioSolutionPageOrder(
-        canvasStateStore,
-        interiorPageCountRef.current,
-        placement,
-      )
-      if (!order) return null
-
-      // Remount cleanups must not save old canvases over the reordered snapshots.
-      // The resume effect undoes one suspension per commit, so never stack two.
-      if (!shouldResumeStoreSaveRef.current) {
-        shouldResumeStoreSaveRef.current = true
-        canvasStateStore.suspendSave()
-      }
-      canvasStateStore.reorderPagesSerialized(order)
-      const moved = new Set<number>()
-      order.forEach((oldIndex, newIndex) => {
-        if (oldIndex !== newIndex) moved.add(newIndex)
-      })
-
-      // Verso <-> recto swaps the gutter side; studio sheets follow their new safe area.
-      const marginArgs = { pageWidth: interiorPageWidth, pageHeight: interiorPageHeight, marginGuide }
-      const remirrored = new Set<number>()
-      for (const newIndex of moved) {
-        const oldIndex = order[newIndex]!
-        if (oldIndex % 2 === newIndex % 2) continue
-        const canvasJson = canvasStateStore.getSerialized(newIndex)
-        if (!canvasJson) continue
-        const dx =
-          resolveStudioMarginForPage({ pageIndex: newIndex, ...marginArgs }).left -
-          resolveStudioMarginForPage({ pageIndex: oldIndex, ...marginArgs }).left
-        const shifted = shiftStudioPageJsonX(canvasJson, dx)
-        if (shifted === canvasJson) continue
-        canvasStateStore.setSerialized(newIndex, shifted)
-        remirrored.add(newIndex)
-      }
-
-      // In-flight studio live writes target the pre-reorder index -> canvas mapping.
-      for (const pageIndex of moved) {
-        studioWriteGenerationRef.current.set(
-          pageIndex,
-          (studioWriteGenerationRef.current.get(pageIndex) ?? 0) + 1,
-        )
-      }
-
-      resetThumbnailRuntimeState()
-      updateThumbnailUrls((prev) => {
-        const next = permuteThumbnailUrls(prev, order)
-        for (const pageIndex of remirrored) delete next[pageIndex]
-        return next
-      })
-      setInteriorPageSlotKeys((prev) => [
-        ...order.map((oldIndex) => prev[oldIndex] ?? createInteriorPageSlotKey()),
-        ...prev.slice(order.length),
-      ])
-      setSaveResumeToken((t) => t + 1)
-      refreshHasUnsavedChanges()
-      return { order, moved }
-    },
-    [
-      canvasStateStore,
-      interiorPageHeight,
-      interiorPageWidth,
-      marginGuide,
-      refreshHasUnsavedChanges,
-      resetThumbnailRuntimeState,
-      syncEditorInteriorCanvasesToStore,
-      updateThumbnailUrls,
-    ],
-  )
-
-  /**
    * Replace the interior with `pages` (`rebuildInteriorPages`; the live canvases
    * must be synced to the store first). Rows that keep their snapshot keep their
    * slot key, so a moved one remounts at its new index; rebuilt pages get a
@@ -1559,6 +1476,44 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
       resetThumbnailRuntimeState,
       setPageCount,
       updateThumbnailUrls,
+    ],
+  )
+
+  /**
+   * Put studio solution pages where `placement` wants them, `perPage` keys to a
+   * page at the end of the book (`commitInteriorPages`), or null when the book
+   * is already arranged.
+   */
+  const arrangeStudioSolutionPages = useCallback(
+    (
+      placement: StudioSolutionPlacement,
+      perPage: SolutionsPerPage,
+    ): { newIndexOf: number[]; changed: Set<number> } | null => {
+      syncEditorInteriorCanvasesToStore()
+      const pages = resolveStudioSolutionLayout({
+        store: canvasStateStore,
+        pageCount: interiorPageCountRef.current,
+        placement,
+        perPage,
+        pageWidth: interiorPageWidth,
+        pageHeight: interiorPageHeight,
+        marginFor: (pageIndex) =>
+          resolveStudioMarginForPage({
+            pageIndex,
+            pageWidth: interiorPageWidth,
+            pageHeight: interiorPageHeight,
+            marginGuide,
+          }),
+      })
+      return pages ? commitInteriorPages(pages) : null
+    },
+    [
+      canvasStateStore,
+      commitInteriorPages,
+      interiorPageHeight,
+      interiorPageWidth,
+      marginGuide,
+      syncEditorInteriorCanvasesToStore,
     ],
   )
 
@@ -1891,27 +1846,33 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
 
   const solutionsAtEndRef = useRef(settings.solutionsAtEnd)
   solutionsAtEndRef.current = settings.solutionsAtEnd
+  const solutionsPerPageRef = useRef(settings.solutionsPerPage)
+  solutionsPerPageRef.current = settings.solutionsPerPage
 
   useEffect(() => {
-    return onStudioArrangeSolutions(({ placement }) => {
-      if (!arrangeStudioSolutionPages(placement)) return
-      // Like a trim/bleed Apply: persist the settings side effect right away.
-      void saveCanvases({ quiet: true }).catch(() => {
-        // Error toast already shown by saveCanvases
-      })
+    return onStudioArrangeSolutions(({ placement, perPage }) => {
+      if (arrangeStudioSolutionPages(placement, perPage)) {
+        shouldPersistArrangedSolutionsRef.current = true
+      }
     })
-  }, [arrangeStudioSolutionPages, saveCanvases])
+  }, [arrangeStudioSolutionPages])
 
   useEffect(() => {
     return onStudioGenerationDone((detail) => {
       let pageIndices = detail.pageIndices
       let movedPageIndices = new Set<number>()
       // Generators always write the key right after its game; regroup once the run is done.
-      const arranged = solutionsAtEndRef.current ? arrangeStudioSolutionPages('end') : null
+      const arranged = solutionsAtEndRef.current
+        ? arrangeStudioSolutionPages('end', solutionsPerPageRef.current)
+        : null
       if (arranged) {
-        const newIndexOf = invertPageOrder(arranged.order)
-        pageIndices = pageIndices.map((pageIndex) => newIndexOf[pageIndex] ?? pageIndex)
-        movedPageIndices = arranged.moved
+        // A key folded into a shared solution page has no page of its own any more.
+        pageIndices = pageIndices.flatMap((pageIndex) => {
+          if (pageIndex < 0) return [pageIndex]
+          const newIndex = arranged.newIndexOf[pageIndex]
+          return newIndex == null ? [] : [newIndex]
+        })
+        movedPageIndices = arranged.changed
         // Their permuted thumbnails predate the generate; the rail re-requests missing ones.
         updateThumbnailUrls((prev) => {
           const next = { ...prev }
@@ -2385,6 +2346,7 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
                   pageWidth={interiorPageWidth}
                   pageHeight={interiorPageHeight}
                   pageCount={settings.pageCount}
+                  isActive={index === activePageIndex}
                   onCanvasReady={handleCanvasReady}
                   onActiveCanvasChange={handleActiveCanvasChange}
                   onIsSelectionLockedChange={editor.pageRow.onIsSelectionLockedChange}
@@ -2399,6 +2361,15 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
                   showCanvasGrid={showCanvasGrid}
                 />
               ))}
+              <button
+                type="button"
+                onClick={handleAddPageAfterLast}
+                className="flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg border-2 border-dashed border-primary/25 bg-card/50 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/50 hover:bg-accent/60 hover:text-primary-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                style={EDITOR_PAGE_ROW_WIDTH_STYLE}
+              >
+                <Plus className="size-4" aria-hidden />
+                Add page
+              </button>
             </div>
 
             {/* Book cover mode canvas */}
@@ -2450,6 +2421,7 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
         isStarterPlanLocked={isStarterPlanLocked}
         zoomLevel={zoomLevel}
         onZoomChange={handleZoomChange}
+        currentPage={activePageIndex + 1}
         totalPages={isInteriorMode ? settings.pageCount : 1}
         onRemoveCanvas={
           isCanvasesLoading

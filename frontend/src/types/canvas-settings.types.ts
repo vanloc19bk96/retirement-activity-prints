@@ -74,6 +74,19 @@ export interface CanvasSettings {
   fitDroppedImagesToPage: boolean
   /** When true, studio solution pages sit after every game instead of after their own. */
   solutionsAtEnd: boolean
+  /** Studio solutions printed on one page once they sit at the end of the book. */
+  solutionsPerPage: SolutionsPerPage
+}
+
+export const SOLUTIONS_PER_PAGE_OPTIONS = [1, 2, 4] as const
+
+export type SolutionsPerPage = (typeof SOLUTIONS_PER_PAGE_OPTIONS)[number]
+
+export const DEFAULT_SOLUTIONS_PER_PAGE: SolutionsPerPage = 1
+
+/** An API that predates the option, or a value it does not offer, prints one per page. */
+export function normalizeSolutionsPerPage(value: unknown): SolutionsPerPage {
+  return SOLUTIONS_PER_PAGE_OPTIONS.find((option) => option === value) ?? DEFAULT_SOLUTIONS_PER_PAGE
 }
 
 /** Logical editor/print-layout DPI (was 72; 96 improves on-screen text sharpness). */
@@ -168,5 +181,6 @@ export function getDefaultCanvasSettings(): CanvasSettings {
     marginGuide: calculateMarginGuide(defaultPageCount, defaultAddBleed),
     fitDroppedImagesToPage: true,
     solutionsAtEnd: false,
+    solutionsPerPage: DEFAULT_SOLUTIONS_PER_PAGE,
   }
 }

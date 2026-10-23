@@ -5,12 +5,14 @@ import type {
   PageSizeLabel,
   PageDimensions,
   MarginGuide,
+  SolutionsPerPage,
 } from '@/types/canvas-settings.types'
 import {
   getDefaultCanvasSettings,
   parsePageSizeLabel,
   calculateDimensionsWithBleed,
   calculateMarginGuide,
+  normalizeSolutionsPerPage,
 } from '@/types/canvas-settings.types'
 import type { BookCoverDimensions, BookCoverZones } from '@/types/book-cover.types'
 import {
@@ -27,6 +29,7 @@ interface ApplySettingsOptions {
   addBleed: boolean
   showVisualGuide: boolean
   solutionsAtEnd: boolean
+  solutionsPerPage: SolutionsPerPage
 }
 
 interface CanvasSettingsContextValue {
@@ -57,6 +60,7 @@ export function CanvasSettingsProvider({ children }: CanvasSettingsProviderProps
     addBleed: settings.addBleed,
     showVisualGuide: settings.showVisualGuide,
     solutionsAtEnd: settings.solutionsAtEnd,
+    solutionsPerPage: settings.solutionsPerPage,
   }
 
   const { error: projectSettingsError, isLoading: isProjectSettingsLoading, projectSettings } = useProjectSettingsSync(defaultProjectSettings)
@@ -78,6 +82,7 @@ export function CanvasSettingsProvider({ children }: CanvasSettingsProviderProps
         showVisualGuide: projectSettings.showVisualGuide,
         // An API that predates the option omits it.
         solutionsAtEnd: projectSettings.solutionsAtEnd === true,
+        solutionsPerPage: normalizeSolutionsPerPage(projectSettings.solutionsPerPage),
         marginGuide,
       }
     })
@@ -103,6 +108,7 @@ export function CanvasSettingsProvider({ children }: CanvasSettingsProviderProps
       addBleed,
       showVisualGuide,
       solutionsAtEnd,
+      solutionsPerPage,
     }: ApplySettingsOptions): void => {
       setSettings((prev) => {
         const trimDimensions = parsePageSizeLabel(pageSizeLabel)
@@ -117,6 +123,7 @@ export function CanvasSettingsProvider({ children }: CanvasSettingsProviderProps
           addBleed,
           showVisualGuide,
           solutionsAtEnd,
+          solutionsPerPage,
           marginGuide,
         }
       })

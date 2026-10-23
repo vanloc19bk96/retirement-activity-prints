@@ -149,6 +149,7 @@ export function useBookInfoForm() {
         addBleed: settings.addBleed,
         showVisualGuide: settings.showVisualGuide,
         solutionsAtEnd: settings.solutionsAtEnd,
+        solutionsPerPage: settings.solutionsPerPage,
         bookInfo: normalized,
       }
       await saveSettings(nextSettings)
@@ -186,6 +187,7 @@ export function useBookInfoForm() {
     settings.pageSizeLabel,
     settings.showVisualGuide,
     settings.solutionsAtEnd,
+    settings.solutionsPerPage,
     toast,
     trimBookSize,
   ])

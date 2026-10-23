@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { RotateCcw, Trash2 } from 'lucide-react'
+import { Minus, Plus, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 const MIN_ZOOM = 0.5
 const MAX_ZOOM = 5
 export const DEFAULT_ZOOM = 0.9
+/** The -/+ buttons move to the next multiple of this many percent. */
+const ZOOM_BUTTON_STEP_PERCENT = 10
 
 const SLIDER_MIN_PERCENT = MIN_ZOOM * 100
 const SLIDER_MAX_PERCENT = MAX_ZOOM * 100
@@ -27,24 +29,20 @@ function percentToPosition(percent: number): number {
   return (SLIDER_RANGE * Math.log(clamped / SLIDER_MIN_PERCENT)) / LOG_RATIO
 }
 
+function steppedZoom(zoomLevel: number, direction: 1 | -1): number {
+  const percent = Math.round(zoomLevel * 100)
+  const step = ZOOM_BUTTON_STEP_PERCENT
+  const next = direction > 0 ? (Math.floor(percent / step) + 1) * step : (Math.ceil(percent / step) - 1) * step
+  return clampZoom(next / 100)
+}
+
 export type ZoomControlProps = {
   zoomLevel: number
   onZoomChange: (level: number) => void
-  currentPage?: number
-  totalPages: number
-  /** Interior: opens reset flow. Cover: clears cover canvas only. */
-  onRemoveCanvas?: () => void
   className?: string
 }
 
-export function ZoomControl({
-  zoomLevel,
-  onZoomChange,
-  currentPage = 1,
-  totalPages,
-  onRemoveCanvas,
-  className,
-}: ZoomControlProps) {
+export function ZoomControl({ zoomLevel, onZoomChange, className }: ZoomControlProps) {
   // Local drag position keeps the thumb responsive while heavy parent
   // re-renders (canvas resync) are coalesced to one per animation frame.
   const [dragPosition, setDragPosition] = useState<number | null>(null)
@@ -95,21 +93,22 @@ export function ZoomControl({
 
   return (
     <div
-      className={cn('flex items-center gap-3', className)}
+      className={cn('flex items-center gap-1', className)}
       role="group"
       aria-label="Zoom"
     >
-      {totalPages > 0 && (
-        <span
-          className="min-w-[2.5rem] text-center text-xs font-medium tabular-nums text-muted-foreground"
-          aria-label={`Page ${currentPage} of ${totalPages}`}
-        >
-          Page {currentPage} / {totalPages}
-        </span>
-      )}
-      <span className="min-w-[2.75rem] text-right text-xs font-medium tabular-nums text-muted-foreground">
-        {displayPercent}%
-      </span>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7 shrink-0"
+        onClick={() => onZoomChange(steppedZoom(zoomLevel, -1))}
+        disabled={zoomLevel <= MIN_ZOOM}
+        title="Zoom out"
+        aria-label="Zoom out"
+      >
+        <Minus className="h-3.5 w-3.5" />
+      </Button>
       <input
         type="range"
         min={0}
@@ -119,34 +118,39 @@ export function ZoomControl({
         onChange={(event) => handleSliderChange(Number(event.target.value))}
         onPointerUp={handleSliderCommit}
         onBlur={handleSliderCommit}
-        className="h-2 w-28 cursor-pointer accent-[var(--color-control-accent)]"
+        className="h-2 w-24 cursor-pointer accent-[var(--color-control-accent)]"
+        aria-label="Zoom level"
         aria-valuemin={0}
         aria-valuemax={SLIDER_RANGE}
         aria-valuenow={Math.round(position)}
+        aria-valuetext={`${displayPercent}%`}
       />
       <Button
         type="button"
         variant="ghost"
         size="icon"
         className="h-7 w-7 shrink-0"
+        onClick={() => onZoomChange(steppedZoom(zoomLevel, 1))}
+        disabled={zoomLevel >= MAX_ZOOM}
+        title="Zoom in"
+        aria-label="Zoom in"
+      >
+        <Plus className="h-3.5 w-3.5" />
+      </Button>
+      <span className="min-w-[2.75rem] text-center text-xs font-semibold tabular-nums text-foreground">
+        {displayPercent}%
+      </span>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7 shrink-0 text-muted-foreground"
         onClick={handleResetZoom}
-        aria-label="Reset zoom to 90%"
+        title={`Reset zoom to ${Math.round(DEFAULT_ZOOM * 100)}%`}
+        aria-label={`Reset zoom to ${Math.round(DEFAULT_ZOOM * 100)}%`}
       >
         <RotateCcw className="h-3.5 w-3.5" />
       </Button>
-      {onRemoveCanvas ? (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 shrink-0 text-destructive hover:text-destructive"
-          onClick={onRemoveCanvas}
-          aria-label="Remove canvas content"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
-      ) : null}
     </div>
   )
 }
-

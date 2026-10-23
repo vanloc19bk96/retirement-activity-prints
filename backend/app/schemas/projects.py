@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
@@ -25,6 +26,10 @@ class ProjectSettings(BaseModel):
     solutionsAtEnd: bool = Field(
         default=False,
         description="When true, studio solution pages are grouped at the end of the book",
+    )
+    solutionsPerPage: Literal[1, 2, 4] = Field(
+        default=1,
+        description="Studio solutions printed on one page when they are grouped at the end",
     )
     bookInfo: ProjectBookInfo | None = Field(
         default=None,

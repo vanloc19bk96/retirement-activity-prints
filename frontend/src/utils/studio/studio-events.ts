@@ -1,4 +1,5 @@
 import type { StudioFabricObject } from '@/types/studio-template.types'
+import type { SolutionsPerPage } from '@/types/canvas-settings.types'
 import type { StudioSolutionPlacement } from './studio-solution-placement'
 
 export const STUDIO_WRITE_PAGE_EVENT = 'studio:write-page'
@@ -55,9 +56,11 @@ export function onStudioGenerationDone(
 
 export interface StudioArrangeSolutionsDetail {
   placement: StudioSolutionPlacement
+  /** Keys per page once they sit at the end; ignored after each game. */
+  perPage: SolutionsPerPage
 }
 
-/** Move the book's existing solution pages to match `placement` (settings Apply). */
+/** Move the book's existing solution pages to match `placement` and `perPage` (settings Apply). */
 export function dispatchStudioArrangeSolutions(detail: StudioArrangeSolutionsDetail): void {
   window.dispatchEvent(new CustomEvent(STUDIO_ARRANGE_SOLUTIONS_EVENT, { detail }))
 }

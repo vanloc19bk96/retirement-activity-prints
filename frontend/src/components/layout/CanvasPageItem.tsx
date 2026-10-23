@@ -52,7 +52,7 @@ export const CanvasPageItem = memo(function CanvasPageItem({
       ref={containerRef}
       role="application"
       aria-label="Canvas"
-      className="relative border border-zinc-300 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)] outline-none focus:outline-none dark:border-zinc-600 dark:bg-zinc-50 dark:shadow-[0_12px_34px_rgba(0,0,0,0.45)]"
+      className="canvas-paper relative bg-white outline-none focus:outline-none"
       style={EDITOR_CANVAS_SIZE_STYLE}
     >
       <div

@@ -40,7 +40,7 @@ export function MarginGuideOverlay({
           left: safeLeft,
           right: safeRight,
           bottom: safeBottom,
-          outline: '2px dashed #ef4444',
+          outline: '1px dashed var(--color-crayon-pink)',
         }}
       />
     </div>

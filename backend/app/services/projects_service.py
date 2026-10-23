@@ -15,7 +15,10 @@ DEFAULT_PROJECT_SETTINGS = {
     "showVisualGuide": True,
     "fitDroppedImagesToPage": True,
     "solutionsAtEnd": False,
+    "solutionsPerPage": 1,
 }
+
+SOLUTIONS_PER_PAGE_OPTIONS = (1, 2, 4)
 
 
 def _normalize_book_info(raw_book_info: object) -> dict[str, object] | None:
@@ -70,6 +73,7 @@ def _normalize_project_settings(saved_settings: object) -> dict[str, object]:
     show_visual_guide = saved_settings.get("showVisualGuide")
     fit_dropped_images_to_page = saved_settings.get("fitDroppedImagesToPage")
     solutions_at_end = saved_settings.get("solutionsAtEnd")
+    solutions_per_page = saved_settings.get("solutionsPerPage")
     book_info = _normalize_book_info(saved_settings.get("bookInfo"))
 
     normalized_settings: dict[str, object] = {
@@ -93,6 +97,11 @@ def _normalize_project_settings(saved_settings: object) -> dict[str, object]:
             solutions_at_end
             if isinstance(solutions_at_end, bool)
             else defaults["solutionsAtEnd"]
+        ),
+        "solutionsPerPage": (
+            solutions_per_page
+            if type(solutions_per_page) is int and solutions_per_page in SOLUTIONS_PER_PAGE_OPTIONS
+            else defaults["solutionsPerPage"]
         ),
     }
 

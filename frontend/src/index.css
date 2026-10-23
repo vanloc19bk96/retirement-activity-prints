@@ -15,6 +15,7 @@
   --color-popover-foreground: var(--theme-popover-foreground);
   --color-primary: var(--theme-primary);
   --color-primary-foreground: var(--theme-primary-foreground);
+  --color-primary-text: var(--theme-primary-text);
   --color-secondary: var(--theme-secondary);
   --color-secondary-foreground: var(--theme-secondary-foreground);
   --color-muted: var(--theme-muted);
@@ -23,6 +24,7 @@
   --color-accent-foreground: var(--theme-accent-foreground);
   --color-destructive: var(--theme-destructive);
   --color-destructive-foreground: var(--theme-destructive-foreground);
+  --color-destructive-text: var(--theme-destructive-text);
   --color-success: var(--theme-success);
   --color-success-foreground: var(--theme-success-foreground);
   --color-border: var(--theme-border);
@@ -45,6 +47,8 @@
   --theme-popover-foreground: #1d1b33;
   --theme-primary: #5b45e0;
   --theme-primary-foreground: #ffffff;
+  /* Primary / destructive as a text color: in dark mode the fills are too dim to read on the surfaces. */
+  --theme-primary-text: #4b36cc;
   --theme-secondary: #efedfb;
   --theme-secondary-foreground: #1d1b33;
   --theme-muted: #f0eff8;
@@ -53,6 +57,7 @@
   --theme-accent-foreground: #3f2db8;
   --theme-destructive: hsl(0 72% 50%);
   --theme-destructive-foreground: #ffffff;
+  --theme-destructive-text: hsl(0 72% 45%);
   --theme-success: #1f9d6b;
   --theme-success-foreground: #ffffff;
   --theme-border: #e4e1f1;
@@ -61,6 +66,10 @@
   /* Canvas workspace behind the pages: tinted surface with a dot grid. */
   --theme-workspace: #ebe9f6;
   --theme-workspace-dot: #d3cfe8;
+  --theme-workspace-scrollbar: #c9c3e6;
+  /* Page "paper": hairline edge + soft violet-tinted lift off the workspace. */
+  --theme-paper-shadow: 0 0 0 1px rgb(29 27 51 / 0.07), 0 1px 3px rgb(29 27 51 / 0.06),
+    0 14px 36px -10px rgb(59 45 140 / 0.22);
 
   --color-background: var(--theme-background);
   --color-foreground: var(--theme-foreground);
@@ -70,6 +79,7 @@
   --color-popover-foreground: var(--theme-popover-foreground);
   --color-primary: var(--theme-primary);
   --color-primary-foreground: var(--theme-primary-foreground);
+  --color-primary-text: var(--theme-primary-text);
   --color-secondary: var(--theme-secondary);
   --color-secondary-foreground: var(--theme-secondary-foreground);
   --color-muted: var(--theme-muted);
@@ -78,6 +88,7 @@
   --color-accent-foreground: var(--theme-accent-foreground);
   --color-destructive: var(--theme-destructive);
   --color-destructive-foreground: var(--theme-destructive-foreground);
+  --color-destructive-text: var(--theme-destructive-text);
   --color-success: var(--theme-success);
   --color-success-foreground: var(--theme-success-foreground);
   --color-border: var(--theme-border);
@@ -110,6 +121,7 @@
   --theme-popover-foreground: #f3f1ff;
   --theme-primary: #7563ff;
   --theme-primary-foreground: #ffffff;
+  --theme-primary-text: #b3a8ff;
   --theme-secondary: #25223d;
   --theme-secondary-foreground: #f3f1ff;
   --theme-muted: #23203a;
@@ -118,6 +130,7 @@
   --theme-accent-foreground: #d4ccff;
   --theme-destructive: hsl(0 62.8% 45%);
   --theme-destructive-foreground: #ffffff;
+  --theme-destructive-text: #f87171;
   --theme-success: #2fb383;
   --theme-success-foreground: #ffffff;
   --theme-border: #302c4a;
@@ -125,6 +138,8 @@
   --theme-ring: #8b7cff;
   --theme-workspace: #181528;
   --theme-workspace-dot: #2c2848;
+  --theme-workspace-scrollbar: #3a3560;
+  --theme-paper-shadow: 0 0 0 1px rgb(255 255 255 / 0.08), 0 18px 44px -10px rgb(0 0 0 / 0.65);
   --color-control-accent: #7563ff;
 }
 
@@ -170,6 +185,13 @@ body {
   background-color: var(--theme-workspace);
   background-image: radial-gradient(var(--theme-workspace-dot) 1.2px, transparent 1.2px);
   background-size: 20px 20px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-workspace-scrollbar) transparent;
+}
+
+/* A canvas page: stays white in dark mode since it is what gets printed. */
+.canvas-paper {
+  box-shadow: var(--theme-paper-shadow);
 }
 
 /* Custom fonts: OFL or author permits commercial use */
