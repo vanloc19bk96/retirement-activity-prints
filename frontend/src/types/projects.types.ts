@@ -39,3 +39,10 @@ export interface ListPageSizeOptionsResponse {
   options: PageSizeOption[]
 }
 
+
+/** The project an editor tab works on; `name` comes from the hub. */
+export interface CurrentProject {
+  id: string
+  name: string | null
+  is_hub_project: boolean
+}

@@ -1,6 +1,7 @@
 import { StaticCanvas, type Canvas, type FabricObject } from 'fabric'
 import { omitFabricCanvasJsonSurfaceFields } from '@/utils/canvas-template'
 import { getCanvasPasteboardPadding } from '@/utils/fabric-canvas-pasteboard'
+import { launchAuthHeaders } from '@/lib/launch-session'
 
 export const CANVAS_THUMBNAIL_PIXEL_WIDTH = 180
 const THUMBNAIL_JPEG_QUALITY = 0.74
@@ -14,24 +15,7 @@ function isHttpOrHttpsUrl(value: string): boolean {
 }
 
 function getThumbnailProxyAuthHeaders(): Record<string, string> {
-  const headers: Record<string, string> = {}
-  if (typeof localStorage === 'undefined') return headers
-  try {
-    const userStr = localStorage.getItem('user')
-    if (userStr) {
-      const user = JSON.parse(userStr) as { id?: unknown }
-      if (typeof user.id === 'string' && user.id.trim()) {
-        headers['X-User-Id'] = user.id.trim()
-      }
-    }
-  } catch {
-    /* ignore */
-  }
-  const token = localStorage.getItem('launch_token')?.trim()
-  if (token) {
-    headers.Authorization = `Bearer ${token}`
-  }
-  return headers
+  return launchAuthHeaders() ?? {}
 }
 
 /**

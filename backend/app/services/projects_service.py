@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from uuid import UUID
 
+from postgrest.exceptions import APIError
+
 from app.core.supabase import create_supabase_admin_client
 
 PROJECT_SCHEMA_NAME = "retirement_activity_prints"
@@ -107,70 +109,115 @@ def _get_projects_postgrest_client():
     return supabase.schema(PROJECT_SCHEMA_NAME)
 
 
-def _ensure_project_settings_exists(*, user_id: UUID) -> None:
-    """
-    Ensure there is exactly one `projects` row per user.
+class ProjectAccessDenied(PermissionError):
+    """The project id belongs to another user."""
 
-    Required by the editor flows: on first launch we create a default row,
-    then subsequent calls only update `projects.settings`.
-    """
-    supabase = _get_projects_postgrest_client()
 
+def _select_project(*, project_id: UUID) -> dict[str, object] | None:
     response = (
-        supabase.table(PROJECTS_TABLE_NAME)
-        .select("id")
-        .eq("user_id", str(user_id))
+        _get_projects_postgrest_client()
+        .table(PROJECTS_TABLE_NAME)
+        .select("id, user_id")
+        .eq("id", str(project_id))
         .limit(1)
         .execute()
     )
-    if response.data:
-        return
-
-    insert_payload = {"user_id": str(user_id), "settings": DEFAULT_PROJECT_SETTINGS}
-    insert_response = supabase.table(PROJECTS_TABLE_NAME).insert(insert_payload).execute()
-    if not insert_response.data:
-        raise RuntimeError("Failed to create projects.settings row for user")
+    return (response.data or [None])[0]
 
 
-def save_project_settings(*, settings: dict[str, object], user_id: UUID) -> dict[str, object]:
-    supabase = _get_projects_postgrest_client()
-    _ensure_project_settings_exists(user_id=user_id)
-    normalized_settings = _normalize_project_settings(settings)
+def _insert_project(*, user_id: UUID, project_id: UUID | None = None) -> UUID:
+    payload: dict[str, object] = {"user_id": str(user_id), "settings": DEFAULT_PROJECT_SETTINGS}
+    if project_id is not None:
+        payload["id"] = str(project_id)
+    response = _get_projects_postgrest_client().table(PROJECTS_TABLE_NAME).insert(payload).execute()
+    if not response.data or not response.data[0].get("id"):
+        raise RuntimeError("Failed to create projects row for user")
+    return UUID(str(response.data[0]["id"]))
 
-    payload = {
-        "user_id": str(user_id),
-        "settings": normalized_settings,
-    }
 
-    # `user_id` is UNIQUE in the table, so upsert keeps exactly 1 record per user.
+def _ensure_owned_project(*, user_id: UUID, project_id: UUID) -> UUID:
+    """
+    The hub's project id, created here on first open (a project made in the hub starts
+    empty). An id another user holds is refused.
+    """
+    row = _select_project(project_id=project_id)
+    if row is None:
+        try:
+            return _insert_project(user_id=user_id, project_id=project_id)
+        except APIError:
+            # Two first requests raced; the other insert won. Fall through to the owner check.
+            row = _select_project(project_id=project_id)
+            if row is None:
+                raise
+    if str(row.get("user_id")) != str(user_id):
+        raise ProjectAccessDenied(str(project_id))
+    return project_id
+
+
+def latest_project_id(*, user_id: UUID) -> UUID:
+    """The user's most recently updated project, created when the user has none."""
     response = (
-        supabase.table(PROJECTS_TABLE_NAME)
-        .upsert(payload, on_conflict="user_id")
+        _get_projects_postgrest_client()
+        .table(PROJECTS_TABLE_NAME)
+        .select("id")
+        .eq("user_id", str(user_id))
+        .order("updated_at", desc=True)
+        .limit(1)
         .execute()
     )
-
-    if not response.data:
-        # This should not happen for a successful upsert, but fail fast if it does.
-        raise RuntimeError("Failed to upsert projects.settings")
-
-    # `settings` in DB is jsonb; we store it as-is.
-    saved_row = response.data[0]
-    saved_settings = saved_row.get("settings")
-    return _normalize_project_settings(saved_settings)
+    if response.data and response.data[0].get("id"):
+        return UUID(str(response.data[0]["id"]))
+    return _insert_project(user_id=user_id)
 
 
-def get_project_settings(*, user_id: UUID) -> dict[str, object]:
-    supabase = _get_projects_postgrest_client()
-    _ensure_project_settings_exists(user_id=user_id)
+def create_project(*, user_id: UUID) -> UUID:
+    """A new empty project for the user."""
+    return _insert_project(user_id=user_id)
 
+
+def resolve_project_id(*, user_id: UUID, project_id: UUID | None) -> UUID:
+    """
+    The project a request works on: the one its launch token names (from the hub), or for
+    a token without one (the app is not on hub projects yet) the user's latest project.
+    """
+    if project_id is None:
+        return latest_project_id(user_id=user_id)
+    return _ensure_owned_project(user_id=user_id, project_id=project_id)
+
+
+def list_user_project_ids(*, user_id: UUID) -> list[UUID]:
     response = (
-        supabase.table(PROJECTS_TABLE_NAME)
-        .select("settings")
+        _get_projects_postgrest_client()
+        .table(PROJECTS_TABLE_NAME)
+        .select("id")
         .eq("user_id", str(user_id))
         .execute()
     )
+    return [UUID(str(row["id"])) for row in response.data or [] if row.get("id")]
 
+
+def save_project_settings(*, settings: dict[str, object], project_id: UUID) -> dict[str, object]:
+    normalized_settings = _normalize_project_settings(settings)
+    response = (
+        _get_projects_postgrest_client()
+        .table(PROJECTS_TABLE_NAME)
+        .update({"settings": normalized_settings})
+        .eq("id", str(project_id))
+        .execute()
+    )
+    if not response.data:
+        raise RuntimeError("Failed to save projects.settings")
+    return _normalize_project_settings(response.data[0].get("settings"))
+
+
+def get_project_settings(*, project_id: UUID) -> dict[str, object]:
+    response = (
+        _get_projects_postgrest_client()
+        .table(PROJECTS_TABLE_NAME)
+        .select("settings")
+        .eq("id", str(project_id))
+        .limit(1)
+        .execute()
+    )
     row = (response.data or [{}])[0] or {}
-    saved_settings = row.get("settings")
-    return _normalize_project_settings(saved_settings)
-
+    return _normalize_project_settings(row.get("settings"))

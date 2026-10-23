@@ -6,6 +6,7 @@ import type {
   GenerateInteriorImagesPayload,
   GeneratedImage,
 } from '@/types/ai-images.types'
+import { launchAuthHeaders, launchFetch } from '@/lib/launch-session'
 
 const POLL_INTERVAL_MS = 1500
 const MAX_POLL_DURATION_MS = 12 * 60 * 1000
@@ -21,22 +22,7 @@ async function parseError(response: Response): Promise<Error> {
 }
 
 function getLaunchAuthHeader(): Record<string, string> | undefined {
-  const userStr = localStorage.getItem('user')
-  let userId: string | undefined
-  if (userStr) {
-    try {
-      const user = JSON.parse(userStr) as { id?: unknown }
-      if (typeof user.id === 'string' && user.id.trim()) userId = user.id.trim()
-    } catch {
-      userId = undefined
-    }
-  }
-
-  const token = localStorage.getItem('launch_token')?.trim()
-  const headers: Record<string, string> = {}
-  if (token) headers.Authorization = `Bearer ${token}`
-  if (userId) headers['X-User-Id'] = userId
-  return Object.keys(headers).length > 0 ? headers : undefined
+  return launchAuthHeaders()
 }
 
 function mapGeneratedImages(body: GenerateImagesApiResponse): GeneratedImage[] {
@@ -62,7 +48,7 @@ function buildAuthHeaders(): Record<string, string> {
 }
 
 async function submitInteriorImageJob(payload: GenerateInteriorImagesPayload): Promise<string> {
-  const response = await fetch('/api/ai-images/interior/jobs', {
+  const response = await launchFetch('/api/ai-images/interior/jobs', {
     method: 'POST',
     headers: buildAuthHeaders(),
     body: JSON.stringify(payload),
@@ -80,7 +66,7 @@ async function submitInteriorImageJob(payload: GenerateInteriorImagesPayload): P
 async function pollImageJobUntilCompleted(jobId: string): Promise<GenerateImagesApiResponse> {
   const startedAt = Date.now()
   while (Date.now() - startedAt <= MAX_POLL_DURATION_MS) {
-    const response = await fetch(`/api/ai-images/jobs/${jobId}`, {
+    const response = await launchFetch(`/api/ai-images/jobs/${jobId}`, {
       method: 'GET',
       headers: buildAuthHeaders(),
     })

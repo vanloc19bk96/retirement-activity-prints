@@ -1,8 +1,10 @@
 import type {
+  CurrentProject,
   ListPageSizeOptionsResponse,
   ProjectSettings,
   SaveProjectSettingsResponse,
 } from '@/types/projects.types'
+import { launchAuthHeaders, launchFetch } from '@/lib/launch-session'
 
 async function parseError(response: Response): Promise<Error> {
   try {
@@ -15,28 +17,13 @@ async function parseError(response: Response): Promise<Error> {
 }
 
 function getLaunchAuthHeader(): Record<string, string> | undefined {
-  const userStr = localStorage.getItem('user')
-  let userId: string | undefined
-  if (userStr) {
-    try {
-      const user = JSON.parse(userStr) as { id?: unknown }
-      if (typeof user.id === 'string' && user.id.trim()) userId = user.id.trim()
-    } catch {
-      userId = undefined
-    }
-  }
-
-  const token = localStorage.getItem('launch_token')?.trim()
-  const headers: Record<string, string> = {}
-  if (token) headers.Authorization = `Bearer ${token}`
-  if (userId) headers['X-User-Id'] = userId
-  return Object.keys(headers).length > 0 ? headers : undefined
+  return launchAuthHeaders()
 }
 
 export const projectsApi = {
   getSettings: async (): Promise<ProjectSettings | null> => {
     const authHeader = getLaunchAuthHeader()
-    const response = await fetch('/api/projects/settings', {
+    const response = await launchFetch('/api/projects/settings', {
       method: 'GET',
       headers: authHeader,
     })
@@ -53,7 +40,7 @@ export const projectsApi = {
 
   getPageSizeOptions: async (): Promise<ListPageSizeOptionsResponse> => {
     const authHeader = getLaunchAuthHeader()
-    const response = await fetch('/api/projects/page-size-options', {
+    const response = await launchFetch('/api/projects/page-size-options', {
       method: 'GET',
       headers: authHeader,
     })
@@ -70,7 +57,7 @@ export const projectsApi = {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
     if (authHeader) Object.assign(headers, authHeader)
 
-    const response = await fetch('/api/projects/settings', {
+    const response = await launchFetch('/api/projects/settings', {
       method: 'POST',
       headers,
       body: JSON.stringify(settings),
@@ -81,6 +68,26 @@ export const projectsApi = {
     }
 
     return (await response.json()) as SaveProjectSettingsResponse
+  },
+
+  getCurrentProject: async (): Promise<CurrentProject> => {
+    const response = await launchFetch('/api/projects/current', { method: 'GET' })
+    if (!response.ok) {
+      throw await parseError(response)
+    }
+    return (await response.json()) as CurrentProject
+  },
+
+  renameCurrentProject: async (name: string): Promise<CurrentProject> => {
+    const response = await launchFetch('/api/projects/current', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    })
+    if (!response.ok) {
+      throw await parseError(response)
+    }
+    return (await response.json()) as CurrentProject
   },
 }
 

@@ -1,17 +1,18 @@
 from __future__ import annotations
 
-from uuid import UUID
-
 from fastapi import APIRouter, Body, Depends, HTTPException
 
-from app.core.dependencies import get_current_user_id
+from app.core.dependencies import ProjectContext, get_current_project, get_current_user_id
 
 from app.schemas.projects import (
+    CurrentProjectResponse,
     ListPageSizeOptionsResponse,
     PageSizeOption,
     ProjectSettings,
+    RenameCurrentProjectRequest,
     SaveProjectSettingsResponse,
 )
+from app.services import hub_projects_client
 from app.services.page_size_service import list_page_size_options
 from app.services.projects_service import get_project_settings, save_project_settings
 
@@ -25,21 +26,16 @@ router = APIRouter(prefix="/projects", tags=["projects"])
 )
 async def save_settings(
     payload: ProjectSettings = Body(...),
-    user_id_value: str = Depends(get_current_user_id),
+    project: ProjectContext = Depends(get_current_project),
 ) -> SaveProjectSettingsResponse:
     try:
-        user_id = UUID(user_id_value)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail="Invalid user id") from exc
-
-    try:
-        saved_settings = save_project_settings(settings=payload.model_dump(), user_id=user_id)
+        saved_settings = save_project_settings(settings=payload.model_dump(), project_id=project.project_id)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:  # pragma: no cover - best-effort error mapping
         raise HTTPException(status_code=500, detail="Failed to save settings") from exc
 
-    return SaveProjectSettingsResponse(user_id=user_id, settings=saved_settings)
+    return SaveProjectSettingsResponse(user_id=project.user_id, settings=saved_settings)
 
 
 @router.get(
@@ -47,14 +43,40 @@ async def save_settings(
     response_model=SaveProjectSettingsResponse,
     summary="Get canvas settings from projects.settings (jsonb)",
 )
-async def get_settings(user_id_value: str = Depends(get_current_user_id)) -> SaveProjectSettingsResponse:
-    try:
-        user_id = UUID(user_id_value)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail="Invalid user id") from exc
+async def get_settings(project: ProjectContext = Depends(get_current_project)) -> SaveProjectSettingsResponse:
+    saved_settings = get_project_settings(project_id=project.project_id)
+    return SaveProjectSettingsResponse(user_id=project.user_id, settings=saved_settings)
 
-    saved_settings = get_project_settings(user_id=user_id)
-    return SaveProjectSettingsResponse(user_id=user_id, settings=saved_settings)
+
+@router.get(
+    "/current",
+    response_model=CurrentProjectResponse,
+    summary="The project this editor tab works on, named as in the hub",
+)
+async def get_current_project_info(project: ProjectContext = Depends(get_current_project)) -> CurrentProjectResponse:
+    hub_project = hub_projects_client.get_project(project.launch_token) if project.is_hub_project else None
+    return CurrentProjectResponse(
+        id=project.project_id,
+        name=(hub_project or {}).get("name"),
+        is_hub_project=project.is_hub_project,
+    )
+
+
+@router.patch(
+    "/current",
+    response_model=CurrentProjectResponse,
+    summary="Rename this tab's project (the name lives in the hub)",
+)
+async def rename_current_project(
+    payload: RenameCurrentProjectRequest = Body(...),
+    project: ProjectContext = Depends(get_current_project),
+) -> CurrentProjectResponse:
+    if not project.is_hub_project:
+        raise HTTPException(status_code=409, detail="Open this project from the hub to rename it")
+    renamed = hub_projects_client.rename_project(project.launch_token, payload.name)
+    if renamed is None:
+        raise HTTPException(status_code=502, detail="Could not rename the project in the hub")
+    return CurrentProjectResponse(id=project.project_id, name=renamed.get("name"), is_hub_project=True)
 
 
 @router.get(

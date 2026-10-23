@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class ProjectBookInfo(BaseModel):
@@ -46,3 +46,23 @@ class PageSizeOption(BaseModel):
 class ListPageSizeOptionsResponse(BaseModel):
     options: list[PageSizeOption]
 
+
+
+class CurrentProjectResponse(BaseModel):
+    """The project an editor tab works on; `name` comes from the hub (None outside hub projects)."""
+
+    id: UUID
+    name: str | None = None
+    is_hub_project: bool = False
+
+
+class RenameCurrentProjectRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=120)
+
+    @field_validator("name")
+    @classmethod
+    def _tidy_name(cls, value: str) -> str:
+        cleaned = " ".join(value.split())
+        if not cleaned:
+            raise ValueError("Project name cannot be empty")
+        return cleaned

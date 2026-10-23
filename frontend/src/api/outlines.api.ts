@@ -1,4 +1,5 @@
 import type { ListOutlineAssetsResponse } from '@/types/outlines.types'
+import { launchAuthHeaders, launchFetch } from '@/lib/launch-session'
 
 async function parseError(response: Response): Promise<Error> {
   try {
@@ -11,22 +12,7 @@ async function parseError(response: Response): Promise<Error> {
 }
 
 function getLaunchAuthHeader(): Record<string, string> | undefined {
-  const userStr = localStorage.getItem('user')
-  let userId: string | undefined
-  if (userStr) {
-    try {
-      const user = JSON.parse(userStr) as { id?: unknown }
-      if (typeof user.id === 'string' && user.id.trim()) userId = user.id.trim()
-    } catch {
-      userId = undefined
-    }
-  }
-
-  const token = localStorage.getItem('launch_token')?.trim()
-  const headers: Record<string, string> = {}
-  if (token) headers.Authorization = `Bearer ${token}`
-  if (userId) headers['X-User-Id'] = userId
-  return Object.keys(headers).length > 0 ? headers : undefined
+  return launchAuthHeaders()
 }
 
 function buildAssetsQuery(params: { q?: string; limit: number; offset: number }): string {
@@ -50,7 +36,7 @@ export const outlinesApi = {
       limit: params.limit ?? 40,
       offset: params.offset ?? 0,
     })
-    const response = await fetch(`/api/outlines/assets?${query}`, {
+    const response = await launchFetch(`/api/outlines/assets?${query}`, {
       method: 'GET',
       headers: authHeader,
       signal: params.signal,

@@ -1,13 +1,13 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 from uuid import UUID
 
 from app.core.supabase import create_supabase_admin_client
 from app.services.projects_service import (
-    DEFAULT_PROJECT_SETTINGS,
     PROJECT_SCHEMA_NAME,
-    PROJECTS_TABLE_NAME,
+    list_user_project_ids,
 )
 from app.services.storage_service import (
     collect_referenced_supabase_image_public_urls_from_canvas_json,
@@ -15,7 +15,11 @@ from app.services.storage_service import (
     delete_user_image_objects_not_referenced_by_public_urls,
 )
 
+logger = logging.getLogger(__name__)
+
 CANVASES_TABLE_NAME = "canvases"
+# Canvas JSON can run to ~100 KB a page, so other projects' canvases are read in small pages.
+OTHER_PROJECTS_CANVAS_PAGE_SIZE = 50
 DEFAULT_CANVAS_DATA: dict[str, object] = {
     "version": "6.7.1",
     "objects": [],
@@ -108,33 +112,47 @@ def _ensure_default_canvases_for_project(*, supabase: Any, project_id: UUID) -> 
         ).execute()
 
 
-def _get_or_create_project_id(*, user_id: UUID) -> UUID:
-    supabase = _get_projects_postgrest_client()
+def _other_project_ids(*, user_id: UUID, project_id: UUID) -> list[str]:
+    return [str(pid) for pid in list_user_project_ids(user_id=user_id) if pid != project_id]
 
-    response = (
-        supabase.table(PROJECTS_TABLE_NAME)
-        .select("id")
-        .eq("user_id", str(user_id))
-        .execute()
+
+def _image_urls_used_by_projects(*, supabase: Any, project_ids: list[str]) -> set[str]:
+    """
+    Every storage image the given projects' canvases use. Uploaded images live in one folder
+    per user, shared by all of that user's projects, so cleanup must keep these too.
+    """
+    urls: set[str] = set()
+    if not project_ids:
+        return urls
+    start = 0
+    while True:
+        response = (
+            supabase.table(CANVASES_TABLE_NAME)
+            .select("id, canvas_data")
+            .in_("project_id", project_ids)
+            .order("id")
+            .range(start, start + OTHER_PROJECTS_CANVAS_PAGE_SIZE - 1)
+            .execute()
+        )
+        rows = response.data or []
+        for row in rows:
+            canvas_data = row.get("canvas_data")
+            if isinstance(canvas_data, dict):
+                urls.update(collect_referenced_supabase_image_public_urls_from_canvas_json(canvas_data))
+        if len(rows) < OTHER_PROJECTS_CANVAS_PAGE_SIZE:
+            return urls
+        start += OTHER_PROJECTS_CANVAS_PAGE_SIZE
+
+
+def _cleanup_processed_images_after_save(*, user_id: UUID, project_id: UUID, referenced: list[str]) -> None:
+    # The client only knows this project's images. With other projects in the same storage
+    # folder, cleanup waits for the next editor load, which reads every project (get_canvases).
+    if _other_project_ids(user_id=user_id, project_id=project_id):
+        return
+    delete_user_processed_objects_not_referenced_by_public_urls(
+        user_id=str(user_id),
+        referenced_public_urls=referenced,
     )
-
-    if response.data:
-        project_id = response.data[0].get("id")
-        if isinstance(project_id, str) and project_id:
-            return UUID(project_id)
-
-    # Ensure there is always a projects row for this user.
-    # We only need the `id` FK for canvases.
-    insert_payload = {"user_id": str(user_id), "settings": DEFAULT_PROJECT_SETTINGS}
-    insert_response = supabase.table(PROJECTS_TABLE_NAME).insert(insert_payload).execute()
-    if not insert_response.data:
-        raise RuntimeError("Failed to create projects row for user")
-
-    project_id = insert_response.data[0].get("id")
-    if not isinstance(project_id, str) or not project_id:
-        raise RuntimeError("projects.id missing after insert")
-
-    return UUID(project_id)
 
 
 def save_canvases(
@@ -142,10 +160,10 @@ def save_canvases(
     canvases: list[dict],
     interior_page_count: int,
     user_id: UUID,
+    project_id: UUID,
     referenced_supabase_image_public_urls: list[str] | None = None,
 ) -> dict[str, object]:
     supabase = _get_projects_postgrest_client()
-    project_id = _get_or_create_project_id(user_id=user_id)
 
     _delete_obsolete_interior_canvases_with_page_index_ge(
         supabase=supabase,
@@ -154,9 +172,10 @@ def save_canvases(
     )
 
     if not canvases:
-        delete_user_processed_objects_not_referenced_by_public_urls(
-            user_id=str(user_id),
-            referenced_public_urls=referenced_supabase_image_public_urls or [],
+        _cleanup_processed_images_after_save(
+            user_id=user_id,
+            project_id=project_id,
+            referenced=referenced_supabase_image_public_urls or [],
         )
         return {"project_id": project_id, "saved": []}
 
@@ -218,17 +237,17 @@ def save_canvases(
 
         saved_items.append({"page_index": page_index})
 
-    delete_user_processed_objects_not_referenced_by_public_urls(
-        user_id=str(user_id),
-        referenced_public_urls=referenced_supabase_image_public_urls or [],
+    _cleanup_processed_images_after_save(
+        user_id=user_id,
+        project_id=project_id,
+        referenced=referenced_supabase_image_public_urls or [],
     )
 
     return {"project_id": project_id, "saved": saved_items}
 
 
-def get_canvases(*, user_id: UUID) -> dict[str, object]:
+def get_canvases(*, user_id: UUID, project_id: UUID) -> dict[str, object]:
     supabase = _get_projects_postgrest_client()
-    project_id = _get_or_create_project_id(user_id=user_id)
 
     _ensure_default_canvases_for_project(supabase=supabase, project_id=project_id)
 
@@ -267,6 +286,14 @@ def get_canvases(*, user_id: UUID) -> dict[str, object]:
             continue
         for url in collect_referenced_supabase_image_public_urls_from_canvas_json(canvas_data):
             referenced_public_urls_set.add(url)
+    try:
+        referenced_public_urls_set |= _image_urls_used_by_projects(
+            supabase=supabase,
+            project_ids=_other_project_ids(user_id=user_id, project_id=project_id),
+        )
+    except Exception as exc:  # noqa: BLE001 - without every project's images, delete nothing
+        logger.warning("image_cleanup_skipped user=%s err=%s", user_id, exc)
+        return {"project_id": project_id, "canvases": canvases}
 
     # Load project snapshot and best-effort clean orphan processed objects.
     # We intentionally allow deletion even when we cannot resolve any processed URL,

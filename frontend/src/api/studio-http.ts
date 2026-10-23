@@ -5,28 +5,14 @@
  * build on this module so auth headers and error shapes stay in one place.
  */
 
+import { launchAuthHeaders, launchFetch } from '@/lib/launch-session'
+
 interface ApiErrorBody {
   detail?: string | { message?: string }
 }
 
-function readStoredUserId(): string | undefined {
-  const raw = localStorage.getItem('user')
-  if (!raw) return undefined
-  try {
-    const user = JSON.parse(raw) as { id?: unknown }
-    return typeof user.id === 'string' && user.id.trim() ? user.id.trim() : undefined
-  } catch {
-    return undefined
-  }
-}
-
 function buildJsonHeaders(): Record<string, string> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  const token = localStorage.getItem('launch_token')?.trim()
-  const userId = readStoredUserId()
-  if (token) headers.Authorization = `Bearer ${token}`
-  if (userId) headers['X-User-Id'] = userId
-  return headers
+  return { 'Content-Type': 'application/json', ...launchAuthHeaders() }
 }
 
 async function readError(response: Response, label: string): Promise<Error> {
@@ -55,7 +41,7 @@ export async function postStudioJson<TRequest, TResponse>(options: {
   label: string
 }): Promise<TResponse> {
   const { path, body, signal, label } = options
-  const response = await fetch(path, {
+  const response = await launchFetch(path, {
     method: 'POST',
     signal,
     headers: buildJsonHeaders(),

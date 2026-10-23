@@ -111,14 +111,19 @@ comment on column retirement_activity_prints.users.puzzle_salt is
 -- -----------------------------------------------------------------------------
 -- 4) projects
 -- -----------------------------------------------------------------------------
+-- A user can have several projects; the Creator Hub lists them and opens one by id
+-- (the launch token's project_id). The hub's hub_projects row shares this id.
 create table if not exists retirement_activity_prints.projects (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null unique
+  user_id uuid not null
     references retirement_activity_prints.users (id) on delete cascade,
   settings jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+create index if not exists projects_user_id_updated_at_idx
+  on retirement_activity_prints.projects (user_id, updated_at desc);
 
 drop trigger if exists projects_set_updated_at on retirement_activity_prints.projects;
 create trigger projects_set_updated_at

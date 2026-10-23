@@ -1,11 +1,22 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
 import type { User, VerifyLaunchTokenResponse, RefreshLaunchTokenResponse } from '@/types/auth'
+import {
+  clearLaunchToken,
+  getLaunchToken,
+  setLaunchProject,
+  setLaunchToken,
+  setLaunchTokenRefresher,
+} from '@/lib/launch-session'
 
 const SKIP_UNSAVED_WARNING_ONCE_KEY = 'skip_unsaved_warning_once'
+/** Why the tab was sent to the open-from-hub page (read there to explain it). */
+export const LAUNCH_END_REASON_KEY = 'launch_end_reason'
+export type LaunchEndReason = 'project_deleted' | 'session_expired'
 
 export interface LaunchAuthConfig {
   apiBaseUrl: string
   hubUrl?: string
+  /** Unused: the token is kept per tab by `launch-session`. */
   launchTokenKey?: string
   /** Path for verifying launch token (POST). Default: '/api/auth/verify-launch-token' */
   verifyPath?: string
@@ -37,7 +48,6 @@ export function createLaunchAuthClient(config: LaunchAuthConfig): {
   const {
     apiBaseUrl,
     hubUrl = '',
-    launchTokenKey = 'launch_token',
     verifyPath = '/api/auth/verify-launch-token',
     refreshPath = '/api/auth/refresh-launch-token',
     loginPath = '/open-from-hub',
@@ -56,7 +66,7 @@ export function createLaunchAuthClient(config: LaunchAuthConfig): {
 
   api.interceptors.request.use(
     (requestConfig) => {
-      const token = localStorage.getItem(launchTokenKey)
+      const token = getLaunchToken()
       if (token) {
         requestConfig.headers = requestConfig.headers ?? {}
         requestConfig.headers.Authorization = `Bearer ${token}`
@@ -72,9 +82,10 @@ export function createLaunchAuthClient(config: LaunchAuthConfig): {
     return fullUrl.includes('refresh-launch-token')
   }
 
-  const performLogout = () => {
+  const performLogout = (reason: LaunchEndReason = 'session_expired') => {
     sessionStorage.setItem(SKIP_UNSAVED_WARNING_ONCE_KEY, '1')
-    localStorage.removeItem(launchTokenKey)
+    sessionStorage.setItem(LAUNCH_END_REASON_KEY, reason)
+    clearLaunchToken()
     localStorage.removeItem('user')
     if (onLogout) {
       onLogout()
@@ -99,7 +110,7 @@ export function createLaunchAuthClient(config: LaunchAuthConfig): {
         return Promise.reject(error)
       }
 
-      const token = localStorage.getItem(launchTokenKey)
+      const token = getLaunchToken()
       if (token?.trim()) {
         try {
           const { data } = await api.post<RefreshLaunchTokenResponse>(refreshPath, {
@@ -107,7 +118,7 @@ export function createLaunchAuthClient(config: LaunchAuthConfig): {
           })
 
           if (data?.token && data?.user) {
-            localStorage.setItem(launchTokenKey, data.token)
+            setLaunchToken(data.token)
             localStorage.setItem('user', JSON.stringify(data.user))
 
             requestConfig._retried = true
@@ -116,8 +127,12 @@ export function createLaunchAuthClient(config: LaunchAuthConfig): {
 
             return api.request(requestConfig)
           }
-        } catch {
-          // Ignore refresh failures and force logout below
+        } catch (refreshError) {
+          if (isProjectDeletedError(refreshError)) {
+            performLogout('project_deleted')
+            return Promise.reject(error)
+          }
+          // Other refresh failures force logout below
         }
       }
 
@@ -125,6 +140,18 @@ export function createLaunchAuthClient(config: LaunchAuthConfig): {
       return Promise.reject(error)
     },
   )
+
+  function isProjectDeletedError(err: unknown): boolean {
+    return axios.isAxiosError(err) && err.response?.status === 410
+  }
+
+  /** Keep the token (or its replacement pinned to the tab's project) and the project's name. */
+  function storeVerifiedSession(token: string, data: VerifyLaunchTokenResponse): void {
+    setLaunchToken(data.token?.trim() || token)
+    setLaunchProject(data.project ? { id: data.project.id, name: data.project.name ?? null } : null)
+    localStorage.setItem('user', JSON.stringify(data.user))
+    sessionStorage.removeItem(LAUNCH_END_REASON_KEY)
+  }
 
   function readLaunchTokenFromUrl(): string | null {
     const searchParams = new URLSearchParams(window.location.search)
@@ -200,8 +227,7 @@ export function createLaunchAuthClient(config: LaunchAuthConfig): {
     try {
       const { data } = await api.post<VerifyLaunchTokenResponse>(verifyPath, { token: trimmed })
       if (data?.user) {
-        localStorage.setItem(launchTokenKey, trimmed)
-        localStorage.setItem('user', JSON.stringify(data.user))
+        storeVerifiedSession(trimmed, data)
         return true
       }
     } catch (err) {
@@ -223,7 +249,7 @@ export function createLaunchAuthClient(config: LaunchAuthConfig): {
   }
 
   async function refreshLaunchToken(): Promise<boolean> {
-    const token = localStorage.getItem(launchTokenKey)
+    const token = getLaunchToken()
     if (!token?.trim()) return false
 
     try {
@@ -232,25 +258,28 @@ export function createLaunchAuthClient(config: LaunchAuthConfig): {
       })
 
       if (data?.token && data?.user) {
-        localStorage.setItem(launchTokenKey, data.token)
+        setLaunchToken(data.token)
         localStorage.setItem('user', JSON.stringify(data.user))
         return true
       }
-    } catch {
-      // Ignore refresh failures; caller will handle false
+    } catch (err) {
+      // The project was deleted in the hub: this tab must stop editing it.
+      if (isProjectDeletedError(err)) performLogout('project_deleted')
     }
 
     return false
   }
 
+  setLaunchTokenRefresher(refreshLaunchToken)
+
   async function tryVerifyStoredToken(): Promise<boolean> {
-    const token = localStorage.getItem(launchTokenKey)
+    const token = getLaunchToken()
     if (!token?.trim()) return false
 
     try {
       const { data } = await api.post<VerifyLaunchTokenResponse>(verifyPath, { token: token.trim() })
       if (data?.user) {
-        localStorage.setItem('user', JSON.stringify(data.user))
+        storeVerifiedSession(token.trim(), data)
         return true
       }
     } catch {
@@ -259,7 +288,7 @@ export function createLaunchAuthClient(config: LaunchAuthConfig): {
         return true
       }
 
-      localStorage.removeItem(launchTokenKey)
+      clearLaunchToken()
       localStorage.removeItem('user')
     }
 
@@ -267,7 +296,7 @@ export function createLaunchAuthClient(config: LaunchAuthConfig): {
   }
 
   async function ensureValidSession(): Promise<boolean> {
-    const token = localStorage.getItem(launchTokenKey)
+    const token = getLaunchToken()
     if (!token?.trim()) return false
 
     const refreshed = await refreshLaunchToken()
@@ -303,7 +332,7 @@ export function createLaunchAuthClient(config: LaunchAuthConfig): {
 
   function isAuthenticated(): boolean {
     if (getStoredUser()) return true
-    return !!localStorage.getItem(launchTokenKey)
+    return !!getLaunchToken()
   }
 
   function getStoredUser(): User | null {

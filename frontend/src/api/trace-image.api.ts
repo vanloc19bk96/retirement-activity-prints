@@ -1,4 +1,5 @@
 import type { GenerateTraceImagePayload, GenerateTraceImageResponse } from '@/types/trace-image.types'
+import { launchAuthHeaders, launchFetch } from '@/lib/launch-session'
 
 async function parseError(response: Response): Promise<Error> {
   try {
@@ -11,22 +12,7 @@ async function parseError(response: Response): Promise<Error> {
 }
 
 function getLaunchAuthHeader(): Record<string, string> | undefined {
-  const userStr = localStorage.getItem('user')
-  let userId: string | undefined
-  if (userStr) {
-    try {
-      const user = JSON.parse(userStr) as { id?: unknown }
-      if (typeof user.id === 'string' && user.id.trim()) userId = user.id.trim()
-    } catch {
-      userId = undefined
-    }
-  }
-
-  const token = localStorage.getItem('launch_token')?.trim()
-  const headers: Record<string, string> = {}
-  if (token) headers.Authorization = `Bearer ${token}`
-  if (userId) headers['X-User-Id'] = userId
-  return Object.keys(headers).length > 0 ? headers : undefined
+  return launchAuthHeaders()
 }
 
 export const traceImageApi = {
@@ -35,7 +21,7 @@ export const traceImageApi = {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
     if (authHeaders) Object.assign(headers, authHeaders)
 
-    const response = await fetch('/api/trace-image/generate', {
+    const response = await launchFetch('/api/trace-image/generate', {
       method: 'POST',
       headers,
       body: JSON.stringify(payload),

@@ -79,8 +79,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }, REFRESH_INTERVAL_MS)
 
+    // Timers barely run in a background or sleeping tab, so the token may have expired by
+    // the time the user comes back; renew it before the next save needs it.
+    let lastVisibleRefresh = Date.now()
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return
+      if (Date.now() - lastVisibleRefresh < REFRESH_INTERVAL_MS) return
+      lastVisibleRefresh = Date.now()
+      void authService.ensureValidSession()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+
     return () => {
       window.clearInterval(intervalId)
+      document.removeEventListener('visibilitychange', onVisible)
     }
   }, [user])
 

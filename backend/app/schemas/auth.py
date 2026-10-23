@@ -4,6 +4,8 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
+from app.schemas.projects import CurrentProjectResponse
+
 
 class VerifyLaunchTokenRequest(BaseModel):
     """Request body for verifying launch token (JWT from hub)."""
@@ -42,6 +44,9 @@ class UserResponse(BaseModel):
 class VerifyLaunchTokenResponse(BaseModel):
     user: UserResponse
     hub_url: Optional[str] = None
+    # Set when the tab must switch to a new token pinned to its project (see auth route).
+    token: Optional[str] = None
+    project: Optional[CurrentProjectResponse] = None
 
 
 class RefreshLaunchTokenResponse(BaseModel):

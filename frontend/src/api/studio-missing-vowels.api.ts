@@ -2,24 +2,10 @@ import type {
   MissingVowelsRequest,
   MissingVowelsResponse,
 } from '@/types/studio-missing-vowels.types'
+import { launchAuthHeaders, launchFetch } from '@/lib/launch-session'
 
 function getLaunchAuthHeader(): Record<string, string> | undefined {
-  const userStr = localStorage.getItem('user')
-  let userId: string | undefined
-  if (userStr) {
-    try {
-      const user = JSON.parse(userStr) as { id?: unknown }
-      if (typeof user.id === 'string' && user.id.trim()) userId = user.id.trim()
-    } catch {
-      userId = undefined
-    }
-  }
-
-  const token = localStorage.getItem('launch_token')?.trim()
-  const headers: Record<string, string> = {}
-  if (token) headers.Authorization = `Bearer ${token}`
-  if (userId) headers['X-User-Id'] = userId
-  return Object.keys(headers).length > 0 ? headers : undefined
+  return launchAuthHeaders()
 }
 
 function buildJsonHeaders(): Record<string, string> {
@@ -50,7 +36,7 @@ export async function generateMissingVowels(
   req: MissingVowelsRequest,
   signal: AbortSignal,
 ): Promise<MissingVowelsResponse> {
-  const response = await fetch('/api/studio/missing-vowels', {
+  const response = await launchFetch('/api/studio/missing-vowels', {
     method: 'POST',
     signal,
     headers: buildJsonHeaders(),

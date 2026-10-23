@@ -8,6 +8,8 @@ The frontend opens the app from the Hub with a launch token, then calls:
 from __future__ import annotations
 
 import logging
+import threading
+import time
 from datetime import datetime
 from typing import Any, Optional
 
@@ -26,6 +28,36 @@ logger = logging.getLogger(__name__)
 HUB_VERIFY_PATH = "/launch/verify"
 HUB_REFRESH_PATH = "/launch/refresh"
 USERS_TABLE_NAME = "users"
+
+# Every API request carries the launch token, so verifying it with the hub each time would
+# add a round trip per request. A verified token is trusted for a short while; it is signed
+# and short-lived anyway, and the hub still checks it again on refresh.
+VERIFY_CACHE_SECONDS = 60
+_VERIFY_CACHE_MAX_ENTRIES = 5000
+_verify_cache: dict[str, tuple[float, dict[str, Optional[str]]]] = {}
+_verify_cache_lock = threading.Lock()
+
+
+def _cached_claims(token: str) -> Optional[dict[str, Optional[str]]]:
+    with _verify_cache_lock:
+        entry = _verify_cache.get(token)
+        if entry is None:
+            return None
+        if entry[0] < time.monotonic():
+            _verify_cache.pop(token, None)
+            return None
+        return dict(entry[1])
+
+
+def _remember_claims(token: str, claims: dict[str, Optional[str]]) -> None:
+    now = time.monotonic()
+    with _verify_cache_lock:
+        if len(_verify_cache) >= _VERIFY_CACHE_MAX_ENTRIES:
+            for key in [key for key, (expires, _) in _verify_cache.items() if expires < now]:
+                _verify_cache.pop(key, None)
+            if len(_verify_cache) >= _VERIFY_CACHE_MAX_ENTRIES:
+                _verify_cache.clear()
+        _verify_cache[token] = (now + VERIFY_CACHE_SECONDS, dict(claims))
 
 
 def _get_hub_base_url() -> str:
@@ -62,7 +94,15 @@ def _get_user_row_by_email(*, email: str) -> dict[str, Any]:
     return row
 
 
-def verify_launch_token_via_hub(token: str) -> dict[str, str]:
+def verify_launch_token_via_hub(token: str) -> dict[str, Any]:
+    """
+    Claims of a launch token: `hub_user_id`, `email`, and `app_id` / `project_id` (None when
+    the token predates hub projects or the app has none yet).
+    """
+    cached = _cached_claims(token.strip())
+    if cached is not None:
+        return cached
+
     base = _get_hub_base_url()
     url = f"{base}{HUB_VERIFY_PATH}"
 
@@ -102,7 +142,14 @@ def verify_launch_token_via_hub(token: str) -> dict[str, str]:
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Invalid response from hub",
         )
-    return {"hub_user_id": str(hub_user_id), "email": str(email)}
+    claims: dict[str, Optional[str]] = {
+        "hub_user_id": str(hub_user_id),
+        "email": str(email),
+        "app_id": str(data["app_id"]) if data.get("app_id") else None,
+        "project_id": str(data["project_id"]) if data.get("project_id") else None,
+    }
+    _remember_claims(token.strip(), claims)
+    return claims
 
 
 def refresh_launch_token_via_hub(token: str) -> dict[str, str]:
@@ -123,6 +170,11 @@ def refresh_launch_token_via_hub(token: str) -> dict[str, str]:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired launch token; cannot refresh",
+        )
+    if resp.status_code == 410:
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail="This project was deleted in the hub",
         )
     if resp.status_code != 200:
         raise HTTPException(
@@ -172,6 +224,30 @@ def _normalize_puzzle_salt(raw: Any) -> Optional[str]:
         logger.warning("Unexpected puzzle_salt encoding; omitting from session")
         return None
     return text
+
+
+_USER_ID_CACHE_SECONDS = 300
+_user_id_by_email: dict[str, tuple[float, str]] = {}
+_user_id_lock = threading.Lock()
+
+
+def get_user_id_from_launch(*, email: str) -> str:
+    """The local user id for a launch token's email, without the quota lookups of `get_user_from_launch`."""
+    key = email.strip().lower()
+    now = time.monotonic()
+    with _user_id_lock:
+        entry = _user_id_by_email.get(key)
+        if entry is not None and entry[0] > now:
+            return entry[1]
+    user_id = _get_user_row_by_email(email=email).get("id")
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="User record missing id",
+        )
+    with _user_id_lock:
+        _user_id_by_email[key] = (now + _USER_ID_CACHE_SECONDS, str(user_id))
+    return str(user_id)
 
 
 def get_user_from_launch(*, hub_user_id: str, email: str) -> UserResponse:

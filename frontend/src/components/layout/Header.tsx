@@ -7,8 +7,11 @@ import {
   DEFAULT_STANDARD_UPGRADE_URL,
   DEFAULT_STARTER_URL,
 } from '@/constants/plan-features'
+import { useCurrentProject } from '@/hooks/use-current-project'
+import { getHubUrl } from '@/services/auth.service'
 import { isProPlan, isStarterPlan, normalizeUserPlan } from '@/utils/user-plan'
 import { HeaderDialogActions } from './header-dialog-actions'
+import { HeaderProjectTitle } from './HeaderProjectTitle'
 import { UserMenu } from './UserMenu'
 
 const STARTER_URL = import.meta.env.VITE_STARTER_URL || DEFAULT_STARTER_URL
@@ -19,9 +22,15 @@ const PROMOTIONAL_PACK_URL =
   import.meta.env.VITE_PROMOTIONAL_PACK_URL || DEFAULT_PROMOTIONAL_PACK_URL
 const NICHE_VAULT_URL = import.meta.env.VITE_NICHE_VAULT_URL || DEFAULT_NICHE_VAULT_URL
 
+function hubProjectsUrl(): string | null {
+  const hubUrl = getHubUrl().trim().replace(/\/+$/, '')
+  return hubUrl ? `${hubUrl}/projects` : null
+}
+
 function HeaderComponent(): JSX.Element {
   const [isDarkMode, setIsDarkMode] = useState(false)
   const { user, logout } = useAuthContext()
+  const { project, rename } = useCurrentProject(Boolean(user))
 
   const applyTheme = (shouldUseDark: boolean): void => {
     const root = document.documentElement
@@ -74,20 +83,13 @@ function HeaderComponent(): JSX.Element {
       }
     >
       <div className="flex min-h-10 flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <div className="flex flex-col">
-            <span className="inline-block origin-left scale-[1.075] text-sm font-semibold leading-tight sm:text-base">
-              Retirement Activity Prints
-            </span>
-            <span
-              className={
-                'text-xs ' +
-                (isBlueHeaderSurface ? 'text-primary-foreground/75' : 'text-muted-foreground')
-              }
-            >
-            </span>
-          </div>
-        </div>
+        <HeaderProjectTitle
+          appName="Retirement Activity Prints"
+          project={project}
+          projectsUrl={project ? hubProjectsUrl() : null}
+          isBlueHeaderSurface={isBlueHeaderSurface}
+          onRename={rename}
+        />
 
         <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
           <HeaderDialogActions

@@ -28,6 +28,10 @@ export interface ErrorResponse {
 export interface VerifyLaunchTokenResponse {
   user: User
   hub_url: string | null
+  /** A replacement token pinned to the tab's project; use it instead of the one sent. */
+  token?: string | null
+  /** The project this tab edits (hub projects), named as in the hub. */
+  project?: { id: string; name: string | null; is_hub_project?: boolean } | null
 }
 
 /** Response after refreshing launch token; client stores new token and user. */
