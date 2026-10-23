@@ -13,6 +13,7 @@ import {
 } from './canvas-editor-queries'
 import { useCanvasEditorPageRowBindings } from './use-canvas-editor-page-row-bindings'
 import { useCanvasEditorToolbarBindings } from './use-canvas-editor-toolbar-bindings'
+import { useBookCoverSpineEvents } from './use-book-cover-spine-events'
 import type { TextToolbarState } from '@/types/text-toolbar.types'
 import {
   collectReferencedFontFamiliesFromFabricCanvasJson,
@@ -127,6 +128,8 @@ export function useCanvasEditor(options?: UseCanvasEditorOptions): CanvasEditorB
   const [isImageSelection, setIsImageSelection] = useState(false)
 
   const canvasByIndexRef = useRef<Record<number, Canvas>>({})
+
+  useBookCoverSpineEvents({ canvasByIndexRef, geometryRef: bookCoverDropRef })
 
   const hasSelection = useMemo(() => Object.values(selectionByCanvas).some(Boolean), [selectionByCanvas])
 

@@ -55,6 +55,7 @@ export function MainLayout(): JSX.Element {
     save: false,
     alignment: false,
     bookInfo: false,
+    spine: false,
   })
 
   const isPanelExpanded = !collapsedPanels[activePanel]

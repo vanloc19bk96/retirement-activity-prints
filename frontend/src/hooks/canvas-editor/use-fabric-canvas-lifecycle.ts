@@ -18,6 +18,7 @@ import {
 } from '@/utils/fabric-canvas-pasteboard'
 import { rehydrateEraserMetadata } from '@/utils/eraser-rehydrate'
 import { remapBookCoverImageClipsOnCanvasResize } from '@/utils/book-cover-image-resize'
+import { layoutSpineObjects } from '@/utils/book-cover-spine'
 import type { MarginGuide } from '@/types/canvas-settings.types'
 import type { BookCoverDimensions, BookCoverZones } from '@/types/book-cover.types'
 import { buildFabricCanvasTextEventHandlers } from '@/utils/fabric-canvas-text-event-handlers'
@@ -296,6 +297,8 @@ export function useFabricCanvasLifecycle({
               sourceSize,
               nextSize,
             )
+            // Spine width follows the page count; re-center spine art and text on it.
+            layoutSpineObjects(canvas, { zones: bookCoverZones, dimensions: bookCoverDimensions })
           }
           store.setAuthoringLogicalSize(canvasIndex, nextSize)
         }

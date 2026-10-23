@@ -15,6 +15,8 @@ const BARCODE_PADDING_INCHES = 0.25
 // Minimum spine width to safely place spine text.
 const MIN_SPINE_WIDTH_FOR_TEXT_INCHES = 0.0625
 const MIN_PAGE_COUNT_FOR_SPINE = 24
+// KDP only prints spine text on books with more than 79 pages.
+export const KDP_MIN_PAGE_COUNT_FOR_SPINE_TEXT = 80
 
 export interface BookCoverDimensions {
   fullWidthInches: number
@@ -63,7 +65,10 @@ export function calculateSpineWidth(pageCount: number, bookInfo?: ProjectBookInf
 }
 
 export function canShowSpineText(pageCount: number, bookInfo?: ProjectBookInfo | null): boolean {
-  return calculateSpineWidth(pageCount, bookInfo) >= MIN_SPINE_WIDTH_FOR_TEXT_INCHES
+  return (
+    pageCount >= KDP_MIN_PAGE_COUNT_FOR_SPINE_TEXT &&
+    calculateSpineWidth(pageCount, bookInfo) >= MIN_SPINE_WIDTH_FOR_TEXT_INCHES
+  )
 }
 
 export function calculateBookCoverDimensions(

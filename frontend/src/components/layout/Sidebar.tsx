@@ -9,6 +9,7 @@ import {
   SaveIcon,
   Loader2,
   BookOpen,
+  Library,
   Sparkles,
 } from 'lucide-react'
 import { useEffect, useRef } from 'react'
@@ -22,6 +23,7 @@ import { ToolsPanel } from '@/components/panels/ToolsPanel'
 import { SavePanel } from '@/components/panels/SavePanel'
 import { AlignmentPanel } from '@/components/panels/AlignmentPanel'
 import { BookInfoPanel } from '@/components/panels/BookInfoPanel'
+import { SpinePanel } from '@/components/panels/SpinePanel'
 import { useCanvasSave } from '@/context/CanvasSaveContext'
 import { useAuthContext } from '@/context/AuthContext'
 import { useCanvasPenTool } from '@/context/CanvasPenToolContext'
@@ -48,11 +50,11 @@ const NAV_ITEMS: ReadonlyArray<{ panel: PanelKey; label: string; Icon: LucideIco
   { panel: 'download', label: 'Download', Icon: DownloadIcon },
 ]
 
-const BOOK_COVER_NAV_ITEM: { panel: PanelKey; label: string; Icon: LucideIcon } = {
-  panel: 'bookInfo',
-  label: 'Book Info',
-  Icon: BookOpen,
-}
+const BOOK_COVER_NAV_ITEMS: ReadonlyArray<{ panel: PanelKey; label: string; Icon: LucideIcon }> = [
+  { panel: 'bookInfo', label: 'Book Info', Icon: BookOpen },
+  { panel: 'spine', label: 'Spine', Icon: Library },
+]
+const BOOK_COVER_PANELS: ReadonlySet<PanelKey> = new Set(BOOK_COVER_NAV_ITEMS.map((item) => item.panel))
 
 interface SidebarProps {
   activePanel: PanelKey
@@ -99,7 +101,7 @@ export function Sidebar({
     }
     wasBookCoverModeRef.current = isBookCoverMode
 
-    if (!isBookCoverMode && activePanel === 'bookInfo') {
+    if (!isBookCoverMode && BOOK_COVER_PANELS.has(activePanel)) {
       onChangePanel('components')
     }
   }, [activePanel, isBookCoverMode, onChangePanel])
@@ -143,20 +145,19 @@ export function Sidebar({
             )
           })}
 
-          {isBookCoverMode && (
-            <button
-              type="button"
-              className={getItemClasses()}
-              onClick={() => handleChangePanel(BOOK_COVER_NAV_ITEM.panel)}
-              aria-label={BOOK_COVER_NAV_ITEM.label}
-            >
-              <BOOK_COVER_NAV_ITEM.Icon
-                className={getIconClasses(BOOK_COVER_NAV_ITEM.panel)}
-                aria-hidden
-              />
-              <span className={labelClasses}>{BOOK_COVER_NAV_ITEM.label}</span>
-            </button>
-          )}
+          {isBookCoverMode &&
+            BOOK_COVER_NAV_ITEMS.map(({ panel, label, Icon }) => (
+              <button
+                key={panel}
+                type="button"
+                className={getItemClasses()}
+                onClick={() => handleChangePanel(panel)}
+                aria-label={label}
+              >
+                <Icon className={getIconClasses(panel)} aria-hidden />
+                <span className={labelClasses}>{label}</span>
+              </button>
+            ))}
 
           <button
             type="button"
@@ -244,6 +245,9 @@ export function Sidebar({
           </div>
           <div className={panelContentClasses('bookInfo', activePanel)}>
             <BookInfoPanel />
+          </div>
+          <div className={panelContentClasses('spine', activePanel)}>
+            <SpinePanel isOpen={isBookCoverMode && activePanel === 'spine' && isPanelExpanded} />
           </div>
         </div>
       </div>
