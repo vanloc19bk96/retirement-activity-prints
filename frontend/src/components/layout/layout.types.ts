@@ -10,4 +10,6 @@ export type PanelKey =
   | 'save'
   | 'alignment'
   | 'bookInfo'
-  | 'spine'
+
+/** Panels in the right-hand bar (Book Cover only). */
+export type RightPanelKey = 'front' | 'spine' | 'back'

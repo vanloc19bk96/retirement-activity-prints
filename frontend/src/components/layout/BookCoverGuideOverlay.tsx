@@ -40,10 +40,6 @@ const LEGEND_ENTRIES = [
     desc: 'Fold placement may vary slightly.',
   },
   {
-    label: 'Blue Dotted Box = Spine Text Area',
-    desc: 'Keep spine text inside this box. KDP prints spine text only on books with more than 79 pages.',
-  },
-  {
     label: 'White Area = Live Area',
     desc: 'Position logos, text, and essential images in this area.',
   },
@@ -82,7 +78,6 @@ export function BookCoverGuideOverlay({
       <TrimOutline zone={zones.backCover} zoom={zoom} skipBorder="right" />
       <TrimOutline zone={zones.frontCover} zoom={zoom} skipBorder="left" />
       <SpineFoldLines spine={zones.spine} zoom={zoom} fullHeight={dimensions.fullHeightPixels} />
-      <SpineTextArea zone={zones.spineSafeArea} zoom={zoom} />
       <BarcodeZone zone={zones.barcodeArea} zoom={zoom} />
       <BackCoverLegend safeArea={legendSafeArea} zoom={zoom} alignRight={isRightToLeft} />
       <FrontCoverInfo
@@ -187,22 +182,6 @@ function SpineFoldLines({ spine, zoom, fullHeight }: { spine: Rect; zoom: number
       <div className="absolute" style={{ left: spine.x * zoom, top: 0, width: 0, height: h, borderLeft: dashedBorder }} />
       <div className="absolute" style={{ left: (spine.x + spine.width) * zoom, top: 0, width: 0, height: h, borderLeft: dashedBorder }} />
     </>
-  )
-}
-
-function SpineTextArea({ zone, zoom }: { zone: Rect; zoom: number }) {
-  if (zone.width <= 0) return null
-  return (
-    <div
-      className="absolute"
-      style={{
-        left: zone.x * zoom,
-        top: zone.y * zoom,
-        width: zone.width * zoom,
-        height: zone.height * zoom,
-        border: `1px dotted ${COLORS.spineFold}`,
-      }}
-    />
   )
 }
 

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { ChevronLeft } from 'lucide-react'
 import { Sidebar } from '@/components/layout/Sidebar'
+import { RightSidebar } from '@/components/layout/RightSidebar'
 import { MainContent } from '@/components/layout/MainContent'
 import { Header } from '@/components/layout/Header'
 import { PageThumbnails } from '@/components/layout/PageThumbnails'
@@ -55,7 +56,6 @@ export function MainLayout(): JSX.Element {
     save: false,
     alignment: false,
     bookInfo: false,
-    spine: false,
   })
 
   const isPanelExpanded = !collapsedPanels[activePanel]
@@ -128,6 +128,7 @@ export function MainLayout(): JSX.Element {
                           onOpenAlignmentPanel={handleOpenAlignmentPanel}
                           canvasStateStore={canvasStateStore}
                         />
+                        <RightSidebar />
                       </div>
                       <Toaster />
                     </div>

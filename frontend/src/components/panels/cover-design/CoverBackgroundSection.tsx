@@ -1,19 +1,27 @@
 import { ImageUp, Loader2, RefreshCw } from 'lucide-react'
-import { useRef, type ChangeEvent } from 'react'
+import { useRef, type ChangeEvent, type ReactNode } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { useUploadImage } from '@/hooks/use-upload-image'
-import type { SpineBackgroundMode, SpineDesign } from '@/types/book-cover-spine.types'
 import {
-  SpineColorInput,
-  SpineFieldLabel,
-  SpineSection,
-  SpineSegmented,
-  SpineSwatches,
-} from './spine-controls'
+  CoverColorInput,
+  CoverFieldLabel,
+  CoverSection,
+  CoverSegmented,
+  CoverSwatches,
+} from './cover-controls'
 
-/** Classic spine colors that print well on KDP paper stock. */
-const PRESET_SPINE_COLORS = [
+export type CoverBackgroundMode = 'none' | 'color' | 'image'
+
+/** Background fields shared by the spine and front / back cover designs. */
+export interface CoverBackgroundValue {
+  backgroundMode: CoverBackgroundMode
+  backgroundColor: string
+  backgroundImageUrl: string | null
+}
+
+/** Classic cover colors that print well on KDP paper stock. */
+const PRESET_COVER_COLORS = [
   '#1e3a5f',
   '#111111',
   '#ffffff',
@@ -28,31 +36,46 @@ const PRESET_SPINE_COLORS = [
   '#4a90d9',
 ] as const
 
-const BACKGROUND_MODES: ReadonlyArray<{ value: SpineBackgroundMode; label: string }> = [
+const BACKGROUND_MODES: ReadonlyArray<{ value: CoverBackgroundMode; label: string }> = [
   { value: 'none', label: 'None' },
   { value: 'color', label: 'Color' },
   { value: 'image', label: 'Image' },
 ]
 
-interface SpineBackgroundSectionProps {
-  design: SpineDesign
+interface CoverBackgroundSectionProps {
+  /** Used in labels, e.g. "Spine" or "Front cover". */
+  name: string
+  description: string
+  imageHint: string
+  /** Shape of the image thumbnail: a tall strip for the spine, a page for a cover. */
+  thumbnail: 'strip' | 'page'
+  value: CoverBackgroundValue
   palette: string[]
-  onChange: (patch: Partial<SpineDesign>) => void
+  onChange: (patch: Partial<CoverBackgroundValue>) => void
   onRefreshPalette: () => void
+  /** Extra control shown beside the section title. */
+  action?: ReactNode
 }
 
-export function SpineBackgroundSection({
-  design,
+export function CoverBackgroundSection({
+  name,
+  description,
+  imageHint,
+  thumbnail,
+  value,
   palette,
   onChange,
   onRefreshPalette,
-}: SpineBackgroundSectionProps): JSX.Element {
+  action,
+}: CoverBackgroundSectionProps): JSX.Element {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const { isUploading, error, uploadImage } = useUploadImage()
+  const idPrefix = name.toLowerCase().replace(/\s+/g, '-')
+  const thumbnailClass = thumbnail === 'strip' ? 'h-24 w-10' : 'h-24 w-[4.5rem]'
 
-  const handleModeChange = (mode: SpineBackgroundMode): void => {
-    // First switch to Color starts from the color right beside the front cover.
-    if (mode === 'color' && design.backgroundMode !== 'color' && palette[0]) {
+  const handleModeChange = (mode: CoverBackgroundMode): void => {
+    // First switch to Color starts from the best matching cover color.
+    if (mode === 'color' && value.backgroundMode !== 'color' && palette[0]) {
       onChange({ backgroundMode: mode, backgroundColor: palette[0] })
       return
     }
@@ -72,22 +95,19 @@ export function SpineBackgroundSection({
   }
 
   return (
-    <SpineSection
-      title="Background"
-      description="Fills the spine between the two fold lines, including the bleed."
-    >
-      <SpineSegmented
-        label="Spine background"
-        value={design.backgroundMode}
+    <CoverSection title="Background" description={description} action={action}>
+      <CoverSegmented
+        label={`${name} background`}
+        value={value.backgroundMode}
         options={BACKGROUND_MODES}
         onChange={handleModeChange}
       />
 
-      {design.backgroundMode === 'color' && (
+      {value.backgroundMode === 'color' && (
         <div className="space-y-3">
           <div>
             <div className="mb-1.5 flex items-center justify-between">
-              <SpineFieldLabel>Match your cover</SpineFieldLabel>
+              <CoverFieldLabel>Match your cover</CoverFieldLabel>
               <button
                 type="button"
                 onClick={onRefreshPalette}
@@ -99,40 +119,40 @@ export function SpineBackgroundSection({
               </button>
             </div>
             {palette.length > 0 ? (
-              <SpineSwatches
+              <CoverSwatches
                 label="Cover color"
                 colors={palette}
-                value={design.backgroundColor}
+                value={value.backgroundColor}
                 onSelect={(color) => onChange({ backgroundColor: color })}
               />
             ) : (
               <p className="text-xs text-muted-foreground">
-                Add your front and back cover art, then press Refresh to pick colors from it.
+                Add art to your cover, then press Refresh to pick colors from it.
               </p>
             )}
           </div>
           <div>
-            <SpineFieldLabel>Classic colors</SpineFieldLabel>
-            <SpineSwatches
+            <CoverFieldLabel>Classic colors</CoverFieldLabel>
+            <CoverSwatches
               label="Preset color"
-              colors={PRESET_SPINE_COLORS}
-              value={design.backgroundColor}
+              colors={PRESET_COVER_COLORS}
+              value={value.backgroundColor}
               onSelect={(color) => onChange({ backgroundColor: color })}
             />
           </div>
           <div>
-            <SpineFieldLabel htmlFor="spine-background-color">Custom color</SpineFieldLabel>
-            <SpineColorInput
-              id="spine-background-color"
-              label="Spine background color"
-              value={design.backgroundColor}
+            <CoverFieldLabel htmlFor={`${idPrefix}-background-color`}>Custom color</CoverFieldLabel>
+            <CoverColorInput
+              id={`${idPrefix}-background-color`}
+              label={`${name} background color`}
+              value={value.backgroundColor}
               onChange={(color) => onChange({ backgroundColor: color })}
             />
           </div>
         </div>
       )}
 
-      {design.backgroundMode === 'image' && (
+      {value.backgroundMode === 'image' && (
         <div className="space-y-2">
           <input
             ref={fileInputRef}
@@ -142,14 +162,16 @@ export function SpineBackgroundSection({
             onChange={(event) => void handleFileChange(event)}
           />
           <div className="flex items-stretch gap-3">
-            {design.backgroundImageUrl ? (
+            {value.backgroundImageUrl ? (
               <img
-                src={design.backgroundImageUrl}
-                alt="Spine background"
-                className="h-24 w-10 shrink-0 rounded border border-border object-cover"
+                src={value.backgroundImageUrl}
+                alt={`${name} background`}
+                className={`${thumbnailClass} shrink-0 rounded border border-border object-cover`}
               />
             ) : (
-              <div className="flex h-24 w-10 shrink-0 items-center justify-center rounded border border-dashed border-border text-muted-foreground">
+              <div
+                className={`${thumbnailClass} flex shrink-0 items-center justify-center rounded border border-dashed border-border text-muted-foreground`}
+              >
                 <ImageUp className="h-4 w-4" aria-hidden />
               </div>
             )}
@@ -169,18 +191,16 @@ export function SpineBackgroundSection({
                 )}
                 {isUploading
                   ? 'Uploading…'
-                  : design.backgroundImageUrl
+                  : value.backgroundImageUrl
                     ? 'Replace image'
                     : 'Upload image'}
               </Button>
-              <p className="text-[11px] leading-snug text-muted-foreground">
-                The image is cropped to fill the spine. Tall images or textures work best. JPG, PNG or WEBP.
-              </p>
+              <p className="text-[11px] leading-snug text-muted-foreground">{imageHint}</p>
             </div>
           </div>
           {error && <p className="text-xs text-amber-600">{error}</p>}
         </div>
       )}
-    </SpineSection>
+    </CoverSection>
   )
 }

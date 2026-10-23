@@ -1,9 +1,10 @@
 import { BookOpen, Loader2, Trash2 } from 'lucide-react'
 
-import { SpineBackgroundSection } from '@/components/panels/spine/SpineBackgroundSection'
+import { CoverBackgroundSection } from '@/components/panels/cover-design/CoverBackgroundSection'
 import { SpineTextSection } from '@/components/panels/spine/SpineTextSection'
 import { Button } from '@/components/ui/button'
 import { useCanvasSettings } from '@/context/CanvasSettingsContext'
+import { useCoverFaceDesign } from '@/hooks/use-cover-face-design'
 import { useSpineDesign } from '@/hooks/use-spine-design'
 import { canShowSpineText } from '@/types/book-cover.types'
 import { isSpineDesignEmpty } from '@/types/book-cover-spine.types'
@@ -59,6 +60,15 @@ export function SpinePanel({ isOpen }: { isOpen: boolean }): JSX.Element {
     removeDesign,
   } = useSpineDesign(isOpen)
 
+  // Lets the spine reuse the title and author already typed for the front cover.
+  const front = useCoverFaceDesign('front', isOpen)
+  const frontTitle = front.design.title.trim().replace(/\s+/g, ' ')
+  const frontAuthor = front.design.author.trim()
+  const canCopyFromFront =
+    front.isLoaded &&
+    (frontTitle.length > 0 || frontAuthor.length > 0) &&
+    (design.title !== frontTitle || design.author !== frontAuthor)
+
   const pageCount = projectBookInfo.pageCount
   const canHaveText = canShowSpineText(pageCount, projectBookInfo)
 
@@ -87,8 +97,12 @@ export function SpinePanel({ isOpen }: { isOpen: boolean }): JSX.Element {
         ) : (
           <>
             <hr className="border-border" />
-            <SpineBackgroundSection
-              design={design}
+            <CoverBackgroundSection
+              name="Spine"
+              description="Fills the spine between the two fold lines, including the bleed."
+              imageHint="The image is cropped to fill the spine. Tall images or textures work best. JPG, PNG or WEBP."
+              thumbnail="strip"
+              value={design}
               palette={palette}
               onChange={updateDesign}
               onRefreshPalette={refreshPalette}
@@ -101,11 +115,16 @@ export function SpinePanel({ isOpen }: { isOpen: boolean }): JSX.Element {
               canHaveText={canHaveText}
               onChange={updateDesign}
               onTextColorChange={setTextColor}
+              onCopyFromFront={
+                canCopyFromFront
+                  ? () => updateDesign({ title: frontTitle, author: frontAuthor })
+                  : undefined
+              }
             />
             {canHaveText && (
               <div className="rounded-md bg-muted/40 px-3 py-2 text-[11px] leading-relaxed text-muted-foreground">
-                Spine text stays inside the blue dotted box on the cover. You can still click it on the
-                cover to edit, but changing a setting here centers it again.
+                Spine text stays inside the spine's safe area, clear of both fold lines. You can still
+                click it on the cover to edit, but changing a setting here centers it again.
               </div>
             )}
           </>

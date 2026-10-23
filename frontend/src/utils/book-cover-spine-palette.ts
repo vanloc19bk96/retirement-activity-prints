@@ -122,6 +122,21 @@ function readRegionPixels(
   return context.getImageData(0, 0, element.width, element.height).data
 }
 
+/** Main colors of one cover area, leaving out the objects `exclude` matches. */
+export function sampleCoverAreaPalette(
+  canvas: Canvas,
+  rect: ZoneRect,
+  exclude: (object: FabricObject) => boolean,
+): string[] {
+  try {
+    const pixels = readRegionPixels(canvas, rect, (object) => !exclude(object))
+    return pixels ? dominantColors(pixels, MAX_PALETTE_SIZE) : []
+  } catch {
+    // A cross-origin image taints the sample canvas; fall back to presets.
+    return []
+  }
+}
+
 /**
  * Swatches that match the cover: the colors right beside each spine fold
  * first (they blend into the spine best), then the front cover's main colors.

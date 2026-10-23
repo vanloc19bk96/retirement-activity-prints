@@ -1,7 +1,7 @@
 import { Check } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 
-export function SpineSection({
+export function CoverSection({
   title,
   description,
   action,
@@ -26,7 +26,7 @@ export function SpineSection({
   )
 }
 
-export function SpineFieldLabel({ htmlFor, children }: { htmlFor?: string; children: ReactNode }): JSX.Element {
+export function CoverFieldLabel({ htmlFor, children }: { htmlFor?: string; children: ReactNode }): JSX.Element {
   return (
     <label htmlFor={htmlFor} className="mb-1.5 block text-xs font-medium text-foreground">
       {children}
@@ -34,7 +34,7 @@ export function SpineFieldLabel({ htmlFor, children }: { htmlFor?: string; child
   )
 }
 
-export function SpineSegmented<T extends string>({
+export function CoverSegmented<T extends string>({
   label,
   value,
   options,
@@ -74,7 +74,7 @@ export function SpineSegmented<T extends string>({
   )
 }
 
-export function SpineSwatches({
+export function CoverSwatches({
   colors,
   value,
   onSelect,
@@ -87,7 +87,8 @@ export function SpineSwatches({
 }): JSX.Element {
   const selected = value.toLowerCase()
   return (
-    <div className="flex flex-wrap gap-1.5" role="group" aria-label={label}>
+    // Padding keeps the selection ring and hover zoom clear of the scroll area's clipped edge.
+    <div className="flex flex-wrap gap-1.5 p-0.5" role="group" aria-label={label}>
       {colors.map((color) => {
         const isActive = color.toLowerCase() === selected
         return (
@@ -99,7 +100,8 @@ export function SpineSwatches({
             aria-pressed={isActive}
             onClick={() => onSelect(color)}
             className={`relative h-7 w-7 rounded-md border shadow-sm transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-              isActive ? 'border-foreground ring-2 ring-[var(--color-control-accent)] ring-offset-1 ring-offset-background' : 'border-border'
+              // The ring hugs the swatch so the selected color fills right up to its rounded edge.
+              isActive ? 'border-transparent ring-2 ring-[var(--color-control-accent)]' : 'border-border'
             }`}
             style={{ backgroundColor: color }}
           >
@@ -117,7 +119,7 @@ export function SpineSwatches({
   )
 }
 
-export function SpineColorInput({
+export function CoverColorInput({
   id,
   value,
   onChange,

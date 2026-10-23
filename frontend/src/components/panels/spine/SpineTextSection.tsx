@@ -1,4 +1,4 @@
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, Copy } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { FontFamilySelect } from '@/components/ui/font-family-select'
@@ -14,12 +14,12 @@ import {
 import { KDP_MIN_PAGE_COUNT_FOR_SPINE_TEXT } from '@/types/book-cover.types'
 import { mergeSwatches, readableTextColor } from '@/utils/book-cover-spine-palette'
 import {
-  SpineColorInput,
-  SpineFieldLabel,
-  SpineSection,
-  SpineSegmented,
-  SpineSwatches,
-} from './spine-controls'
+  CoverColorInput,
+  CoverFieldLabel,
+  CoverSection,
+  CoverSegmented,
+  CoverSwatches,
+} from '@/components/panels/cover-design/cover-controls'
 
 const DIRECTIONS: ReadonlyArray<{ value: SpineTextDirection; label: string }> = [
   { value: 'top-to-bottom', label: 'Top to bottom' },
@@ -62,6 +62,8 @@ interface SpineTextSectionProps {
   canHaveText: boolean
   onChange: (patch: Partial<SpineDesign>) => void
   onTextColorChange: (color: string) => void
+  /** Set when the front cover has a title or author the spine can reuse. */
+  onCopyFromFront?: () => void
 }
 
 export function SpineTextSection({
@@ -71,10 +73,11 @@ export function SpineTextSection({
   canHaveText,
   onChange,
   onTextColorChange,
+  onCopyFromFront,
 }: SpineTextSectionProps): JSX.Element {
   if (!canHaveText) {
     return (
-      <SpineSection title="Spine text">
+      <CoverSection title="Spine text">
         <div className="space-y-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-xs leading-relaxed text-amber-800 dark:text-amber-300">
           <p className="flex items-start gap-1.5 font-medium">
             <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
@@ -96,7 +99,7 @@ export function SpineTextSection({
             </Button>
           )}
         </div>
-      </SpineSection>
+      </CoverSection>
     )
   }
 
@@ -108,13 +111,25 @@ export function SpineTextSection({
   )
 
   return (
-    <SpineSection
+    <CoverSection
       title="Spine text"
       description="Sized automatically to the largest size that fits inside the spine text area."
     >
       <div className="space-y-3">
+        {onCopyFromFront && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="w-full gap-1.5"
+            onClick={onCopyFromFront}
+          >
+            <Copy className="h-3.5 w-3.5" aria-hidden />
+            Use title and author from the front cover
+          </Button>
+        )}
         <div>
-          <SpineFieldLabel htmlFor="spine-title">Title</SpineFieldLabel>
+          <CoverFieldLabel htmlFor="spine-title">Title</CoverFieldLabel>
           <input
             id="spine-title"
             className={TEXT_INPUT_CLASS}
@@ -124,7 +139,7 @@ export function SpineTextSection({
           />
         </div>
         <div>
-          <SpineFieldLabel htmlFor="spine-author">Author</SpineFieldLabel>
+          <CoverFieldLabel htmlFor="spine-author">Author</CoverFieldLabel>
           <input
             id="spine-author"
             className={TEXT_INPUT_CLASS}
@@ -134,9 +149,9 @@ export function SpineTextSection({
           />
         </div>
         <div>
-          <SpineFieldLabel htmlFor="spine-publisher">
+          <CoverFieldLabel htmlFor="spine-publisher">
             Publisher or series <span className="font-normal text-muted-foreground">(optional)</span>
-          </SpineFieldLabel>
+          </CoverFieldLabel>
           <input
             id="spine-publisher"
             className={TEXT_INPUT_CLASS}
@@ -148,7 +163,7 @@ export function SpineTextSection({
       </div>
 
       <div>
-        <SpineFieldLabel>Layout</SpineFieldLabel>
+        <CoverFieldLabel>Layout</CoverFieldLabel>
         <div className="grid grid-cols-2 gap-2" role="group" aria-label="Spine text layout">
           {LAYOUTS.map((option) => {
             const isActive = design.layout === option.value
@@ -176,8 +191,8 @@ export function SpineTextSection({
       </div>
 
       <div>
-        <SpineFieldLabel>Reading direction</SpineFieldLabel>
-        <SpineSegmented
+        <CoverFieldLabel>Reading direction</CoverFieldLabel>
+        <CoverSegmented
           label="Spine text direction"
           value={design.direction}
           options={DIRECTIONS}
@@ -192,7 +207,7 @@ export function SpineTextSection({
 
       <div className="grid grid-cols-[1fr_auto] items-end gap-3">
         <div className="min-w-0">
-          <SpineFieldLabel>Font</SpineFieldLabel>
+          <CoverFieldLabel>Font</CoverFieldLabel>
           <FontFamilySelect
             value={design.fontFamily}
             onChange={(fontFamily) => onChange({ fontFamily })}
@@ -210,15 +225,15 @@ export function SpineTextSection({
       </div>
 
       <div>
-        <SpineFieldLabel>Text color</SpineFieldLabel>
+        <CoverFieldLabel>Text color</CoverFieldLabel>
         <div className="space-y-2">
-          <SpineSwatches
+          <CoverSwatches
             label="Text color"
             colors={textSwatches}
             value={design.textColor}
             onSelect={onTextColorChange}
           />
-          <SpineColorInput
+          <CoverColorInput
             id="spine-text-color"
             label="Spine text color"
             value={design.textColor}
@@ -229,7 +244,7 @@ export function SpineTextSection({
 
       <div>
         <div className="mb-1.5 flex items-center justify-between">
-          <SpineFieldLabel htmlFor="spine-text-size">Text size</SpineFieldLabel>
+          <CoverFieldLabel htmlFor="spine-text-size">Text size</CoverFieldLabel>
           <span className="text-xs tabular-nums text-muted-foreground">
             {Math.round(design.textScale * 100)}%
           </span>
@@ -246,6 +261,6 @@ export function SpineTextSection({
         />
         <p className="mt-1 text-[11px] text-muted-foreground">100% is the largest size that fits the spine.</p>
       </div>
-    </SpineSection>
+    </CoverSection>
   )
 }

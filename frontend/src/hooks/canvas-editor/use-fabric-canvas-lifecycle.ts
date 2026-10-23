@@ -19,6 +19,7 @@ import {
 import { rehydrateEraserMetadata } from '@/utils/eraser-rehydrate'
 import { remapBookCoverImageClipsOnCanvasResize } from '@/utils/book-cover-image-resize'
 import { layoutSpineObjects } from '@/utils/book-cover-spine'
+import { captureCoverFaceManualPositions, layoutCoverFaceObjects } from '@/utils/book-cover-face'
 import type { MarginGuide } from '@/types/canvas-settings.types'
 import type { BookCoverDimensions, BookCoverZones } from '@/types/book-cover.types'
 import { buildFabricCanvasTextEventHandlers } from '@/utils/fabric-canvas-text-event-handlers'
@@ -276,6 +277,8 @@ export function useFabricCanvasLifecycle({
         const shouldRescaleForResize = hasLogicalSizeChanged
 
         if (restoreSucceeded && shouldRescaleForResize) {
+          // Read text dragged on the cover before the rescale moves everything.
+          if (isBookCover) captureCoverFaceManualPositions(canvas)
           const targetArea =
             !isBookCover
               ? resolveInteriorPageSafeArea({
@@ -299,6 +302,12 @@ export function useFabricCanvasLifecycle({
             )
             // Spine width follows the page count; re-center spine art and text on it.
             layoutSpineObjects(canvas, { zones: bookCoverZones, dimensions: bookCoverDimensions })
+            // The front moves with the spine; refit cover backgrounds and text to their faces.
+            layoutCoverFaceObjects(
+              canvas,
+              { zones: bookCoverZones, dimensions: bookCoverDimensions },
+              { detectManualMoves: false },
+            )
           }
           store.setAuthoringLogicalSize(canvasIndex, nextSize)
         }

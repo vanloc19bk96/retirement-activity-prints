@@ -38,6 +38,9 @@ export const CUSTOM_OBJECT_PROPS: string[] = [
   // Book-cover spine objects managed by the Spine panel (see book-cover-spine.ts).
   'spineRole',
   'spineDesign',
+  // Front / back cover objects managed by the cover panels (see book-cover-face.ts).
+  'coverFace',
+  'coverFaceDesign',
   // Fabric omits this from toObject(), but a cached group rasterises into a
   // canvas the size of its own bounds and crops whatever a child draws past
   // them. Studio groups ship with caching off for that reason; without it here

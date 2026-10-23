@@ -1940,6 +1940,29 @@ export const MainContent = memo(function MainContent({ onOpenAlignmentPanel, can
     }
   }, [zoomLevel])
 
+  // A right-hand panel opening shrinks this area from its right edge. Scroll by
+  // the same amount so the pages slide over with the panel, as they do for the
+  // left sidebar, instead of disappearing underneath it.
+  useEffect(() => {
+    const scrollEl = scrollRef.current
+    if (!scrollEl || typeof ResizeObserver === 'undefined') return
+    let lastRect = scrollEl.getBoundingClientRect()
+    // scrollLeft snaps to whole pixels; carry the remainder across animation frames.
+    let carry = 0
+    const observer = new ResizeObserver(() => {
+      const rect = scrollEl.getBoundingClientRect()
+      const leftMoved = Math.abs(rect.left - lastRect.left) > 0.5
+      const rightDelta = lastRect.right - rect.right
+      lastRect = rect
+      if (leftMoved || rightDelta === 0) return
+      const target = scrollEl.scrollLeft + rightDelta + carry
+      scrollEl.scrollLeft = target
+      carry = Math.max(-1, Math.min(1, target - scrollEl.scrollLeft))
+    })
+    observer.observe(scrollEl)
+    return () => observer.disconnect()
+  }, [])
+
   useEffect(() => {
     const scrollEl = scrollRef.current
 
