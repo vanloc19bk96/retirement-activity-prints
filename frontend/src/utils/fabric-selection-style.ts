@@ -1,4 +1,4 @@
-import { Canvas, Control, controlsUtils, FabricObject, util } from 'fabric'
+import { Canvas, Control, controlsUtils, FabricObject, InteractiveFabricObject, util } from 'fabric'
 import { applyFabricTightTextVerticalMetrics } from '@/utils/fabric-text-vertical-metrics'
 import { cropFromLeft, cropFromRight, cropFromTop, cropFromBottom } from './canvas-image-crop'
 import {
@@ -40,14 +40,9 @@ const FLOATING_TOOLBAR_OCCLUSION_HALF_WIDTH = 150
 /** If the rotate handle sits at or above this offset from the AABB top edge, it can sit under the toolbar. */
 const FLOATING_TOOLBAR_TOP_SLOP = 28
 
-/** Degrees — below this, treat as axis-aligned for cursor (avoids float noise). */
-const CORNER_CURSOR_ROTATION_EPSILON = 0.5
+/** Two-way CSS resize cursors, indexed by on-screen handle direction in 45° steps (mod 180°). */
+const BIDIRECTIONAL_RESIZE_CURSORS = ['ew-resize', 'nwse-resize', 'ns-resize', 'nesw-resize'] as const
 
-/**
- * Fabric's `nw-resize` / `se-resize` / … can draw as non-diagonal on some OS/browser combos
- * (same issue noted for text). Use CSS `nwse-resize` / `nesw-resize` when the object is
- * visually unrotated; keep Fabric's rotation-aware handler when angled.
- */
 function getSelectionTopCenterInCanvasPixels(target: FabricObject): {
   minY: number
   centerX: number
@@ -92,21 +87,42 @@ function isRotateHandleObscuredByFloatingToolbar(
   return overlapsToolbarColumn && nearSelectionTop
 }
 
-function createUnrotatedDiagonalCornerCursorHandler(
-  unrotated: 'nwse-resize' | 'nesw-resize',
-): NonNullable<Control['cursorStyleHandler']> {
-  return (eventData, control, fabricObject, coord) => {
-    const deg = ((fabricObject.getTotalAngle() % 360) + 360) % 360
-    if (deg > CORNER_CURSOR_ROTATION_EPSILON && deg < 360 - CORNER_CURSOR_ROTATION_EPSILON) {
-      return controlsUtils.scaleCursorStyleHandler(
-        eventData,
-        control,
-        fabricObject as FabricObject,
-        coord,
-      )
-    }
-    return unrotated
-  }
+/**
+ * Resize cursor for a handle at (x, y) in the object's unit box, rotated with the object.
+ * Fabric 7 derives the cursor from the center→handle vector, so on wide/tall objects a corner
+ * reads as almost horizontal/vertical; here every corner is a 45° diagonal in the object's own
+ * frame. Two-way cursors also avoid `se-resize` & co. drawing non-diagonal on some OS/browsers.
+ */
+function getRotatedResizeCursor(
+  fabricObject: InteractiveFabricObject,
+  x: number,
+  y: number,
+): string {
+  const localDeg = util.radiansToDegrees(
+    Math.atan2(fabricObject.flipY ? -y : y, fabricObject.flipX ? -x : x),
+  )
+  const vpt = fabricObject.canvas?.viewportTransform
+  const viewportDeg = vpt ? util.radiansToDegrees(Math.atan2(vpt[1], vpt[0])) : 0
+  const deg = localDeg + fabricObject.getTotalAngle() + viewportDeg
+  const index = Math.round((((deg % 180) + 180) % 180) / 45) % 4
+  return BIDIRECTIONAL_RESIZE_CURSORS[index]
+}
+
+const rotatedCornerCursorStyleHandler: NonNullable<Control['cursorStyleHandler']> = (
+  eventData,
+  control,
+  fabricObject,
+  coord,
+) => {
+  // Fabric's handler still decides lock state (`not-allowed`); only the direction is replaced.
+  const fabricCursor = controlsUtils.scaleCursorStyleHandler(
+    eventData,
+    control,
+    fabricObject as FabricObject,
+    coord,
+  )
+  if (fabricCursor === 'not-allowed') return fabricCursor
+  return getRotatedResizeCursor(fabricObject, control.x, control.y)
 }
 
 function renderCornerResizeControl(
@@ -308,33 +324,13 @@ function applyObjectControls(target: FabricObject): void {
     lockScalingFlip: true,
   })
 
-  // Corner handles: keep custom draw, but use Fabric's rotation-aware cursor
+  // Corner handles: custom draw + diagonal cursor that rotates with the object
   // (fixed nwse/nesw are screen-axis cursors and feel wrong on rotated objects, e.g. template images at 90°).
-  const configureCornerResizeControl = (
-    control: Control | undefined,
-    cursorStyleHandler?: Control['cursorStyleHandler'],
-  ): void => {
-    if (!control) return
-    control.cursorStyleHandler = cursorStyleHandler ?? controlsUtils.scaleCursorStyleHandler
+  for (const control of [controls.tl, controls.tr, controls.bl, controls.br]) {
+    if (!control) continue
+    control.cursorStyleHandler = rotatedCornerCursorStyleHandler
     control.render = renderCornerResizeControl
   }
-
-  configureCornerResizeControl(
-    controls.tl,
-    createUnrotatedDiagonalCornerCursorHandler('nwse-resize'),
-  )
-  configureCornerResizeControl(
-    controls.tr,
-    createUnrotatedDiagonalCornerCursorHandler('nesw-resize'),
-  )
-  configureCornerResizeControl(
-    controls.bl,
-    createUnrotatedDiagonalCornerCursorHandler('nesw-resize'),
-  )
-  configureCornerResizeControl(
-    controls.br,
-    createUnrotatedDiagonalCornerCursorHandler('nwse-resize'),
-  )
 
   if (isLineShape) {
     const lineEndpointControls = createLineEndpointControls({
@@ -468,13 +464,8 @@ function applyObjectControls(target: FabricObject): void {
   }
 
   if (isTextObject) {
-    // Force explicit diagonal cursors for text corners. Fabric's `se-resize`/`sw-resize`
-    // can render as non-diagonal on some browser/OS combinations, which makes the text
-    // bottom-right handle look like horizontal resize even though it is a corner scale handle.
-    configureCornerResizeControl(controls.tl, () => 'nwse-resize')
-    configureCornerResizeControl(controls.br, () => 'nwse-resize')
-    configureCornerResizeControl(controls.tr, () => 'nesw-resize')
-    configureCornerResizeControl(controls.bl, () => 'nesw-resize')
+    const textWidthCursorStyleHandler: Control['cursorStyleHandler'] = (_eventData, control, obj) =>
+      getRotatedResizeCursor(obj, control.x, control.y)
 
     target.setControlsVisibility({
       mt: false,
@@ -487,7 +478,7 @@ function applyObjectControls(target: FabricObject): void {
       offsetX: -SIDE_RESIZE_HANDLE_BORDER_OFFSET,
       offsetY: 0,
       actionHandler: controlsUtils.changeWidth,
-      cursorStyleHandler: () => 'ew-resize',
+      cursorStyleHandler: textWidthCursorStyleHandler,
       actionName: 'resizing',
       render: renderHorizontalResizeControl,
       sizeX: SIDE_RESIZE_HANDLE_WIDTH,
@@ -501,7 +492,7 @@ function applyObjectControls(target: FabricObject): void {
       offsetX: SIDE_RESIZE_HANDLE_BORDER_OFFSET,
       offsetY: 0,
       actionHandler: controlsUtils.changeWidth,
-      cursorStyleHandler: () => 'ew-resize',
+      cursorStyleHandler: textWidthCursorStyleHandler,
       actionName: 'resizing',
       render: renderHorizontalResizeControl,
       sizeX: SIDE_RESIZE_HANDLE_WIDTH,
