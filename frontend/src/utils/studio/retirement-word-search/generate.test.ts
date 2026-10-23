@@ -28,10 +28,12 @@ import { selectWordEntries, worstBankEntry } from './content'
 import { isPalindrome, isUnsafeCopy } from './content-quality'
 import { WORD_SEARCH_FIXTURE_POOL } from './fixture'
 import { WORD_SEARCH_THEME_SALT } from './theme'
-import { drawWordList } from './draw'
+import { bankBandHeight, drawWordList } from './draw'
 import { wordSearchTemplate } from './generate'
 import { spellsBlockedWord, tryBuildWordSearch } from './place'
 import {
+  BANK_MAX_FONT,
+  BANK_MIN_FONT,
   CELL_MAX,
   CELL_MIN,
   GRID_MAX_SIDE,
@@ -454,6 +456,45 @@ describe('word-search page and solution', () => {
     for (const text of bank) {
       expect(text).not.toMatch(/ /)
       expect(text).toContain(NBSP)
+    }
+  })
+
+  it('never stacks a large-print bank into one overlapping column on a tight band', () => {
+    const words = [
+      'Bake Bread', 'Bird Song', 'Easy Walk', 'Good Book', 'Herb Pot',
+      'Letter', 'Nap Time', 'Old Photos', 'Pet Cat', 'Picnic',
+      'Puzzles', 'Quiet Day', 'Rose Bush', 'Soft Yarn', 'Warm Tea',
+    ]
+    // Down to the band the page plan reserves (four rows at the floor), where
+    // every column count ties on font size.
+    const floor = bankBandHeight(4, BANK_MIN_FONT)
+    for (const width of [500, 680]) {
+      for (let height = floor; height <= floor + 40; height += 4) {
+        const objects = drawWordList(
+          words,
+          { left: 40, top: 900, width, height },
+          'PT Serif',
+          { templateKey: 'word-search', instanceId: 'bank-tight', pageRole: 'single' },
+          { minFontSize: BANK_MIN_FONT, maxFontSize: BANK_MAX_FONT, maximizeFont: true },
+        )
+        const bank = flatten(objects).filter(
+          (object) =>
+            object.type === 'textbox' &&
+            words.includes(String(object.text ?? '').split(NBSP).join(' ')),
+        )
+        expect(bank).toHaveLength(words.length)
+        const colLefts = new Set(bank.map((object) => Math.round(Number(object.left))))
+        expect(colLefts.size, `${width} x ${height}`).toBeGreaterThan(1)
+        for (const a of bank) {
+          for (const b of bank) {
+            if (a === b || a.left !== b.left) continue
+            // Same column: rows sit at least a full text box apart.
+            expect(Math.abs(Number(a.top) - Number(b.top))).toBeGreaterThanOrEqual(
+              Number(a.height) - 1,
+            )
+          }
+        }
+      }
     }
   })
 

@@ -358,11 +358,22 @@ function maximizeBankColumns(options: BankFitOptions): BankColumnLayout {
     if (colInnerW < widest) break
     maxCol = colCount
   }
+  // `buildBankColumnLayout` clamps the font up to the floor even when the rows
+  // are shorter than that, so on a tight band every count ties at the floor.
+  // A count whose rows cannot hold the text is not a candidate: picking it
+  // stacks every word into one column of overlapping lines.
+  const fits = (layout: BankColumnLayout) =>
+    layout.wordSize * options.textHeightRatio <= layout.rowBoxes[0]!.height
   let best = buildBankColumnLayout({ ...options, colCount: 1 })
   for (let colCount = 2; colCount <= maxCol; colCount++) {
     const candidate = buildBankColumnLayout({ ...options, colCount })
-    // Bigger font wins; ties keep the earlier (fewer-column) balanced layout.
-    if (candidate.wordSize > best.wordSize) best = candidate
+    if (fits(candidate) !== fits(best)) {
+      if (fits(candidate)) best = candidate
+      continue
+    }
+    // Neither fits: fewer rows overlap least. Both fit: bigger font wins, and
+    // ties keep the earlier (fewer-column) balanced layout.
+    if (!fits(best) || candidate.wordSize > best.wordSize) best = candidate
   }
   return best
 }
