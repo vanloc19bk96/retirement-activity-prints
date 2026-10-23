@@ -6,9 +6,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.studio_variety import StudioVarietyRequest
 
-# One entry per profile in app/data/studio/occupation-trivia/prompt.json; a test
-# keeps the two identical. Adding an occupation is a profile there, a value here
-# and an option on the frontend.
+# One entry per preset in app/data/studio/occupations/prompt.json; a test keeps
+# the two identical. Adding a preset is a profile there, a value here and an
+# option on the frontend.
 OccupationKey = Literal[
     "teacher", "nurse", "police", "military", "trucker", "engineer", "accountant", "postal"
 ]
@@ -23,11 +23,16 @@ class OccupationTriviaRequest(StudioVarietyRequest):
     reserves, a choice beside its letter, and a note on the one answer page. A
     question written past any of them is dropped here rather than shipped for
     the page to discover at layout time.
+
+    ``custom_occupation`` is a job the seller typed. When it is set it names
+    the pack and ``occupation`` is ignored; the service plans the job (see
+    ``app/services/studio_occupation.py``) or says why it cannot be used.
     """
 
     model_config = ConfigDict(populate_by_name=True)
 
     occupation: OccupationKey = "teacher"
+    custom_occupation: str = Field(default="", max_length=80, alias="customOccupation")
     level: OccupationTriviaLevel = "classic"
     count: int = Field(default=14, ge=1, le=16)
     max_question_chars: int = Field(default=120, ge=60, le=150, alias="maxQuestionChars")
@@ -108,9 +113,13 @@ class OccupationTriviaCheckOutput(BaseModel):
 
 
 class OccupationTriviaResponse(BaseModel):
-    """Every question is distinct, on the occupation, and passed every gate and the blind check."""
+    """Every question is distinct, on the occupation, and passed every gate and the blind check.
+
+    ``occupation`` is the key the pack was written for: the preset's id, or the
+    typed job folded to lower case ("bus driver").
+    """
 
     model_config = ConfigDict(populate_by_name=True)
 
-    occupation: OccupationKey
+    occupation: str
     questions: List[OccupationTriviaQuestion]

@@ -6,6 +6,7 @@ vi.mock('@/api/studio-work-lingo.api', () => ({
 }))
 
 import { generateWorkLingo } from '@/api/studio-work-lingo.api'
+import { StudioHttpError } from '@/api/studio-http'
 import { buildDefaultConfig } from '@/constants/studio-templates'
 import { clearStudioRecentContent } from '../studio-variety'
 import { MAX_MEANING_CHARS, MAX_PHRASE_CHARS, WL_AI_EMPTY_MESSAGE, wlLevelSpec, wlPhraseLabel } from './content'
@@ -102,6 +103,32 @@ describe('workLingoPrefetch', () => {
     const remote = await workLingoPrefetch(config(), signal())
     expect(remote.pairs.length).toBeGreaterThan(0)
     expect(generateMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('asks for a job’s own lingo by preset or by name, and keeps its own memory', async () => {
+    generateMock.mockResolvedValue({ ...WL_FIXTURE, occupation: 'trucker' })
+    const remote = await workLingoPrefetch(config({ occupation: 'trucker' }), signal())
+    expect(lastRequest()).toMatchObject({ occupation: 'trucker' })
+    expect(lastRequest().customOccupation).toBeUndefined()
+    expect(remote.occupation).toBe('trucker')
+
+    generateMock.mockResolvedValue({ ...WL_FIXTURE, occupation: 'electrician' })
+    await workLingoPrefetch(config({ writeOwnOccupation: true, customOccupation: 'Electrician' }), signal())
+    expect(lastRequest()).toMatchObject({ customOccupation: 'Electrician' })
+    // The trucker page's phrases are not this job's memory.
+    expect(lastRequest().avoid).not.toContain(wlPhraseLabel(WL_FIXTURE_PAIRS[0]!.phrase))
+  })
+
+  it('refuses a reply written for another job', async () => {
+    generateMock.mockResolvedValue({ ...WL_FIXTURE, occupation: 'nurse' })
+    await expect(workLingoPrefetch(config({ occupation: 'trucker' }), signal())).rejects.toThrow(WL_AI_EMPTY_MESSAGE)
+  })
+
+  it('stops at the service’s refusal of a typed job and shows its reason', async () => {
+    generateMock.mockRejectedValue(new StudioHttpError('This is a hobby rather than a job.', 422))
+    const typed = config({ writeOwnOccupation: true, customOccupation: 'Stamp collector' })
+    await expect(workLingoPrefetch(typed, signal())).rejects.toThrow('This is a hobby rather than a job.')
+    expect(generateMock).toHaveBeenCalledTimes(1)
   })
 
   it('does not retry a rate limit', async () => {

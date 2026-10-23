@@ -5,6 +5,7 @@ from app.schemas.studio_occupation_trivia import (
     OccupationTriviaRequest,
     OccupationTriviaResponse,
 )
+from app.services.studio_occupation import OccupationNotSuitableError, OccupationPlanError
 from app.services.studio_occupation_trivia_service import (
     OccupationTriviaGenerationError,
     OccupationTriviaRateLimitError,
@@ -21,6 +22,16 @@ async def create_occupation_trivia(
 ) -> OccupationTriviaResponse:
     try:
         return await generate_occupation_trivia(req, user_id=user_id)
+    except OccupationNotSuitableError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+    except OccupationPlanError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(exc),
+        ) from exc
     except OccupationTriviaRateLimitError as exc:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,

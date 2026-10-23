@@ -1,9 +1,11 @@
+import type { StudioConfig } from '@/types/studio-template.types'
 import type {
   CareerNumbersDistance,
   CareerNumbersResponse,
   CareerNumbersTone,
   CareerNumbersWorkplace,
 } from '@/types/studio-career-numbers.types'
+import { foldOccupation, typedOccupationName } from '../_shared/occupations'
 import { createRng } from '../studio-rng'
 import { BL_BRAND_TERMS, keysRepeat, stem, type IdeaKey } from '../bucket-list/content'
 import { isUnsafeCopy } from '../retirement-word-search/content-quality'
@@ -93,6 +95,20 @@ export const CBN_WORKPLACES: readonly { value: CareerNumbersWorkplace; label: st
 
 export function parseCbnWorkplace(raw: unknown): CareerNumbersWorkplace {
   return CBN_WORKPLACES.some((w) => w.value === raw) ? (raw as CareerNumbersWorkplace) : 'any'
+}
+
+/**
+ * The workplace a set plans its themes from. A job the seller typed has no
+ * themes of its own: it plans from every theme, in that job's words.
+ */
+export function cbnWorkplaceOf(config: StudioConfig): CareerNumbersWorkplace {
+  return typedOccupationName(config) ? 'any' : parseCbnWorkplace(config.workplace)
+}
+
+/** What a set's memory is kept under: the workplace, or the typed job folded. */
+export function cbnVarietyBucket(config: StudioConfig): string {
+  const typed = typedOccupationName(config)
+  return typed ? foldOccupation(typed) : parseCbnWorkplace(config.workplace)
 }
 
 export const CBN_DISTANCES: readonly { value: CareerNumbersDistance; label: string; unit: string }[] = [

@@ -1,9 +1,20 @@
-import type { StudioConfig, StudioConfigField } from '@/types/studio-template.types'
+import type {
+  StudioConfig,
+  StudioConfigField,
+  StudioConfigValidationError,
+} from '@/types/studio-template.types'
 import { STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
+import {
+  customOccupationField,
+  isPresetOccupation,
+  validateTypedOccupation,
+  writeOwnOccupationField,
+} from '../_shared/occupations'
 import {
   OT_LEVELS,
   OT_OCCUPATIONS,
   otInstruction,
+  otJob,
   otOccupationSpec,
   parseOtOccupation,
 } from './content'
@@ -11,11 +22,17 @@ import { otPrintNote } from './layout'
 
 /** Instruction text the page will actually carry, for layout measurement. */
 export function instructionFor(config: StudioConfig): string {
-  return config.showInstructions === false ? '' : otInstruction(parseOtOccupation(config.occupation))
+  return config.showInstructions === false ? '' : otInstruction(otJob(config))
 }
 
 /**
  * Two questions: whose job, and how deep into it.
+ *
+ * Whose job is a preset, or — behind the switch above the picker — any job the
+ * seller types, for a book written for that one line of work ("for Retired
+ * Firefighters"). The service plans a typed job before writing a question and
+ * refuses one no warm, KDP-safe pack can be written for, with a reason the
+ * form shows.
  *
  * What the form deliberately does not ask:
  *
@@ -32,14 +49,19 @@ export function instructionFor(config: StudioConfig): string {
  * book's own solutions setting.
  */
 export const OT_CONFIG_SCHEMA: StudioConfigField[] = [
+  writeOwnOccupationField(),
   {
     key: 'occupation',
     label: 'Occupation',
     type: 'select',
     default: 'teacher',
     options: OT_OCCUPATIONS.map((o) => ({ label: o.label, value: o.value })),
+    visibleWhen: isPresetOccupation,
     helpWhen: (config) => otOccupationSpec(parseOtOccupation(config.occupation)).covers,
   },
+  customOccupationField(
+    'Any job, like “Firefighter” or “Electrician”: questions on its tools, terms, routines and history, fact-checked before they print.',
+  ),
   {
     key: 'level',
     label: 'Level',
@@ -55,3 +77,7 @@ export const OT_CONFIG_SCHEMA: StudioConfigField[] = [
       }),
   },
 ]
+
+export function validateOtConfig(config: StudioConfig): StudioConfigValidationError | null {
+  return validateTypedOccupation(config)
+}

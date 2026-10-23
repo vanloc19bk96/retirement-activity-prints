@@ -1,4 +1,3 @@
-import type { OccupationKey } from '@/types/studio-occupation-trivia.types'
 import {
   OT_CHOICE_COUNT,
   OT_LETTERS,
@@ -43,7 +42,7 @@ const joined = (lines: readonly string[]) => lines.join(' ').replace(/\s+/g, ' '
  */
 export function runOtKdpPreflight(options: {
   pack: FittedOtPack
-  occupation: OccupationKey
+  occupation: string
   fields: OtFields
 }): KdpPreflightResult {
   const { pack, occupation, fields } = options

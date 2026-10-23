@@ -24,7 +24,7 @@ import {
   orderCbnSet,
   parseCbnCount,
   parseCbnDistance,
-  parseCbnWorkplace,
+  cbnWorkplaceOf,
   parseCbnPayload,
   pickCbnSet,
 } from './content'
@@ -89,7 +89,7 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
   const name = parseRetireeName(config.retireeName)
   const size = parseCbnCount(config.questions)
   const distance = parseCbnDistance(config.distance)
-  const workplace = parseCbnWorkplace(config.workplace)
+  const workplace = cbnWorkplaceOf(config)
   const seed = Number(config.seed ?? ctx.seed ?? 1)
   const tag: StudioTag = { templateKey: CBN_TEMPLATE_KEY, instanceId: ctx.instanceId, pageRole: 'single' }
   const fail = (message: string) => [errorPage(ctx, config, tag, message)]
@@ -140,7 +140,7 @@ export const careerNumbersTemplate: StudioTemplateDefinition = {
   label: 'Career By the Numbers',
   category: 'keepsake',
   description:
-    'Looking back on a working life in numbers: light, nostalgic estimates (“About how many cups of tea or coffee powered your career?”, “On your busiest day, how many phone calls did you answer?”), and the retiree writes a best guess on each line, with the unit printed beside it (“About ______ cups”). Best guesses are the whole point; nothing is looked up and nothing is invented for them. Works for any line of work, never about pay, health or age. Pick the kind of work, how many questions and miles or kilometres; type size and pages are fitted to your trim. Fresh questions every time, never repeated within your book.',
+    'Looking back on a working life in numbers: light, nostalgic estimates (“About how many cups of tea or coffee powered your career?”, “On your busiest day, how many phone calls did you answer?”), and the retiree writes a best guess on each line, with the unit printed beside it (“About ______ cups”). Best guesses are the whole point; nothing is looked up and nothing is invented for them. Works for any line of work, never about pay, health or age. Pick the kind of work, or type the retiree’s job (Firefighter, Bus driver…) for a book written for that job, how many questions and miles or kilometres; type size and pages are fitted to your trim. Fresh questions every time, never repeated within your book.',
   pageCount: 1,
   producesAnswerKey: false,
   defaultPageTitle: CBN_DEFAULT_TITLE,

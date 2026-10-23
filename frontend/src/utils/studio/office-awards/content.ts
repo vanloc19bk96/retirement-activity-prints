@@ -1,8 +1,10 @@
+import type { StudioConfig } from '@/types/studio-template.types'
 import type {
   OfficeAwardsResponse,
   OfficeAwardsTone,
   OfficeAwardsWorkplace,
 } from '@/types/studio-office-awards.types'
+import { foldOccupation, typedOccupationName } from '../_shared/occupations'
 import { createRng } from '../studio-rng'
 import { BL_BRAND_TERMS, keysRepeat, stem, type IdeaKey } from '../bucket-list/content'
 import { isUnsafeCopy } from '../retirement-word-search/content-quality'
@@ -88,6 +90,20 @@ export const OA_WORKPLACES: readonly { value: OfficeAwardsWorkplace; label: stri
 
 export function parseOaWorkplace(raw: unknown): OfficeAwardsWorkplace {
   return OA_WORKPLACES.some((w) => w.value === raw) ? (raw as OfficeAwardsWorkplace) : 'any'
+}
+
+/**
+ * The workplace a set plans its themes from. A job the seller typed has no
+ * themes of its own: it plans from every theme, in that job's words.
+ */
+export function oaWorkplaceOf(config: StudioConfig): OfficeAwardsWorkplace {
+  return typedOccupationName(config) ? 'any' : parseOaWorkplace(config.workplace)
+}
+
+/** What a set's memory is kept under: the workplace, or the typed job folded. */
+export function oaVarietyBucket(config: StudioConfig): string {
+  const typed = typedOccupationName(config)
+  return typed ? foldOccupation(typed) : parseOaWorkplace(config.workplace)
 }
 
 /** Who the instructions speak of. */

@@ -17,6 +17,8 @@ import {
 } from '../studio-generator-test'
 import { workLingoTemplate } from './generate'
 import { instructionFor } from './config'
+import { PRESET_OCCUPATIONS } from '../_shared/occupations'
+import { wlJob } from './content'
 import {
   MIN_PAIRS_PER_PAGE,
   WL_AI_EMPTY_MESSAGE,
@@ -137,9 +139,31 @@ describe('work-lingo-match registry', () => {
     expect(STUDIO_ANSWER_INK_MONO_TEMPLATES.has('work-lingo-match')).toBe(true)
   })
 
-  it('asks only for the level, Classic by default', () => {
-    expect(workLingoTemplate.configSchema.map((field) => field.key)).toEqual(['level'])
-    expect(buildDefaultConfig(workLingoTemplate)).toMatchObject({ level: 'classic' })
+  it('asks whose lingo (everyday talk by default) and the level, Classic by default', () => {
+    expect(workLingoTemplate.configSchema.map((field) => field.key)).toEqual([
+      'writeOwnOccupation',
+      'occupation',
+      'customOccupation',
+      'level',
+    ])
+    expect(buildDefaultConfig(workLingoTemplate)).toMatchObject({
+      level: 'classic',
+      occupation: 'any',
+      writeOwnOccupation: false,
+    })
+    const occupation = workLingoTemplate.configSchema.find((field) => field.key === 'occupation')!
+    expect(occupation.options!.map((o) => o.value)).toEqual(['any', ...PRESET_OCCUPATIONS.map((o) => o.value)])
+  })
+
+  it('reads whose lingo a page is, a typed preset as the preset', () => {
+    expect(wlJob(base)).toMatchObject({ key: 'any', custom: '' })
+    expect(wlJob({ ...base, occupation: 'trucker' })).toMatchObject({ key: 'trucker', label: 'Trucker' })
+    const typed = { ...base, writeOwnOccupation: true, customOccupation: 'Electrician' }
+    expect(wlJob(typed)).toMatchObject({ key: 'electrician', label: 'Electrician', custom: 'Electrician' })
+    expect(wlJob({ ...typed, customOccupation: 'nurse' })).toMatchObject({ key: 'nurse', custom: '' })
+    expect(workLingoTemplate.validateConfig!({ ...typed, customOccupation: 'Google engineer' })?.field).toBe(
+      'customOccupation',
+    )
   })
 
   it('carries one short instruction, or none', () => {

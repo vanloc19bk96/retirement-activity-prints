@@ -73,6 +73,11 @@ from app.services.studio_gemini import (
     call_gemini_json,
     parse_json_object,
 )
+from app.services.studio_occupation import (
+    OccupationProfile,
+    custom_line,
+    custom_profile,
+)
 from app.services.studio_variety import (
     VarietyScope,
     bucket_key,
@@ -190,9 +195,15 @@ def _check_rate_limit(user_id: str) -> None:
         raise OfficeAwardsRateLimitError(str(exc)) from exc
 
 
-def _scope(req: OfficeAwardsRequest, user_id: str, seed: int) -> VarietyScope:
-    """One memory per workplace: that is what decides which awards risk repeating."""
-    return VarietyScope(game=GAME, user_id=user_id, bucket=bucket_key(req.workplace), seed=seed)
+def _scope(
+    req: OfficeAwardsRequest,
+    user_id: str,
+    seed: int,
+    occupation: OccupationProfile | None = None,
+) -> VarietyScope:
+    """One memory per workplace or typed job: that is what decides which awards risk repeating."""
+    bucket = bucket_key(occupation.key) if occupation else bucket_key(req.workplace)
+    return VarietyScope(game=GAME, user_id=user_id, bucket=bucket, seed=seed)
 
 
 def _budget(req: OfficeAwardsRequest) -> int:
@@ -558,11 +569,16 @@ def _build_prompt(
     workplace: str,
     budget: int,
     locale: str,
+    occupation: OccupationProfile | None = None,
 ) -> str:
     lines, _ = briefs(asks)
     want = len(lines)
     brief_block = "\n".join(lines)
-    workplace_line = str(section(section(_config(), "workplaces"), workplace)["line"])
+    workplace_line = (
+        custom_line(occupation, subject="The team")
+        if occupation
+        else str(section(section(_config(), "workplaces"), workplace)["line"])
+    )
     tone_lines = "\n".join(f"- {text}" for text in section(_config(), "tones").values())
     min_words = _limit("minAwardWords")
     max_words = _limit("maxAwardWords")
@@ -703,13 +719,14 @@ def _accept(
 
 async def generate_office_awards(req: OfficeAwardsRequest, user_id: str) -> OfficeAwardsResponse:
     _check_rate_limit(user_id)
+    occupation = await custom_profile(req.custom_occupation) if req.custom_occupation.strip() else None
 
     slots = plan_slots(req)
     if not slots:
         raise OfficeAwardsGenerationError(FINAL_ERROR)
     budget = _budget(req)
     started = time.perf_counter()
-    home = _scope(req, user_id, req.seed)
+    home = _scope(req, user_id, req.seed, occupation)
     # What this seller printed before: the client's list (spans workers and
     # restarts) plus this worker's own memory. An award that repeats either is
     # dropped here, not just discouraged in the prompt.
@@ -725,7 +742,9 @@ async def generate_office_awards(req: OfficeAwardsRequest, user_id: str) -> Offi
         asks = [(i, _retry_slot(slots[i], attempt)) for i in missing]
         written = [kept[i].award for i in sorted(kept)]
         seed = req.seed + attempt * 97
-        prompt = _build_prompt(asks, workplace=req.workplace, budget=budget, locale=req.locale)
+        prompt = _build_prompt(
+            asks, workplace=req.workplace, budget=budget, locale=req.locale, occupation=occupation
+        )
         prompt = with_variety(
             prompt,
             home.at_seed(seed),
@@ -763,14 +782,19 @@ async def generate_office_awards(req: OfficeAwardsRequest, user_id: str) -> Offi
         len(awards),
         len(slots),
         calls,
-        req.workplace,
+        occupation.key if occupation else req.workplace,
         bool(req.themes),
     )
     return OfficeAwardsResponse(awards=awards)
 
 
-def build_prompt_for_tests(asks: Sequence[Tuple[int, Slot]], *, workplace: str = "any") -> str:
-    return _build_prompt(asks, workplace=workplace, budget=48, locale="en")
+def build_prompt_for_tests(
+    asks: Sequence[Tuple[int, Slot]],
+    *,
+    workplace: str = "any",
+    occupation: OccupationProfile | None = None,
+) -> str:
+    return _build_prompt(asks, workplace=workplace, budget=48, locale="en", occupation=occupation)
 
 
 def parse_payload_for_tests(raw: str) -> List[Any]:

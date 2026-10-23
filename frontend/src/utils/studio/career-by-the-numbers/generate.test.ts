@@ -123,13 +123,21 @@ describe('career-by-the-numbers registry', () => {
     expect(registered.prefetch).toBeTypeOf('function')
   })
 
-  it('asks only the name, the kind of work, how many questions and the distance unit', () => {
+  it('asks only the name, the kind of work (or the retiree’s own job), how many questions and the distance unit', () => {
     expect(careerNumbersTemplate.configSchema.map((f) => f.key)).toEqual([
       'retireeName',
+      'writeOwnOccupation',
       'workplace',
+      'customOccupation',
       'questions',
       'distance',
     ])
+    const validate = careerNumbersTemplate.validateConfig!
+    const base = buildDefaultConfig(careerNumbersTemplate)
+    expect(validate({ ...base, writeOwnOccupation: true, customOccupation: 'Bus driver' })).toBeNull()
+    expect(validate({ ...base, writeOwnOccupation: true, customOccupation: 'Ford mechanic' })?.message).toMatch(
+      /company or brand/,
+    )
     const config = buildDefaultConfig(careerNumbersTemplate)
     expect(config.retireeName).toBe('')
     expect(config.workplace).toBe('any')

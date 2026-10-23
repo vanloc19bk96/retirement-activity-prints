@@ -6,6 +6,7 @@ vi.mock('@/api/studio-occupation-trivia.api', () => ({
 }))
 
 import { generateOccupationTrivia } from '@/api/studio-occupation-trivia.api'
+import { StudioHttpError } from '@/api/studio-http'
 import { buildDefaultConfig } from '@/constants/studio-templates'
 import { clearStudioRecentContent } from '../studio-variety'
 import {
@@ -87,6 +88,32 @@ describe('occupationTriviaPrefetch', () => {
   it('refuses a reply written for another occupation', async () => {
     generateMock.mockResolvedValue({ ...OT_FIXTURE, occupation: 'postal' })
     await expect(occupationTriviaPrefetch(config(), signal())).rejects.toThrow(OT_AI_EMPTY_MESSAGE)
+  })
+
+  it('asks for a typed job by name, and keys its pack by the folded name', async () => {
+    const typed = config({ writeOwnOccupation: true, customOccupation: 'Bus  Driver' })
+    generateMock.mockResolvedValue({ ...OT_FIXTURE, occupation: 'bus driver' })
+    const printed = [otLabel('bus driver', OT_FIXTURE_QUESTIONS[0]!), otLabel('teacher', OT_FIXTURE_QUESTIONS[1]!)]
+    const remote = await occupationTriviaPrefetch(typed, signal(), bookContext(printed))
+    expect(lastRequest()).toMatchObject({ customOccupation: 'Bus Driver' })
+    expect(remote.occupation).toBe('bus driver')
+    const questions = remote.questions.map((q) => q.question)
+    expect(questions).not.toContain(OT_FIXTURE_QUESTIONS[0]!.question)
+    expect(questions).toContain(OT_FIXTURE_QUESTIONS[1]!.question)
+  })
+
+  it('never sends a preset typed by hand as a typed job', async () => {
+    generateMock.mockResolvedValue({ ...OT_FIXTURE, occupation: 'nurse' })
+    await occupationTriviaPrefetch(config({ writeOwnOccupation: true, customOccupation: 'nurse' }), signal())
+    expect(lastRequest().occupation).toBe('nurse')
+    expect(lastRequest().customOccupation).toBeUndefined()
+  })
+
+  it('stops at the service’s refusal of a typed job and shows its reason', async () => {
+    generateMock.mockRejectedValue(new StudioHttpError('This is a hobby rather than a job.', 422))
+    const typed = config({ writeOwnOccupation: true, customOccupation: 'Stamp collector' })
+    await expect(occupationTriviaPrefetch(typed, signal())).rejects.toThrow('This is a hobby rather than a job.')
+    expect(generateMock).toHaveBeenCalledTimes(1)
   })
 
   it('does not retry a rate limit', async () => {

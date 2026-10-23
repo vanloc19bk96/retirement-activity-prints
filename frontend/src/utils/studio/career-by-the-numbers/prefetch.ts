@@ -1,4 +1,5 @@
 import { generateCareerNumbers } from '@/api/studio-career-numbers.api'
+import { isStudioRefusal } from '@/api/studio-http'
 import type { StudioConfig, StudioPrefetchContext } from '@/types/studio-template.types'
 import type { CareerNumbersResponse } from '@/types/studio-career-numbers.types'
 import {
@@ -7,6 +8,7 @@ import {
   studioAvoidList,
   studioVarietyKey,
 } from '../studio-variety'
+import { typedOccupationName } from '../_shared/occupations'
 import {
   CBN_AI_EMPTY_MESSAGE,
   CBN_SHORT_MESSAGE,
@@ -19,7 +21,8 @@ import {
   cleanCbnPool,
   parseCbnCount,
   parseCbnDistance,
-  parseCbnWorkplace,
+  cbnVarietyBucket,
+  cbnWorkplaceOf,
   pickCbnSet,
   type CbnQuestion,
 } from './content'
@@ -83,10 +86,11 @@ export async function careerNumbersPrefetch(
   context?: StudioPrefetchContext,
 ): Promise<CareerNumbersResponse> {
   const seed = Number(config.seed ?? 1)
-  const workplace = parseCbnWorkplace(config.workplace)
+  const workplace = cbnWorkplaceOf(config)
+  const typed = typedOccupationName(config)
   const distance = parseCbnDistance(config.distance)
   const size = parseCbnCount(config.questions)
-  const varietyKey = studioVarietyKey(CBN_TEMPLATE_KEY, workplace)
+  const varietyKey = studioVarietyKey(CBN_TEMPLATE_KEY, cbnVarietyBucket(config))
   const book = context?.bookContentLabels(CBN_TEMPLATE_KEY) ?? []
   const recent = studioAvoidList(varietyKey)
   const printed = [...book, ...recent]
@@ -109,6 +113,7 @@ export async function careerNumbersPrefetch(
       const remote = await generateCareerNumbers(
         {
           workplace,
+          ...(typed ? { customOccupation: typed } : {}),
           distance,
           questions: size,
           themes: ask?.themes,
@@ -128,7 +133,8 @@ export async function careerNumbersPrefetch(
       if (signal.aborted) throw error
       lastError = error
       console.warn(`[${CBN_TEMPLATE_KEY}] AI attempt ${attempt + 1} failed`, error)
-      if (isRateLimit(error)) break
+      // A refused job is refused again: its reason is the form's error.
+      if (isRateLimit(error) || isStudioRefusal(error)) break
     }
   }
 

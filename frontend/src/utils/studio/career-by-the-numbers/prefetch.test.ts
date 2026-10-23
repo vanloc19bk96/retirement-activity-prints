@@ -7,6 +7,7 @@ vi.mock('@/api/studio-career-numbers.api', () => ({
 }))
 
 import { generateCareerNumbers } from '@/api/studio-career-numbers.api'
+import { StudioHttpError } from '@/api/studio-http'
 import { buildDefaultConfig } from '@/constants/studio-templates'
 import { clearStudioRecentContent, studioAvoidList, studioVarietyKey } from '../studio-variety'
 import {
@@ -52,6 +53,21 @@ describe('careerNumbersPrefetch', () => {
     expect(req.maxUnitChars).toBe(MAX_UNIT_CHARS)
     // Spares come back with the set, for the page to spend.
     expect(res.questions.map((q) => q.question)).toEqual(CBN_FIXTURE_QUESTIONS)
+  })
+
+  it('sends a typed job by name, plans from every theme and keeps the job’s own memory', async () => {
+    generateMock.mockResolvedValue(CBN_FIXTURE)
+    await careerNumbersPrefetch(config({ workplace: 'trades', writeOwnOccupation: true, customOccupation: ' Bus  driver ' }), signal())
+    expect(request(0)).toMatchObject({ workplace: 'any', customOccupation: 'Bus driver' })
+    expect(studioAvoidList(studioVarietyKey(CBN_TEMPLATE_KEY, 'bus driver')).length).toBeGreaterThan(0)
+    expect(studioAvoidList(studioVarietyKey(CBN_TEMPLATE_KEY, 'trades'))).toEqual([])
+  })
+
+  it('stops at the service’s refusal of a typed job and shows its reason', async () => {
+    generateMock.mockRejectedValue(new StudioHttpError('This is a hobby rather than a job.', 422))
+    const typed = config({ writeOwnOccupation: true, customOccupation: 'Stamp collector' })
+    await expect(careerNumbersPrefetch(typed, signal())).rejects.toThrow('This is a hobby rather than a job.')
+    expect(generateMock).toHaveBeenCalledTimes(1)
   })
 
   it('never sends the retiree’s name', async () => {

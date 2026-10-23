@@ -1,4 +1,3 @@
-import type { OccupationKey } from '@/types/studio-occupation-trivia.types'
 import type { Box } from '../studio-layout'
 import {
   OT_CHOICE_COUNT,
@@ -73,7 +72,7 @@ function fitQuestions(
   plan: OtQuizPlan,
   font: string,
   seed: number,
-  occupation: OccupationKey,
+  occupation: string,
 ): FittedOtQuestion[] {
   const slots = dealOtAnswerSlots(chosen.length, seed)
   return chosen.map(({ item, questionLines }, index) => {
@@ -121,7 +120,7 @@ export function fitOtPack(
   promised: OtQuizPlan,
   font: string,
   seed: number,
-  occupation: OccupationKey,
+  occupation: string,
   fields: OtFields,
 ): FittedOtPack | null {
   const candidates: Candidate[] = []

@@ -28,9 +28,11 @@ from app.services.studio_occupation_trivia_service import (
     question_label,
     questions_repeat,
 )
+from app.services.prompt_data import load_config
 from app.services.studio_variety import reset_memory
 
 SERVICE = "app.services.studio_occupation_trivia_service"
+PRESETS = load_config("occupations")["presets"]
 BUDGETS = Budgets(question=120, choice=36, explanation=80)
 
 VALID_ITEMS = [
@@ -199,12 +201,12 @@ def _item(**change) -> OccupationTriviaQuestion | None:
 
 def test_every_occupation_in_the_schema_has_a_profile() -> None:
     field = OccupationTriviaRequest.model_fields["occupation"].annotation
-    assert sorted(typing.get_args(field)) == sorted(_config()["occupations"])
+    assert sorted(typing.get_args(field)) == sorted(PRESETS)
 
 
-@pytest.mark.parametrize("occupation", sorted(_config()["occupations"]))
+@pytest.mark.parametrize("occupation", sorted(PRESETS))
 def test_every_profile_is_complete(occupation: str) -> None:
-    profile = _config()["occupations"][occupation]
+    profile = PRESETS[occupation]
     assert profile["label"] and profile["who"] and profile["care"]
     # Enough areas that a full reply never repeats one.
     assert len(profile["areas"]) >= _config()["limits"]["maxWrite"]
@@ -423,11 +425,11 @@ def test_a_missing_or_malformed_reply_fails_closed() -> None:
 # ---------------------------------------------------------------- the prompt
 
 
-@pytest.mark.parametrize("occupation", sorted(_config()["occupations"]))
+@pytest.mark.parametrize("occupation", sorted(PRESETS))
 def test_every_occupation_gets_its_own_areas_and_care(occupation: str) -> None:
     req = OccupationTriviaRequest(occupation=occupation, count=12, seed=4)
     prompt = build_prompt_for_tests(req)
-    profile = _config()["occupations"][occupation]
+    profile = PRESETS[occupation]
     assert profile["care"] in prompt
     briefs = re.findall(r"^\d+\. area: (.+); shape: ", prompt, re.MULTILINE)
     assert len(briefs) == 16
@@ -487,3 +489,79 @@ def test_generate_tops_up_a_short_first_round(monkeypatch) -> None:
     response = asyncio.run(generate_occupation_trivia(OccupationTriviaRequest(count=12, seed=2), user_id="u3"))
     assert calls["n"] == 2
     assert len(response.questions) == len(VALID_ITEMS)
+
+
+# ---------------------------------------------------------------- a job the seller typed
+
+
+BUS_DRIVER = {
+    "suitable": True,
+    "reason": "",
+    "label": "Bus Driver",
+    "who": "bus drivers and transit crews",
+    "areas": [f"bus depot corner number {n}" for n in range(1, 17)],
+    "care": "Never describe road accidents or injuries.",
+    "blocked_terms": ["crash"],
+}
+
+
+def _plan(monkeypatch: pytest.MonkeyPatch, reply: dict, prompts: list | None = None) -> None:
+    from app.services import studio_occupation
+
+    studio_occupation.clear_cache_for_tests()
+
+    async def planner(prompt: str) -> str:
+        if prompts is not None:
+            prompts.append(prompt)
+        return json.dumps(reply)
+
+    monkeypatch.setattr("app.services.studio_occupation._call_planner", planner)
+
+
+def test_a_typed_job_is_written_from_its_planned_profile(monkeypatch) -> None:
+    _plan(monkeypatch, BUS_DRIVER)
+    prompts: list = []
+
+    async def writer(prompt: str) -> str:
+        prompts.append(prompt)
+        return json.dumps(VALID)
+
+    _patch(monkeypatch, writer, fake_checker())
+    req = OccupationTriviaRequest(occupation="teacher", customOccupation=" Bus  driver ", count=14, seed=3)
+    response = asyncio.run(generate_occupation_trivia(req, user_id="u1"))
+
+    assert response.occupation == "bus driver"
+    assert "This pack is for bus drivers and transit crews" in prompts[0]
+    assert "Never describe road accidents or injuries." in prompts[0]
+    assert re.findall(r"^\d+\. area: (bus depot corner number \d+);", prompts[0], re.MULTILINE)
+    assert "chalk" not in prompts[0].split("Write exactly")[1].split("How to build")[0]
+
+
+def test_a_typed_jobs_blocked_terms_gate_its_questions() -> None:
+    from app.services.studio_occupation import profile_from_reply
+
+    from app.services.studio_occupation_trivia_service import is_unsafe
+
+    profile = profile_from_reply("Bus driver", BUS_DRIVER)
+    assert is_unsafe("The crash bar opened the rear door.", profile)
+    assert not is_unsafe("The crash bar opened the rear door.", "teacher")
+    crash = {**VALID_ITEMS[0], "question": "What did drivers write crash reports on?"}
+    assert normalize_item(crash, budgets=BUDGETS, occupation=profile) is None
+    item = normalize_item(VALID_ITEMS[0], budgets=BUDGETS, occupation=profile)
+    assert question_label(profile, item).startswith("bus driver: ")
+    assert label_repeats(item, question_label(profile, item), profile)
+    assert not label_repeats(item, question_label("teacher", item), profile)
+
+
+def test_a_refused_job_writes_nothing(monkeypatch) -> None:
+    from app.services.studio_occupation import OccupationNotSuitableError
+
+    _plan(monkeypatch, {"suitable": False, "reason": "This is a company rather than a job."})
+
+    async def never(_prompt: str) -> str:
+        raise AssertionError("no question may be written for a refused job")
+
+    _patch(monkeypatch, never, never)
+    req = OccupationTriviaRequest(customOccupation="Acme Widgets", count=14)
+    with pytest.raises(OccupationNotSuitableError, match="company rather than a job"):
+        asyncio.run(generate_occupation_trivia(req, user_id="u1"))

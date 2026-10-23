@@ -4,9 +4,12 @@ from typing import List, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.studio_occupation_trivia import OccupationKey
 from app.schemas.studio_variety import StudioVarietyRequest
 
 WorkLingoLevel = Literal["gentle", "classic", "challenging"]
+# "any" is everyday workplace talk; a preset is that job's own lingo.
+WorkLingoOccupation = Literal["any", OccupationKey]
 
 
 class WorkLingoRequest(StudioVarietyRequest):
@@ -17,11 +20,15 @@ class WorkLingoRequest(StudioVarietyRequest):
     every meaning in the lines the page reserved. A pair written past either is
     dropped here rather than shipped for the page to discover at layout time.
 
-    ``level`` says how familiar the phrases should be.
+    ``level`` says how familiar the phrases should be. ``occupation`` makes the
+    page one job's own lingo; ``custom_occupation``, a job the seller typed,
+    overrides it.
     """
 
     model_config = ConfigDict(populate_by_name=True)
 
+    occupation: WorkLingoOccupation = "any"
+    custom_occupation: str = Field(default="", max_length=80, alias="customOccupation")
     level: WorkLingoLevel = "classic"
     count: int = Field(default=14, ge=1, le=16)
     max_phrase_chars: int = Field(default=28, ge=12, le=32, alias="maxPhraseChars")
@@ -95,3 +102,5 @@ class WorkLingoResponse(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     pairs: List[WorkLingoPair]
+    # "any", a preset's id, or the typed job folded to lower case.
+    occupation: str = "any"

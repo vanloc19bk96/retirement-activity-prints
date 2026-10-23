@@ -4,6 +4,12 @@ import type {
   StudioConfigValidationError,
 } from '@/types/studio-template.types'
 import { STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
+import {
+  customOccupationField,
+  isPresetOccupation,
+  validateTypedOccupation,
+  writeOwnOccupationField,
+} from '../_shared/occupations'
 import { WKB_NAME_MAX, parseRetireeName, retireeNameProblem } from '../who-knows-retiree-best/content'
 import {
   OA_COUNTS,
@@ -41,17 +47,22 @@ export const OA_CONFIG_SCHEMA: StudioConfigField[] = [
     placeholder: 'e.g. Linda',
     help: 'A first name or nickname for the heading, instructions and awards about the retiree, such as “Most Likely to Inherit Linda’s Chair”. It is printed only, never sent to the AI. Leave blank to say “the retiree”.',
   },
+  writeOwnOccupationField(),
   {
     key: 'workplace',
     label: 'Where did they work?',
     type: 'select',
     default: 'any',
+    visibleWhen: isPresetOccupation,
     options: OA_WORKPLACES.map((w) => ({ label: w.label, value: w.value })),
     helpWhen: (config) => {
       const workplace = OA_WORKPLACES.find((w) => w.value === parseOaWorkplace(config.workplace))!
       return `${workplace.help} Always friendly: a mix of playful and heartfelt, nothing about looks, age, health or money.`
     },
   },
+  customOccupationField(
+    'Any job, like “Firefighter” or “Bus driver”: the awards speak that job’s language, its shifts, kit and routines.',
+  ),
   {
     key: 'awards',
     label: 'Awards',
@@ -79,5 +90,6 @@ export const OA_CONFIG_SCHEMA: StudioConfigField[] = [
 
 export function validateOaConfig(config: StudioConfig): StudioConfigValidationError | null {
   const message = retireeNameProblem(config.retireeName)
-  return message ? { message, field: 'retireeName' } : null
+  if (message) return { message, field: 'retireeName' }
+  return validateTypedOccupation(config)
 }

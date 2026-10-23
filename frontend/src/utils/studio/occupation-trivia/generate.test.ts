@@ -9,6 +9,7 @@ import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import { assertObjectsInSafeMargin, runGeneratorContractTests } from '../studio-generator-test'
 import { occupationTriviaTemplate } from './generate'
 import { instructionFor } from './config'
+import { otJob } from './content'
 import {
   OT_AI_EMPTY_MESSAGE,
   OT_DEFAULT_TITLE,
@@ -127,10 +128,14 @@ describe('occupation-trivia registry', () => {
     expect(STUDIO_ANSWER_INK_MONO_TEMPLATES.has('occupation-trivia')).toBe(true)
   })
 
-  it('asks the seller only for the occupation and the level', () => {
+  it('asks the seller only for the occupation (a preset, or one they type) and the level', () => {
     const own = occupationTriviaTemplate.configSchema.map((f) => f.key)
-    expect(own).toEqual(['occupation', 'level'])
-    const occupation = occupationTriviaTemplate.configSchema[0]!
+    expect(own).toEqual(['writeOwnOccupation', 'occupation', 'customOccupation', 'level'])
+    const occupation = occupationTriviaTemplate.configSchema.find((f) => f.key === 'occupation')!
+    const typed = occupationTriviaTemplate.configSchema.find((f) => f.key === 'customOccupation')!
+    expect(occupation.visibleWhen!({ ...base, writeOwnOccupation: true })).toBe(false)
+    expect(typed.visibleWhen!({ ...base, writeOwnOccupation: true })).toBe(true)
+    expect(typed.visibleWhen!(base)).toBe(false)
     expect(occupation.options!.map((o) => o.value)).toEqual(OT_OCCUPATIONS.map((o) => o.value))
     for (const o of OT_OCCUPATIONS) {
       expect(occupation.helpWhen!({ ...base, occupation: o.value })).toBe(o.covers)
@@ -141,6 +146,30 @@ describe('occupation-trivia registry', () => {
     expect(instructionFor({ ...base, occupation: 'postal' })).toBe(otInstruction('postal'))
     expect(otInstruction('trucker')).toMatch(/^Trucker trivia/)
     expect(instructionFor({ ...base, showInstructions: false })).toBe('')
+  })
+
+  it('names a typed job in the instruction, and reads a typed preset as the preset', () => {
+    const typed = { ...base, writeOwnOccupation: true, customOccupation: '  bus  driver ' }
+    expect(instructionFor(typed)).toMatch(/^Bus Driver trivia: /)
+    expect(otJob(typed)).toMatchObject({ key: 'bus driver', custom: 'bus driver' })
+    expect(otJob({ ...typed, customOccupation: 'Nurse' })).toEqual({
+      key: 'nurse',
+      label: 'Nurse',
+      preset: 'nurse',
+      custom: '',
+    })
+    // The switch off, the typed text is ignored.
+    expect(otJob({ ...base, customOccupation: 'Bus driver' }).key).toBe('teacher')
+  })
+
+  it('checks a typed job before anything is sent', () => {
+    const validate = occupationTriviaTemplate.validateConfig!
+    expect(validate(base)).toBeNull()
+    expect(validate({ ...base, writeOwnOccupation: true, customOccupation: 'Firefighter' })).toBeNull()
+    expect(validate({ ...base, writeOwnOccupation: true, customOccupation: '' })?.field).toBe('customOccupation')
+    expect(validate({ ...base, writeOwnOccupation: true, customOccupation: 'Walmart greeter' })?.message).toMatch(
+      /company or brand/,
+    )
   })
 })
 

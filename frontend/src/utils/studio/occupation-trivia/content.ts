@@ -1,3 +1,4 @@
+import type { StudioConfig } from '@/types/studio-template.types'
 import type {
   OccupationKey,
   OccupationTriviaLevel,
@@ -5,6 +6,13 @@ import type {
   OccupationTriviaResponse,
 } from '@/types/studio-occupation-trivia.types'
 import { createRng } from '../studio-rng'
+import {
+  PRESET_OCCUPATIONS,
+  foldOccupation,
+  occupationTitle,
+  typedOccupation,
+  typedPreset,
+} from '../_shared/occupations'
 
 /**
  * What one Occupation Trivia question is, and every rule it must pass to print.
@@ -69,22 +77,27 @@ export interface OtOccupationSpec {
   covers: string
 }
 
+/** What a pack for each preset covers — the form's help line. */
+const OT_COVERS: Readonly<Record<OccupationKey, string>> = {
+  teacher: 'Chalkboards, grade books, the school bell and the history of teaching.',
+  nurse: 'Nursing history, uniforms, ward routines and familiar equipment. Never medical advice.',
+  police: 'Badges, radios, walking the beat, call boxes and the history of policing.',
+  military: 'Ranks, bugle calls, mess halls, customs and traditions. Branch and country named where it matters.',
+  trucker: 'CB radio talk, rigs and trailers, truck stops and life on the road.',
+  engineer: 'Slide rules, blueprints, landmark structures and engineering traditions. No calculations.',
+  accountant: 'Ledgers, adding machines, month-end and the history of the profession. No tax law.',
+  postal: 'Stamps, postmarks, sorting cases, routes and the history of the mail.',
+}
+
 /**
- * The occupations a pack can be written for. Each is a profile in the
- * service's prompt data (its topic areas, care rules and blocked words); a
- * test keeps the two lists identical. A new occupation is a profile there and
- * one line here.
+ * The preset occupations a pack can be picked for: the shared presets
+ * (`_shared/occupations.ts`), each a hand-written profile in the service's
+ * data. Any other job is typed by the seller and planned by the service.
  */
-export const OT_OCCUPATIONS: readonly OtOccupationSpec[] = [
-  { value: 'teacher', label: 'Teacher', covers: 'Chalkboards, grade books, the school bell and the history of teaching.' },
-  { value: 'nurse', label: 'Nurse', covers: 'Nursing history, uniforms, ward routines and familiar equipment. Never medical advice.' },
-  { value: 'police', label: 'Police', covers: 'Badges, radios, walking the beat, call boxes and the history of policing.' },
-  { value: 'military', label: 'Military', covers: 'Ranks, bugle calls, mess halls, customs and traditions. Branch and country named where it matters.' },
-  { value: 'trucker', label: 'Trucker', covers: 'CB radio talk, rigs and trailers, truck stops and life on the road.' },
-  { value: 'engineer', label: 'Engineer', covers: 'Slide rules, blueprints, landmark structures and engineering traditions. No calculations.' },
-  { value: 'accountant', label: 'Accountant', covers: 'Ledgers, adding machines, month-end and the history of the profession. No tax law.' },
-  { value: 'postal', label: 'Postal', covers: 'Stamps, postmarks, sorting cases, routes and the history of the mail.' },
-]
+export const OT_OCCUPATIONS: readonly OtOccupationSpec[] = PRESET_OCCUPATIONS.map((o) => ({
+  ...o,
+  covers: OT_COVERS[o.value],
+}))
 
 export function parseOtOccupation(raw: unknown): OccupationKey {
   const value = String(raw ?? '')
@@ -93,6 +106,28 @@ export function parseOtOccupation(raw: unknown): OccupationKey {
 
 export const otOccupationSpec = (occupation: OccupationKey): OtOccupationSpec =>
   OT_OCCUPATIONS.find((spec) => spec.value === occupation)!
+
+/**
+ * The job a pack is written for.
+ *
+ * `key` is what its questions are labelled and remembered by, and what the
+ * service echoes back: the preset's id, or the typed job folded to lower case
+ * ("bus driver"). `label` names it on the page. `custom` is the typed job as
+ * sent, '' for a preset — a typed preset ("Teacher") is the preset.
+ */
+export interface OtJob {
+  key: string
+  label: string
+  preset: OccupationKey
+  custom: string
+}
+
+export function otJob(config: StudioConfig): OtJob {
+  const preset = typedPreset(config) ?? parseOtOccupation(config.occupation)
+  const custom = typedOccupation(config)
+  if (custom) return { key: foldOccupation(custom), label: occupationTitle(custom), preset, custom }
+  return { key: preset, label: otOccupationSpec(preset).label, preset, custom: '' }
+}
 
 export interface OtLevelSpec {
   value: OccupationTriviaLevel
@@ -118,8 +153,9 @@ export function parseOtLevel(raw: unknown): OccupationTriviaLevel {
  * The how-to line, naming the job so a reader knows whose pack it is. One
  * short sentence: the lettered bubbles show how to answer.
  */
-export function otInstruction(occupation: OccupationKey): string {
-  return `${otOccupationSpec(occupation).label} trivia: circle the letter of the best answer.`
+export function otInstruction(occupation: OccupationKey | OtJob): string {
+  const label = typeof occupation === 'string' ? otOccupationSpec(occupation).label : occupation.label
+  return `${label} trivia: circle the letter of the best answer.`
 }
 
 /** One validated question, as the service wrote it. */
@@ -296,7 +332,7 @@ const ABSOLUTE_RE = wordPattern(OT_ABSOLUTE_TERMS)
 const BAD_CHOICE_RE = wordPattern(OT_BAD_CHOICE_TERMS)
 const OCCUPATION_RE = Object.fromEntries(
   Object.entries(OT_OCCUPATION_BLOCKED_TERMS).map(([key, terms]) => [key, wordPattern(terms)]),
-) as Record<OccupationKey, RegExp>
+) as Partial<Record<string, RegExp>>
 
 const MEDICAL_RE =
   /\bprevent\s+dementia\b|\breverse\s+aging\b|\bcures?\s+for\b|\banti[\s-]?aging\b|\bmemory\s+loss\b/i
@@ -316,13 +352,18 @@ const NUMBER_RE = /^\s*(\(?(\d{1,2}|[A-Da-d])[.):]\s+|[-*•]\s+)/
 const LABEL_RE = /^\s*(question|answer|correct answer|choice|option|note|fact|explanation|topic)\s*:\s*/i
 const EDGE_TRIM_RE = /^['‘’\s]+|['‘’\s]+$/g
 
-export function isUnsafeOtCopy(text: string, occupation: OccupationKey): boolean {
+/**
+ * A preset's own blocked words apply here too; a typed job's come from its
+ * planned profile and are applied by the service, which is the only side that
+ * has them.
+ */
+export function isUnsafeOtCopy(text: string, occupation: string): boolean {
   return (
     MEDICAL_RE.test(text) ||
     FINANCE_RE.test(text) ||
     BLOCKED_RE.test(text) ||
     BRAND_RE.test(text) ||
-    OCCUPATION_RE[occupation].test(text)
+    (OCCUPATION_RE[occupation]?.test(text) ?? false)
   )
 }
 
@@ -406,14 +447,14 @@ export function questionsRepeat(item: OtQuestion, other: OtQuestion): boolean {
  * What a printed question is remembered by: "teacher: blackboard chalk = chalk".
  * The occupation keeps one job's answers from ruling out another's.
  */
-export function otLabel(occupation: OccupationKey, item: Pick<OtQuestion, 'topic' | 'answer'>): string {
+export function otLabel(occupation: string, item: Pick<OtQuestion, 'topic' | 'answer'>): string {
   const topic = folded(item.topic).slice(0, 28).trim()
   const answer = folded(item.answer).slice(0, 20).trim()
   return `${occupation}: ${topic} = ${answer}`.slice(0, 60).trim()
 }
 
 /** True when `label` — a printed question's label — names this question's fact. */
-export function labelRepeats(item: OtQuestion, label: string, occupation: OccupationKey): boolean {
+export function labelRepeats(item: OtQuestion, label: string, occupation: string): boolean {
   let text = String(label ?? '').trim()
   const colon = text.indexOf(': ')
   if (colon >= 0) {
@@ -457,7 +498,7 @@ const wordCount = (text: string) => text.split(' ').filter(Boolean).length
 /** One plain question ending in a single question mark — or null. */
 export function normalizeOtQuestionText(
   raw: unknown,
-  occupation: OccupationKey,
+  occupation: string,
   budget = MAX_QUESTION_CHARS,
 ): string | null {
   const text = stripLabels(raw)
@@ -474,7 +515,7 @@ export function normalizeOtQuestionText(
 /** One short answer choice, with no closing full stop — or null. */
 export function normalizeOtChoice(
   raw: unknown,
-  occupation: OccupationKey,
+  occupation: string,
   budget = MAX_CHOICE_CHARS,
 ): string | null {
   let text = stripLabels(raw)
@@ -493,7 +534,7 @@ export function normalizeOtChoice(
 /** One standalone sentence for the answer page, ending in a full stop — or null. */
 export function normalizeOtExplanation(
   raw: unknown,
-  occupation: OccupationKey,
+  occupation: string,
   budget = MAX_EXPLANATION_CHARS,
 ): string | null {
   const text = stripLabels(raw).replace(/[\s.]+$/, '')
@@ -542,7 +583,7 @@ function choicesDistinct(choices: readonly string[]): boolean {
 }
 
 /** One complete, checked question from raw service output — or null, never a repair. */
-export function normalizeOtQuestion(raw: unknown, occupation: OccupationKey): OtQuestion | null {
+export function normalizeOtQuestion(raw: unknown, occupation: string): OtQuestion | null {
   if (!raw || typeof raw !== 'object') return null
   const record = raw as Record<string, unknown>
   // Only the service's blind check can say a question is right enough to print.
@@ -575,7 +616,7 @@ export function normalizeOtQuestion(raw: unknown, occupation: OccupationKey): Ot
  */
 export function selectOtQuestions(
   raw: unknown,
-  options: { occupation: OccupationKey; cap: number; avoid?: readonly string[] },
+  options: { occupation: string; cap: number; avoid?: readonly string[] },
 ): OtQuestion[] {
   const { occupation, cap, avoid = [] } = options
   const out: OtQuestion[] = []
@@ -598,14 +639,12 @@ export function otServiceQuestion(item: OtQuestion): OccupationTriviaQuestion {
 
 /** Read `ctx.remoteData` defensively — it is whatever the prefetch returned. */
 export function parseOtPayload(remote: unknown): {
-  occupation: OccupationKey | null
+  occupation: string | null
   questions: readonly OccupationTriviaQuestion[]
 } {
   if (!remote || typeof remote !== 'object') return { occupation: null, questions: [] }
   const payload = remote as Partial<OccupationTriviaResponse>
-  const occupation = OT_OCCUPATIONS.some((o) => o.value === payload.occupation)
-    ? (payload.occupation as OccupationKey)
-    : null
+  const occupation = typeof payload.occupation === 'string' && payload.occupation ? payload.occupation : null
   return { occupation, questions: Array.isArray(payload.questions) ? payload.questions : [] }
 }
 

@@ -7,6 +7,7 @@ from app.services.studio_career_numbers_service import (
     CareerNumbersRateLimitError,
     generate_career_numbers,
 )
+from app.services.studio_occupation import OccupationNotSuitableError, OccupationPlanError
 
 router = APIRouter(prefix="/studio", tags=["studio"])
 
@@ -18,6 +19,16 @@ async def create_career_numbers(
 ) -> CareerNumbersResponse:
     try:
         return await generate_career_numbers(req, user_id=user_id)
+    except OccupationNotSuitableError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+    except OccupationPlanError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(exc),
+        ) from exc
     except CareerNumbersRateLimitError as exc:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,

@@ -16,6 +16,8 @@ export type OfficeAwardsTone = 'playful' | 'warm'
 
 export interface OfficeAwardsRequest {
   workplace: OfficeAwardsWorkplace
+  /** A job the seller typed; when set it names the work and `workplace` is "any". */
+  customOccupation?: string
   /** Awards the printed set holds; the service adds spares. */
   awards: number
   /** Top-up form: themes the set does not use yet. */

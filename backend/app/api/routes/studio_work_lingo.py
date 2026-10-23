@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.dependencies import get_current_user_id
 from app.schemas.studio_work_lingo import WorkLingoRequest, WorkLingoResponse
+from app.services.studio_occupation import OccupationNotSuitableError, OccupationPlanError
 from app.services.studio_work_lingo_service import (
     WorkLingoGenerationError,
     WorkLingoRateLimitError,
@@ -18,6 +19,16 @@ async def create_work_lingo(
 ) -> WorkLingoResponse:
     try:
         return await generate_work_lingo(req, user_id=user_id)
+    except OccupationNotSuitableError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+    except OccupationPlanError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(exc),
+        ) from exc
     except WorkLingoRateLimitError as exc:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,

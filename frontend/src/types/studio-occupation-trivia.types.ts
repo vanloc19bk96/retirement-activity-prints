@@ -1,4 +1,4 @@
-/** Occupations a pack can be written for — one profile each in the service's prompt data. */
+/** Preset occupations — one hand-written profile each in the service's `occupations` data. */
 export type OccupationKey =
   | 'teacher'
   | 'nurse'
@@ -22,6 +22,8 @@ export type OccupationTriviaLevel = 'gentle' | 'classic' | 'challenging'
  */
 export interface OccupationTriviaRequest {
   occupation: OccupationKey
+  /** A job the seller typed; when set it names the pack and `occupation` is ignored. */
+  customOccupation?: string
   level: OccupationTriviaLevel
   /** Questions to write — more than one pack prints, so the layout gates have spares. */
   count: number
@@ -51,6 +53,7 @@ export interface OccupationTriviaQuestion {
 }
 
 export interface OccupationTriviaResponse {
-  occupation: OccupationKey
+  /** The preset's id, or the typed job folded to lower case. */
+  occupation: string
   questions: OccupationTriviaQuestion[]
 }

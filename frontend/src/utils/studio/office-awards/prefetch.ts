@@ -1,4 +1,5 @@
 import { generateOfficeAwards } from '@/api/studio-office-awards.api'
+import { isStudioRefusal } from '@/api/studio-http'
 import type { StudioConfig, StudioPrefetchContext } from '@/types/studio-template.types'
 import type { OfficeAwardsResponse } from '@/types/studio-office-awards.types'
 import {
@@ -7,6 +8,7 @@ import {
   studioAvoidList,
   studioVarietyKey,
 } from '../studio-variety'
+import { typedOccupationName } from '../_shared/occupations'
 import {
   MAX_AWARD_CHARS,
   OA_AI_EMPTY_MESSAGE,
@@ -16,7 +18,8 @@ import {
   oaAwards,
   oaShortfall,
   parseOaCount,
-  parseOaWorkplace,
+  oaVarietyBucket,
+  oaWorkplaceOf,
   pickOaSet,
   type OaAward,
 } from './content'
@@ -77,9 +80,10 @@ export async function officeAwardsPrefetch(
   context?: StudioPrefetchContext,
 ): Promise<OfficeAwardsResponse> {
   const seed = Number(config.seed ?? 1)
-  const workplace = parseOaWorkplace(config.workplace)
+  const workplace = oaWorkplaceOf(config)
+  const typed = typedOccupationName(config)
   const size = parseOaCount(config.awards)
-  const varietyKey = studioVarietyKey(OA_TEMPLATE_KEY, workplace)
+  const varietyKey = studioVarietyKey(OA_TEMPLATE_KEY, oaVarietyBucket(config))
   const book = context?.bookContentLabels(OA_TEMPLATE_KEY) ?? []
   const recent = studioAvoidList(varietyKey)
   const printed = [...book, ...recent]
@@ -102,6 +106,7 @@ export async function officeAwardsPrefetch(
       const remote = await generateOfficeAwards(
         {
           workplace,
+          ...(typed ? { customOccupation: typed } : {}),
           awards: size,
           themes: ask?.themes,
           count: ask?.count,
@@ -119,7 +124,8 @@ export async function officeAwardsPrefetch(
       if (signal.aborted) throw error
       lastError = error
       console.warn(`[${OA_TEMPLATE_KEY}] AI attempt ${attempt + 1} failed`, error)
-      if (isRateLimit(error)) break
+      // A refused job is refused again: its reason is the form's error.
+      if (isRateLimit(error) || isStudioRefusal(error)) break
     }
   }
 

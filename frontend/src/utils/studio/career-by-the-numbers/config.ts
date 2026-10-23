@@ -4,6 +4,12 @@ import type {
   StudioConfigValidationError,
 } from '@/types/studio-template.types'
 import { STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
+import {
+  customOccupationField,
+  isPresetOccupation,
+  validateTypedOccupation,
+  writeOwnOccupationField,
+} from '../_shared/occupations'
 import { WKB_NAME_MAX, parseRetireeName, retireeNameProblem } from '../who-knows-retiree-best/content'
 import {
   CBN_COUNTS,
@@ -44,17 +50,22 @@ export const CBN_CONFIG_SCHEMA: StudioConfigField[] = [
     placeholder: 'e.g. Linda',
     help: 'A first name or nickname for the heading, such as “Linda’s Career By the Numbers”. It is printed only, never sent to the AI.',
   },
+  writeOwnOccupationField(),
   {
     key: 'workplace',
     label: 'What kind of work?',
     type: 'select',
     default: 'any',
+    visibleWhen: isPresetOccupation,
     options: CBN_WORKPLACES.map((w) => ({ label: w.label, value: w.value })),
     helpWhen: (config) => {
       const workplace = CBN_WORKPLACES.find((w) => w.value === parseCbnWorkplace(config.workplace))!
       return `${workplace.help} Every question is a fun estimate: nothing about pay, health or age.`
     },
   },
+  customOccupationField(
+    'Any job, like “Firefighter” or “Bus driver”: the questions count that job’s own moments, shifts and kit.',
+  ),
   {
     key: 'questions',
     label: 'Questions',
@@ -82,5 +93,6 @@ export const CBN_CONFIG_SCHEMA: StudioConfigField[] = [
 
 export function validateCbnConfig(config: StudioConfig): StudioConfigValidationError | null {
   const message = retireeNameProblem(config.retireeName)
-  return message ? { message, field: 'retireeName' } : null
+  if (message) return { message, field: 'retireeName' }
+  return validateTypedOccupation(config)
 }

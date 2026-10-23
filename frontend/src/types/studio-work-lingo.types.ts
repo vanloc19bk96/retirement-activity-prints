@@ -1,5 +1,10 @@
+import type { OccupationKey } from './studio-occupation-trivia.types'
+
 /** How familiar a Work Lingo Match page's phrases are. */
 export type WorkLingoLevel = 'gentle' | 'classic' | 'challenging'
+
+/** Whose lingo: everyday workplace talk, or one preset job's own. */
+export type WorkLingoOccupation = 'any' | OccupationKey
 
 /**
  * What a Work Lingo Match page asks the content service for.
@@ -9,6 +14,9 @@ export type WorkLingoLevel = 'gentle' | 'classic' | 'challenging'
  * its row, and every meaning in the lines the page reserved.
  */
 export interface WorkLingoRequest {
+  occupation?: WorkLingoOccupation
+  /** A job the seller typed; when set the page is its lingo and `occupation` is ignored. */
+  customOccupation?: string
   level: WorkLingoLevel
   /** Pairs to write — more than one page prints, so the layout gates have spares. */
   count: number
@@ -36,4 +44,6 @@ export interface WorkLingoPair {
 
 export interface WorkLingoResponse {
   pairs: WorkLingoPair[]
+  /** "any", a preset's id, or the typed job folded to lower case. Older replies omit it. */
+  occupation?: string
 }

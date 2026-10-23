@@ -44,6 +44,13 @@ so nothing reaches the page on the writer's word alone:
 Variety is structural. Each requested pair gets its own brief -- a workplace
 area and an era, sampled by seed from twenty areas and four eras -- so a reply
 ranges across the office rather than ten ways to say "let's talk later".
+
+**One job's lingo.** A page can instead be the lingo of one occupation -- a
+preset or a job the seller typed (``app/services/studio_occupation.py``) -- for
+books written for that job. Its briefs pair the job's own areas with an angle
+(a nickname for kit, shift or radio talk, an older term), the writer and the
+checker both judge phrases as that job uses them, and the job's care rules and
+blocked words apply on top of the shared ones.
 """
 
 from __future__ import annotations
@@ -80,6 +87,7 @@ from app.services.studio_gemini import (
     call_gemini_json,
     parse_json_object,
 )
+from app.services.studio_occupation import OccupationProfile, resolve_occupation
 from app.services.studio_variety import (
     VarietyScope,
     bucket_key,
@@ -159,9 +167,10 @@ def _check_rate_limit(user_id: str) -> None:
         raise WorkLingoRateLimitError(str(exc)) from exc
 
 
-def _scope(user_id: str, seed: int) -> VarietyScope:
-    """One memory for every level: a phrase printed on a Gentle page must not return on a Classic one."""
-    return VarietyScope(game=GAME, user_id=user_id, bucket=bucket_key("all"), seed=seed)
+def _scope(user_id: str, seed: int, occupation: OccupationProfile | None = None) -> VarietyScope:
+    """One memory per job for every level: a phrase printed on a Gentle page must not return on a Classic one."""
+    bucket = bucket_key(occupation.key) if occupation else bucket_key("all")
+    return VarietyScope(game=GAME, user_id=user_id, bucket=bucket, seed=seed)
 
 
 @dataclass(frozen=True)
@@ -181,8 +190,13 @@ def budgets_for(req: WorkLingoRequest) -> Budgets:
 # ---------------------------------------------------------------- text keys
 
 
-def is_unsafe(text: str) -> bool:
-    return bool(_FINANCE_RE.search(text) or _blocked_re().search(text) or _brand_re().search(text))
+def is_unsafe(text: str, occupation: OccupationProfile | None = None) -> bool:
+    return bool(
+        _FINANCE_RE.search(text)
+        or _blocked_re().search(text)
+        or _brand_re().search(text)
+        or (occupation is not None and occupation.blocked_re.search(text))
+    )
 
 
 def _stem(token: str) -> str:
@@ -295,7 +309,9 @@ def _strip_labels(raw: Any, label: re.Pattern[str]) -> str:
     return text
 
 
-def normalize_phrase(raw: Any, *, budget: int) -> str | None:
+def normalize_phrase(
+    raw: Any, *, budget: int, occupation: OccupationProfile | None = None
+) -> str | None:
     """The phrase as printed: plain words, starting with a capital, never an acronym -- or None."""
     text = _strip_labels(raw, _PHRASE_LABEL_RE)
     if not text or not _PHRASE_RE.match(text):
@@ -307,12 +323,14 @@ def normalize_phrase(raw: Any, *, budget: int) -> str | None:
         return None
     if not int_value(limits, "minPhraseChars") <= len(text) <= budget:
         return None
-    if not content_tokens(text) or is_unsafe(text):
+    if not content_tokens(text) or is_unsafe(text, occupation):
         return None
     return text
 
 
-def normalize_meaning(raw: Any, *, budget: int) -> str | None:
+def normalize_meaning(
+    raw: Any, *, budget: int, occupation: OccupationProfile | None = None
+) -> str | None:
     """The meaning as printed: a short plain phrase with no closing full stop -- or None."""
     text = _strip_labels(raw, _MEANING_LABEL_RE)
     if not text or not _MEANING_RE.match(text):
@@ -325,12 +343,14 @@ def normalize_meaning(raw: Any, *, budget: int) -> str | None:
         return None
     if not int_value(limits, "minMeaningChars") <= len(text) <= budget:
         return None
-    if is_unsafe(text):
+    if is_unsafe(text, occupation):
         return None
     return text
 
 
-def normalize_pair(raw: Any, *, budgets: Budgets) -> WorkLingoPair | None:
+def normalize_pair(
+    raw: Any, *, budgets: Budgets, occupation: OccupationProfile | None = None
+) -> WorkLingoPair | None:
     """One complete, well-formed pair -- or None. Never a repaired one.
 
     Well-formed is not fair: this is every check that can be made without
@@ -338,10 +358,10 @@ def normalize_pair(raw: Any, *, budgets: Budgets) -> WorkLingoPair | None:
     """
     if not isinstance(raw, dict):
         return None
-    phrase = normalize_phrase(raw.get("phrase"), budget=budgets.phrase)
+    phrase = normalize_phrase(raw.get("phrase"), budget=budgets.phrase, occupation=occupation)
     if phrase is None:
         return None
-    meaning = normalize_meaning(raw.get("meaning"), budget=budgets.meaning)
+    meaning = normalize_meaning(raw.get("meaning"), budget=budgets.meaning, occupation=occupation)
     if meaning is None or echoes_phrase(meaning, phrase):
         return None
     # Never verified here, whatever the input claims: only the checker marks a pair.
@@ -355,6 +375,7 @@ def filter_pairs(
     cap: int,
     avoid: Iterable[str] = (),
     kept: Sequence[WorkLingoPair] = (),
+    occupation: OccupationProfile | None = None,
 ) -> list[WorkLingoPair]:
     """Keep the well-formed pairs a pool can hold without repeating the book.
 
@@ -364,7 +385,7 @@ def filter_pairs(
     avoided = [label for label in (str(a or "").strip() for a in avoid) if label]
     out: list[WorkLingoPair] = []
     for raw in raw_items:
-        pair = normalize_pair(raw, budgets=budgets)
+        pair = normalize_pair(raw, budgets=budgets, occupation=occupation)
         if pair is None:
             continue
         if any(pairs_conflict(pair, other) for other in (*kept, *out)):
@@ -388,29 +409,43 @@ def _parse_payload(raw: str) -> list[Any]:
     return items
 
 
-def _level(req: WorkLingoRequest) -> Mapping[str, Any]:
-    return section(section(_config(), "levels"), req.level)
+def _level(level: str, occupation: OccupationProfile | None = None) -> Mapping[str, Any]:
+    return section(section(_config(), "jobLevels" if occupation else "levels"), level)
 
 
-def _briefs(want: int, seed: int) -> list[str]:
+def _briefs(want: int, seed: int, occupation: OccupationProfile | None = None) -> list[str]:
     """One distinct brief per pair: a workplace area and an era.
 
     Areas and eras are shuffled by seed independently, so the same area meets
     a different era on the next page, and no area repeats within a reply until
-    every other one has been used.
+    every other one has been used. A job's page pairs the job's own areas with
+    an angle on its lingo instead.
     """
     rng = random.Random(seed)
-    areas = list(string_list(_config(), "areas"))
-    eras = list(string_list(_config(), "eras"))
+    if occupation:
+        areas = list(occupation.areas)
+        eras = list(string_list(_config(), "jobAngles"))
+        label = "angle"
+    else:
+        areas = list(string_list(_config(), "areas"))
+        eras = list(string_list(_config(), "eras"))
+        label = "era"
     rng.shuffle(areas)
     rng.shuffle(eras)
     return [
-        f"{index + 1}. area: {areas[index % len(areas)]}; era: {eras[index % len(eras)]}"
+        f"{index + 1}. area: {areas[index % len(areas)]}; {label}: {eras[index % len(eras)]}"
         for index in range(want)
     ]
 
 
-def _build_prompt(req: WorkLingoRequest, *, seed: int | None = None) -> str:
+def _build_prompt(
+    req: WorkLingoRequest,
+    *,
+    seed: int | None = None,
+    occupation: OccupationProfile | None = None,
+) -> str:
+    if occupation:
+        return _build_job_prompt(req, occupation, seed=seed)
     limits = _limits()
     want = min(int_value(limits, "maxWrite"), req.count + 4)
     prompt_seed = req.seed if seed is None else seed
@@ -427,7 +462,7 @@ worked in all kinds of jobs. The page lists the workplace phrases and, shuffled
 apart, their plain-English meanings. The reader matches each phrase to its
 meaning -- a fond "how many of these do you remember from work?".
 
-Level -- {_level(req)["writer"]}
+Level -- {_level(req.level)["writer"]}
 
 Write exactly {want} pairs, one per brief, in this order:
 {briefs}
@@ -484,6 +519,88 @@ Return JSON only:
 """
 
 
+def _build_job_prompt(
+    req: WorkLingoRequest, occupation: OccupationProfile, *, seed: int | None = None
+) -> str:
+    """The writer's brief for one job's own lingo."""
+    limits = _limits()
+    want = min(int_value(limits, "maxWrite"), req.count + 4)
+    prompt_seed = req.seed if seed is None else seed
+    language = locale_line(section(_config(), "locale"), req.locale)
+    budgets = budgets_for(req)
+    briefs = "\n".join(_briefs(want, prompt_seed, occupation))
+    example = section(_config(), "jobExample")
+    phrase_words = int_value(limits, "maxPhraseWords")
+    meaning_words = int_value(limits, "maxMeaningWords")
+    job = occupation.label.lower()
+
+    return f"""Create job-lingo pairs for "Work Lingo Match", a matching puzzle in a
+large-print retirement activity book written for {occupation.who}. The page
+lists phrases from the job's own lingo and, shuffled apart, their plain-English
+meanings. The reader matches each phrase to its meaning -- a fond "how much of
+the old shop talk do you still know?" for a retired {job}.
+
+Level -- {_level(req.level, occupation)["writer"]}
+
+Write exactly {want} pairs, one per brief, in this order:
+{briefs}
+
+How to build each pair -- in this order:
+1. "area": the brief's area, copied.
+2. "phrase": a real, established term, nickname, saying or bit of shop talk
+   that {occupation.who} genuinely use about that area, in the brief's angle,
+   as people in the job actually say it.
+3. "meaning": what the phrase means in this job, in plain English an outsider
+   could follow.
+
+Phrases:
+- Real and well established in this job: never invent, blend or adapt a phrase
+  to fill a brief. If the brief suggests nothing real, pick a real phrase from a
+  nearby area of the same job.
+- Belongs to THIS job: never general office talk ("Circle back", "Touch base")
+  and never everyday English with the job's name added.
+- 1 to {phrase_words} words, at most {budgets.phrase} characters, starting with a capital
+  letter. No acronyms, abbreviations, codes or numbers, no brand names, no
+  slogans, no quotations, no one employer's internal terms.
+- Recognised by people in this job across English-speaking countries; when a
+  term belongs to one country, pick another.
+- A phrase with several common meanings: use its clearest meaning in this job,
+  or pick another phrase.
+- Every phrase in this reply is different, and no two share a word. Never two
+  phrases that mean the same thing.
+
+Meanings:
+- What the phrase means in this job, not its literal words.
+- 3 to {meaning_words} words, at most {budgets.meaning} characters. A short plain phrase,
+  starting with a capital, with no full stop.
+- Never repeat a word of its phrase, and never a word of another phrase in
+  this reply.
+- Specific enough that it fits its own phrase and no other in the reply: no two
+  meanings may say similar things, and none so broad it could fit several
+  phrases.
+- Your own wording, never copied from a dictionary, website, manual or book.
+
+The job: {occupation.care}
+
+Tone: warm, nostalgic and proud of the work. Never mock workers, the public,
+bosses, retirees or older people.
+
+Never:
+- Phrases with offensive, insensitive or stereotyped origins or wording, gallows
+  humour, or any about age or being old, health, injury, death, violence,
+  weapons, sex, alcohol, gambling, politics or religion. Nothing crude.
+- Brand names, trademarks, company slogans, advertising taglines, celebrities,
+  song, film or TV lines.
+{language}
+
+Return JSON only:
+{{ "items": [
+  {{ "brief": 1, "area": "{example['area']}", "phrase": "{example['phrase']}",
+    "meaning": "{example['meaning']}" }} ] }}
+(That example is a trucker's and shows the shape only. Never use it.)
+"""
+
+
 async def _call_writer(prompt: str) -> str:
     return await call_gemini_json(
         prompt=prompt,
@@ -514,7 +631,10 @@ class CheckPlan:
 
 
 def build_check_plan(
-    candidates: Sequence[WorkLingoPair], seed: int, level: str = "classic"
+    candidates: Sequence[WorkLingoPair],
+    seed: int,
+    level: str = "classic",
+    occupation: OccupationProfile | None = None,
 ) -> CheckPlan:
     """A prompt that never says which meaning belongs to which phrase.
 
@@ -530,10 +650,36 @@ def build_check_plan(
     meanings = "\n".join(
         f"{_letter(pos)}. {candidates[k].meaning}" for pos, k in enumerate(order)
     )
-    familiar = str(section(section(_config(), "levels"), level)["checker"])
+    familiar = str(_level(level, occupation)["checker"])
+    if occupation:
+        puzzle = f"the lingo of {occupation.who}"
+        real = (
+            f"a term, nickname, saying or bit of shop talk that {occupation.who} genuinely\n"
+            "  use -- not invented or blended, not general office talk or everyday English,\n"
+            "  not an acronym, slogan, quotation or one employer's internal term."
+        )
+        accurate = (
+            "the meaning says what the phrase means in this job, as most people in it\n"
+            "  would explain it -- not its literal words, and not a sense only one country\n"
+            "  or era would give it."
+        )
+        care = f"\n  It keeps to this rule: {occupation.care}"
+    else:
+        puzzle = "workplace phrases"
+        real = (
+            "an established workplace expression or business idiom that people\n"
+            "  genuinely say -- not invented or blended, not an acronym, slogan, quotation\n"
+            "  or one company's internal term."
+        )
+        accurate = (
+            "the meaning says what the phrase communicates at work in most\n"
+            "  English-speaking workplaces -- not its literal words, and not a sense only\n"
+            "  one country, profession or era would give it."
+        )
+        care = ""
 
     prompt = f"""You are a strict editor for a published, large-print puzzle book for retirees
-and older adults. The puzzle: match each workplace phrase to its plain-English
+and older adults. The puzzle: match each phrase from {puzzle} to its plain-English
 meaning. An invented phrase, a wrong meaning, or a meaning that fits two
 phrases makes the puzzle unfair and means refunds, so when in doubt, answer
 false.
@@ -546,19 +692,15 @@ Step 1 -- For each phrase, pick the letter of the meaning that fits it best,
 as the phrase is used at work. Use "none" if no meaning truly fits.
 
 Step 2 -- Judge that phrase together with the meaning you picked:
-- "real": an established workplace expression or business idiom that people
-  genuinely say -- not invented or blended, not an acronym, slogan, quotation
-  or one company's internal term.
-- "accurate": the meaning says what the phrase communicates at work in most
-  English-speaking workplaces -- not its literal words, and not a sense only
-  one country, profession or era would give it.
+- "real": {real}
+- "accurate": {accurate}
 - "one_meaning": no other meaning on the list could reasonably be matched to
   this phrase, and this meaning could not reasonably be matched to any other
   phrase on the list.
 - "familiar": {familiar}.
 - "suitable": clean and respectful. No offensive, insensitive or stereotyped
   origin or wording; nothing about age or being old, health, death, violence,
-  sex, alcohol, gambling, politics or religion; no brands or slogans.
+  sex, alcohol, gambling, politics or religion; no brands or slogans.{care}
 
 PHRASES
 {phrases}
@@ -641,12 +783,15 @@ async def _call_checker(prompt: str) -> str:
 
 
 async def verify_pairs(
-    candidates: Sequence[WorkLingoPair], seed: int, level: str = "classic"
+    candidates: Sequence[WorkLingoPair],
+    seed: int,
+    level: str = "classic",
+    occupation: OccupationProfile | None = None,
 ) -> list[WorkLingoPair]:
     """Run the blind check over the whole set. Raises when the check itself could not run."""
     if not candidates:
         return []
-    plan = build_check_plan(candidates, seed, level)
+    plan = build_check_plan(candidates, seed, level, occupation)
     raw = await _call_checker(plan.prompt)
     return apply_check(candidates, plan, parse_json_object(raw))
 
@@ -665,6 +810,11 @@ def _min_pairs(cap: int) -> int:
 
 async def generate_work_lingo(req: WorkLingoRequest, user_id: str) -> WorkLingoResponse:
     _check_rate_limit(user_id)
+    occupation = (
+        await resolve_occupation(req.occupation, req.custom_occupation)
+        if req.custom_occupation.strip() or req.occupation != "any"
+        else None
+    )
 
     budgets = budgets_for(req)
     cap = min(int_value(_limits(), "poolSize"), req.count)
@@ -676,13 +826,15 @@ async def generate_work_lingo(req: WorkLingoRequest, user_id: str) -> WorkLingoR
     # What this seller printed before: the client's list (spans workers and
     # restarts) plus this worker's own memory. A phrase that repeats either is
     # dropped here, not just discouraged in the prompt.
-    printed = [*req.avoid, *recent(_scope(user_id, req.seed), MEMORY_FILTER_LIMIT)]
+    printed = [*req.avoid, *recent(_scope(user_id, req.seed, occupation), MEMORY_FILTER_LIMIT)]
 
     for attempt in range(attempts):
         seed = req.seed + attempt * 97
-        scope = _scope(user_id, seed)
+        scope = _scope(user_id, seed, occupation)
         avoid = [*req.avoid, *(phrase_label(pair.phrase) for pair in kept)]
-        prompt = with_variety(_build_prompt(req, seed=seed), scope, client_avoid=avoid)
+        prompt = with_variety(
+            _build_prompt(req, seed=seed, occupation=occupation), scope, client_avoid=avoid
+        )
         try:
             raw = await _call_writer(prompt)
             items_raw = _parse_payload(raw)
@@ -698,6 +850,7 @@ async def generate_work_lingo(req: WorkLingoRequest, user_id: str) -> WorkLingoR
             cap=int_value(_limits(), "maxWrite"),
             avoid=printed,
             kept=kept,
+            occupation=occupation,
         )
         if not fresh:
             last_error = FINAL_ERROR
@@ -707,7 +860,7 @@ async def generate_work_lingo(req: WorkLingoRequest, user_id: str) -> WorkLingoR
         pool = [pair.model_copy(update={"verified": False}) for pair in (*kept, *fresh)]
         checked += len(pool)
         try:
-            confirmed = await verify_pairs(pool, seed, req.level)
+            confirmed = await verify_pairs(pool, seed, req.level, occupation)
         except Exception as exc:
             logger.warning("studio_work_lingo_check_failed attempt=%s error=%s", attempt + 1, exc)
             last_error = CHECK_ERROR
@@ -717,7 +870,10 @@ async def generate_work_lingo(req: WorkLingoRequest, user_id: str) -> WorkLingoR
         # checked set is larger: a re-check that loses earlier pairs must not
         # leave the seller with less than the first round gave.
         survivors = filter_pairs(
-            (pair.model_dump() for pair in confirmed), budgets=budgets, cap=cap
+            (pair.model_dump() for pair in confirmed),
+            budgets=budgets,
+            cap=cap,
+            occupation=occupation,
         )
         if len(survivors) >= len(kept):
             kept = survivors
@@ -729,10 +885,13 @@ async def generate_work_lingo(req: WorkLingoRequest, user_id: str) -> WorkLingoR
         raise WorkLingoGenerationError(last_error)
 
     verified = [pair.model_copy(update={"verified": True}) for pair in kept]
-    remember(_scope(user_id, req.seed), (phrase_label(pair.phrase) for pair in verified))
+    remember(
+        _scope(user_id, req.seed, occupation), (phrase_label(pair.phrase) for pair in verified)
+    )
+    key = occupation.key if occupation else "any"
     logger.info(
         "studio_work_lingo_generated model=%s check_model=%s latency_ms=%s "
-        "written=%s checked=%s verified=%s level=%s",
+        "written=%s checked=%s verified=%s level=%s occupation=%s",
         settings.STUDIO_GEMINI_MODEL,
         settings.STUDIO_FACT_CHECK_MODEL or settings.STUDIO_GEMINI_MODEL,
         int((time.perf_counter() - started) * 1000),
@@ -740,12 +899,18 @@ async def generate_work_lingo(req: WorkLingoRequest, user_id: str) -> WorkLingoR
         checked,
         len(verified),
         req.level,
+        key,
     )
-    return WorkLingoResponse(pairs=verified)
+    return WorkLingoResponse(pairs=verified, occupation=key)
 
 
-def build_prompt_for_tests(req: WorkLingoRequest, *, seed: int | None = None) -> str:
-    return _build_prompt(req, seed=seed)
+def build_prompt_for_tests(
+    req: WorkLingoRequest,
+    *,
+    seed: int | None = None,
+    occupation: OccupationProfile | None = None,
+) -> str:
+    return _build_prompt(req, seed=seed, occupation=occupation)
 
 
 def parse_payload_for_tests(raw: str) -> list[Any]:

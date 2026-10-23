@@ -1,9 +1,18 @@
+import type { StudioConfig } from '@/types/studio-template.types'
 import type {
   WorkLingoLevel,
+  WorkLingoOccupation,
   WorkLingoPair,
   WorkLingoResponse,
 } from '@/types/studio-work-lingo.types'
 import { createRng } from '../studio-rng'
+import {
+  PRESET_OCCUPATIONS,
+  foldOccupation,
+  occupationTitle,
+  typedOccupation,
+  typedPreset,
+} from '../_shared/occupations'
 
 /**
  * What one Work Lingo Match pair is, and every rule it must pass to print.
@@ -82,6 +91,36 @@ export const wlLevelSpec = (level: WorkLingoLevel): WlLevelSpec =>
 
 /** The fullest page any level asks for. */
 export const MAX_PAIRS_PER_PAGE = Math.max(...WL_LEVELS.map((level) => level.maxPairs))
+
+/**
+ * Whose lingo a page is.
+ *
+ * `key` is what the page's memory is kept under and what the service echoes:
+ * "any" for everyday workplace talk, a preset's id, or the typed job folded to
+ * lower case. `custom` is the typed job as sent, '' otherwise; a typed preset
+ * ("Trucker") is the preset.
+ */
+export interface WlJob {
+  key: string
+  label: string
+  preset: WorkLingoOccupation
+  custom: string
+}
+
+export const WL_ANY_OCCUPATION = 'any'
+
+export function parseWlOccupation(raw: unknown): WorkLingoOccupation {
+  const value = String(raw ?? '')
+  return PRESET_OCCUPATIONS.some((o) => o.value === value) ? (value as WorkLingoOccupation) : WL_ANY_OCCUPATION
+}
+
+export function wlJob(config: StudioConfig): WlJob {
+  const preset = typedPreset(config) ?? parseWlOccupation(config.occupation)
+  const custom = typedOccupation(config)
+  if (custom) return { key: foldOccupation(custom), label: occupationTitle(custom), preset, custom }
+  const label = PRESET_OCCUPATIONS.find((o) => o.value === preset)?.label ?? ''
+  return { key: preset, label, preset, custom: '' }
+}
 
 /**
  * The only instruction a reader needs. One short line on every trim: the

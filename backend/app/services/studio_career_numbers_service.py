@@ -81,6 +81,11 @@ from app.services.studio_gemini import (
     call_gemini_json,
     parse_json_object,
 )
+from app.services.studio_occupation import (
+    OccupationProfile,
+    custom_line,
+    custom_profile,
+)
 from app.services.studio_variety import (
     VarietyScope,
     bucket_key,
@@ -221,9 +226,15 @@ def _check_rate_limit(user_id: str) -> None:
         raise CareerNumbersRateLimitError(str(exc)) from exc
 
 
-def _scope(req: CareerNumbersRequest, user_id: str, seed: int) -> VarietyScope:
-    """One memory per workplace: that is what decides which questions risk repeating."""
-    return VarietyScope(game=GAME, user_id=user_id, bucket=bucket_key(req.workplace), seed=seed)
+def _scope(
+    req: CareerNumbersRequest,
+    user_id: str,
+    seed: int,
+    occupation: OccupationProfile | None = None,
+) -> VarietyScope:
+    """One memory per workplace or typed job: that is what decides which questions risk repeating."""
+    bucket = bucket_key(occupation.key) if occupation else bucket_key(req.workplace)
+    return VarietyScope(game=GAME, user_id=user_id, bucket=bucket, seed=seed)
 
 
 def _question_budget(req: CareerNumbersRequest) -> int:
@@ -652,11 +663,16 @@ def _build_prompt(
     budget: int,
     unit_budget: int,
     locale: str,
+    occupation: OccupationProfile | None = None,
 ) -> str:
     lines, _ = briefs(asks, distance)
     want = len(lines)
     brief_block = "\n".join(lines)
-    workplace_line = str(section(section(_config(), "workplaces"), workplace)["line"])
+    workplace_line = (
+        custom_line(occupation, subject="The retiree")
+        if occupation
+        else str(section(section(_config(), "workplaces"), workplace)["line"])
+    )
     distance_line = str(section(section(_config(), "distances"), distance)["line"])
     unit_word = distance_unit(distance)
     tone_lines = "\n".join(f"- {text}" for text in section(_config(), "tones").values())
@@ -831,6 +847,7 @@ def _accept(
 
 async def generate_career_numbers(req: CareerNumbersRequest, user_id: str) -> CareerNumbersResponse:
     _check_rate_limit(user_id)
+    occupation = await custom_profile(req.custom_occupation) if req.custom_occupation.strip() else None
 
     slots = plan_slots(req)
     if not slots:
@@ -838,7 +855,7 @@ async def generate_career_numbers(req: CareerNumbersRequest, user_id: str) -> Ca
     budget = _question_budget(req)
     unit_budget = _unit_budget(req)
     started = time.perf_counter()
-    home = _scope(req, user_id, req.seed)
+    home = _scope(req, user_id, req.seed, occupation)
     # What this seller printed before: the client's list (spans workers and
     # restarts) plus this worker's own memory. A question that repeats either
     # is dropped here, not just discouraged in the prompt.
@@ -861,6 +878,7 @@ async def generate_career_numbers(req: CareerNumbersRequest, user_id: str) -> Ca
             budget=budget,
             unit_budget=unit_budget,
             locale=req.locale,
+            occupation=occupation,
         )
         prompt = with_variety(
             prompt,
@@ -901,7 +919,7 @@ async def generate_career_numbers(req: CareerNumbersRequest, user_id: str) -> Ca
         len(questions),
         len(slots),
         calls,
-        req.workplace,
+        occupation.key if occupation else req.workplace,
         req.distance,
         bool(req.themes),
     )

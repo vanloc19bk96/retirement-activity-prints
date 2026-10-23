@@ -36,9 +36,17 @@ const PROMPT = fileURLToPath(
 const config = JSON.parse(readFileSync(PROMPT, 'utf-8')) as Record<string, unknown> & {
   limits: Record<string, number>
   levels: Record<string, unknown>
-  occupations: Record<string, { label: string; blockedTerms: string[] }>
   example: Record<string, unknown>
 }
+/** The presets live in the data every job-themed game shares. */
+const OCCUPATIONS = fileURLToPath(
+  new URL('../../../../../backend/app/data/studio/occupations/prompt.json', import.meta.url),
+)
+const presets = (
+  JSON.parse(readFileSync(OCCUPATIONS, 'utf-8')) as {
+    presets: Record<string, { label: string; blockedTerms: string[] }>
+  }
+).presets
 
 describe('occupation-trivia lists mirror the service', () => {
   it.each([
@@ -60,10 +68,10 @@ describe('occupation-trivia lists mirror the service', () => {
   })
 
   it('offers exactly the occupations the service has profiles for, with their care lists', () => {
-    expect(OT_OCCUPATIONS.map((o) => o.value)).toEqual(Object.keys(config.occupations))
+    expect(OT_OCCUPATIONS.map((o) => o.value)).toEqual(Object.keys(presets))
     for (const o of OT_OCCUPATIONS) {
-      expect(o.label).toBe(config.occupations[o.value]!.label)
-      expect([...OT_OCCUPATION_BLOCKED_TERMS[o.value]]).toEqual(config.occupations[o.value]!.blockedTerms)
+      expect(o.label).toBe(presets[o.value]!.label)
+      expect([...OT_OCCUPATION_BLOCKED_TERMS[o.value]]).toEqual(presets[o.value]!.blockedTerms)
     }
   })
 

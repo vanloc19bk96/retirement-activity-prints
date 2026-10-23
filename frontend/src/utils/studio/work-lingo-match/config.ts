@@ -1,6 +1,17 @@
-import type { StudioConfig, StudioConfigField } from '@/types/studio-template.types'
+import type {
+  StudioConfig,
+  StudioConfigField,
+  StudioConfigValidationError,
+} from '@/types/studio-template.types'
 import { STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
-import { WL_LEVELS, parseWlLevel, wlInstruction } from './content'
+import {
+  PRESET_OCCUPATIONS,
+  customOccupationField,
+  isPresetOccupation,
+  validateTypedOccupation,
+  writeOwnOccupationField,
+} from '../_shared/occupations'
+import { WL_ANY_OCCUPATION, WL_LEVELS, parseWlLevel, wlInstruction, wlJob } from './content'
 import { wlPrintNote } from './layout'
 
 /** Instruction text the page will actually carry, for layout measurement. */
@@ -9,7 +20,12 @@ export function instructionFor(config: StudioConfig): string {
 }
 
 /**
- * One question: how familiar the phrases should be.
+ * Two questions: whose lingo, and how familiar the phrases should be.
+ *
+ * Whose lingo is everyday workplace talk by default. A book written for one
+ * job ("for Retired Truckers") can make the page that job's own shop talk —
+ * a preset, or any job the seller types behind the switch, which the service
+ * plans first and refuses, with a reason, when no warm, KDP-safe page fits it.
  *
  * What the form deliberately does not ask:
  *
@@ -28,6 +44,25 @@ export function instructionFor(config: StudioConfig): string {
  * never have.
  */
 export const WL_CONFIG_SCHEMA: StudioConfigField[] = [
+  writeOwnOccupationField(),
+  {
+    key: 'occupation',
+    label: 'Whose lingo?',
+    type: 'select',
+    default: WL_ANY_OCCUPATION,
+    options: [
+      { label: 'Everyday workplace talk', value: WL_ANY_OCCUPATION },
+      ...PRESET_OCCUPATIONS.map((o) => ({ label: `${o.label} lingo`, value: o.value })),
+    ],
+    visibleWhen: isPresetOccupation,
+    helpWhen: (config) =>
+      wlJob(config).key === WL_ANY_OCCUPATION
+        ? 'Office classics like “circle back” and “touch base”, from every kind of workplace.'
+        : 'That job’s own shop talk, each phrase checked to be real and to have one clear meaning.',
+  },
+  customOccupationField(
+    'Any job, like “Firefighter” or “Electrician”: the page becomes that job’s own lingo, each phrase checked to be real.',
+  ),
   {
     key: 'level',
     label: 'Level',
@@ -42,7 +77,16 @@ export const WL_CONFIG_SCHEMA: StudioConfigField[] = [
         font: String(config.fontFamily ?? STUDIO_DEFAULT_FONT),
         level: parseWlLevel(config.level),
       })
-      return `Phrases from meetings, memos, deadlines, sales and teamwork, each checked to have one clear meaning. ${note}`
+      const job = wlJob(config)
+      const what =
+        job.key === WL_ANY_OCCUPATION
+          ? 'Phrases from meetings, memos, deadlines, sales and teamwork'
+          : `${job.label} lingo from across the job`
+      return `${what}, each checked to have one clear meaning. ${note}`
     },
   },
 ]
+
+export function validateWlConfig(config: StudioConfig): StudioConfigValidationError | null {
+  return validateTypedOccupation(config)
+}

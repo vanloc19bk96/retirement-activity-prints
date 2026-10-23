@@ -41,7 +41,9 @@ reaches the page on the writer's word alone:
 * **Occupation care.** Each occupation carries its own rules and blocked words
   on top of the shared ones: no medical advice in a Nurse pack, no weapons or
   tactics in a Police or Military pack, no current regulations for Truckers or
-  tax law for Accountants.
+  tax law for Accountants. A job the seller typed gets the same from its
+  planned profile (``app/services/studio_occupation.py``), and a job no warm,
+  KDP-safe pack can be written for is refused before a question is written.
 
 Variety is structural. Each requested question gets its own brief -- one of
 the occupation's topic areas and a question shape, sampled by seed -- so a
@@ -57,7 +59,7 @@ import re
 import time
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Iterable, Mapping, Sequence, Union
 
 from app.core.config import settings
 from app.schemas.studio_occupation_trivia import (
@@ -81,6 +83,11 @@ from app.services.studio_gemini import (
     StudioRateLimitError,
     call_gemini_json,
     parse_json_object,
+)
+from app.services.studio_occupation import (
+    OccupationProfile,
+    preset_profile,
+    resolve_occupation,
 )
 from app.services.studio_variety import (
     VarietyScope,
@@ -182,11 +189,6 @@ def _bad_choice_re() -> re.Pattern[str]:
     return word_pattern(string_list(_config(), "badChoiceTerms"))
 
 
-@lru_cache(maxsize=None)
-def _occupation_re(occupation: str) -> re.Pattern[str]:
-    return word_pattern(string_list(_profile(occupation), "blockedTerms"))
-
-
 @lru_cache(maxsize=1)
 def _personal_words() -> frozenset[str]:
     return frozenset(w.lower() for w in string_list(_config(), "personalWords"))
@@ -203,8 +205,13 @@ def _aliases() -> Mapping[str, str]:
     return {str(k).lower(): str(v).lower() for k, v in raw.items()}
 
 
-def _profile(occupation: str) -> Mapping[str, Any]:
-    return section(section(_config(), "occupations"), occupation)
+# A preset's id, or the planned profile of a typed job. Gates and labels take
+# either, so a test can still say "teacher".
+Occupation = Union[OccupationProfile, str]
+
+
+def _profile(occupation: Occupation) -> OccupationProfile:
+    return occupation if isinstance(occupation, OccupationProfile) else preset_profile(occupation)
 
 
 _rate_limiter = RateLimiter(
@@ -228,9 +235,9 @@ def _check_rate_limit(user_id: str) -> None:
         raise OccupationTriviaRateLimitError(str(exc)) from exc
 
 
-def _scope(req: OccupationTriviaRequest, user_id: str, seed: int) -> VarietyScope:
+def _scope(occupation: OccupationProfile, user_id: str, seed: int) -> VarietyScope:
     """One memory per occupation, across levels: a fact printed on a Gentle pack must not return on a Classic one."""
-    return VarietyScope(game=GAME, user_id=user_id, bucket=bucket_key(req.occupation), seed=seed)
+    return VarietyScope(game=GAME, user_id=user_id, bucket=bucket_key(occupation.key), seed=seed)
 
 
 @dataclass(frozen=True)
@@ -252,13 +259,13 @@ def budgets_for(req: OccupationTriviaRequest) -> Budgets:
 # ---------------------------------------------------------------- text keys
 
 
-def is_unsafe(text: str, occupation: str) -> bool:
+def is_unsafe(text: str, occupation: Occupation) -> bool:
     return bool(
         _MEDICAL_RE.search(text)
         or _FINANCE_RE.search(text)
         or _blocked_re().search(text)
         or _brand_re().search(text)
-        or _occupation_re(occupation).search(text)
+        or _profile(occupation).blocked_re.search(text)
     )
 
 
@@ -341,7 +348,7 @@ def questions_repeat(item: OccupationTriviaQuestion, other: OccupationTriviaQues
     return _jaccard(content_tokens(item.question), content_tokens(other.question)) >= QUESTION_REPEAT_JACCARD
 
 
-def question_label(occupation: str, item: OccupationTriviaQuestion) -> str:
+def question_label(occupation: Occupation, item: OccupationTriviaQuestion) -> str:
     """What a printed question is remembered by: "teacher: blackboard chalk = chalk".
 
     The occupation keeps a nurse's "clipboard" from ruling out a trucker's, and
@@ -349,15 +356,15 @@ def question_label(occupation: str, item: OccupationTriviaQuestion) -> str:
     """
     topic = _folded(item.topic)[:28].strip()
     answer = _folded(item.answer)[:20].strip()
-    return f"{occupation}: {topic} = {answer}"[:AVOID_LABEL_CHARS].strip()
+    return f"{_profile(occupation).key}: {topic} = {answer}"[:AVOID_LABEL_CHARS].strip()
 
 
-def label_repeats(item: OccupationTriviaQuestion, label: str, occupation: str) -> bool:
+def label_repeats(item: OccupationTriviaQuestion, label: str, occupation: Occupation) -> bool:
     """True when ``label`` -- a printed question's label -- names this question's fact."""
     text = str(label or "").strip()
     head, sep, rest = text.partition(": ")
     if sep:
-        if head.strip().lower() != occupation:
+        if head.strip().lower() != _profile(occupation).key:
             return False
         text = rest
     topic, sep, answer = text.partition(" = ")
@@ -395,7 +402,7 @@ def _personal(text: str) -> bool:
     return any(token in _personal_words() for token in _raw_tokens(text))
 
 
-def normalize_question(raw: Any, *, budget: int, occupation: str) -> str | None:
+def normalize_question(raw: Any, *, budget: int, occupation: Occupation) -> str | None:
     """One plain question ending in a single question mark -- or None."""
     text = _strip_labels(raw)
     if not text or not text.endswith("?") or text.count("?") != 1:
@@ -416,7 +423,7 @@ def normalize_question(raw: Any, *, budget: int, occupation: str) -> str | None:
     return text
 
 
-def normalize_choice(raw: Any, *, budget: int, occupation: str) -> str | None:
+def normalize_choice(raw: Any, *, budget: int, occupation: Occupation) -> str | None:
     """One short answer choice, with no closing full stop -- or None."""
     text = _strip_labels(raw)
     if text.endswith(".") and not text.endswith(".."):
@@ -441,7 +448,7 @@ def normalize_choice(raw: Any, *, budget: int, occupation: str) -> str | None:
     return text
 
 
-def normalize_explanation(raw: Any, *, budget: int, occupation: str) -> str | None:
+def normalize_explanation(raw: Any, *, budget: int, occupation: Occupation) -> str | None:
     """One standalone sentence for the answer page, ending in a full stop -- or None."""
     text = _strip_labels(raw).rstrip(" .").strip()
     if not text or "?" in text or "!" in text:
@@ -495,7 +502,7 @@ def _choices_distinct(choices: Sequence[str]) -> bool:
     return True
 
 
-def normalize_item(raw: Any, *, budgets: Budgets, occupation: str) -> OccupationTriviaQuestion | None:
+def normalize_item(raw: Any, *, budgets: Budgets, occupation: Occupation) -> OccupationTriviaQuestion | None:
     """One complete, well-formed question -- or None. Never a repaired one.
 
     Well-formed is not right: this is every check that can be made without
@@ -543,7 +550,7 @@ def filter_items(
     raw_items: Iterable[Any],
     *,
     budgets: Budgets,
-    occupation: str,
+    occupation: Occupation,
     cap: int,
     avoid: Iterable[str] = (),
     kept: Sequence[OccupationTriviaQuestion] = (),
@@ -584,7 +591,7 @@ def _level(level: str) -> Mapping[str, Any]:
     return section(section(_config(), "levels"), level)
 
 
-def _briefs(occupation: str, want: int, seed: int) -> list[str]:
+def _briefs(occupation: Occupation, want: int, seed: int) -> list[str]:
     """One distinct brief per question: a topic area of the job and a question shape.
 
     Areas and shapes are shuffled by seed independently, so an area meets a
@@ -592,7 +599,7 @@ def _briefs(occupation: str, want: int, seed: int) -> list[str]:
     every other one has been used.
     """
     rng = random.Random(seed)
-    areas = list(string_list(_profile(occupation), "areas"))
+    areas = list(_profile(occupation).areas)
     shapes = list(string_list(_config(), "shapes"))
     rng.shuffle(areas)
     rng.shuffle(shapes)
@@ -606,21 +613,26 @@ def _json_list(values: Iterable[str]) -> str:
     return "[" + ", ".join(f'"{value}"' for value in values) + "]"
 
 
-def _build_prompt(req: OccupationTriviaRequest, *, seed: int | None = None) -> str:
+def _build_prompt(
+    req: OccupationTriviaRequest,
+    *,
+    seed: int | None = None,
+    occupation: Occupation | None = None,
+) -> str:
     limits = _limits()
     want = min(int_value(limits, "maxWrite"), req.count + 4)
     prompt_seed = req.seed if seed is None else seed
     language = locale_line(section(_config(), "locale"), req.locale)
     budgets = budgets_for(req)
-    profile = _profile(req.occupation)
-    briefs = "\n".join(_briefs(req.occupation, want, prompt_seed))
+    profile = _profile(req.occupation if occupation is None else occupation)
+    briefs = "\n".join(_briefs(profile, want, prompt_seed))
     example = section(_config(), "example")
     latest = int_value(limits, "latestYear")
 
     return f"""Create multiple-choice trivia questions for an "Occupation Trivia Pack" in a
-large-print retirement activity book. This pack is for {profile["who"]} -- many
+large-print retirement activity book. This pack is for {profile.who} -- many
 readers did this job for decades and are proud of it. Every question should give
-a retired {str(profile["label"]).lower()} a spark of recognition: the tools, terms,
+a retired {profile.label.lower()} a spark of recognition: the tools, terms,
 routines, traditions and history of the job as they knew it.
 
 Level -- {_level(req.level)["writer"]}
@@ -643,7 +655,7 @@ The job:
 - Knowledge that belongs to THIS job: its tools, equipment, terms, routines,
   traditions, workplaces and history. Never general workplace knowledge with the
   job's name added, and never general knowledge anyone could answer.
-- {profile["care"]}
+- {profile.care}
 
 Facts:
 - Settled, well-documented facts that any good reference confirms and that will
@@ -726,7 +738,7 @@ class CheckPlan:
 def build_check_plan(
     candidates: Sequence[OccupationTriviaQuestion],
     seed: int,
-    occupation: str,
+    occupation: Occupation,
     level: str = "classic",
 ) -> CheckPlan:
     """A prompt that never says which choice is right.
@@ -755,7 +767,7 @@ def build_check_plan(
     questions = "\n\n".join(blocks)
 
     prompt = f"""You are a strict fact-checker and editor for a published, large-print
-trivia book for retirees. This pack is for {profile["who"]}. A wrong or
+trivia book for retirees. This pack is for {profile.who}. A wrong or
 debatable answer key means refunds, so when in doubt, answer false.
 
 Each question below has four lettered choices in random order. The letters
@@ -783,7 +795,7 @@ For each question:
 - "suitable": true only if it is respectful and warm: no stereotype or mockery
   of the job or of older people, no "do you remember" framing, no brands,
   celebrities or living people, no politics, religion or violence, and it keeps
-  to this rule: {profile["care"]}
+  to this rule: {profile.care}
 - "duplicate_of": the number of an EARLIER question in this list that tests the
   same fact, however worded; 0 if none.
 
@@ -902,7 +914,7 @@ async def _call_checker(prompt: str) -> str:
 async def verify_items(
     candidates: Sequence[OccupationTriviaQuestion],
     seed: int,
-    occupation: str,
+    occupation: Occupation,
     level: str = "classic",
 ) -> list[OccupationTriviaQuestion]:
     """Run the blind check. Raises when the check itself could not run."""
@@ -929,6 +941,7 @@ async def generate_occupation_trivia(
     req: OccupationTriviaRequest, user_id: str
 ) -> OccupationTriviaResponse:
     _check_rate_limit(user_id)
+    occupation = await resolve_occupation(req.occupation, req.custom_occupation)
 
     budgets = budgets_for(req)
     cap = min(int_value(_limits(), "poolSize"), req.count)
@@ -940,13 +953,15 @@ async def generate_occupation_trivia(
     # What this seller printed before: the client's list (spans workers and
     # restarts) plus this worker's own memory. A question that repeats either is
     # dropped here, not just discouraged in the prompt.
-    printed = [*req.avoid, *recent(_scope(req, user_id, req.seed), MEMORY_FILTER_LIMIT)]
+    printed = [*req.avoid, *recent(_scope(occupation, user_id, req.seed), MEMORY_FILTER_LIMIT)]
 
     for attempt in range(attempts):
         seed = req.seed + attempt * 97
-        scope = _scope(req, user_id, seed)
-        avoid = [*req.avoid, *(question_label(req.occupation, item) for item in kept)]
-        prompt = with_variety(_build_prompt(req, seed=seed), scope, client_avoid=avoid)
+        scope = _scope(occupation, user_id, seed)
+        avoid = [*req.avoid, *(question_label(occupation, item) for item in kept)]
+        prompt = with_variety(
+            _build_prompt(req, seed=seed, occupation=occupation), scope, client_avoid=avoid
+        )
         try:
             raw = await _call_writer(prompt)
             items_raw = _parse_payload(raw)
@@ -961,14 +976,14 @@ async def generate_occupation_trivia(
         candidates = filter_items(
             items_raw,
             budgets=budgets,
-            occupation=req.occupation,
+            occupation=occupation,
             cap=int_value(_limits(), "maxWrite"),
             avoid=printed,
             kept=kept,
         )
         checked += len(candidates)
         try:
-            confirmed = await verify_items(candidates, seed, req.occupation, req.level)
+            confirmed = await verify_items(candidates, seed, occupation, req.level)
         except Exception as exc:
             logger.warning(
                 "studio_occupation_trivia_check_failed attempt=%s error=%s", attempt + 1, exc
@@ -989,8 +1004,8 @@ async def generate_occupation_trivia(
         raise OccupationTriviaGenerationError(last_error)
 
     remember(
-        _scope(req, user_id, req.seed),
-        (question_label(req.occupation, item) for item in kept),
+        _scope(occupation, user_id, req.seed),
+        (question_label(occupation, item) for item in kept),
     )
     logger.info(
         "studio_occupation_trivia_generated model=%s check_model=%s latency_ms=%s "
@@ -1001,10 +1016,10 @@ async def generate_occupation_trivia(
         written,
         checked,
         len(kept),
-        req.occupation,
+        occupation.key,
         req.level,
     )
-    return OccupationTriviaResponse(occupation=req.occupation, questions=kept)
+    return OccupationTriviaResponse(occupation=occupation.key, questions=kept)
 
 
 def build_prompt_for_tests(req: OccupationTriviaRequest, *, seed: int | None = None) -> str:

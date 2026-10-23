@@ -1,4 +1,5 @@
 import { generateOccupationTrivia } from '@/api/studio-occupation-trivia.api'
+import { isStudioRefusal } from '@/api/studio-http'
 import type { StudioConfig, StudioPrefetchContext } from '@/types/studio-template.types'
 import type { OccupationTriviaResponse } from '@/types/studio-occupation-trivia.types'
 import {
@@ -15,10 +16,10 @@ import {
   OT_MIN_QUESTIONS,
   OT_TARGET_QUESTIONS,
   OT_TEMPLATE_KEY,
+  otJob,
   otLabel,
   otServiceQuestion,
   parseOtLevel,
-  parseOtOccupation,
   selectOtQuestions,
   type OtQuestion,
 } from './content'
@@ -86,7 +87,8 @@ export async function occupationTriviaPrefetch(
   context?: StudioPrefetchContext,
 ): Promise<OccupationTriviaResponse> {
   const seed = Number(config.seed ?? 1)
-  const occupation = parseOtOccupation(config.occupation)
+  const job = otJob(config)
+  const occupation = job.key
   const level = parseOtLevel(config.level)
   const varietyKey = studioVarietyKey(OT_TEMPLATE_KEY, occupation)
   // Every label carries its occupation, so another pack's questions never rule one out.
@@ -104,7 +106,8 @@ export async function occupationTriviaPrefetch(
     try {
       const remote = await generateOccupationTrivia(
         {
-          occupation,
+          occupation: job.preset,
+          ...(job.custom ? { customOccupation: job.custom } : {}),
           level,
           count: OT_REQUEST_COUNT,
           maxQuestionChars: MAX_QUESTION_CHARS,
@@ -131,7 +134,8 @@ export async function occupationTriviaPrefetch(
       if (signal.aborted) throw error
       lastError = error
       console.warn(`[${OT_TEMPLATE_KEY}] AI attempt ${attempt + 1} failed`, error)
-      if (isRateLimit(error)) break
+      // A refused job is refused again: its reason is the form's error.
+      if (isRateLimit(error) || isStudioRefusal(error)) break
     }
   }
 

@@ -1,5 +1,5 @@
 {
-  "_comment": "Work Lingo Match. Each page lists numbered workplace phrases ('Circle back') and, shuffled apart, lettered plain-English meanings ('Return to the topic later'); the reader writes each meaning's letter beside its phrase. Variety is structural: every requested pair gets its own brief (a workplace area and an era, sampled by seed), so a reply cannot be ten meeting phrases. Nothing ships on the writer's word: a second, blind call is shown the phrases and the meanings shuffled apart -- the puzzle itself -- matches each phrase to its meaning, and rates it as a real expression, an accurate meaning, the only meaning on the list that fits, familiar enough and suitable. Only pairs it matches back correctly, uniquely and passes on every count survive, and the pairs a response returns were all checked together as one set. Length budgets arrive on the request (frontend/src/utils/studio/work-lingo-match/content.ts); limits below are the hard bounds. qualifierWords (function words, pronouns, light verbs and particles) are dropped before phrases are compared, so 'Put it on the back burner' and 'Back burner' read as one phrase and two phrases sharing a word never share a page.",
+  "_comment": "Work Lingo Match. Each page lists numbered workplace phrases ('Circle back') and, shuffled apart, lettered plain-English meanings ('Return to the topic later'); the reader writes each meaning's letter beside its phrase. Variety is structural: every requested pair gets its own brief (a workplace area and an era, sampled by seed), so a reply cannot be ten meeting phrases. Nothing ships on the writer's word: a second, blind call is shown the phrases and the meanings shuffled apart -- the puzzle itself -- matches each phrase to its meaning, and rates it as a real expression, an accurate meaning, the only meaning on the list that fits, familiar enough and suitable. Only pairs it matches back correctly, uniquely and passes on every count survive, and the pairs a response returns were all checked together as one set. Length budgets arrive on the request (frontend/src/utils/studio/work-lingo-match/content.ts); limits below are the hard bounds. qualifierWords (function words, pronouns, light verbs and particles) are dropped before phrases are compared, so 'Put it on the back burner' and 'Back burner' read as one phrase and two phrases sharing a word never share a page. A page can also be one job's own lingo (the occupation: a preset from occupations/prompt.json or a job the seller typed): its briefs then pair the job's areas with jobAngles instead of areas and eras, its level lines are jobLevels, and jobExample shows the shape. The job's care rules and blocked words apply on top of this file's.",
   "limits": {
     "rateLimitPerWindow": 20,
     "maxOutputTokens": 4096,
@@ -95,5 +95,27 @@
     "they", "their", "them", "he", "she", "his", "her", "him", "this", "that", "these", "those", "there", "then", "than", "now",
     "what", "who", "which", "when", "where", "how", "why", "someone", "somebody", "something", "thing", "things", "one", "ones",
     "people", "person", "more", "most", "much", "many", "again", "later"
-  ]
+  ],
+  "jobLevels": {
+    "gentle": {
+      "writer": "Gentle: lingo nearly everyone who did this job used every day, and that many outsiders have heard too.",
+      "checker": "nearly anyone who did this job would know it straight away, and many outsiders have heard it"
+    },
+    "classic": {
+      "writer": "Classic: well-known lingo of the job -- mostly everyday terms, with a few that make a retired worker smile and think for a moment.",
+      "checker": "most people who spent years in this job would recognise it"
+    },
+    "challenging": {
+      "writer": "Challenging: lingo a long-serving worker knew well but an outsider would not -- older terms, nicknames and shop talk. Never exam or certification vocabulary, and never one workplace's private slang.",
+      "checker": "a long-serving worker in this job would know it, even if an outsider would not; it is not exam vocabulary or one workplace's private slang"
+    }
+  },
+  "jobAngles": [
+    "an everyday term of the trade",
+    "a nickname for a piece of kit, a vehicle or a place",
+    "shift, crew or radio talk",
+    "an older term from the job's earlier decades",
+    "a saying people in the job used about the work"
+  ],
+  "jobExample": {"area": "CB radio talk on the road", "phrase": "Hammer down", "meaning": "Drive at full speed"}
 }

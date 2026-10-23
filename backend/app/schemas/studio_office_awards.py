@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.schemas.studio_variety import StudioVarietyRequest
 
@@ -29,6 +29,8 @@ class OfficeAwardsRequest(StudioVarietyRequest):
     model_config = ConfigDict(populate_by_name=True)
 
     workplace: OfficeAwardsWorkplace = "any"
+    # A job the seller typed; when set it names the work and ``workplace`` is "any".
+    custom_occupation: str = Field(default="", max_length=80, alias="customOccupation")
     awards: int = Field(default=12, ge=4, le=24)
     themes: Optional[List[str]] = Field(default=None, max_length=30)
     count: Optional[int] = Field(default=None, ge=1, le=32)
@@ -36,6 +38,14 @@ class OfficeAwardsRequest(StudioVarietyRequest):
     max_award_chars: int = Field(default=48, ge=24, le=48, alias="maxAwardChars")
     seed: int = Field(default=1, ge=0)
     locale: str = Field(default="en", max_length=8)
+
+    @model_validator(mode="after")
+    def _typed_job_plans_from_every_theme(self) -> "OfficeAwardsRequest":
+        # A typed job has no rewrite of its own: it plans from every theme, in
+        # the job's words (see app/services/studio_occupation.py).
+        if self.custom_occupation.strip():
+            self.workplace = "any"
+        return self
 
 
 class OfficeAwardsItem(BaseModel):

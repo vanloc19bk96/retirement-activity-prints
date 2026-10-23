@@ -1,4 +1,5 @@
 import { generateWorkLingo } from '@/api/studio-work-lingo.api'
+import { isStudioRefusal } from '@/api/studio-http'
 import type { StudioConfig, StudioPrefetchContext } from '@/types/studio-template.types'
 import type { WorkLingoResponse } from '@/types/studio-work-lingo.types'
 import {
@@ -12,9 +13,11 @@ import {
   MAX_PHRASE_CHARS,
   MIN_PAIRS_PER_PAGE,
   WL_AI_EMPTY_MESSAGE,
+  WL_ANY_OCCUPATION,
   WL_TEMPLATE_KEY,
   parseWlLevel,
   selectWlPairs,
+  wlJob,
   wlLevelSpec,
   wlPhraseLabel,
   wlServicePair,
@@ -44,8 +47,12 @@ const MAX_AI_ATTEMPTS = 2
 /** Book phrases sent to the server as avoid hints, newest first. */
 const BOOK_AVOID_HINTS = 40
 
-/** One memory for every level: a phrase printed on a Gentle page must not return on a Classic one. */
-const VARIETY_BUCKET = 'all'
+/**
+ * One memory per job for every level: a phrase printed on a Gentle page must
+ * not return on a Classic one. Everyday workplace talk keeps the bucket it
+ * always had.
+ */
+const varietyBucket = (key: string) => (key === WL_ANY_OCCUPATION ? 'all' : key)
 
 const isRateLimit = (error: unknown) =>
   error instanceof Error && /too many/i.test(error.message)
@@ -89,10 +96,11 @@ export async function workLingoPrefetch(
   context?: StudioPrefetchContext,
 ): Promise<WorkLingoResponse> {
   const seed = Number(config.seed ?? 1)
+  const job = wlJob(config)
   const level = parseWlLevel(config.level)
   const target = wlLevelSpec(level).maxPairs
   const count = wlRequestCount(target)
-  const varietyKey = studioVarietyKey(WL_TEMPLATE_KEY, VARIETY_BUCKET)
+  const varietyKey = studioVarietyKey(WL_TEMPLATE_KEY, varietyBucket(job.key))
   const book = context?.bookContentLabels(WL_TEMPLATE_KEY) ?? []
   const recent = studioAvoidList(varietyKey)
   const hints = [...book.slice(-BOOK_AVOID_HINTS).reverse().map(wlPhraseLabel), ...recent]
@@ -105,6 +113,8 @@ export async function workLingoPrefetch(
     try {
       const remote = await generateWorkLingo(
         {
+          occupation: job.preset,
+          ...(job.custom ? { customOccupation: job.custom } : {}),
           level,
           count,
           maxPhraseChars: MAX_PHRASE_CHARS,
@@ -117,9 +127,13 @@ export async function workLingoPrefetch(
         },
         signal,
       )
-      const usable = selectWlPairs(remote?.pairs, { cap: count, avoid: [...book, ...recent] })
+      // A reply written for another job (an older deploy, a mock) never fills this page;
+      // replies from before the echo existed were always everyday talk.
+      const echoed = remote?.occupation ?? WL_ANY_OCCUPATION
+      const pairs = echoed === job.key ? remote?.pairs : []
+      const usable = selectWlPairs(pairs, { cap: count, avoid: [...book, ...recent] })
       if (usable.length > best.length) best = usable
-      for (const pair of remote?.pairs ?? []) {
+      for (const pair of pairs ?? []) {
         const phrase = String(pair?.phrase ?? '').trim()
         if (phrase) offered.push(wlPhraseLabel(phrase))
       }
@@ -130,13 +144,14 @@ export async function workLingoPrefetch(
       if (signal.aborted) throw error
       lastError = error
       console.warn(`[${WL_TEMPLATE_KEY}] AI attempt ${attempt + 1} failed`, error)
-      if (isRateLimit(error)) break
+      // A refused job is refused again: its reason is the form's error.
+      if (isRateLimit(error) || isStudioRefusal(error)) break
     }
   }
 
   if (best.length >= MIN_PAIRS_PER_PAGE) {
     rememberStudioContent(varietyKey, best.map((pair) => wlPhraseLabel(pair.phrase)))
-    return { pairs: best.map(wlServicePair) }
+    return { pairs: best.map(wlServicePair), occupation: job.key }
   }
   if (lastError instanceof Error && lastError.message.trim()) {
     throw new Error(lastError.message.trim())

@@ -11,20 +11,38 @@ interface ApiErrorBody {
   detail?: string | { message?: string }
 }
 
+/** A studio endpoint's error, with the HTTP status it came back with. */
+export class StudioHttpError extends Error {
+  readonly status: number
+
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'StudioHttpError'
+    this.status = status
+  }
+}
+
+/**
+ * The service refused the request itself (422) — a typed occupation no page
+ * can be written for, say. Asking again gets the same answer, so callers stop.
+ */
+export const isStudioRefusal = (error: unknown): boolean =>
+  error instanceof StudioHttpError && error.status === 422
+
 function buildJsonHeaders(): Record<string, string> {
   return { 'Content-Type': 'application/json', ...launchAuthHeaders() }
 }
 
 async function readError(response: Response, label: string): Promise<Error> {
-  const fallback = new Error(`${label} failed (${response.status})`)
+  const fallback = new StudioHttpError(`${label} failed (${response.status})`, response.status)
   try {
     const body = (await response.json()) as ApiErrorBody
     if (typeof body.detail === 'string' && body.detail.trim()) {
-      return new Error(body.detail.trim())
+      return new StudioHttpError(body.detail.trim(), response.status)
     }
     if (body.detail && typeof body.detail === 'object') {
       const message = body.detail.message?.trim()
-      if (message) return new Error(message)
+      if (message) return new StudioHttpError(message, response.status)
     }
     return fallback
   } catch {

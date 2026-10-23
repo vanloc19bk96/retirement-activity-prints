@@ -8,7 +8,7 @@ import type {
 import { STUDIO_BODY_SIZE, STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
 import { boxCenterX, drawHeader } from '../studio-layout'
 import { buildText, type StudioTag } from '../studio-fabric-builders'
-import { OT_CONFIG_SCHEMA, instructionFor } from './config'
+import { OT_CONFIG_SCHEMA, instructionFor, validateOtConfig } from './config'
 import {
   OT_AI_EMPTY_MESSAGE,
   OT_BUILD_FAILED_MESSAGE,
@@ -16,7 +16,7 @@ import {
   OT_MIN_QUESTIONS,
   OT_PAGE_TOO_SMALL_MESSAGE,
   OT_TEMPLATE_KEY,
-  parseOtOccupation,
+  otJob,
   parseOtPayload,
   selectOtQuestions,
 } from './content'
@@ -74,7 +74,7 @@ function errorPage(
  */
 function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageOutput[] {
   const font = String(config.fontFamily ?? STUDIO_DEFAULT_FONT)
-  const occupation = parseOtOccupation(config.occupation)
+  const occupation = otJob(config).key
   const instruction = instructionFor(config)
   const tag: StudioTag = { templateKey: OT_TEMPLATE_KEY, instanceId: ctx.instanceId, pageRole: 'single' }
   const fail = (message: string) => [errorPage(ctx, config, tag, message)]
@@ -129,7 +129,7 @@ export const occupationTriviaTemplate: StudioTemplateDefinition = {
   label: 'Occupation Trivia Pack',
   category: 'trivia',
   description:
-    'Retirement Edition: about ten multiple-choice questions celebrating one job (Teacher, Nurse, Police, Military, Trucker, Engineer, Accountant or Postal). Questions come from the tools, terms, routines, traditions and history of that work, and every answer is fact-checked before it prints. Readers circle a letter; one answer page lists every answer with a short note. Pick an occupation and a level; the type size and pages are fitted to your trim. Fresh questions every pack, never repeated within your book.',
+    'Retirement Edition: about ten multiple-choice questions celebrating one job: pick Teacher, Nurse, Police, Military, Trucker, Engineer, Accountant or Postal, or type any other (Firefighter, Electrician, Pharmacist…) for a book written for that job. Questions come from the tools, terms, routines, traditions and history of that work, and every answer is fact-checked before it prints. Readers circle a letter; one answer page lists every answer with a short note. Pick an occupation and a level; the type size and pages are fitted to your trim. Fresh questions every pack, never repeated within your book.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: OT_DEFAULT_TITLE,
@@ -155,5 +155,6 @@ export const occupationTriviaTemplate: StudioTemplateDefinition = {
     <path d="M11 36.6h32" stroke="currentColor" stroke-width="0.9" stroke-linecap="round"/>
   </svg>`,
   configSchema: OT_CONFIG_SCHEMA,
+  validateConfig: validateOtConfig,
   generate,
 }

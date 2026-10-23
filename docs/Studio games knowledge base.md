@@ -51,6 +51,28 @@ options it exposes* — not the implementation. Source of truth in code:
   - *Page title* (toggle) + *Title text* — leave blank to auto-number as
     "Game N" / "Solution Game N".
   - *Show instructions* (toggle) — show/hide the on-page instruction line.
+- **Occupation (job-themed games)** — sellers build sub-niche books ("for
+  Retired Firefighters") whose title only holds up if a few games inside are
+  about that job. Four games take an occupation the same way: Occupation
+  Trivia Pack, Work Lingo Match, Office Awards and Career By the Numbers. Each
+  shows its presets and, above them, a *Type my own occupation* switch that
+  swaps the picker for a text box (any job up to 40 characters and 5 words).
+  The form refuses a company or brand name and a refused job before anything
+  is sent (`utils/studio/_shared/occupations.ts`). The API then plans the job
+  (`services/studio_occupation.py`): one AI call decides whether a warm,
+  KDP-safe page can be written for it at all (a real line of work, not a
+  company, person, hobby or joke, and not one whose everyday knowledge is
+  violence, sex, drugs, alcohol, gambling, politics or religion) and, if so,
+  writes its profile: label, who the page is for, sixteen areas of the job, a
+  care rule and blocked words. Code checks every field again. A refusal comes
+  back as a 422 with a plain reason, and the form shows it as the error. A
+  typed preset ("Teacher") is the preset. Profiles and refusals are cached per
+  worker by the folded name, and one lock per name means a book asking for
+  six pages of one job plans it once. Presets live in
+  `backend/app/data/studio/occupations/prompt.json`. A test keeps the
+  frontend's presets, refused and brand lists and name limits identical to it.
+  The 18 word games with *Write my own theme* already take any job as a theme
+  ("Life at the fire station"), so a whole book can be themed to one job.
 - **Canvas-edit hint** — a few games group their output so the editor shows a
   tip ("ungroup the grid, then add from Components") if the user wants to
   hand-edit individual cells after generation. Marked **Canvas-edit hint** below.
@@ -2968,7 +2990,9 @@ Pages: 1 · Answer key: no · AI content: yes (sayings; lettering and pattern ar
 ### Occupation Trivia Pack (`occupation-trivia`)
 A multiple-choice trivia pack built for retirement books that celebrate one
 career. The seller picks an occupation (Teacher, Nurse, Police, Military,
-Trucker, Engineer, Accountant or Postal) and gets about ten numbered questions
+Trucker, Engineer, Accountant or Postal), or types any other job behind the
+*Type my own occupation* switch (Firefighter, Electrician, Pharmacist; see
+*Occupation* under Shared concepts), and gets about ten numbered questions
 from the tools, terms, routines, traditions and history of that job ("What did
 teachers write on the blackboard with?", "Which trailer keeps a load cold?").
 Each question has four choices, lettered A to D, and every letter sits inside a
@@ -2999,11 +3023,18 @@ question never runs past four lines and a choice never past two. The answer
 page tries 16 pt down to 13 pt with notes at 12 pt or larger. If no size holds
 the notes, it drops the notes and keeps every answer.
 
-Occupations are profiles in `backend/app/data/studio/occupation-trivia/prompt.json`.
-Each profile has its topic areas (eighteen per job), a care rule and its own
-blocked words. Adding an occupation means adding a profile there, one value in
-the schema and one line in `utils/studio/occupation-trivia/content.ts`. Tests
-keep the three in step. The care rules keep each pack safe for its job:
+Preset occupations are profiles in `backend/app/data/studio/occupations/prompt.json`,
+shared with the other job-themed games. Each profile has its topic areas
+(eighteen per job), a care rule and its own blocked words. Adding a preset
+means adding a profile there, one value in the schema and one line in
+`utils/studio/_shared/occupations.ts` (plus its help line in
+`occupation-trivia/content.ts`). Tests keep them in step. A typed job gets
+the same from its planned profile: its sixteen areas brief the questions, its
+care rule goes to the writer and to the blind check, and its blocked words
+gate every question, choice and note in the API. A typed job's pack is
+labelled and remembered under the folded name ("bus driver: ..."), and the
+API echoes that key, so a reply for another job never fills the pack. The care
+rules keep each pack safe for its job:
 - Nurse: history, equipment names and routines, never medical advice, doses or
   treatments.
 - Police and Military: no weapons, tactics or operations. Military questions
@@ -3157,8 +3188,16 @@ spaced-capital headings. The answer page sets every phrase again under the same
 number, its letter in the box in bold and the exact meaning from the puzzle in
 italics beneath it. Nothing depends on colour.
 
-Settings: the level only. Gentle deals everyday office phrases nearly everyone
-knows and holds at most eight pairs; Classic mixes familiar phrases with a few
+Settings: whose lingo and the level. *Whose lingo?* is everyday workplace talk
+(default), one preset job's own lingo ("Trucker lingo": "Hammer down" = "Drive
+at full speed"), or any job typed behind the *Type my own occupation* switch.
+A job's page is briefed from the job's own areas, each paired with an angle (an
+everyday term of the trade, a nickname for kit or a place, shift or radio talk,
+an older term, a saying about the work). It has its own level lines
+(`jobLevels`), and the blind check judges each phrase as that job uses it,
+with the job's care rule and blocked words on top. Each job keeps its own
+memory; everyday talk keeps the bucket it always had. Gentle deals everyday
+office phrases nearly everyone knows and holds at most eight pairs; Classic mixes familiar phrases with a few
 to think about; Challenging reaches for less obvious but still widely used
 business idioms (never niche industry jargon or new startup slang). Classic and
 Challenging hold up to ten. Workplace area, pairs per page, type size and decoy
@@ -3729,7 +3768,11 @@ and the "Why" line.
   no coworker names are ever asked for.
 - *Where did they work?*: any workplace (default: no cubicles or corporate
   jargon), office, school, healthcare (never anything medical), shop /
-  restaurant / hotel, or workshop / site / factory.
+  restaurant / hotel, or workshop / site / factory. Or *Type my own
+  occupation*: the team's job (Firefighter, Bus driver). A typed job plans
+  from every theme, and the prompt's workplace line becomes the job's own
+  ("The team worked as firefighters and fire service crews..."), with its care
+  rule. Its awards are remembered under the job.
 - *Awards*: 6, 8, 10 (default), 12, 16, 20 or 24.
 - *Add a "Why" line*: off by default. The winner's name stays the core
   interaction, and the reason line is for keepsake books.
@@ -4091,7 +4134,9 @@ questions and the distance unit.
 - *What kind of work?*: any kind of work (default: nothing assumes a desk,
   email, a commute or a Monday-to-Friday week), office, school, healthcare
   (never anything medical), shop / restaurant / hotel, or workshop / site /
-  on the road.
+  on the road. Or *Type my own occupation*: the retiree's job. A typed job
+  plans from every theme, the prompt counts that job's own moments, shifts
+  and kit, and its questions are remembered under the job.
 - *Questions*: 6, 8 (default), 10, 12, 15 or 20.
 - *Distances in*: miles (default) or kilometres. Every commute or travel
   question uses that unit, so nobody wonders which to write.

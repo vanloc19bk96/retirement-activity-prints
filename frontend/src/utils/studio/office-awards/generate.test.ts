@@ -112,13 +112,19 @@ describe('office-awards registry', () => {
     expect(registered.prefetch).toBeTypeOf('function')
   })
 
-  it('asks only the name, the workplace, how many awards and the reason line', () => {
+  it('asks only the name, the workplace (or the team’s own job), how many awards and the reason line', () => {
     expect(officeAwardsTemplate.configSchema.map((f) => f.key)).toEqual([
       'retireeName',
+      'writeOwnOccupation',
       'workplace',
+      'customOccupation',
       'awards',
       'reasonLine',
     ])
+    const validate = officeAwardsTemplate.validateConfig!
+    const base = buildDefaultConfig(officeAwardsTemplate)
+    expect(validate({ ...base, writeOwnOccupation: true, customOccupation: 'Firefighter' })).toBeNull()
+    expect(validate({ ...base, writeOwnOccupation: true, customOccupation: '' })?.field).toBe('customOccupation')
     const config = buildDefaultConfig(officeAwardsTemplate)
     expect(config.retireeName).toBe('')
     expect(config.workplace).toBe('any')

@@ -20,6 +20,8 @@ export type CareerNumbersDistance = 'miles' | 'km'
 
 export interface CareerNumbersRequest {
   workplace: CareerNumbersWorkplace
+  /** A job the seller typed; when set it names the work and `workplace` is "any". */
+  customOccupation?: string
   distance: CareerNumbersDistance
   /** Questions the printed set holds; the service adds spares. */
   questions: number

@@ -8,7 +8,7 @@ import type {
 import { STUDIO_BODY_SIZE, STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
 import { boxCenterX, drawHeader } from '../studio-layout'
 import { buildText, type StudioTag } from '../studio-fabric-builders'
-import { WL_CONFIG_SCHEMA, instructionFor } from './config'
+import { WL_CONFIG_SCHEMA, instructionFor, validateWlConfig } from './config'
 import {
   WL_AI_EMPTY_MESSAGE,
   WL_BUILD_FAILED_MESSAGE,
@@ -127,7 +127,7 @@ export const workLingoTemplate: StudioTemplateDefinition = {
   label: 'Work Lingo Match',
   category: 'trivia',
   description:
-    'Retirement Edition: how many of these workplace phrases do you remember? Match office classics like "circle back", "touch base" and "low-hanging fruit" to their plain-English meanings by writing a letter in each box. Every phrase is checked to be real, with one clear meaning on the page. Pick a level; the number of pairs and type size are fitted to your page. Fresh phrases every page, never repeated within your book.',
+    'Retirement Edition: how many of these workplace phrases do you remember? Match office classics like "circle back", "touch base" and "low-hanging fruit" to their plain-English meanings by writing a letter in each box, or make the page one job\'s own shop talk: Trucker, Nurse, Police and the other presets, or any job you type (Firefighter, Electrician…) for a book written for that job. Every phrase is checked to be real, with one clear meaning on the page. Pick a level; the number of pairs and type size are fitted to your page. Fresh phrases every page, never repeated within your book.',
   pageCount: 1,
   producesAnswerKey: true,
   defaultPageTitle: WL_DEFAULT_TITLE,
@@ -152,5 +152,6 @@ export const workLingoTemplate: StudioTemplateDefinition = {
     <path d="M5 25.2h54" stroke="currentColor" stroke-width="0.4" opacity="0.35"/>
   </svg>`,
   configSchema: WL_CONFIG_SCHEMA,
+  validateConfig: validateWlConfig,
   generate,
 }
