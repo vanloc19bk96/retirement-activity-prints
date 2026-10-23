@@ -4,6 +4,7 @@ import { PageRow } from './PageRow'
 import { CanvasPageItem, MAX_EDITOR_INTERIOR_PAGES } from './CanvasPageItem'
 import { clampZoom, DEFAULT_ZOOM } from './ZoomControl'
 import { Toolbar } from './Toolbar'
+import { RightInspector, useInspectorState } from './inspector/RightInspector'
 import {
   DeletePageDialogHost,
   type DeletePageDialogHostHandle,
@@ -50,6 +51,13 @@ import {
 } from '@/utils/editor-page-navigation'
 import { onEditorInsertPages, onEditorRemovePages } from '@/utils/editor-page-events'
 import { onCreateNewProject } from '@/utils/new-project-events'
+import {
+  READ_INTERIOR_PAGES_EVENT,
+  REWRITE_INTERIOR_PAGES_EVENT,
+  type ReadInteriorPagesEventDetail,
+  type RewriteInteriorPages,
+  type RewriteInteriorPagesEventDetail,
+} from '@/utils/page-design-events'
 import {
   onStudioArrangeSolutions,
   onStudioWritePage,
@@ -249,11 +257,10 @@ function revokeRemovedThumbnailUrls(previousUrls: Record<number, string>, nextUr
   }
 }
 type MainContentProps = {
-  onOpenAlignmentPanel?: () => void
   canvasStateStore: CanvasStateStore
 }
 
-export const MainContent = memo(function MainContent({ onOpenAlignmentPanel, canvasStateStore }: MainContentProps): JSX.Element {
+export const MainContent = memo(function MainContent({ canvasStateStore }: MainContentProps): JSX.Element {
   const [zoomLevel, setZoomLevel] = useState(DEFAULT_ZOOM)
   const [showCanvasGrid, setShowCanvasGrid] = useState(false)
   const { isInteriorMode, setIsInteriorMode } = useEditorMode()
@@ -351,6 +358,25 @@ export const MainContent = memo(function MainContent({ onOpenAlignmentPanel, can
   const isStarterPlanLocked = isUserOnStarterPlan(user)
   const interiorPageWidth = pageDimensions.widthPixels
   const interiorPageHeight = pageDimensions.heightPixels
+  const isInteriorModeRef = useRef(isInteriorMode)
+  isInteriorModeRef.current = isInteriorMode
+  const isCanvasesLoadingRef = useRef(isCanvasesLoading)
+  isCanvasesLoadingRef.current = isCanvasesLoading
+  const activePageIndexRef = useRef(activePageIndex)
+  activePageIndexRef.current = activePageIndex
+
+  const inspector = useInspectorState()
+  const { openTab: openInspectorTab } = inspector
+  const handleOpenAlignment = useCallback((): void => openInspectorTab('design'), [openInspectorTab])
+
+  /** The inspector works on the cover, or the interior page that is active / in view. */
+  const layersCanvasIndex = isInteriorMode ? activePageIndex : -1
+  const layersCanvasIndexRef = useRef(layersCanvasIndex)
+  layersCanvasIndexRef.current = layersCanvasIndex
+  const [layersCanvas, setLayersCanvas] = useState<Canvas | null>(null)
+  useEffect(() => {
+    setLayersCanvas(editor.getCanvasByIndex(layersCanvasIndex))
+  }, [editor.getCanvasByIndex, layersCanvasIndex])
 
   useEffect(() => {
     thumbnailUrlsRef.current = thumbnailUrls
@@ -500,6 +526,7 @@ export const MainContent = memo(function MainContent({ onOpenAlignmentPanel, can
   const handleCanvasReady = useCallback(
     (canvasIndex: number, canvas: Canvas | null): void => {
       editor.pageRow.onCanvasReady(canvasIndex, canvas)
+      if (canvasIndex === layersCanvasIndexRef.current) setLayersCanvas(canvas)
 
       detachThumbnailListeners(canvasIndex)
       thumbnailCanvasByIndexRef.current.delete(canvasIndex)
@@ -1468,6 +1495,134 @@ export const MainContent = memo(function MainContent({ onOpenAlignmentPanel, can
     ],
   )
 
+  /**
+   * Replace the interior with `pages` (`rebuildInteriorPages`; the live canvases
+   * must be synced to the store first). Rows that keep their snapshot keep their
+   * slot key, so a moved one remounts at its new index; rebuilt pages get a
+   * fresh slot and restore from the store. Returns where each old page went
+   * (`newIndexOf[oldIndex]`, unset for a page folded into a rebuilt one) and the
+   * new indices whose rows changed.
+   */
+  const commitInteriorPages = useCallback(
+    (
+      pages: ReadonlyArray<{ from: number | null; json?: object }>,
+    ): { newIndexOf: number[]; changed: Set<number> } => {
+      // Remount cleanups must not save old canvases over the rebuilt snapshots.
+      // The resume effect undoes one suspension per commit, so never stack two.
+      if (!shouldResumeStoreSaveRef.current) {
+        shouldResumeStoreSaveRef.current = true
+        canvasStateStore.suspendSave()
+      }
+      canvasStateStore.rebuildInteriorPages(pages)
+
+      const newIndexOf: number[] = []
+      const changed = new Set<number>()
+      pages.forEach((page, newIndex) => {
+        if (page.from != null) newIndexOf[page.from] = newIndex
+        if (page.from !== newIndex || page.json !== undefined) changed.add(newIndex)
+      })
+
+      // In-flight studio live writes target the old index -> canvas mapping.
+      for (const pageIndex of changed) {
+        studioWriteGenerationRef.current.set(
+          pageIndex,
+          (studioWriteGenerationRef.current.get(pageIndex) ?? 0) + 1,
+        )
+      }
+
+      resetThumbnailRuntimeState()
+      updateThumbnailUrls((prev) => {
+        const next: Record<number, string> = {}
+        pages.forEach((page, newIndex) => {
+          const url = page.from != null && page.json === undefined ? prev[page.from] : undefined
+          if (url) next[newIndex] = url
+        })
+        return next
+      })
+      setInteriorPageSlotKeys((prev) =>
+        pages.map((page) =>
+          page.from != null ? (prev[page.from] ?? createInteriorPageSlotKey()) : createInteriorPageSlotKey(),
+        ),
+      )
+      setSaveResumeToken((t) => t + 1)
+      if (pages.length !== interiorPageCountRef.current) {
+        interiorPageCountRef.current = pages.length
+        setPageCount(pages.length)
+        setActivePageIndex((prev) => clampPageIndex(prev, pages.length))
+      }
+      refreshHasUnsavedChanges()
+      return { newIndexOf, changed }
+    },
+    [
+      canvasStateStore,
+      refreshHasUnsavedChanges,
+      resetThumbnailRuntimeState,
+      setPageCount,
+      updateThumbnailUrls,
+    ],
+  )
+
+  /** Apply a page-level change (`requestInteriorPagesRewrite`) to the interior; returns the pages it added or changed. */
+  const rewriteInteriorPages = useCallback(
+    (rewrite: RewriteInteriorPages): number => {
+      if (!isInteriorModeRef.current) throw new Error('Switch to the interior pages to change them.')
+      if (isCanvasesLoadingRef.current) throw new Error('The project is still loading. Try again in a moment.')
+      syncEditorInteriorCanvasesToStore()
+      const pages = Array.from({ length: interiorPageCountRef.current }, (_, i) => canvasStateStore.getSerialized(i))
+      const planned = rewrite(pages, {
+        activePageIndex: clampPageIndex(activePageIndexRef.current, pages.length),
+        size: { width: interiorPageWidth, height: interiorPageHeight },
+      })
+      if (!planned) return 0
+      if (planned.layout.length > MAX_EDITOR_INTERIOR_PAGES) {
+        throw new Error(`A book can have at most ${MAX_EDITOR_INTERIOR_PAGES} pages. Remove some pages first.`)
+      }
+      const changed = planned.layout.filter((page) => page.json !== undefined).length
+      if (changed === 0 && planned.layout.length === pages.length) return 0
+      commitInteriorPages(planned.layout.map(({ from, json }) => ({ from: from ?? null, json })))
+      if (planned.focus !== undefined) {
+        setActivePageIndex(clampPageIndex(planned.focus, planned.layout.length))
+      }
+      return changed
+    },
+    [canvasStateStore, commitInteriorPages, interiorPageHeight, interiorPageWidth, syncEditorInteriorCanvasesToStore],
+  )
+
+  useEffect(() => {
+    const handleRewriteEvent = (event: Event): void => {
+      const detail = (event as CustomEvent<RewriteInteriorPagesEventDetail>).detail
+      if (!detail) return
+      detail.handled = true
+      try {
+        detail.resolve(rewriteInteriorPages(detail.rewrite))
+      } catch (caught) {
+        detail.reject(caught)
+      }
+    }
+    window.addEventListener(REWRITE_INTERIOR_PAGES_EVENT, handleRewriteEvent)
+    return () => {
+      window.removeEventListener(REWRITE_INTERIOR_PAGES_EVENT, handleRewriteEvent)
+    }
+  }, [rewriteInteriorPages])
+
+  useEffect(() => {
+    const handleReadEvent = (event: Event): void => {
+      const detail = (event as CustomEvent<ReadInteriorPagesEventDetail>).detail
+      if (!detail) return
+      detail.handled = true
+      if (isCanvasesLoadingRef.current) {
+        detail.reject(new Error('The project is still loading. Try again in a moment.'))
+        return
+      }
+      syncEditorInteriorCanvasesToStore()
+      detail.resolve(Array.from({ length: interiorPageCountRef.current }, (_, i) => canvasStateStore.getSerialized(i)))
+    }
+    window.addEventListener(READ_INTERIOR_PAGES_EVENT, handleReadEvent)
+    return () => {
+      window.removeEventListener(READ_INTERIOR_PAGES_EVENT, handleReadEvent)
+    }
+  }, [canvasStateStore, syncEditorInteriorCanvasesToStore])
+
   const handleClearCoverCanvasOnly = useCallback((): void => {
     shouldResumeStoreSaveRef.current = true
     canvasStateStore.suspendSave()
@@ -2175,11 +2330,12 @@ export const MainContent = memo(function MainContent({ onOpenAlignmentPanel, can
         onStrokeColorChange={editor.toolbar.onStrokeColorChange}
         onFillColorChange={editor.toolbar.onFillColorChange}
         onCornerRadiusChange={editor.toolbar.onCornerRadiusChange}
-        onOpenAlignmentPanel={onOpenAlignmentPanel}
+        onOpenAlignmentPanel={handleOpenAlignment}
       />
+      <div className="relative flex min-h-0 flex-1">
       <div
         ref={scrollRef}
-        className="workspace-surface isolate min-h-0 flex-1 overflow-auto pt-6 pb-6"
+        className="workspace-surface isolate min-h-0 min-w-0 flex-1 overflow-auto pt-6 pb-6"
         onPointerMove={(event) => {
           const el = scrollRef.current
           if (!el) return
@@ -2280,6 +2436,13 @@ export const MainContent = memo(function MainContent({ onOpenAlignmentPanel, can
             </div>
           </EditorScrollRootProvider>
         )}
+      </div>
+      <RightInspector
+        canvas={layersCanvas}
+        isCover={!isInteriorMode}
+        pageIndex={activePageIndex}
+        state={inspector}
+      />
       </div>
       <MainFooter
         isInteriorMode={isInteriorMode}

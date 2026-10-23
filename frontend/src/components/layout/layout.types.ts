@@ -8,7 +8,6 @@ export type PanelKey =
   | 'setting'
   | 'download'
   | 'save'
-  | 'alignment'
   | 'bookInfo'
 
 /** Panels in the right-hand bar (Book Cover only). */

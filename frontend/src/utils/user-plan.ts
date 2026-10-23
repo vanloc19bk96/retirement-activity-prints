@@ -36,6 +36,13 @@ export function isUserEmojisLocked(user: { plan: string | null } | null): boolea
   return user !== null && !isProPlan(user.plan)
 }
 
+/** The Tools and Photos panels are Pro-only: Starter and Standard are locked. */
+export function isUserToolsLocked(user: { plan: string | null } | null): boolean {
+  if (user === null) return false
+  const normalized = normalizeUserPlan(user.plan)
+  return isStarterPlan(normalized) || normalized === 'standard'
+}
+
 /** Matches backend Standard tier (legacy: `premium`, `pro`). */
 export function isStandardTierPlan(plan: string | null | undefined): boolean {
   const normalized = normalizeUserPlan(plan)
@@ -44,6 +51,16 @@ export function isStandardTierPlan(plan: string | null | undefined): boolean {
 
 export function isUserOnStandardTierPlan(user: { plan: string | null } | null): boolean {
   return user !== null && isStandardTierPlan(user.plan)
+}
+
+/** Page tools are Pro-only: page backgrounds, objects repeated across pages. */
+export function isUserPageToolsLocked(user: { plan: string | null } | null): boolean {
+  return user !== null && !isProPlan(user.plan)
+}
+
+/** Checking every page of the book at once is Pro-only; every plan checks the open page. */
+export function isUserBookCheckLocked(user: { plan: string | null } | null): boolean {
+  return user !== null && !isProPlan(user.plan)
 }
 
 /** AI book cover generation is Pro-only. */

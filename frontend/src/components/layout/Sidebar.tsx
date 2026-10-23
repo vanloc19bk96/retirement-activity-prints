@@ -20,13 +20,13 @@ import { DownloadPanel } from '@/components/panels/DownloadPanel'
 import { PhotosPanel } from '@/components/panels/PhotosPanel'
 import { ToolsPanel } from '@/components/panels/ToolsPanel'
 import { SavePanel } from '@/components/panels/SavePanel'
-import { AlignmentPanel } from '@/components/panels/AlignmentPanel'
 import { BookInfoPanel } from '@/components/panels/BookInfoPanel'
 import { useCanvasSave } from '@/context/CanvasSaveContext'
 import { useAuthContext } from '@/context/AuthContext'
 import { useCanvasPenTool } from '@/context/CanvasPenToolContext'
 import { useEditorMode } from '@/context/EditorModeContext'
 import { getPlanLockedTooltip } from '@/constants/plan-lock-tooltips'
+import { isUserToolsLocked } from '@/utils/user-plan'
 import {
   navChipClasses,
   navIconClasses as iconClasses,
@@ -70,13 +70,7 @@ export function Sidebar({
   const { activeDrawingTool, setActiveDrawingTool } = useCanvasPenTool()
   const { isBookCoverMode } = useEditorMode()
   const wasBookCoverModeRef = useRef(isBookCoverMode)
-  const normalizedPlan = user?.plan?.trim().toLowerCase() ?? null
-  const isToolsAndPhotosLocked =
-    user !== null &&
-    (normalizedPlan === 'starter' ||
-      normalizedPlan === 'essential' ||
-      normalizedPlan === 'basic' ||
-      normalizedPlan === 'standard')
+  const isToolsAndPhotosLocked = isUserToolsLocked(user)
 
   const getItemClasses = (panel: PanelKey): string => navItemClasses(activePanel === panel)
   const getChipClasses = (panel: PanelKey, tone: NavTone): string =>
@@ -232,9 +226,6 @@ export function Sidebar({
           </div>
           <div className={panelContentClasses('save', activePanel)}>
             <SavePanel />
-          </div>
-          <div className={panelContentClasses('alignment', activePanel)}>
-            <AlignmentPanel />
           </div>
           <div className={panelContentClasses('bookInfo', activePanel)}>
             <BookInfoPanel />

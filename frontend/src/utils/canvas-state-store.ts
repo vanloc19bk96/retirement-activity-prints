@@ -23,6 +23,8 @@ export const CUSTOM_OBJECT_PROPS: string[] = [
   'selectable',
   'editable',
   'objectId',
+  // Name the user gave the object in the Layers panel.
+  'layerName',
   // Eraser: stroke records baked into image pixel buffer at runtime.
   'eraserStrokes',
   'eraserSourceCrop',
@@ -646,6 +648,48 @@ export class CanvasStateStore {
     else this.pendingFabricBaselineReconcile.delete(pageIndexB)
     if (pendingB) this.pendingFabricBaselineReconcile.add(pageIndexA)
     else this.pendingFabricBaselineReconcile.delete(pageIndexA)
+  }
+
+  /**
+   * Replace the interior with `pages`: each keeps the snapshot (and authoring
+   * size) of its `from` page, or takes `json` when it has one. The page count
+   * may change. As with reorder, baselines stay at their indices so every
+   * changed page reads as dirty; those past the new end go, as after a delete.
+   */
+  rebuildInteriorPages(pages: ReadonlyArray<{ from: number | null; json?: object }>): void {
+    const nextStore = new Map<number, object>()
+    const nextSizes = new Map<number, CanvasLogicalSize>()
+    pages.forEach(({ from, json }, newIndex) => {
+      if (json) {
+        nextStore.set(newIndex, prepareCanvasJsonForPersistence(json))
+        return
+      }
+      if (from == null) return
+      const value = this.store.get(from)
+      if (value) nextStore.set(newIndex, value)
+      const size = this.authoringLogicalSizeByIndex.get(from)
+      if (size) nextSizes.set(newIndex, size)
+    })
+
+    const isUnchanged = (index: number): boolean =>
+      index < pages.length && pages[index]!.from === index && pages[index]!.json === undefined
+    for (const index of Array.from(this.store.keys())) {
+      if (index >= 0) this.store.delete(index)
+    }
+    for (const index of Array.from(this.authoringLogicalSizeByIndex.keys())) {
+      if (index >= 0) this.authoringLogicalSizeByIndex.delete(index)
+    }
+    for (const index of Array.from(this.fabricLiveTrusted)) {
+      if (index >= 0 && !isUnchanged(index)) this.fabricLiveTrusted.delete(index)
+    }
+    for (const index of Array.from(this.pendingFabricBaselineReconcile)) {
+      if (index >= 0 && !isUnchanged(index)) this.pendingFabricBaselineReconcile.delete(index)
+    }
+    for (const index of Array.from(this.baselineSerialized.keys())) {
+      if (index >= pages.length) this.baselineSerialized.delete(index)
+    }
+    for (const [index, value] of nextStore) this.store.set(index, value)
+    for (const [index, size] of nextSizes) this.authoringLogicalSizeByIndex.set(index, size)
   }
 
   /**

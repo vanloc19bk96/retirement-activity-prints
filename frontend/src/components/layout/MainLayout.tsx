@@ -54,7 +54,6 @@ export function MainLayout(): JSX.Element {
     setting: false,
     download: false,
     save: false,
-    alignment: false,
     bookInfo: false,
   })
 
@@ -79,10 +78,6 @@ export function MainLayout(): JSX.Element {
     return onOpenEditorPanel(({ panel }) => {
       openPanel(panel)
     })
-  }, [openPanel])
-
-  const handleOpenAlignmentPanel = useCallback((): void => {
-    openPanel('alignment')
   }, [openPanel])
 
   return (
@@ -125,7 +120,6 @@ export function MainLayout(): JSX.Element {
                         </div>
                         <PageThumbnails />
                         <MainContent
-                          onOpenAlignmentPanel={handleOpenAlignmentPanel}
                           canvasStateStore={canvasStateStore}
                         />
                         <RightSidebar />

@@ -15,7 +15,7 @@ type LockableObject = FabricObject & {
   exitEditing?: () => unknown
 }
 
-function isLocked(obj: LockableObject): boolean {
+export function isObjectLocked(obj: LockableObject): boolean {
   return Boolean(
     obj.lockMovementX &&
       obj.lockMovementY &&
@@ -25,7 +25,7 @@ function isLocked(obj: LockableObject): boolean {
   )
 }
 
-function setLocked(obj: LockableObject, nextLocked: boolean): void {
+export function setObjectLocked(obj: LockableObject, nextLocked: boolean): void {
   if (nextLocked && obj.isEditing && typeof obj.exitEditing === 'function') {
     obj.exitEditing()
   }
@@ -56,10 +56,10 @@ export function getActiveLockState(canvas: Canvas): boolean | null {
   if (isFabricActiveSelection(target)) {
     const objects = target.getObjects() as LockableObject[]
     if (objects.length === 0) return null
-    return objects.every((o) => isLocked(o))
+    return objects.every((o) => isObjectLocked(o))
   }
 
-  return isLocked(target)
+  return isObjectLocked(target)
 }
 
 export function toggleLockActive(canvas: Canvas): void {
@@ -69,15 +69,15 @@ export function toggleLockActive(canvas: Canvas): void {
   if (isFabricActiveSelection(target)) {
     const objects = target.getObjects() as LockableObject[]
     if (objects.length === 0) return
-    const shouldLock = objects.some((o) => !isLocked(o))
+    const shouldLock = objects.some((o) => !isObjectLocked(o))
 
-    for (const obj of objects) setLocked(obj, shouldLock)
+    for (const obj of objects) setObjectLocked(obj, shouldLock)
     target.setCoords()
     canvas.requestRenderAll()
     return
   }
 
-  setLocked(target, !isLocked(target))
+  setObjectLocked(target, !isObjectLocked(target))
   canvas.requestRenderAll()
 }
 
