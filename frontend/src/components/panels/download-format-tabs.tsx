@@ -6,9 +6,9 @@ import { getPlanLockedTooltip } from '@/constants/plan-lock-tooltips'
 import { PRO_ONLY_DOWNLOAD_FORMATS, type DownloadFormat } from '@/types/canvas-download.types'
 
 const FORMAT_TAB_ACTIVE_CLASS =
-  'border-primary bg-primary text-primary-foreground dark:border-zinc-700 dark:bg-zinc-700 dark:text-zinc-50'
+  'border-primary bg-primary text-primary-foreground'
 const FORMAT_TAB_INACTIVE_CLASS =
-  'border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
+  'border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground'
 const FORMAT_TAB_LOCKED_CLASS =
   'cursor-not-allowed opacity-50 hover:bg-background hover:text-foreground dark:hover:bg-background'
 

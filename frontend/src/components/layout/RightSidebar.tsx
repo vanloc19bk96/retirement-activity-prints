@@ -6,22 +6,18 @@ import { CoverFacePanel } from '@/components/panels/CoverFacePanel'
 import { SpinePanel } from '@/components/panels/SpinePanel'
 import { Button } from '@/components/ui/button'
 import { useEditorMode } from '@/context/EditorModeContext'
+import {
+  navChipClasses,
+  navIconClasses as iconClasses,
+  navItemClasses,
+  navLabelClasses as labelClasses,
+  type NavTone,
+} from '@/components/layout/nav-tones'
 
-const iconClasses = 'h-4 w-4 shrink-0 sm:h-5 sm:w-5'
-
-const baseItemClasses =
-  'flex min-h-[2.875rem] w-full flex-col items-center justify-center gap-0.5 rounded-md px-0.5 py-1 transition-colors sm:min-h-[3.25rem] sm:px-1 sm:py-1.5'
-
-const labelClasses =
-  'max-w-full text-center text-[9px] font-medium leading-tight tracking-tight sm:text-[10px]'
-
-const inactiveItemClasses = 'text-muted-foreground hover:text-foreground hover:bg-accent'
-const activeIconClasses = 'text-primary dark:text-zinc-50'
-
-const RIGHT_NAV_ITEMS: ReadonlyArray<{ panel: RightPanelKey; label: string; Icon: LucideIcon }> = [
-  { panel: 'front', label: 'Front', Icon: BookImage },
-  { panel: 'spine', label: 'Spine', Icon: Library },
-  { panel: 'back', label: 'Back', Icon: BookText },
+const RIGHT_NAV_ITEMS: ReadonlyArray<{ panel: RightPanelKey; label: string; Icon: LucideIcon; tone: NavTone }> = [
+  { panel: 'front', label: 'Front', Icon: BookImage, tone: 'rose' },
+  { panel: 'spine', label: 'Spine', Icon: Library, tone: 'violet' },
+  { panel: 'back', label: 'Back', Icon: BookText, tone: 'sky' },
 ]
 
 const panelContentClasses = (panel: RightPanelKey, activePanel: RightPanelKey): string =>
@@ -63,19 +59,21 @@ export function RightSidebar(): JSX.Element | null {
           </div>
         </div>
         <div className="flex w-[4.125rem] flex-col items-stretch py-1.5 sm:w-[4.5rem] sm:py-2 md:w-[4.75rem]">
-          <nav className="flex flex-col items-stretch gap-1 px-0.5 sm:gap-1.5 sm:px-0.5">
-            {RIGHT_NAV_ITEMS.map(({ panel, label, Icon }) => {
+          <nav className="flex flex-col items-stretch gap-0.5 px-0.5 sm:gap-1 sm:px-0.5">
+            {RIGHT_NAV_ITEMS.map(({ panel, label, Icon, tone }) => {
               const isActive = isPanelExpanded && activePanel === panel
               return (
                 <button
                   key={panel}
                   type="button"
-                  className={`${baseItemClasses} ${inactiveItemClasses}`}
+                  className={navItemClasses(isActive)}
                   onClick={() => handleChangePanel(panel)}
                   aria-label={label}
                   aria-pressed={isActive}
                 >
-                  <Icon className={`${iconClasses} ${isActive ? activeIconClasses : ''}`} aria-hidden />
+                  <span className={navChipClasses(isActive, tone)}>
+                    <Icon className={iconClasses} aria-hidden />
+                  </span>
                   <span className={labelClasses}>{label}</span>
                 </button>
               )

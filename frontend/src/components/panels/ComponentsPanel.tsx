@@ -36,49 +36,57 @@ const ELEMENT_ITEMS: ReadonlyArray<{
   label: string
   description: string
   Icon: LucideIcon
+  /** Icon tile colors: each element type has its own crayon. */
+  tileClassName: string
 }> = [
   {
     key: 'image',
     label: 'Image',
     description: 'Upload, AI, and drag images onto the canvas.',
     Icon: ImageIcon,
+    tileClassName: 'bg-sky-100 text-sky-600 dark:bg-sky-500/15 dark:text-sky-300',
   },
   {
     key: 'text',
     label: 'Text',
     description: 'Add and style text on the canvas.',
     Icon: TypeIcon,
+    tileClassName: 'bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300',
   },
   {
     key: 'shape',
     label: 'Shape',
     description: 'Insert shapes and paths.',
     Icon: ShapesIcon,
+    tileClassName: 'bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300',
   },
   {
     key: 'icon',
     label: 'Icons',
     description: 'Drag icons onto the canvas.',
     Icon: Sparkles,
+    tileClassName: 'bg-pink-100 text-pink-600 dark:bg-pink-500/15 dark:text-pink-300',
   },
   {
     key: 'emoji',
     label: 'Emojis',
     description: 'Drag emojis onto the canvas.',
     Icon: Smile,
+    tileClassName: 'bg-orange-100 text-orange-600 dark:bg-orange-500/15 dark:text-orange-300',
   },
   {
     key: 'svg',
     label: 'SVG',
     description: 'Upload SVGs and drag them onto the canvas.',
     Icon: FileCode2,
+    tileClassName: 'bg-teal-100 text-teal-600 dark:bg-teal-500/15 dark:text-teal-300',
   },
 ]
 
 const ELEMENT_ROW_CLASS =
-  'flex w-full items-center gap-3 rounded-lg border border-border bg-card p-3 text-left transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+  'group flex w-full items-center gap-3 rounded-xl border border-border bg-card p-3 text-left shadow-sm transition-all hover:-translate-y-px hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
 const ELEMENT_ROW_LOCKED_CLASS =
-  'cursor-not-allowed opacity-50 hover:bg-card hover:text-foreground'
+  'cursor-not-allowed opacity-50 hover:translate-y-0 hover:border-border hover:shadow-sm'
 
 function isElementLocked(key: ComponentElementKey, user: { plan: string | null } | null): boolean {
   if (key === 'icon') return isUserIconsLocked(user)
@@ -163,9 +171,12 @@ export function ComponentsPanel(): JSX.Element {
 
         {view === 'elements' ? (
           <div className="min-h-0 space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">Elements</p>
+            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden />
+              Elements
+            </p>
             <ul className="flex flex-col gap-2" role="list">
-              {ELEMENT_ITEMS.map(({ key, label, description, Icon }) => {
+              {ELEMENT_ITEMS.map(({ key, label, description, Icon, tileClassName }) => {
                 const isLocked = isElementLocked(key, user)
                 const lockedTooltip = getElementLockedTooltip(key)
 
@@ -181,8 +192,13 @@ export function ComponentsPanel(): JSX.Element {
                     aria-disabled={isLocked}
                     disabled={isLocked}
                   >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40">
-                      <Icon className="h-4 w-4 text-foreground" aria-hidden />
+                    <span
+                      className={cn(
+                        'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-transform group-hover:scale-105',
+                        tileClassName,
+                      )}
+                    >
+                      <Icon className="h-[1.125rem] w-[1.125rem]" aria-hidden />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">

@@ -14,7 +14,7 @@ export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
       onCheckedChange?.(!checked)
     }
 
-    // Same blue as range controls (--color-control-accent), not theme primary (near-black).
+    // Same color as range controls (--color-control-accent).
     const trackClass = isDisabled
       ? 'bg-muted/70'
       : checked

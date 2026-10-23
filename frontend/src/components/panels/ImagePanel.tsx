@@ -33,9 +33,9 @@ const DEFAULT_AI_COVER_FORM_STATE: AICoverFormState = {
 }
 
 const IMAGE_PANEL_TAB_ACTIVE_CLASS =
-  'bg-primary text-primary-foreground shadow-sm dark:bg-zinc-700 dark:text-zinc-50'
+  'bg-primary text-primary-foreground shadow-sm'
 const IMAGE_PANEL_TAB_INACTIVE_CLASS =
-  'text-muted-foreground hover:bg-accent hover:text-accent-foreground dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
+  'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
 
 export function ImagePanel(): JSX.Element {
   const { user } = useAuthContext()

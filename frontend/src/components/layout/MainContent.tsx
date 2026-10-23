@@ -2179,7 +2179,7 @@ export const MainContent = memo(function MainContent({ onOpenAlignmentPanel, can
       />
       <div
         ref={scrollRef}
-        className="isolate min-h-0 flex-1 overflow-auto bg-muted pt-6 pb-6 dark:bg-zinc-800"
+        className="workspace-surface isolate min-h-0 flex-1 overflow-auto pt-6 pb-6"
         onPointerMove={(event) => {
           const el = scrollRef.current
           if (!el) return

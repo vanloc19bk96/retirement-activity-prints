@@ -59,7 +59,7 @@ function HeaderDialogActionsComponent({
   const outlineButtonClassName =
     'h-9 gap-2 ' +
     (isBlueHeaderSurface
-      ? 'border-primary-foreground/35 bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20 hover:text-primary-foreground'
+      ? 'border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white'
       : '')
 
   return (
@@ -100,7 +100,7 @@ function HeaderDialogActionsComponent({
             className={
               'h-9 gap-2 ' +
               (isBlueHeaderSurface
-                ? 'border-0 bg-primary-foreground text-primary hover:bg-primary-foreground/90'
+                ? 'border-0 bg-gradient-to-r from-amber-300 to-orange-400 font-semibold text-[#2a1a05] shadow-md hover:from-amber-200 hover:to-orange-300'
                 : '')
             }
             onClick={handleOpenPremiumUpgrade}

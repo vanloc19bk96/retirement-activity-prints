@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useState } from 'react'
+import { Shapes } from 'lucide-react'
 import { useAuthContext } from '@/context/AuthContext'
 import {
   DEFAULT_NICHE_VAULT_URL,
@@ -71,25 +72,27 @@ function HeaderComponent(): JSX.Element {
   const shouldShowUpgradeButton =
     Boolean(user) && (isUserOnStarterPlan || isUserOnStandardPlan) && !isUserOnProPlan
 
-  const isBlueHeaderSurface = !isDarkMode
+  // The header keeps its ink gradient in both themes, so its controls always use light-on-dark styles.
+  const isBlueHeaderSurface = true
 
   return (
-    <header
-      className={
-        'border-b px-4 py-3 sm:px-6 ' +
-        (isBlueHeaderSurface
-          ? 'border-primary/25 bg-primary text-primary-foreground'
-          : 'border-border bg-card text-foreground')
-      }
-    >
+    <header className="app-header px-4 py-3 sm:px-6">
       <div className="flex min-h-10 flex-wrap items-center justify-between gap-3">
-        <HeaderProjectTitle
-          appName="Retirement Activity Prints"
-          project={project}
-          projectsUrl={project ? hubProjectsUrl() : null}
-          isBlueHeaderSurface={isBlueHeaderSurface}
-          onRename={rename}
-        />
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span
+            className="app-logo-mark flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-md ring-1 ring-white/25"
+            aria-hidden
+          >
+            <Shapes className="h-4 w-4 text-white" />
+          </span>
+          <HeaderProjectTitle
+            appName="Retirement Activity Prints"
+            project={project}
+            projectsUrl={project ? hubProjectsUrl() : null}
+            isBlueHeaderSurface={isBlueHeaderSurface}
+            onRename={rename}
+          />
+        </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
           <HeaderDialogActions

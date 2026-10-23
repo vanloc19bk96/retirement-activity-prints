@@ -27,30 +27,28 @@ import { useAuthContext } from '@/context/AuthContext'
 import { useCanvasPenTool } from '@/context/CanvasPenToolContext'
 import { useEditorMode } from '@/context/EditorModeContext'
 import { getPlanLockedTooltip } from '@/constants/plan-lock-tooltips'
+import {
+  navChipClasses,
+  navIconClasses as iconClasses,
+  navItemClasses,
+  navLabelClasses as labelClasses,
+  type NavTone,
+} from '@/components/layout/nav-tones'
 
-const iconClasses = 'h-4 w-4 shrink-0 sm:h-5 sm:w-5'
-
-const baseItemClasses =
-  'flex min-h-[2.875rem] w-full flex-col items-center justify-center gap-0.5 rounded-md px-0.5 py-1 transition-colors sm:min-h-[3.25rem] sm:px-1 sm:py-1.5'
-
-const labelClasses =
-  'max-w-full text-center text-[9px] font-medium leading-tight tracking-tight sm:text-[10px]'
-
-const inactiveItemClasses = 'text-muted-foreground hover:text-foreground hover:bg-accent'
-const activeIconClasses = 'text-primary dark:text-zinc-50'
-
-const NAV_ITEMS: ReadonlyArray<{ panel: PanelKey; label: string; Icon: LucideIcon }> = [
-  { panel: 'components', label: 'Components', Icon: LayoutGrid },
-  { panel: 'studio', label: 'Studio', Icon: Sparkles },
-  { panel: 'photos', label: 'Photos', Icon: Images },
-  { panel: 'tools', label: 'Tools', Icon: Wrench },
-  { panel: 'setting', label: 'Settings', Icon: SettingsIcon },
-  { panel: 'download', label: 'Download', Icon: DownloadIcon },
+const NAV_ITEMS: ReadonlyArray<{ panel: PanelKey; label: string; Icon: LucideIcon; tone: NavTone }> = [
+  { panel: 'components', label: 'Components', Icon: LayoutGrid, tone: 'violet' },
+  { panel: 'studio', label: 'Studio', Icon: Sparkles, tone: 'pink' },
+  { panel: 'photos', label: 'Photos', Icon: Images, tone: 'sky' },
+  { panel: 'tools', label: 'Tools', Icon: Wrench, tone: 'amber' },
+  { panel: 'setting', label: 'Settings', Icon: SettingsIcon, tone: 'teal' },
+  { panel: 'download', label: 'Download', Icon: DownloadIcon, tone: 'emerald' },
 ]
 
-const BOOK_COVER_NAV_ITEMS: ReadonlyArray<{ panel: PanelKey; label: string; Icon: LucideIcon }> = [
-  { panel: 'bookInfo', label: 'Book Info', Icon: BookOpen },
+const BOOK_COVER_NAV_ITEMS: ReadonlyArray<{ panel: PanelKey; label: string; Icon: LucideIcon; tone: NavTone }> = [
+  { panel: 'bookInfo', label: 'Book Info', Icon: BookOpen, tone: 'rose' },
 ]
+
+const SAVE_TONE: NavTone = 'orange'
 const BOOK_COVER_PANELS: ReadonlySet<PanelKey> = new Set(BOOK_COVER_NAV_ITEMS.map((item) => item.panel))
 
 interface SidebarProps {
@@ -80,10 +78,9 @@ export function Sidebar({
       normalizedPlan === 'basic' ||
       normalizedPlan === 'standard')
 
-  const getItemClasses = (): string =>
-    `${baseItemClasses} ${inactiveItemClasses}`
-  const getIconClasses = (panel: PanelKey): string =>
-    `${iconClasses} ${activePanel === panel ? activeIconClasses : ''}`
+  const getItemClasses = (panel: PanelKey): string => navItemClasses(activePanel === panel)
+  const getChipClasses = (panel: PanelKey, tone: NavTone): string =>
+    navChipClasses(activePanel === panel, tone)
 
   const handleChangePanel = (panel: PanelKey): void => {
     if (activeDrawingTool !== 'none') {
@@ -106,19 +103,21 @@ export function Sidebar({
   return (
     <aside className="flex h-full shrink-0 border-r border-border bg-card">
       <div className="flex w-[4.125rem] flex-col items-stretch border-r border-border py-1.5 sm:w-[4.5rem] sm:py-2 md:w-[4.75rem]">
-        <nav className="flex flex-col items-stretch gap-1 px-0.5 sm:gap-1.5 sm:px-0.5">
-          {NAV_ITEMS.map(({ panel, label, Icon }) => {
+        <nav className="flex flex-col items-stretch gap-0.5 px-0.5 sm:gap-1 sm:px-0.5">
+          {NAV_ITEMS.map(({ panel, label, Icon, tone }) => {
             const isLocked = isToolsAndPhotosLocked && (panel === 'tools' || panel === 'photos')
             const button = (
               <button
                 key={panel}
                 type="button"
-                className={`${getItemClasses()} ${isLocked ? 'cursor-not-allowed opacity-50 hover:text-muted-foreground' : ''}`}
+                className={`${getItemClasses(panel)} ${isLocked ? 'cursor-not-allowed opacity-50 hover:text-muted-foreground' : ''}`}
                 onClick={() => handleChangePanel(panel)}
                 disabled={isLocked}
                 aria-disabled={isLocked}
               >
-                <Icon className={getIconClasses(panel)} aria-hidden />
+                <span className={getChipClasses(panel, tone)}>
+                  <Icon className={iconClasses} aria-hidden />
+                </span>
                 <span className={labelClasses}>
                   <span className="inline-flex items-center gap-1">
                     {label}
@@ -143,22 +142,24 @@ export function Sidebar({
           })}
 
           {isBookCoverMode &&
-            BOOK_COVER_NAV_ITEMS.map(({ panel, label, Icon }) => (
+            BOOK_COVER_NAV_ITEMS.map(({ panel, label, Icon, tone }) => (
               <button
                 key={panel}
                 type="button"
-                className={getItemClasses()}
+                className={getItemClasses(panel)}
                 onClick={() => handleChangePanel(panel)}
                 aria-label={label}
               >
-                <Icon className={getIconClasses(panel)} aria-hidden />
+                <span className={getChipClasses(panel, tone)}>
+                  <Icon className={iconClasses} aria-hidden />
+                </span>
                 <span className={labelClasses}>{label}</span>
               </button>
             ))}
 
           <button
             type="button"
-            className={`${getItemClasses()} disabled:pointer-events-none disabled:opacity-50`}
+            className={`${getItemClasses('save')} disabled:pointer-events-none disabled:opacity-50`}
             onClick={() => {
               void saveCanvases()
             }}
@@ -167,24 +168,19 @@ export function Sidebar({
               hasUnsavedChanges && !isSaving ? 'Save (unsaved changes)' : isSaving ? 'Saving' : 'Save'
             }
           >
-            {isSaving ? (
-              <Loader2
-                className={`h-4 w-4 shrink-0 animate-spin sm:h-5 sm:w-5 ${
-                  activePanel === 'save' ? activeIconClasses : ''
-                }`}
-                aria-hidden
-              />
-            ) : (
-              <span className="relative inline-flex">
-                <SaveIcon className={getIconClasses('save')} aria-hidden />
-                {hasUnsavedChanges && (
-                  <span
-                    className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-card"
-                    aria-hidden
-                  />
-                )}
-              </span>
-            )}
+            <span className={`relative ${getChipClasses('save', SAVE_TONE)}`}>
+              {isSaving ? (
+                <Loader2 className={`${iconClasses} animate-spin`} aria-hidden />
+              ) : (
+                <SaveIcon className={iconClasses} aria-hidden />
+              )}
+              {hasUnsavedChanges && !isSaving && (
+                <span
+                  className="absolute right-0.5 top-0.5 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-card"
+                  aria-hidden
+                />
+              )}
+            </span>
             <span className={labelClasses}>{isSaving ? 'Saving…' : 'Save'}</span>
           </button>
         </nav>

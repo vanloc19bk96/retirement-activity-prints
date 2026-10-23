@@ -34,29 +34,33 @@
   --font-sans: system-ui, 'Segoe UI', Roboto, sans-serif;
 
   /*
-   * Light theme: warm off-white base, deep navy primary, brass gold accent.
+   * Light theme: "crayon studio" — airy lavender-white base, violet primary,
+   * plus a crayon set (--color-crayon-*) for nav chips, header stripe and tiles.
    */
-  --theme-background: #faf8f4;
-  --theme-foreground: #1a1a1a;
-  --theme-card: #fdfcfa;
-  --theme-card-foreground: #1a1a1a;
-  --theme-popover: #fdfcfa;
-  --theme-popover-foreground: #1a1a1a;
-  --theme-primary: #1e3a5f;
-  --theme-primary-foreground: #faf8f4;
-  --theme-secondary: #f0ede8;
-  --theme-secondary-foreground: #1a1a1a;
-  --theme-muted: #f0ede8;
-  --theme-muted-foreground: #6b6b6b;
-  --theme-accent: #f3ebd9;
-  --theme-accent-foreground: #5c4520;
+  --theme-background: #f6f5fc;
+  --theme-foreground: #1d1b33;
+  --theme-card: #ffffff;
+  --theme-card-foreground: #1d1b33;
+  --theme-popover: #ffffff;
+  --theme-popover-foreground: #1d1b33;
+  --theme-primary: #5b45e0;
+  --theme-primary-foreground: #ffffff;
+  --theme-secondary: #efedfb;
+  --theme-secondary-foreground: #1d1b33;
+  --theme-muted: #f0eff8;
+  --theme-muted-foreground: #6b6889;
+  --theme-accent: #ece8ff;
+  --theme-accent-foreground: #3f2db8;
   --theme-destructive: hsl(0 72% 50%);
-  --theme-destructive-foreground: #faf8f4;
-  --theme-success: #2d6a4f;
-  --theme-success-foreground: #faf8f4;
-  --theme-border: #e5e0d8;
-  --theme-input: #e5e0d8;
-  --theme-ring: #1e3a5f;
+  --theme-destructive-foreground: #ffffff;
+  --theme-success: #1f9d6b;
+  --theme-success-foreground: #ffffff;
+  --theme-border: #e4e1f1;
+  --theme-input: #dcd8ee;
+  --theme-ring: #5b45e0;
+  /* Canvas workspace behind the pages: tinted surface with a dot grid. */
+  --theme-workspace: #ebe9f6;
+  --theme-workspace-dot: #d3cfe8;
 
   --color-background: var(--theme-background);
   --color-foreground: var(--theme-foreground);
@@ -79,7 +83,14 @@
   --color-border: var(--theme-border);
   --color-input: var(--theme-input);
   --color-ring: var(--theme-ring);
-  --color-control-accent: #c49a4a;
+  --color-control-accent: #5b45e0;
+
+  --color-crayon-violet: #7c5cff;
+  --color-crayon-pink: #f0468f;
+  --color-crayon-coral: #ff7a59;
+  --color-crayon-sun: #ffb627;
+  --color-crayon-teal: #14b8a6;
+  --color-crayon-sky: #38a3f5;
 
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
@@ -89,30 +100,32 @@
 
 .dark {
   /*
-   * Dark theme: charcoal base with warm text, navy primary, brass controls.
+   * Dark theme: deep ink-violet base, brighter violet primary, same crayon set.
    */
-  --theme-background: #1e1e22;
-  --theme-foreground: #faf8f4;
-  --theme-card: #28282e;
-  --theme-card-foreground: #faf8f4;
-  --theme-popover: #28282e;
-  --theme-popover-foreground: #faf8f4;
-  --theme-primary: #3d6a9f;
-  --theme-primary-foreground: #faf8f4;
-  --theme-secondary: #2a2a30;
-  --theme-secondary-foreground: #faf8f4;
-  --theme-muted: #2a2a30;
-  --theme-muted-foreground: #a0a0a0;
-  --theme-accent: #3d3528;
-  --theme-accent-foreground: #e8c878;
-  --theme-destructive: hsl(0 62.8% 40%);
-  --theme-destructive-foreground: #faf8f4;
-  --theme-success: #3d8b6a;
-  --theme-success-foreground: #faf8f4;
-  --theme-border: #3a3835;
-  --theme-input: #3a3835;
-  --theme-ring: #c49a4a;
-  --color-control-accent: #c49a4a;
+  --theme-background: #13111f;
+  --theme-foreground: #f3f1ff;
+  --theme-card: #1c1930;
+  --theme-card-foreground: #f3f1ff;
+  --theme-popover: #1f1c35;
+  --theme-popover-foreground: #f3f1ff;
+  --theme-primary: #7563ff;
+  --theme-primary-foreground: #ffffff;
+  --theme-secondary: #25223d;
+  --theme-secondary-foreground: #f3f1ff;
+  --theme-muted: #23203a;
+  --theme-muted-foreground: #a5a1c4;
+  --theme-accent: #2e2856;
+  --theme-accent-foreground: #d4ccff;
+  --theme-destructive: hsl(0 62.8% 45%);
+  --theme-destructive-foreground: #ffffff;
+  --theme-success: #2fb383;
+  --theme-success-foreground: #ffffff;
+  --theme-border: #302c4a;
+  --theme-input: #3a3560;
+  --theme-ring: #8b7cff;
+  --theme-workspace: #181528;
+  --theme-workspace-dot: #2c2848;
+  --color-control-accent: #7563ff;
 }
 
 * {
@@ -123,6 +136,40 @@ body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-sans);
+}
+
+/* App header: deep ink gradient with a crayon stripe along the bottom edge. */
+.app-header {
+  position: relative;
+  background: linear-gradient(100deg, #1b1640 0%, #2b2170 55%, #3d2a8f 100%);
+  color: #ffffff;
+}
+
+.app-header::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--color-crayon-violet),
+    var(--color-crayon-pink),
+    var(--color-crayon-coral),
+    var(--color-crayon-sun),
+    var(--color-crayon-teal),
+    var(--color-crayon-sky)
+  );
+}
+
+.app-logo-mark {
+  background: linear-gradient(135deg, var(--color-crayon-sun), var(--color-crayon-coral) 50%, var(--color-crayon-pink));
+}
+
+/* Canvas workspace: soft dot grid so the white pages stand out. */
+.workspace-surface {
+  background-color: var(--theme-workspace);
+  background-image: radial-gradient(var(--theme-workspace-dot) 1.2px, transparent 1.2px);
+  background-size: 20px 20px;
 }
 
 /* Custom fonts: OFL or author permits commercial use */
