@@ -10,15 +10,17 @@ export interface PlRemoteData {
  * No network: every picture is bundled and every puzzle proven in the
  * browser. This only reads back the pictures the book's Picture Logic pages
  * already carry (`id|m` or `id|n`, stamped on each puzzle), which generate
- * cannot see on its own, so page 30 is not page 2 again. The collector caps
- * what it returns, so a long book costs the same.
+ * cannot see on its own, so page 30 is not page 2 again. One label per page
+ * that prints it, so a 50-page run past the level's last fresh picture still
+ * knows which ones it has shown most. The collector caps what it returns, so
+ * a long book costs the same.
  */
 export async function pictureLogicPrefetch(
   _config: StudioConfig,
   _signal: AbortSignal,
   context?: StudioPrefetchContext,
 ): Promise<PlRemoteData> {
-  return { bookLabels: context?.bookContentLabels(PL_TEMPLATE_KEY) ?? [] }
+  return { bookLabels: context?.bookContentLabels(PL_TEMPLATE_KEY, { repeats: true }) ?? [] }
 }
 
 export function parsePlRemoteData(raw: unknown): PlRemoteData {

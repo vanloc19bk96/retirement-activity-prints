@@ -18,7 +18,7 @@ export async function steppingStonesPrefetch(
   _signal: AbortSignal,
   context?: StudioPrefetchContext,
 ): Promise<StonesRemoteData> {
-  return { bookLabels: context?.bookContentLabels(STONES_TEMPLATE_KEY) ?? [] }
+  return { bookLabels: context?.bookContentLabels(STONES_TEMPLATE_KEY, { repeats: true }) ?? [] }
 }
 
 export function parseStonesRemoteData(raw: unknown): StonesRemoteData {

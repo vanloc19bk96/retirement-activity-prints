@@ -18,7 +18,7 @@ export async function countryFencePrefetch(
   _signal: AbortSignal,
   context?: StudioPrefetchContext,
 ): Promise<FenceRemoteData> {
-  return { bookLabels: context?.bookContentLabels(FENCE_TEMPLATE_KEY) ?? [] }
+  return { bookLabels: context?.bookContentLabels(FENCE_TEMPLATE_KEY, { repeats: true }) ?? [] }
 }
 
 export function parseFenceRemoteData(raw: unknown): FenceRemoteData {

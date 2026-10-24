@@ -209,8 +209,10 @@ export interface StudioPrefetchContext {
   /**
    * Content labels this template stamped on the book's pages
    * (`data.studioContentLabel`), in page order. Bounded by the collector.
+   * Each label once, unless `repeats` asks for one per puzzle page that
+   * prints it: what a game needs to count how often the book shows an item.
    */
-  bookContentLabels: (templateKey: string) => string[]
+  bookContentLabels: (templateKey: string, options?: { repeats?: boolean }) => string[]
 }
 
 export interface StudioGenerateContext {

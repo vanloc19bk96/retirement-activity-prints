@@ -14,7 +14,7 @@ export interface DriveRemoteData {
  * caps what it returns, so a long book costs the same.
  */
 export async function scenicDrivePrefetch(_config: StudioConfig, _signal: AbortSignal, context?: StudioPrefetchContext): Promise<DriveRemoteData> {
-  return { bookLabels: context?.bookContentLabels(DRIVE_TEMPLATE_KEY) ?? [] }
+  return { bookLabels: context?.bookContentLabels(DRIVE_TEMPLATE_KEY, { repeats: true }) ?? [] }
 }
 
 export function parseDriveRemoteData(raw: unknown): DriveRemoteData {

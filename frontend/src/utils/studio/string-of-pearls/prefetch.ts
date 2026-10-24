@@ -18,7 +18,7 @@ export async function stringOfPearlsPrefetch(
   _signal: AbortSignal,
   context?: StudioPrefetchContext,
 ): Promise<PearlRemoteData> {
-  return { bookLabels: context?.bookContentLabels(PEARL_TEMPLATE_KEY) ?? [] }
+  return { bookLabels: context?.bookContentLabels(PEARL_TEMPLATE_KEY, { repeats: true }) ?? [] }
 }
 
 export function parsePearlRemoteData(raw: unknown): PearlRemoteData {

@@ -15,7 +15,7 @@ export interface PaRemoteData {
  * long book costs the same.
  */
 export async function photoAlbumPrefetch(_config: StudioConfig, _signal: AbortSignal, context?: StudioPrefetchContext): Promise<PaRemoteData> {
-  return { bookLabels: context?.bookContentLabels(PA_TEMPLATE_KEY) ?? [] }
+  return { bookLabels: context?.bookContentLabels(PA_TEMPLATE_KEY, { repeats: true }) ?? [] }
 }
 
 export function parsePaRemoteData(raw: unknown): PaRemoteData {

@@ -18,7 +18,7 @@ export async function islandHoppingPrefetch(
   _signal: AbortSignal,
   context?: StudioPrefetchContext,
 ): Promise<IhRemoteData> {
-  return { bookLabels: context?.bookContentLabels(IH_TEMPLATE_KEY) ?? [] }
+  return { bookLabels: context?.bookContentLabels(IH_TEMPLATE_KEY, { repeats: true }) ?? [] }
 }
 
 export function parseIhRemoteData(raw: unknown): IhRemoteData {

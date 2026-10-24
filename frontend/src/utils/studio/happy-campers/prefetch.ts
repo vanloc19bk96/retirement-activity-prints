@@ -18,7 +18,7 @@ export async function happyCampersPrefetch(
   _signal: AbortSignal,
   context?: StudioPrefetchContext,
 ): Promise<HcRemoteData> {
-  return { bookLabels: context?.bookContentLabels(HC_TEMPLATE_KEY) ?? [] }
+  return { bookLabels: context?.bookContentLabels(HC_TEMPLATE_KEY, { repeats: true }) ?? [] }
 }
 
 export function parseHcRemoteData(raw: unknown): HcRemoteData {

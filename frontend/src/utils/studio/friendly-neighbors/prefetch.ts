@@ -18,7 +18,7 @@ export async function friendlyNeighborsPrefetch(
   _signal: AbortSignal,
   context?: StudioPrefetchContext,
 ): Promise<NeighborsRemoteData> {
-  return { bookLabels: context?.bookContentLabels(NEIGHBORS_TEMPLATE_KEY) ?? [] }
+  return { bookLabels: context?.bookContentLabels(NEIGHBORS_TEMPLATE_KEY, { repeats: true }) ?? [] }
 }
 
 export function parseNeighborsRemoteData(raw: unknown): NeighborsRemoteData {

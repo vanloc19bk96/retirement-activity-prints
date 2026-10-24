@@ -18,7 +18,7 @@ export async function skylineTourPrefetch(
   _signal: AbortSignal,
   context?: StudioPrefetchContext,
 ): Promise<SkyRemoteData> {
-  return { bookLabels: context?.bookContentLabels(SKY_TEMPLATE_KEY) ?? [] }
+  return { bookLabels: context?.bookContentLabels(SKY_TEMPLATE_KEY, { repeats: true }) ?? [] }
 }
 
 export function parseSkyRemoteData(raw: unknown): SkyRemoteData {

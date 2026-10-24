@@ -9,6 +9,7 @@ import {
 } from '@/constants/studio.constants'
 import { STUDIO_CANONICAL_KEY } from '../_shared/uniqueness'
 import { buildGroup, buildRect, buildText, type StudioTag } from '../studio-fabric-builders'
+import type { Box } from '../studio-layout'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
 import { drawGridLines } from '../studio-grid-rules'
 import { PL_MYSTERY_PROMPT, PL_TEMPLATE_KEY, plDesignLabel, type PlDesign } from './content'
@@ -122,13 +123,15 @@ export function buildPlPuzzle(options: {
   })) {
     parts.push(part(bar, 'rule'))
   }
-  // The edge is always heavy, whatever the grid's size.
-  parts.push(
-    part(
-      buildRect({ left: grid.left, top: grid.top, width: grid.width, height: grid.height, fill: 'transparent', stroke: STUDIO_RULE, strokeWidth: STUDIO_STROKE_BOLD }, tag),
-      'frame',
-    ),
-  )
+  // The edge is always heavy, whatever the grid's size: four filled bars flush
+  // inside it. A stroked frame straddles its path, so on the right and bottom
+  // it printed a second line just outside the grid's own edge.
+  const frame = (box: Box) =>
+    part(buildRect({ ...box, fill: STUDIO_RULE, stroke: 'transparent', strokeWidth: 0 }, tag), 'frame')
+  parts.push(frame({ left: grid.left, top: grid.top, width: grid.width, height: STUDIO_STROKE_BOLD }))
+  parts.push(frame({ left: grid.left, top: grid.top + grid.height - STUDIO_STROKE_BOLD, width: grid.width, height: STUDIO_STROKE_BOLD }))
+  parts.push(frame({ left: grid.left, top: grid.top, width: STUDIO_STROKE_BOLD, height: grid.height }))
+  parts.push(frame({ left: grid.left + grid.width - STUDIO_STROKE_BOLD, top: grid.top, width: STUDIO_STROKE_BOLD, height: grid.height }))
 
   // Row clues, right-aligned against the grid; an empty row reads "0".
   design.clues.rows.forEach((clue, r) => {

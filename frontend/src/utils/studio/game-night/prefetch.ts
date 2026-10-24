@@ -14,7 +14,7 @@ export interface GnRemoteData {
  * caps what it returns, so a long book costs the same.
  */
 export async function gameNightPrefetch(_config: StudioConfig, _signal: AbortSignal, context?: StudioPrefetchContext): Promise<GnRemoteData> {
-  return { bookLabels: context?.bookContentLabels(GN_TEMPLATE_KEY) ?? [] }
+  return { bookLabels: context?.bookContentLabels(GN_TEMPLATE_KEY, { repeats: true }) ?? [] }
 }
 
 export function parseGnRemoteData(raw: unknown): GnRemoteData {

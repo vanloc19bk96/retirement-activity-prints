@@ -18,7 +18,7 @@ export async function patchworkQuiltPrefetch(
   _signal: AbortSignal,
   context?: StudioPrefetchContext,
 ): Promise<PqRemoteData> {
-  return { bookLabels: context?.bookContentLabels(PQ_TEMPLATE_KEY) ?? [] }
+  return { bookLabels: context?.bookContentLabels(PQ_TEMPLATE_KEY, { repeats: true }) ?? [] }
 }
 
 export function parsePqRemoteData(raw: unknown): PqRemoteData {

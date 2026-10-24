@@ -14,7 +14,7 @@ export interface YsRemoteData {
  * what it returns, so a long book costs the same.
  */
 export async function yardSalePrefetch(_config: StudioConfig, _signal: AbortSignal, context?: StudioPrefetchContext): Promise<YsRemoteData> {
-  return { bookLabels: context?.bookContentLabels(YS_TEMPLATE_KEY) ?? [] }
+  return { bookLabels: context?.bookContentLabels(YS_TEMPLATE_KEY, { repeats: true }) ?? [] }
 }
 
 export function parseYsRemoteData(raw: unknown): YsRemoteData {

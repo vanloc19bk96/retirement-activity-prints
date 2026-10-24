@@ -319,6 +319,20 @@ describe('picture-logic pages', () => {
     expect(partsOf(puzzle, 'mystery-prompt')[0]!.text).toMatch(/picture/)
   })
 
+  it('draws the heavy edge flush inside the grid, with no second line outside it', () => {
+    const puzzle = puzzleOf(generate(base, kdpCtx(8.5, 11))[0]!.objects)!
+    const rules = partsOf(puzzle, 'rule')
+    const right = Math.max(...rules.map((b) => b.left + b.width!))
+    const bottom = Math.max(...rules.map((b) => b.top + b.height!))
+    const frames = partsOf(puzzle, 'frame')
+    expect(frames).toHaveLength(4)
+    for (const f of frames) {
+      expect(f.strokeWidth).toBe(0)
+      expect(f.left + f.width!).toBeLessThanOrEqual(right)
+      expect(f.top + f.height!).toBeLessThanOrEqual(bottom)
+    }
+  })
+
   it('reveals the picture and its name on the answer page, in black, without the how-to line', () => {
     const out = generate(base, kdpCtx(8.5, 11))
     const answers = out.flatMap((p) => harvestAnswers(p.objects))
@@ -341,6 +355,20 @@ describe('picture-logic pages', () => {
       labels.push(String(puzzleOf(out[0]!.objects)!.data?.[STUDIO_CONTENT_LABEL_KEY]))
     }
     expect(new Set(labels.map((l) => l.split('|')[0])).size).toBe(pool.length)
+  })
+
+  it('keeps a 50-page run even past the level’s last fresh picture: never twice running, every picture in turn', () => {
+    const labels: string[] = []
+    for (let page = 0; page < 50; page++) {
+      const out = generate({ ...base, seed: 500 + page }, kdpCtx(8.5, 11, 500 + page, [...labels], saltOf(9)))
+      labels.push(String(puzzleOf(out[0]!.objects)!.data?.[STUDIO_CONTENT_LABEL_KEY]))
+    }
+    const ids = labels.map((l) => l.split('|')[0]!)
+    ids.slice(1).forEach((id, i) => expect(id).not.toBe(ids[i]))
+    const counts = new Map<string, number>()
+    for (const id of ids) counts.set(id, (counts.get(id) ?? 0) + 1)
+    expect(counts.size).toBe(plLevelPictures('classic').length)
+    expect(Math.max(...counts.values()) - Math.min(...counts.values())).toBeLessThanOrEqual(1)
   })
 
   it('stamps each puzzle with its picture and which way round it is', () => {

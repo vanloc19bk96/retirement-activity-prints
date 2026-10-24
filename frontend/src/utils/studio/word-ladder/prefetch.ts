@@ -18,7 +18,7 @@ export async function wordLadderPrefetch(
   _signal: AbortSignal,
   context?: StudioPrefetchContext,
 ): Promise<WlRemoteData> {
-  return { bookLabels: context?.bookContentLabels(WL_TEMPLATE_KEY) ?? [] }
+  return { bookLabels: context?.bookContentLabels(WL_TEMPLATE_KEY, { repeats: true }) ?? [] }
 }
 
 export function parseWlRemoteData(raw: unknown): WlRemoteData {

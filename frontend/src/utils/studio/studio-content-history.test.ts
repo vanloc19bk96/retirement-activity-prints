@@ -99,4 +99,19 @@ describe('collectStudioContentLabels', () => {
     })
     expect(collectStudioContentLabels(store, 2, 'trivia')).toEqual(['Shared'])
   })
+
+  it('with repeats, reads a label once per puzzle page that prints it, never from an answer page', () => {
+    const store = makeStore({
+      0: [labelled('Armchair'), labelled('Armchair')],
+      1: [labelled('Butterfly')],
+      2: [labelled('Armchair')],
+      3: [{ ...labelled('Armchair'), studioPageRole: 'answers' }],
+    })
+    expect(collectStudioContentLabels(store, 4, 'trivia', { repeats: true })).toEqual([
+      'Armchair',
+      'Butterfly',
+      'Armchair',
+    ])
+    expect(collectStudioContentLabels(store, 4, 'trivia')).toEqual(['Armchair', 'Butterfly'])
+  })
 })

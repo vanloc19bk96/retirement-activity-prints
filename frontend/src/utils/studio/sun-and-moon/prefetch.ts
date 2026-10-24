@@ -14,7 +14,7 @@ export interface SmRemoteData {
  * what it returns, so a long book costs the same.
  */
 export async function sunAndMoonPrefetch(_config: StudioConfig, _signal: AbortSignal, context?: StudioPrefetchContext): Promise<SmRemoteData> {
-  return { bookLabels: context?.bookContentLabels(SM_TEMPLATE_KEY) ?? [] }
+  return { bookLabels: context?.bookContentLabels(SM_TEMPLATE_KEY, { repeats: true }) ?? [] }
 }
 
 export function parseSmRemoteData(raw: unknown): SmRemoteData {

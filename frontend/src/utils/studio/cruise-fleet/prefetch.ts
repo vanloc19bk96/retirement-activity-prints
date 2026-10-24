@@ -18,7 +18,7 @@ export async function cruiseFleetPrefetch(
   _signal: AbortSignal,
   context?: StudioPrefetchContext,
 ): Promise<CfRemoteData> {
-  return { bookLabels: context?.bookContentLabels(CF_TEMPLATE_KEY) ?? [] }
+  return { bookLabels: context?.bookContentLabels(CF_TEMPLATE_KEY, { repeats: true }) ?? [] }
 }
 
 export function parseCfRemoteData(raw: unknown): CfRemoteData {

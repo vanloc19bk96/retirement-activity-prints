@@ -251,8 +251,8 @@ export async function runStudioGenerateOnce(options: {
 
   // Read lazily and afresh per attempt: a bulk run writes pages between calls.
   const prefetchContext: StudioPrefetchContext = {
-    bookContentLabels: (templateKey) =>
-      collectStudioContentLabels(canvasStateStore, req.interiorPageCount, templateKey),
+    bookContentLabels: (templateKey, labelOptions) =>
+      collectStudioContentLabels(canvasStateStore, req.interiorPageCount, templateKey, labelOptions),
   }
 
   // “Game 3” prints as “Game 3: Crossword” so a reader can find a game by name.

@@ -18,7 +18,7 @@ export async function gardenPlotsPrefetch(
   _signal: AbortSignal,
   context?: StudioPrefetchContext,
 ): Promise<GpRemoteData> {
-  return { bookLabels: context?.bookContentLabels(GP_TEMPLATE_KEY) ?? [] }
+  return { bookLabels: context?.bookContentLabels(GP_TEMPLATE_KEY, { repeats: true }) ?? [] }
 }
 
 export function parseGpRemoteData(raw: unknown): GpRemoteData {

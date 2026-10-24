@@ -64,19 +64,28 @@ const MAX_BOOK_CONTENT_LABELS = 400
  * Unlike the hash scan this descends into groups: a question is grouped with
  * its number and answer lines, so its label sits on a child. Capped from the
  * end, so a very long book keeps its most recent pages in view.
+ *
+ * Each label is returned once by default. With `repeats`, a label comes back
+ * once per puzzle page that prints it, and answer pages (which carry the same
+ * labels again) are skipped: a game that deals the least-shown picture first
+ * has to see that the book printed it three times, not once, or it keeps
+ * dealing the same few pictures once the level has gone round.
  */
 export function collectStudioContentLabels(
   store: CanvasStateStore,
   pageCount: number,
   templateKey: string,
+  options: { repeats?: boolean } = {},
 ): string[] {
+  const { repeats = false } = options
   const labels: string[] = []
-  const seen = new Set<string>()
+  let seen = new Set<string>()
   const walk = (objects: unknown[]): void => {
     for (const raw of objects) {
       if (!raw || typeof raw !== 'object') continue
       const obj = raw as StudioFabricObject
       if (obj.studioTemplateKey !== templateKey) continue
+      if (repeats && obj.studioPageRole === 'answers') continue
       const label = obj.data?.[STUDIO_CONTENT_LABEL_KEY]
       if (typeof label === 'string' && label.trim() && !seen.has(label)) {
         seen.add(label)
@@ -86,6 +95,7 @@ export function collectStudioContentLabels(
     }
   }
   for (let pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+    if (repeats) seen = new Set<string>()
     const json = store.getSerialized(pageIndex) as StoredCanvasJson | null
     walk(Array.isArray(json?.objects) ? json.objects : [])
   }

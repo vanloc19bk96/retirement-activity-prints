@@ -18,7 +18,7 @@ export async function tangledYarnPrefetch(
   _signal: AbortSignal,
   context?: StudioPrefetchContext,
 ): Promise<TyRemoteData> {
-  return { bookLabels: context?.bookContentLabels(TY_TEMPLATE_KEY) ?? [] }
+  return { bookLabels: context?.bookContentLabels(TY_TEMPLATE_KEY, { repeats: true }) ?? [] }
 }
 
 export function parseTyRemoteData(raw: unknown): TyRemoteData {

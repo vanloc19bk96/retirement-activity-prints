@@ -18,7 +18,7 @@ export async function lamplighterPrefetch(
   _signal: AbortSignal,
   context?: StudioPrefetchContext,
 ): Promise<LampRemoteData> {
-  return { bookLabels: context?.bookContentLabels(LAMP_TEMPLATE_KEY) ?? [] }
+  return { bookLabels: context?.bookContentLabels(LAMP_TEMPLATE_KEY, { repeats: true }) ?? [] }
 }
 
 export function parseLampRemoteData(raw: unknown): LampRemoteData {

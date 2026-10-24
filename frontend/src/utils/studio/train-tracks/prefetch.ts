@@ -18,7 +18,7 @@ export async function trainTracksPrefetch(
   _signal: AbortSignal,
   context?: StudioPrefetchContext,
 ): Promise<TtRemoteData> {
-  return { bookLabels: context?.bookContentLabels(TT_TEMPLATE_KEY) ?? [] }
+  return { bookLabels: context?.bookContentLabels(TT_TEMPLATE_KEY, { repeats: true }) ?? [] }
 }
 
 export function parseTtRemoteData(raw: unknown): TtRemoteData {
