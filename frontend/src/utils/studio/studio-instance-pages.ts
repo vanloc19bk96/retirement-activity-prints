@@ -130,8 +130,11 @@ export function findAnswerInstanceIds(
   return ids
 }
 
+/** Where page snapshots are read from: the editor's store, or a book not committed yet. */
+export type StudioPageSnapshots = Pick<CanvasStateStore, 'getSerialized'>
+
 function readPageObjects(
-  store: CanvasStateStore,
+  store: StudioPageSnapshots,
   pageIndex: number,
 ): unknown[] {
   const json = store.getSerialized(pageIndex) as StoredCanvasJson | null
@@ -139,7 +142,7 @@ function readPageObjects(
 }
 
 export function readStudioPageMeta(
-  store: CanvasStateStore,
+  store: StudioPageSnapshots,
   pageIndex: number,
 ): { instanceId: string; pageRole: string } | null {
   let meta: { instanceId: string; pageRole: string } | null = null
@@ -165,6 +168,33 @@ function pageHasInstance(
     if (obj.studioInstanceId === instanceId) found = true
   })
   return found
+}
+
+/** Games with a puzzle page at `pageIndex` (answer keys and keepsakes' keys excluded). */
+function puzzleInstanceIdsOnPage(store: StudioPageSnapshots, pageIndex: number): Set<string> {
+  const ids = new Set<string>()
+  walkStudioObjects(readPageObjects(store, pageIndex), (obj) => {
+    if (!obj.studioInstanceId || obj.studioPageRole === 'answers') return
+    ids.add(obj.studioInstanceId)
+  })
+  return ids
+}
+
+/**
+ * Games whose last puzzle page is `pageIndex`: deleting it leaves their answer
+ * keys with nothing to answer. Deleting one page of a two-page game does not.
+ */
+export function findStudioGamesEndingOnPage(
+  store: StudioPageSnapshots,
+  pageCount: number,
+  pageIndex: number,
+): Set<string> {
+  const ids = puzzleInstanceIdsOnPage(store, pageIndex)
+  for (let i = 0; i < pageCount && ids.size > 0; i++) {
+    if (i === pageIndex) continue
+    for (const id of puzzleInstanceIdsOnPage(store, i)) ids.delete(id)
+  }
+  return ids
 }
 
 /** True when the page is a studio answer-key page (not the puzzle). */

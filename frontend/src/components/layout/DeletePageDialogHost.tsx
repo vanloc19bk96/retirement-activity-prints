@@ -3,7 +3,8 @@ import { forwardRef, useCallback, useImperativeHandle, useState, type SetStateAc
 import { DeletePageDialog } from './DeletePageDialog'
 
 export type DeletePageDialogHostHandle = {
-  requestDelete: (pageIndex: number) => void
+  /** `withSolution`: the page is a game's last, so its answer key goes too. */
+  requestDelete: (pageIndex: number, options?: { withSolution?: boolean }) => void
 }
 
 type DeletePageDialogHostProps = {
@@ -18,12 +19,14 @@ export const DeletePageDialogHost = forwardRef<DeletePageDialogHostHandle, Delet
   function DeletePageDialogHost({ onConfirmDelete }, ref): JSX.Element {
     const [isOpen, setIsOpen] = useState(false)
     const [pendingPageIndex, setPendingPageIndex] = useState<number | null>(null)
+    const [withSolution, setWithSolution] = useState(false)
 
     useImperativeHandle(
       ref,
       () => ({
-        requestDelete(pageIndex: number): void {
+        requestDelete(pageIndex, options): void {
           setPendingPageIndex(pageIndex)
+          setWithSolution(options?.withSolution ?? false)
           setIsOpen(true)
         },
       }),
@@ -56,6 +59,7 @@ export const DeletePageDialogHost = forwardRef<DeletePageDialogHostHandle, Delet
         isOpen={isOpen}
         onOpenChange={handleOpenChange}
         pageIndex={pendingPageIndex}
+        withSolution={withSolution}
         onConfirm={handleConfirm}
       />
     )

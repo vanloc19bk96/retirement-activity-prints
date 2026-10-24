@@ -13,6 +13,8 @@ interface DeletePageDialogProps {
   isOpen: boolean
   onOpenChange: Dispatch<SetStateAction<boolean>>
   pageIndex: number | null
+  /** The page's answer key is deleted with it. */
+  withSolution?: boolean
   onConfirm: () => void
 }
 
@@ -20,6 +22,7 @@ export function DeletePageDialog({
   isOpen,
   onOpenChange,
   pageIndex,
+  withSolution = false,
   onConfirm,
 }: DeletePageDialogProps): JSX.Element {
   return (
@@ -29,8 +32,8 @@ export function DeletePageDialog({
           <DialogTitle>Delete page</DialogTitle>
           <DialogDescription>
             {pageIndex !== null
-              ? `Are you sure you want to delete Page ${pageIndex + 1}? This cannot be undone.`
-              : 'Are you sure you want to delete this page? This cannot be undone.'}
+              ? `Are you sure you want to delete Page ${pageIndex + 1}${withSolution ? ' and its solution' : ''}? This cannot be undone.`
+              : `Are you sure you want to delete this page${withSolution ? ' and its solution' : ''}? This cannot be undone.`}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="pt-2">

@@ -1,5 +1,4 @@
-import type { CanvasStateStore } from '@/utils/canvas-state-store'
-import { readStudioPageMeta } from './studio-instance-pages'
+import { readStudioPageMeta, type StudioPageSnapshots } from './studio-instance-pages'
 
 /** Where studio answer-key pages sit in the book. */
 export type StudioSolutionPlacement = 'after-game' | 'end'
@@ -16,7 +15,7 @@ interface InstancePages {
 type PageRole = { instanceId: string; isAnswer: boolean } | null
 
 function collectInstancePages(
-  store: CanvasStateStore,
+  store: StudioPageSnapshots,
   pageCount: number,
 ): { roles: PageRole[]; byInstance: Map<string, InstancePages> } {
   const roles: PageRole[] = []
@@ -58,7 +57,7 @@ function isIdentityOrder(order: number[]): boolean {
  *   solutions whose game is gone stay where they are.
  */
 export function resolveStudioSolutionPageOrder(
-  store: CanvasStateStore,
+  store: StudioPageSnapshots,
   pageCount: number,
   placement: StudioSolutionPlacement,
 ): number[] | null {

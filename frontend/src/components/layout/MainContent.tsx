@@ -63,11 +63,20 @@ import {
   onStudioWritePage,
   onStudioGenerationDone,
 } from '@/utils/studio/studio-events'
-import { type StudioSolutionPlacement } from '@/utils/studio/studio-solution-placement'
-import { resolveStudioSolutionLayout } from '@/utils/studio/studio-solution-pack'
+import {
+  toStudioSolutionPlacement,
+  type StudioSolutionPlacement,
+} from '@/utils/studio/studio-solution-placement'
+import {
+  resolveStudioPageDeletion,
+  resolveStudioSolutionLayout,
+} from '@/utils/studio/studio-solution-pack'
 import type { SolutionsPerPage } from '@/types/canvas-settings.types'
 import { resolveStudioMarginForPage } from '@/utils/studio/studio-margin'
-import { renumberStudioGameTitles } from '@/utils/studio/studio-instance-pages'
+import {
+  findStudioGamesEndingOnPage,
+  renumberStudioGameTitles,
+} from '@/utils/studio/studio-instance-pages'
 import { isStudioNumberedTemplate } from '@/constants/studio-templates'
 import { util, type Canvas } from 'fabric'
 import {
@@ -1141,28 +1150,61 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
   }, [settings.pageCount])
 
   const handleConfirmDelete = (deletedIndex: number): void => {
-    if (settings.pageCount <= 1) {
+    if (settings.pageCount > 1) syncEditorInteriorCanvasesToStore()
+    // A game's last page takes its answer key along.
+    const withSolutions =
+      settings.pageCount > 1
+        ? resolveStudioPageDeletion({
+            store: canvasStateStore,
+            pageCount: interiorPageCountRef.current,
+            deletedPageIndex: deletedIndex,
+            placement: toStudioSolutionPlacement(settings.solutionsAtEnd),
+            perPage: settings.solutionsPerPage,
+            pageWidth: interiorPageWidth,
+            pageHeight: interiorPageHeight,
+            marginFor: (pageIndex) =>
+              resolveStudioMarginForPage({
+                pageIndex,
+                pageWidth: interiorPageWidth,
+                pageHeight: interiorPageHeight,
+                marginGuide,
+              }),
+          })
+        : null
+
+    if (settings.pageCount <= 1 || withSolutions?.length === 0) {
       const emptyInterior = EMPTY_FABRIC_CANVAS_SNAPSHOT as Record<string, unknown>
 
       shouldResumeStoreSaveRef.current = true
       canvasStateStore.suspendSave()
       editor.clearInteriorCanvasesOnly()
       canvasStateStore.resetInteriorPagesToSingleEmpty(emptyInterior)
-      setInteriorPageSlotKeys((prev) => {
-        const next = [...prev]
-        next[deletedIndex] = createInteriorPageSlotKey()
-        return next
-      })
+      setInteriorPageSlotKeys([createInteriorPageSlotKey()])
       setSaveResumeToken((t) => t + 1)
       clearThumbnailCache()
-      handleActiveCanvasChange(deletedIndex)
+      interiorPageCountRef.current = 1
+      setPageCount(1)
+      handleActiveCanvasChange(0)
       return
     }
+
+    if (withSolutions) {
+      commitInteriorPages(withSolutions)
+      const renumbered = new Set(
+        renumberStudioGameTitles(canvasStateStore, withSolutions.length, isStudioNumberedTemplate),
+      )
+      const targetIndex = clampPageIndex(Math.max(0, deletedIndex - 1), withSolutions.length)
+      scrollTargetIndexRef.current = targetIndex
+      updateThumbnailUrls((prev) => dropThumbnailUrls(prev, renumbered))
+      handleActiveCanvasChange(targetIndex)
+      setInteriorPageSlotKeys((prev) => remountPageSlots(prev, renumbered))
+      return
+    }
+
     const nextPageCount = interiorPageCountRef.current - 1
 
     shouldResumeStoreSaveRef.current = true
     canvasStateStore.suspendSave()
-    syncEditorInteriorCanvasesToStore()
     canvasStateStore.deletePageAndShiftSerialized(deletedIndex, nextPageCount)
     // A deleted game leaves no gap: the games after it move up a number.
     const renumbered = new Set(
@@ -1352,9 +1394,14 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
     ],
   )
 
-  const handleRemovePage = useCallback((pageIndex: number): void => {
-    deletePageDialogRef.current?.requestDelete(pageIndex)
-  }, [])
+  const handleRemovePage = useCallback(
+    (pageIndex: number): void => {
+      const withSolution =
+        findStudioGamesEndingOnPage(canvasStateStore, interiorPageCountRef.current, pageIndex).size > 0
+      deletePageDialogRef.current?.requestDelete(pageIndex, { withSolution })
+    },
+    [canvasStateStore],
+  )
 
   const handleMovePage = useCallback(
     (pageIndex: number, direction: 'up' | 'down'): void => {

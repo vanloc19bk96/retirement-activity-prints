@@ -5,12 +5,13 @@ import type { StudioFabricObject } from '@/types/studio-template.types'
 import { objectExtent } from './studio-object-bounds'
 import type { StudioSolutionPlacement } from './studio-solution-placement'
 import {
+  resolveStudioPageDeletion,
   resolveStudioSolutionLayout,
   type StudioSolutionLayoutPage,
 } from './studio-solution-pack'
 
 type PageJson = { objects: Array<Record<string, unknown>> }
-type Role = 'single' | 'answers'
+type Role = 'single' | 'study' | 'recall' | 'answers'
 
 const PAGE_WIDTH = 816
 const PAGE_HEIGHT = 1056
@@ -210,5 +211,81 @@ describe('resolveStudioSolutionLayout — no packing', () => {
 
   it('ignores the count per page while keys follow their games', () => {
     expect(layout(threeGames(), 'after-game', 4)).toBeNull()
+  })
+})
+
+function deletePage(
+  pages: PageJson[],
+  deletedPageIndex: number,
+  placement: StudioSolutionPlacement,
+  perPage: SolutionsPerPage,
+): StudioSolutionLayoutPage[] | null {
+  return resolveStudioPageDeletion({
+    store: storeOf(pages),
+    pageCount: pages.length,
+    deletedPageIndex,
+    placement,
+    perPage,
+    pageWidth: PAGE_WIDTH,
+    pageHeight: PAGE_HEIGHT,
+    marginFor,
+  })
+}
+
+describe('resolveStudioPageDeletion', () => {
+  it('drops the key page that follows its game', () => {
+    const book = threeGames()
+    const next = deletePage(book, 2, 'after-game', 1)!
+    expect(next.map((page) => page.from)).toEqual([0, 1, 4, 5])
+    expect(next.every((page) => page.json === undefined)).toBe(true)
+  })
+
+  it('drops the key page at the end of the book', () => {
+    const book = apply(threeGames(), layout(threeGames(), 'end', 1))
+    // G1 G2 G3 S1 S2 S3
+    const next = deletePage(book, 0, 'end', 1)!
+    expect(apply(book, next).map(instancesOn)).toEqual([['b'], ['c'], ['b'], ['c']])
+  })
+
+  it('takes a packed key off its page and closes the gap', () => {
+    const book = apply(threeGames(), layout(threeGames(), 'end', 4))
+    // G1 G2 G3 [S1 S2 S3]
+    const pages = apply(book, deletePage(book, 1, 'end', 4)!)
+    expect(pages.map(instancesOn)).toEqual([['a'], ['c'], ['a', 'c']])
+    const slots = pages[2]!.objects.map(
+      (obj) => (obj.data as { studioSolutionPack: { slot: number } }).studioSolutionPack.slot,
+    )
+    expect([...new Set(slots)]).toEqual([0, 1])
+  })
+
+  it('pulls later keys forward onto the page that lost one', () => {
+    const book = apply(threeGames(), layout(threeGames(), 'end', 2))
+    // G1 G2 G3 [S1 S2] [S3]
+    const pages = apply(book, deletePage(book, 0, 'end', 2)!)
+    expect(pages.map(instancesOn)).toEqual([['b'], ['c'], ['b', 'c']])
+  })
+
+  it('drops a packed page left without keys', () => {
+    const book = apply(threeGames(), layout(threeGames(), 'end', 2))
+    const next = deletePage(book, 2, 'end', 2)!
+    expect(apply(book, next).map(instancesOn)).toEqual([['a'], ['b'], ['a', 'b']])
+    // [S1 S2] is untouched.
+    expect(next[2]!.json).toBeUndefined()
+  })
+
+  it('keeps the key while the game still has a page', () => {
+    const book = [sheet('a', 'study', 0), sheet('a', 'recall', 1), sheet('a', 'answers', 2)]
+    expect(deletePage(book, 0, 'after-game', 1)).toBeNull()
+  })
+
+  it('leaves plain pages and key pages to the ordinary delete', () => {
+    const book = [...threeGames(), { objects: [] }]
+    expect(deletePage(book, 6, 'after-game', 1)).toBeNull()
+    expect(deletePage(book, 1, 'after-game', 1)).toBeNull()
+  })
+
+  it('can empty the book', () => {
+    const book = [sheet('a', 'single', 0), sheet('a', 'answers', 1)]
+    expect(deletePage(book, 0, 'after-game', 1)).toEqual([])
   })
 })

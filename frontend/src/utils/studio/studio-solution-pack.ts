@@ -1,8 +1,11 @@
 import { STUDIO_TITLE_SIZE } from '@/constants/studio.constants'
 import { DPI, type SolutionsPerPage } from '@/types/canvas-settings.types'
 import type { StudioFabricObject, StudioMargin } from '@/types/studio-template.types'
-import type { CanvasStateStore } from '@/utils/canvas-state-store'
-import { readStudioPageMeta } from './studio-instance-pages'
+import {
+  findStudioGamesEndingOnPage,
+  readStudioPageMeta,
+  type StudioPageSnapshots,
+} from './studio-instance-pages'
 import { isStudioHeaderTitle } from './studio-layout'
 import { unionObjectBounds } from './studio-object-bounds'
 import {
@@ -215,7 +218,7 @@ function sameUnits(a: SolutionUnit[], b: SolutionUnit[]): boolean {
 }
 
 export interface ResolveStudioSolutionLayoutOptions {
-  store: CanvasStateStore
+  store: StudioPageSnapshots
   pageCount: number
   placement: StudioSolutionPlacement
   /** Only used with `end`: keys after their own game always get a page each. */
@@ -364,9 +367,11 @@ export function resolveStudioSolutionLayout(
       return { from: null, json }
     }
     const source = entry.units[0]!.sourcePage
+    // A page that lost a key closes the gap rather than keep an empty cell.
     const kept =
       entry.units[0]!.ownPage == null &&
       sameUnits(entry.units, unitsByPage.get(source) ?? []) &&
+      entry.units.every((unit, slot) => unit.slot === slot) &&
       pageObjects(jsonAt(source)).every((obj) => (readPack(obj)?.slots ?? perPage) === perPage)
     if (kept) return movedPage(source, newIndex)
     return {
@@ -379,6 +384,75 @@ export function resolveStudioSolutionLayout(
     pages.length === pageCount &&
     pages.every((page, newIndex) => page.from === newIndex && page.json === undefined)
   return unchanged ? null : pages
+}
+
+export interface ResolveStudioPageDeletionOptions extends ResolveStudioSolutionLayoutOptions {
+  deletedPageIndex: number
+}
+
+/**
+ * The book without page `deletedPageIndex`, or null when no answer key goes
+ * with it. Deleting a game's last puzzle page takes its key along: a key page
+ * of its own is dropped, a key sharing a packed page is taken off it and the
+ * solution pages are packed again, so no empty cell or empty page is left.
+ * Can come out empty when the book held nothing but that game.
+ */
+export function resolveStudioPageDeletion(
+  options: ResolveStudioPageDeletionOptions,
+): StudioSolutionLayoutPage[] | null {
+  const { store, pageCount, deletedPageIndex } = options
+  const gone = findStudioGamesEndingOnPage(store, pageCount, deletedPageIndex)
+  if (gone.size === 0) return null
+
+  const rows: Array<{ from: number; json?: PageJson }> = []
+  let repack = false
+  for (let pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+    if (pageIndex === deletedPageIndex) continue
+    const json = store.getSerialized(pageIndex) as PageJson | null
+    if (json && isPackedPage(json)) {
+      const bySlot = new Map<number, RawObject[]>()
+      for (const obj of pageObjects(json)) {
+        const pack = readPack(obj)
+        if (pack) bySlot.set(pack.slot, [...(bySlot.get(pack.slot) ?? []), obj])
+      }
+      const dropped = new Set(
+        [...bySlot].flatMap(([slot, objects]) => {
+          const instanceId = findInstanceId(objects)
+          return instanceId && gone.has(instanceId) ? [slot] : []
+        }),
+      )
+      if (dropped.size === 0) {
+        rows.push({ from: pageIndex })
+        continue
+      }
+      repack = true
+      // Objects added after packing went with the first key and leave with it.
+      if (dropped.size === bySlot.size) continue
+      const objects = (json.objects ?? []).filter((raw) => {
+        const pack = isRecord(raw) ? readPack(raw) : null
+        return !pack || !dropped.has(pack.slot)
+      })
+      rows.push({ from: pageIndex, json: { ...json, objects } })
+      continue
+    }
+    const meta = readStudioPageMeta(store, pageIndex)
+    if (meta?.pageRole === 'answers' && gone.has(meta.instanceId)) continue
+    rows.push({ from: pageIndex })
+  }
+
+  if (!repack || rows.length === 0) return rows
+  const snapshots = rows.map((row) => row.json ?? (store.getSerialized(row.from) as PageJson | null))
+  const repacked = resolveStudioSolutionLayout({
+    ...options,
+    store: { getSerialized: (pageIndex) => snapshots[pageIndex] ?? null },
+    pageCount: rows.length,
+  })
+  if (!repacked) return rows
+  return repacked.map((page) => {
+    if (page.from == null) return page
+    const row = rows[page.from]!
+    return { from: row.from, json: page.json ?? row.json }
+  })
 }
 
 /** Lay `units` into the page's safe area: 1 x 2 cells for two per page, 2 x 2 for four. */
