@@ -181,8 +181,9 @@ function puzzleInstanceIdsOnPage(store: StudioPageSnapshots, pageIndex: number):
 }
 
 /**
- * Games whose last puzzle page is `pageIndex`: deleting it leaves their answer
- * keys with nothing to answer. Deleting one page of a two-page game does not.
+ * Games whose last puzzle page is `pageIndex` and that have an answer key:
+ * deleting the page leaves those keys with nothing to answer. Deleting one
+ * page of a two-page game does not, and a game without a key has none to lose.
  */
 export function findStudioGamesEndingOnPage(
   store: StudioPageSnapshots,
@@ -194,7 +195,14 @@ export function findStudioGamesEndingOnPage(
     if (i === pageIndex) continue
     for (const id of puzzleInstanceIdsOnPage(store, i)) ids.delete(id)
   }
-  return ids
+  const keyed = new Set<string>()
+  for (let i = 0; i < pageCount && keyed.size < ids.size; i++) {
+    walkStudioObjects(readPageObjects(store, i), (obj) => {
+      if (obj.studioPageRole !== 'answers' || !obj.studioInstanceId) return
+      if (ids.has(obj.studioInstanceId)) keyed.add(obj.studioInstanceId)
+    })
+  }
+  return keyed
 }
 
 /** True when the page is a studio answer-key page (not the puzzle). */

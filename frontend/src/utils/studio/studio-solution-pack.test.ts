@@ -284,6 +284,11 @@ describe('resolveStudioPageDeletion', () => {
     expect(deletePage(book, 1, 'after-game', 1)).toBeNull()
   })
 
+  it('leaves a game without a key to the ordinary delete', () => {
+    const book = [sheet('a', 'single', 0), sheet('b', 'single', 1), sheet('b', 'answers', 2)]
+    expect(deletePage(book, 0, 'after-game', 1)).toBeNull()
+  })
+
   it('can empty the book', () => {
     const book = [sheet('a', 'single', 0), sheet('a', 'answers', 1)]
     expect(deletePage(book, 0, 'after-game', 1)).toEqual([])

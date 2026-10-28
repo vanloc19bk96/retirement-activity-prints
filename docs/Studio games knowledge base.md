@@ -3908,7 +3908,7 @@ Pages: 1 · Answer key: no · AI content: yes
 
 ---
 
-## Keepsake (6 games)
+## Keepsake (7 games)
 
 ### Retirement Bucket List (`bucket-list`)
 A big, browsable keepsake list of things to do in retirement: 50, 75 or 100
@@ -4290,6 +4290,47 @@ spacing, writing lines and signature room are at their minimums. If the page
 is too small for a roomy box, it says so plainly.
 Pages: 1-4 (default 2) · Answer key: no · AI content: no
 
+### Daily Habits Tracker (`daily-habits-tracker`)
+Weekly pages that help a retiree keep up healthy routines, asked for by a
+customer: drinking water, exercise, sleep, vitamins and supplements, and
+medicines. Each page has a "Week of" line to date by hand, then a table with
+one row per habit and one column per day. A check row has a large box to tick
+each day. The water row has a small glass to fill in for each glass, and the
+sleep row leaves room to write the hours, with "hrs" under it. Medicines get
+one row per time of day (morning, midday, evening, bedtime), so a missed dose
+is easy to spot. Whatever room the table leaves becomes ruled "Notes" lines.
+An optional medicines list page comes first: doctor and pharmacy lines with
+a phone line each, then a blank table (Name, Dose, When I take it, What it is
+for) that fills the page. No answer page.
+
+Settings: habits to track (ten presets: water, exercise or a walk, stretching,
+time outside, fruit & vegetables, hours of sleep, medicines, vitamins &
+supplements, talk with a friend, puzzle or reading; the default is water,
+exercise, sleep, medicines and supplements), glasses of water a day (4, 6 or
+8), how many times a day medicines are taken (1-4), up to three habits of the
+seller's own (28 characters each), which day the week starts on (Monday or
+Sunday), weeks (1, 2, 4, 8 or 12, one page each) and the medicines list
+toggle. The title field prints "My Daily Habits" on every weekly page; the
+medicines list keeps its own heading, "My Medicines & Supplements". The habits
+field warns in the form when the chosen rows will not fit the trim.
+
+Wording (no AI, `utils/studio/habit-tracker/content.ts`): fixed row labels and
+one how-to line naming only the kinds of cell the page has. Nothing prints a
+dose, amount or health advice; the medicines list is blank, filled in with
+what the doctor said.
+
+Page: labels at 14 pt (12 pt only if a long word needs it), at most three
+lines, never split mid-word. Tick boxes are 0.24 in (never under 0.18 in),
+rows at least 0.4 in, day names in full ("Mon") where they fit and single
+letters otherwise. Rows grow by up to 0.2 in to fill the page, and a roomy
+remainder becomes notes. On a narrow trim the doctor and pharmacy phone lines
+move under the name lines instead of beside them. Black ink only.
+
+Variety: none on purpose. Every week is the same form, so the template is
+seed-invariant (`seedInvariant`) and a set of twelve weeks prints twelve
+matching pages.
+Pages: 1-13 (weeks, plus the optional medicines list) · Answer key: no · AI content: no
+
 ### Certificate of Retirement (`retirement-certificate`)
 A framed, gift-worthy certificate for retirement, farewell and retirement gift
 books. From the top: a small line-art emblem, the heading, a presentation line
@@ -4433,6 +4474,7 @@ Pages: 1 · Answer key: no · AI content: no
 | travel-wish-map | Travel Wish Map: Retirement Edition | keepsake | 5-17 | no | no |
 | career-by-the-numbers | Career By the Numbers | keepsake | 1-6 | no | yes |
 | well-wishes-signatures | Well Wishes & Signatures | keepsake | 1-4 | no | no |
+| daily-habits-tracker | Daily Habits Tracker | keepsake | 1-13 | no | no |
 | retirement-certificate | Certificate of Retirement | keepsake | 1 | no | no |
 
-**Total: 56 games** (11 word · 18 logic · 4 visual · 3 coloring · 5 trivia · 9 party · 6 keepsake).
+**Total: 57 games** (11 word · 18 logic · 4 visual · 3 coloring · 5 trivia · 9 party · 7 keepsake).

@@ -59,6 +59,7 @@ import { travelWishMapTemplate } from '@/utils/studio/travel-wish-map/generate'
 import { whoKnowsBestTemplate } from '@/utils/studio/who-knows-retiree-best/generate'
 import { wellWishesTemplate } from '@/utils/studio/well-wishes/generate'
 import { retirementCertificateTemplate } from '@/utils/studio/retirement-certificate/generate'
+import { habitTrackerTemplate } from '@/utils/studio/habit-tracker/generate'
 import { officeAwardsTemplate } from '@/utils/studio/office-awards/generate'
 import { careerNumbersTemplate } from '@/utils/studio/career-by-the-numbers/generate'
 import { retiredNameTemplate } from '@/utils/studio/retired-name/generate'
@@ -158,6 +159,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   travelWishMapTemplate,
   careerNumbersTemplate,
   wellWishesTemplate,
+  habitTrackerTemplate,
   retirementCertificateTemplate,
 ]
 

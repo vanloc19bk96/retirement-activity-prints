@@ -66,7 +66,7 @@ describe('keepsakes in a book', () => {
 
   it('closes a random mix with its keepsakes, after every game', () => {
     for (const seed of [1, 42, 1337, 90210, 555]) {
-      const keys = keysOf(buildRandomBookPlan({ gameCount: 64, seed, categories: [] }))
+      const keys = keysOf(buildRandomBookPlan({ gameCount: POOL_SIZE, seed, categories: [] }))
       const firstKeepsake = keys.findIndex(isKeepsake)
       expect(firstKeepsake).toBeGreaterThan(0)
       expect(keys.slice(firstKeepsake).every(isKeepsake)).toBe(true)
@@ -75,7 +75,7 @@ describe('keepsakes in a book', () => {
 
   it('ends a random mix on the certificate, after the other keepsakes', () => {
     for (const seed of [1, 2, 3, 42, 1337, 90210, 555]) {
-      const keys = keysOf(buildRandomBookPlan({ gameCount: 64, seed, categories: [] }))
+      const keys = keysOf(buildRandomBookPlan({ gameCount: POOL_SIZE, seed, categories: [] }))
       const firstCertificate = keys.indexOf('retirement-certificate')
       expect(firstCertificate).toBeGreaterThan(0)
       expect(keys.slice(firstCertificate).every((key) => key === 'retirement-certificate')).toBe(true)
