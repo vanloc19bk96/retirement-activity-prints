@@ -110,7 +110,7 @@ function expandBookLabels(labels: readonly string[]): Set<string> {
  * balanced — the narrowest measure that still takes two lines — so it never
  * ends on a lone word or two.
  */
-function wrapIntro(text: string, width: number, font: string): string {
+export function wrapIntro(text: string, width: number, font: string): string {
   const spec = plainSpec(font)
   const wrap = (measure: number) => wrapTextToWidth(text, STUDIO_INSTRUCTION_SIZE, measure, spec)
   const full = wrapSafeWidth(width, spec)

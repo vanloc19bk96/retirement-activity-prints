@@ -18,7 +18,7 @@ import {
 import { boxCenterX, boxRight, toNonBreakingSpaces, unionObjectBounds, type Box } from '../studio-layout'
 import { hugTextBoxWidth } from '../studio-text-metrics'
 import { STUDIO_CONTENT_LABEL_KEY } from '../studio-content-history'
-import type { WwMotif } from './content'
+import type { WwFrameStyle, WwMotif } from './content'
 import {
   DOUBLE_INSET,
   ORNAMENT_SIZE,
@@ -59,7 +59,7 @@ const withLabel = (obj: StudioFabricObject, label?: string): StudioFabricObject 
  * instead of chasing its loose parts. A single part is pushed as it is — a
  * group of one is only an extra click.
  */
-function grouped(ctx: DrawContext, role: StudioRole, draw: (inner: DrawContext) => void) {
+export function grouped(ctx: DrawContext, role: StudioRole, draw: (inner: DrawContext) => void) {
   const parts: StudioFabricObject[] = []
   draw({ ...ctx, objects: parts })
   if (parts.length === 1) {
@@ -71,7 +71,7 @@ function grouped(ctx: DrawContext, role: StudioRole, draw: (inner: DrawContext) 
 }
 
 /** A hairline or writing line, drawn as a filled strip so it prints crisp at any zoom. */
-function rule(ctx: DrawContext, left: number, top: number, width: number, fill: string, label?: string) {
+export function rule(ctx: DrawContext, left: number, top: number, width: number, fill: string, label?: string) {
   ctx.objects.push(
     withLabel(
       buildRect(
@@ -103,7 +103,7 @@ function arc(cx: number, cy: number, r: number, from: number, to: number, steps 
 }
 
 /** The outline of a frame, relative to its own top-left, for the shaped styles. */
-function frameOutline(style: WwStyle['frame'], w: number, h: number): Point[] | null {
+function frameOutline(style: WwFrameStyle, w: number, h: number): Point[] | null {
   const c = CORNER
   if (style === 'notched') {
     return [
@@ -129,9 +129,9 @@ function frameOutline(style: WwStyle['frame'], w: number, h: number): Point[] | 
   return null
 }
 
-function drawFrame(ctx: DrawContext, box: WwBox, style: WwStyle, label?: string) {
-  const { frame } = box
-  const shape = frameOutline(style.frame, frame.width, frame.height)
+/** A box's frame in one of the set's styles. Shared with other keepsake cards. */
+export function drawFrame(ctx: DrawContext, frame: Box, style: WwFrameStyle, label?: string) {
+  const shape = frameOutline(style, frame.width, frame.height)
   if (shape) {
     ctx.objects.push(
       withLabel(
@@ -152,7 +152,7 @@ function drawFrame(ctx: DrawContext, box: WwBox, style: WwStyle, label?: string)
     )
     return
   }
-  const round = style.frame === 'rounded' ? ROUND_RADIUS : 0
+  const round = style === 'rounded' ? ROUND_RADIUS : 0
   ctx.objects.push(
     withLabel(
       buildRect(
@@ -161,7 +161,7 @@ function drawFrame(ctx: DrawContext, box: WwBox, style: WwStyle, label?: string)
           rx: round,
           ry: round,
           stroke: STUDIO_RULE,
-          strokeWidth: style.frame === 'brackets' ? 1 : FRAME_STROKE,
+          strokeWidth: style === 'brackets' ? 1 : FRAME_STROKE,
         },
         ctx.tag,
         'structure',
@@ -169,7 +169,7 @@ function drawFrame(ctx: DrawContext, box: WwBox, style: WwStyle, label?: string)
       label,
     ),
   )
-  if (style.frame === 'double') {
+  if (style === 'double') {
     ctx.objects.push(
       buildRect(
         {
@@ -185,7 +185,7 @@ function drawFrame(ctx: DrawContext, box: WwBox, style: WwStyle, label?: string)
       ),
     )
   }
-  if (style.frame === 'brackets') {
+  if (style === 'brackets') {
     const l = frame.left
     const t = frame.top
     const r = boxRight(frame)
@@ -245,7 +245,7 @@ export function drawBox(
 
 function drawBoxParts(ctx: DrawContext, options: Parameters<typeof drawBox>[1]) {
   const { box, style, labelFont, prompt, signoff, designLabel, promptLabel } = options
-  grouped(ctx, 'structure', (frame) => drawFrame(frame, box, style, designLabel))
+  grouped(ctx, 'structure', (frame) => drawFrame(frame, box.frame, style.frame, designLabel))
 
   const room = promptRoom(box.innerWidth, style)
   const text = toNonBreakingSpaces(prompt)

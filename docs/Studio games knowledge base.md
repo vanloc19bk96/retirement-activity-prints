@@ -3908,7 +3908,7 @@ Pages: 1 · Answer key: no · AI content: yes
 
 ---
 
-## Keepsake (7 games)
+## Keepsake (8 games)
 
 ### Retirement Bucket List (`bucket-list`)
 A big, browsable keepsake list of things to do in retirement: 50, 75 or 100
@@ -4290,6 +4290,57 @@ spacing, writing lines and signature room are at their minimums. If the page
 is too small for a roomy box, it says so plainly.
 Pages: 1-4 (default 2) · Answer key: no · AI content: no
 
+### Advice for the Retiree (`advice-for-the-retiree`)
+Advice cards for a retirement party or keepsake book. Each framed card starts
+a sentence for a guest to finish ("The secret to a happy retirement is…",
+"Always say yes to…"), with evenly spaced writing lines and a sign-off line on
+the same rhythm ("From", "Wisely yours,"). A list card opens with a colon
+("Places you should visit:", "Hobbies worth trying:") and numbers every
+writing line. Nothing is filled in before printing and there is no answer
+page.
+
+Settings: the retiree's name (optional, printed in the heading and intro
+only), who's writing (Everyone, Coworkers, or Friends & family, which adds
+work jokes or family prompts), cards per page (1 large, 2, or 4 small), pages
+(1, 2, 3, 4, 6 or 8, default 2) and cut-apart cards (off by default). Cut-apart
+sets draw dashed cut lines down the middle of the gutters and put the set's
+heading on every card in small bold type, since the page heading is trimmed
+away; a typed title is used on the cards when it fits. The cards note reports
+the total and the card size ("8 cards in all, each about 3.5 x 4.4 in."), and
+warns when the chosen grid does not fit the trim. The title field keeps
+"Advice for the Retiree" by default, which means "choose a heading for me".
+
+Wording (no AI, `utils/studio/advice-cards/content.ts`): 10 headings with a
+named form ("Advice for Linda"), 7 intros spoken to the guest, 37 prompts
+(28 for everyone, 6 of them lists, plus 5 for coworkers and 4 for family) and
+7 sign-offs, all original and grouped by audience. Prompts are gentle or lightly funny and never ask for a dose, a sum
+of money or anything an expert should say.
+
+Look: the six Well Wishes frame styles and seven heading motifs (shared code in
+`well-wishes/draw.ts`), black ink with mid-grey writing lines and grey list
+numbers.
+
+Page: one card fills the field, two stack, four make a 2 x 2 grid where each
+column is at least 2.4 in wide, and one column of four otherwise. Every card
+needs at least three writing lines 0.38 in or more apart above the signature
+line, after a prompt that may wrap to two lines at 15 pt (14 pt only if too
+few prompts fit). A grid that cannot meet that is refused, never squeezed: on
+5 x 8, 5.5 x 8.5 and 6 x 9, four cards per page ask for fewer. Lines keep one
+rhythm up from the signature, so a one-line prompt gains a line instead of a
+gap. Cards stretch to fill the page, with no empty band at the foot.
+
+Variety and uniqueness: heading, intro, frame, motif, sign-off and prompts are
+each picked by seed, steered away from what this book's earlier sets print
+(read back from content labels) and from this seller's last couple of sets.
+Prompts are dealt one per card, never twice on a page or on neighbouring cards.
+
+Quality gate: a preflight re-proves page and card counts, one card size per
+page, no overlaps, every card and cut line inside the printable area and clear
+of the cards, no gap at the foot, every prompt and sign-off being one of ours
+and fitting its card, no nearby repeats, readable headings, and the type, line
+spacing, line count and signature room minimums.
+Pages: 1-8 (default 2) · Answer key: no · AI content: no
+
 ### Daily Habits Tracker (`daily-habits-tracker`)
 Weekly pages that help a retiree keep up healthy routines, asked for by a
 customer: drinking water, exercise, sleep, vitamins and supplements, and
@@ -4474,7 +4525,8 @@ Pages: 1 · Answer key: no · AI content: no
 | travel-wish-map | Travel Wish Map: Retirement Edition | keepsake | 5-17 | no | no |
 | career-by-the-numbers | Career By the Numbers | keepsake | 1-6 | no | yes |
 | well-wishes-signatures | Well Wishes & Signatures | keepsake | 1-4 | no | no |
+| advice-for-the-retiree | Advice for the Retiree | keepsake | 1-8 | no | no |
 | daily-habits-tracker | Daily Habits Tracker | keepsake | 1-13 | no | no |
 | retirement-certificate | Certificate of Retirement | keepsake | 1 | no | no |
 
-**Total: 57 games** (11 word · 18 logic · 4 visual · 3 coloring · 5 trivia · 9 party · 7 keepsake).
+**Total: 58 games** (11 word · 18 logic · 4 visual · 3 coloring · 5 trivia · 9 party · 8 keepsake).

@@ -58,6 +58,7 @@ import { weeksOfFirstsTemplate } from '@/utils/studio/weeks-of-firsts/generate'
 import { travelWishMapTemplate } from '@/utils/studio/travel-wish-map/generate'
 import { whoKnowsBestTemplate } from '@/utils/studio/who-knows-retiree-best/generate'
 import { wellWishesTemplate } from '@/utils/studio/well-wishes/generate'
+import { adviceCardsTemplate } from '@/utils/studio/advice-cards/generate'
 import { retirementCertificateTemplate } from '@/utils/studio/retirement-certificate/generate'
 import { habitTrackerTemplate } from '@/utils/studio/habit-tracker/generate'
 import { officeAwardsTemplate } from '@/utils/studio/office-awards/generate'
@@ -159,6 +160,7 @@ const RAW_TEMPLATES: StudioTemplateDefinition[] = [
   travelWishMapTemplate,
   careerNumbersTemplate,
   wellWishesTemplate,
+  adviceCardsTemplate,
   habitTrackerTemplate,
   retirementCertificateTemplate,
 ]
