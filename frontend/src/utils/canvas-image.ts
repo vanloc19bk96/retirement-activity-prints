@@ -2,7 +2,10 @@ import type { Canvas, FabricObject } from 'fabric'
 import { FabricImage } from 'fabric'
 
 import type { CoverPlacementKind } from '@/types/fabric-canvas-item.types'
-import { applyCoverZoneToImage } from '@/utils/book-cover-image-placement'
+import {
+  applyCoverZoneToImage,
+  fitCoverImageToPlacementZone,
+} from '@/utils/book-cover-image-placement'
 import { isSvgImageSrc, loadSvgAsFabricObject } from '@/utils/canvas-svg'
 import { getCanvasPageLogicalSize } from '@/utils/fabric-canvas-pasteboard'
 
@@ -143,6 +146,18 @@ export async function addImageToFabricCanvasAtClientPoint(
     originalImageUrl: src,
     objectId: nextImageObjectId(),
   })
+
+  if (fitMode === 'cover' && zone?.clipToZone) {
+    // Crop to the zone so the selection box stays inside the front/back cover.
+    fitCoverImageToPlacementZone(img as never, zone, zone.placementKind ?? 'front', {
+      lockUniScaling: true,
+    })
+    canvas.add(img)
+    canvas.bringObjectToFront(img)
+    canvas.setActiveObject(img)
+    canvas.requestRenderAll()
+    return
+  }
 
   img.scaleToWidth(size.width)
 

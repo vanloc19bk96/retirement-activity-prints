@@ -7,6 +7,7 @@ import {
   isEventTargetInCurrentSelection,
 } from '@/utils/fabric-selection'
 import { clampImageMaxScale, clampCoverImagePosition } from '@/utils/canvas-image'
+import { panCoverImageCrop, type CoverCropPanTransform } from '@/utils/book-cover-image-placement'
 import {
   applyFabricAlignmentSnapAndGuides,
   drawFabricAlignmentGuides,
@@ -206,12 +207,16 @@ export function buildFabricCanvasInteractionHandlers({
     emitHasSelection()
   }
 
-  const handleObjectMoving = (event: { target?: unknown }): void => {
+  const handleObjectMoving = (event: { target?: unknown; transform?: CoverCropPanTransform }): void => {
     clearHoverBoundingBox()
     const target = event.target as FabricObject | undefined
     if (!target) return
     if (!isEventTargetInCurrentSelection(canvas, target)) return
     hideSelectionFloatingToolbarDuringObjectInteraction()
+    if (panCoverImageCrop(target, event.transform)) {
+      canvas.requestRenderAll()
+      return
+    }
     const guides = applyFabricAlignmentSnapAndGuides(canvas, target, {
       thresholdPx: ALIGNMENT_SNAP_THRESHOLD_PX,
       zoom: zoomRef.current,
