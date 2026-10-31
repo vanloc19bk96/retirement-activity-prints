@@ -28,7 +28,7 @@ services:
     container_name: retirement-activity-prints-backend
     ports:
       # Unique host port — must not collide with logic-grid-prints (8010)
-      - "8011:8000"
+      - "127.0.0.1:8011:8000"
     volumes:
       - ./backend:/app
     env_file:
