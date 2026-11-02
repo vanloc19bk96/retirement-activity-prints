@@ -25,9 +25,14 @@ export type AiImageType =
   | 'page_border'
   | 'background'
 
+export type AiImageSize = 'square' | 'full_page'
+
 export type GenerateInteriorImagesPayload = {
   idea: string
   imageType: AiImageType
+  imageSize: AiImageSize
+  pageWidthInches: number
+  pageHeightInches: number
 }
 
 export type GenerateImagesApiResponse = {

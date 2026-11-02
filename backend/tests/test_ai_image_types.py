@@ -43,15 +43,6 @@ def test_other_types_skip_whitespace_processing(image_type: str) -> None:
     assert type_settings.should_autocrop is False
 
 
-@pytest.mark.parametrize("image_type", ["page_border", "background"])
-def test_full_page_types_are_portrait(image_type: str) -> None:
-    assert image_types.resolve_image_type_settings(image_type).aspect_ratio == "2:3"
-
-
-def test_other_types_default_to_square() -> None:
-    assert image_types.resolve_image_type_settings("none").aspect_ratio == "1:1"
-
-
 def test_unknown_type_is_rejected_by_the_service_helper() -> None:
     with pytest.raises(ValueError):
         image_types.resolve_image_type_settings("hologram")
@@ -73,3 +64,30 @@ def test_request_accepts_the_frontend_field_name() -> None:
 def test_request_rejects_an_unknown_type() -> None:
     with pytest.raises(ValidationError):
         GenerateInteriorImagesRequest(idea="a cat", imageType="hologram")
+
+
+def test_request_defaults_to_square() -> None:
+    assert GenerateInteriorImagesRequest(idea="a cat").image_size == "square"
+
+
+def test_full_page_request_carries_the_page_size() -> None:
+    request = GenerateInteriorImagesRequest(
+        idea="a cat", imageSize="full_page", pageWidthInches=8.5, pageHeightInches=11,
+    )
+    dumped = request.model_dump(by_alias=False)
+    assert (dumped["image_size"], dumped["page_width_inches"], dumped["page_height_inches"]) == (
+        "full_page", 8.5, 11,
+    )
+
+
+def test_full_page_request_requires_the_page_size() -> None:
+    with pytest.raises(ValidationError):
+        GenerateInteriorImagesRequest(idea="a cat", imageSize="full_page", pageWidthInches=8.5)
+
+
+@pytest.mark.parametrize("edge", [0, -1, 500])
+def test_request_rejects_an_impossible_page_size(edge: float) -> None:
+    with pytest.raises(ValidationError):
+        GenerateInteriorImagesRequest(
+            idea="a cat", imageSize="full_page", pageWidthInches=edge, pageHeightInches=11,
+        )

@@ -17,13 +17,17 @@ from __future__ import annotations
 import asyncio
 import base64
 import logging
+import math
 import random
 from typing import Any
 
 import aiohttp
 
 from app.core.config import settings
-from app.services.book_cover_aspect_ratio_mapper import ASPECT_RATIO_PIXEL_DIMENSIONS
+from app.services.book_cover_aspect_ratio_mapper import (
+    ASPECT_RATIO_PIXEL_DIMENSIONS,
+    map_cover_ratio_to_aspect_ratio,
+)
 from app.services.grsaiapi_image_provider import (
     _run_async,
     async_generate_raw_image_bytes as grsai_async_generate_raw,
@@ -34,6 +38,10 @@ logger = logging.getLogger(__name__)
 _OPENAI_IMAGES_URL = "https://api.openai.com/v1/images/generations"
 # OpenAI rejects custom sizes whose edges are not multiples of 16.
 _SIZE_MULTIPLE = 16
+# Exact page ratios generate at the pixel area of OpenAI's recommended 1024x1536 size.
+_EXACT_RATIO_PIXEL_AREA = 1024 * 1536
+# OpenAI allows 3:1, but rounding to the size multiple can push an edge case past it.
+_MAX_EXACT_RATIO = 2.5
 
 
 def _get_api_key() -> str:
@@ -43,16 +51,38 @@ def _get_api_key() -> str:
     return api_key
 
 
-def _round_to_size_multiple(pixels: int) -> int:
+def _round_to_size_multiple(pixels: float) -> int:
     return round(pixels / _SIZE_MULTIPLE) * _SIZE_MULTIPLE
 
 
+def _parse_ratio(aspect_ratio: str) -> float | None:
+    try:
+        width, height = aspect_ratio.split(":")
+        ratio = float(width) / float(height)
+    except (ValueError, ZeroDivisionError):
+        return None
+    return ratio if ratio > 0 else None
+
+
 def _map_aspect_ratio_to_size(aspect_ratio: str) -> str:
+    """Accept a supported label ("2:3") or any exact page ratio ("8.5:11")."""
     dimensions = ASPECT_RATIO_PIXEL_DIMENSIONS.get(aspect_ratio)
     if dimensions is None:
-        return "auto"
+        ratio = _parse_ratio(aspect_ratio)
+        if ratio is None or not 1 / _MAX_EXACT_RATIO <= ratio <= _MAX_EXACT_RATIO:
+            return "auto"
+        width = math.sqrt(_EXACT_RATIO_PIXEL_AREA * ratio)
+        dimensions = (width, width / ratio)
     width, height = dimensions
     return f"{_round_to_size_multiple(width)}x{_round_to_size_multiple(height)}"
+
+
+def _fallback_aspect_ratio(aspect_ratio: str) -> str:
+    """GrsAI only takes supported labels, so an exact page ratio maps to the closest one."""
+    if aspect_ratio in ASPECT_RATIO_PIXEL_DIMENSIONS:
+        return aspect_ratio
+    ratio = _parse_ratio(aspect_ratio)
+    return map_cover_ratio_to_aspect_ratio(ratio) if ratio is not None else aspect_ratio
 
 
 def _join_prompt(prompt: str, system_instruction: str | None) -> str:
@@ -158,7 +188,7 @@ async def _async_generate_with_fallback(
         )
     return await grsai_async_generate_raw(
         prompt,
-        aspect_ratio=aspect_ratio,
+        aspect_ratio=_fallback_aspect_ratio(aspect_ratio),
         max_attempts=max_attempts,
         backoff_base_seconds=backoff_base_seconds,
     )

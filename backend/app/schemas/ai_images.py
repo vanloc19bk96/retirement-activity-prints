@@ -4,6 +4,8 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+MAX_PAGE_EDGE_INCHES = 20
+
 ImageType = Literal[
     "none",
     "coloring",
@@ -42,6 +44,25 @@ class GenerateInteriorImagesRequest(BaseModel):
         alias="customPrompt",
         description="Use a fully custom prompt; if provided, idea/style/lineWeight are ignored",
     )
+    image_size: Literal["square", "full_page"] = Field(
+        default="square",
+        alias="imageSize",
+        description="square, or full_page to match the page size below at print resolution",
+    )
+    page_width_inches: Optional[float] = Field(
+        default=None,
+        gt=0,
+        le=MAX_PAGE_EDGE_INCHES,
+        alias="pageWidthInches",
+        description="Page width; required for full_page",
+    )
+    page_height_inches: Optional[float] = Field(
+        default=None,
+        gt=0,
+        le=MAX_PAGE_EDGE_INCHES,
+        alias="pageHeightInches",
+        description="Page height; required for full_page",
+    )
     style: str = Field(default="random", min_length=1, description="Image style")
     line_weight: str = Field(
         default="medium",
@@ -69,6 +90,12 @@ class GenerateInteriorImagesRequest(BaseModel):
     def strip_line_weight(cls, value: str) -> str:
         cleaned = (value or "").strip()
         return cleaned or "medium"
+
+    @model_validator(mode="after")
+    def validate_full_page_size(self) -> "GenerateInteriorImagesRequest":
+        if self.image_size == "full_page" and not (self.page_width_inches and self.page_height_inches):
+            raise ValueError("pageWidthInches and pageHeightInches are required for full_page")
+        return self
 
     @model_validator(mode="after")
     def validate_prompt_source(self) -> "GenerateInteriorImagesRequest":

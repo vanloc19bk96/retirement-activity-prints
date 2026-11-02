@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { AI_IMAGE_TEXTAREA_CLASS_NAME } from '@/components/panels/ai-image-textarea-styles'
 import { ToggleField } from '@/components/panels/ai-cover-form/ToggleField'
 import { STUDIO_FIELD_INPUT_CLASS } from '@/components/panels/studio/fields/field-input-classes'
-import type { AiImageType } from '@/types/ai-images.types'
+import type { AiImageSize, AiImageType } from '@/types/ai-images.types'
 import type {
   AuthorPosition,
   CoverDimensions,
@@ -74,6 +74,13 @@ const AI_IMAGE_TYPE_GROUPS: ReadonlyArray<{
   },
 ]
 
+// These only make sense covering a whole page, so picking one switches the size too.
+const FULL_PAGE_IMAGE_TYPES: ReadonlySet<AiImageType> = new Set(['page_border', 'background'])
+
+function formatInches(inches: number): string {
+  return String(Number(inches.toFixed(3)))
+}
+
 export type AICoverFormState = {
   description: string
   title: GenerateCoverPayload['title']
@@ -84,6 +91,9 @@ export type AICoverFormState = {
 type AIImageFormProps = {
   idea: string
   imageType: AiImageType
+  imageSize: AiImageSize
+  pageWidthInches: number
+  pageHeightInches: number
   isBookCoverMode: boolean
   coverState: AICoverFormState
   coverDimensions: CoverDimensions
@@ -92,6 +102,7 @@ type AIImageFormProps = {
   isBookCoverLocked: boolean
   onIdeaChange: (idea: string) => void
   onImageTypeChange: (imageType: AiImageType) => void
+  onImageSizeChange: (imageSize: AiImageSize) => void
   onBookCoverModeChange: (enabled: boolean) => void
   onCoverStateChange: (next: AICoverFormState) => void
   onGenerateInterior: (idea: string) => void
@@ -120,6 +131,9 @@ function buildCoverPayload(
 export function AIImageForm({
   idea,
   imageType,
+  imageSize,
+  pageWidthInches,
+  pageHeightInches,
   isBookCoverMode,
   coverState,
   coverDimensions,
@@ -128,6 +142,7 @@ export function AIImageForm({
   isBookCoverLocked,
   onIdeaChange,
   onImageTypeChange,
+  onImageSizeChange,
   onBookCoverModeChange,
   onCoverStateChange,
   onGenerateInterior,
@@ -164,6 +179,13 @@ export function AIImageForm({
         ? { ...coverState.author, enabled: true }
         : { enabled: false, text: '', position: 'bottom' },
     })
+  }
+
+  const handleImageTypeChange = (nextImageType: AiImageType): void => {
+    onImageTypeChange(nextImageType)
+    if (FULL_PAGE_IMAGE_TYPES.has(nextImageType)) {
+      onImageSizeChange('full_page')
+    }
   }
 
   const handleGenerateClick = (): void => {
@@ -237,7 +259,7 @@ export function AIImageForm({
               disabled={isFormDisabled}
               className={STUDIO_FIELD_INPUT_CLASS}
               value={imageType}
-              onChange={(event) => onImageTypeChange(event.target.value as AiImageType)}
+              onChange={(event) => handleImageTypeChange(event.target.value as AiImageType)}
             >
               <option value="none">None (follow my prompt)</option>
               {AI_IMAGE_TYPE_GROUPS.map((group) => (
@@ -249,6 +271,26 @@ export function AIImageForm({
                   ))}
                 </optgroup>
               ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label
+              htmlFor="ai-image-size-select"
+              className="flex items-center justify-between text-xs"
+            >
+              <span className="font-medium text-foreground">Image size</span>
+            </label>
+            <select
+              id="ai-image-size-select"
+              disabled={isFormDisabled}
+              className={STUDIO_FIELD_INPUT_CLASS}
+              value={imageSize}
+              onChange={(event) => onImageSizeChange(event.target.value as AiImageSize)}
+            >
+              <option value="square">Square</option>
+              <option value="full_page">
+                {`Full page (${formatInches(pageWidthInches)} x ${formatInches(pageHeightInches)} in)`}
+              </option>
             </select>
           </div>
         </div>

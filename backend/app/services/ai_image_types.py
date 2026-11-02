@@ -10,14 +10,13 @@ from app.services.prompt_data import PROMPT_ROOT, load_config, load_template, re
 
 NO_IMAGE_TYPE = "none"
 COLORING_IMAGE_TYPE = "coloring"
-_DEFAULT_ASPECT_RATIO = "1:1"
+FULL_PAGE_IMAGE_SIZE = "full_page"
 
 
 @dataclass(frozen=True)
 class ImageTypeSettings:
     should_strip_frame: bool
     should_autocrop: bool
-    aspect_ratio: str
 
 
 @lru_cache(maxsize=1)
@@ -37,7 +36,6 @@ def resolve_image_type_settings(image_type: str) -> ImageTypeSettings:
     return ImageTypeSettings(
         should_strip_frame=bool(config["stripFrame"]),
         should_autocrop=bool(config["autocrop"]),
-        aspect_ratio=str(config.get("aspectRatio", _DEFAULT_ASPECT_RATIO)),
     )
 
 

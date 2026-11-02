@@ -17,7 +17,7 @@ import {
   isUserOnStandardTierPlan,
 } from '@/utils/user-plan'
 import { setImageDragData } from '@/utils/image-dnd'
-import type { AiImageType, GeneratedImage } from '@/types/ai-images.types'
+import type { AiImageSize, AiImageType, GeneratedImage } from '@/types/ai-images.types'
 import type { CoverDimensions, GenerateCoverPayload } from '@/types/cover.types'
 
 type ImagePanelTab = 'upload' | 'ai'
@@ -47,13 +47,14 @@ export function ImagePanel(): JSX.Element {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [interiorIdeaInput, setInteriorIdeaInput] = useState<string>('')
   const [interiorImageType, setInteriorImageType] = useState<AiImageType>('none')
+  const [interiorImageSize, setInteriorImageSize] = useState<AiImageSize>('square')
   const [aiCoverFormState, setAiCoverFormState] = useState<AICoverFormState>(
     DEFAULT_AI_COVER_FORM_STATE,
   )
   const [generatedInteriorImage, setGeneratedInteriorImage] = useState<GeneratedImage | null>(null)
   const [generatedBookCoverImageUrl, setGeneratedBookCoverImageUrl] = useState<string | null>(null)
 
-  const { bookCoverDimensions } = useCanvasSettings()
+  const { bookCoverDimensions, pageDimensions } = useCanvasSettings()
   // One front/back panel including bleed: the back panel (bleed + trim) and the
   // front panel (trim + bleed) are the same size, so one image fits either side exactly.
   const coverPanelWidthInches =
@@ -167,7 +168,13 @@ export function ImagePanel(): JSX.Element {
     resetGenerateError()
     resetCoverGenerateError()
     try {
-      const result = await generateInteriorImages({ idea, imageType: interiorImageType })
+      const result = await generateInteriorImages({
+        idea,
+        imageType: interiorImageType,
+        imageSize: interiorImageSize,
+        pageWidthInches: pageDimensions.widthInches,
+        pageHeightInches: pageDimensions.heightInches,
+      })
       setGeneratedInteriorImage(result.images[0] ?? null)
       setGeneratedBookCoverImageUrl(null)
     } catch {
@@ -306,6 +313,9 @@ export function ImagePanel(): JSX.Element {
             <AIImageForm
               idea={interiorIdeaInput}
               imageType={interiorImageType}
+              imageSize={interiorImageSize}
+              pageWidthInches={pageDimensions.widthInches}
+              pageHeightInches={pageDimensions.heightInches}
               isBookCoverMode={isBookCoverMode}
               coverState={aiCoverFormState}
               coverDimensions={coverDimensions}
@@ -314,6 +324,7 @@ export function ImagePanel(): JSX.Element {
               isBookCoverLocked={isBookCoverModeLocked}
               onIdeaChange={setInteriorIdeaInput}
               onImageTypeChange={setInteriorImageType}
+              onImageSizeChange={setInteriorImageSize}
               onBookCoverModeChange={handleBookCoverModeChange}
               onCoverStateChange={setAiCoverFormState}
               onGenerateInterior={handleGenerateInteriorImages}

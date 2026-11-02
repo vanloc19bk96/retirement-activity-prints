@@ -13,6 +13,7 @@ from PIL import Image
 from app.core.config import settings
 from app.services.ai_image_types import (
     COLORING_IMAGE_TYPE,
+    FULL_PAGE_IMAGE_SIZE,
     NO_IMAGE_TYPE,
     ImageTypeSettings,
     build_image_type_prompt,
@@ -24,7 +25,7 @@ from app.services.book_cover_aspect_ratio_mapper import (
     cover_print_pixel_dimensions,
     map_cover_ratio_to_aspect_ratio,
 )
-from app.services.book_cover_image_resizer import resize_image_bytes_exact
+from app.services.book_cover_image_resizer import fit_image_bytes_to_size, resize_image_bytes_exact
 from app.services.openai_image_provider import (
     generate_batch_raw_image_bytes,
     generate_raw_image_bytes,
@@ -457,6 +458,8 @@ class AiImageService:
         *,
         system_instruction: str | None,
         type_settings: ImageTypeSettings,
+        aspect_ratio: str = "1:1",
+        print_size: tuple[int, int] | None = None,
     ) -> list[tuple[str, bytes, str]]:
         total_attempts = max(1, self.generation_max_attempts)
         prompt_texts = [prompt for _idea, prompt in prompts]
@@ -464,7 +467,7 @@ class AiImageService:
 
         batch_bytes = generate_batch_raw_image_bytes(
             prompt_texts,
-            aspect_ratio=type_settings.aspect_ratio,
+            aspect_ratio=aspect_ratio,
             system_instruction=system_instruction,
             max_attempts=total_attempts,
             backoff_base_seconds=self.generation_backoff_base_seconds,
@@ -476,7 +479,12 @@ class AiImageService:
             processed = raw_bytes
             if type_settings.should_strip_frame:
                 processed = strip_border_frame(processed)
-            if type_settings.should_autocrop:
+            if print_size is not None:
+                processed = fit_image_bytes_to_size(
+                    processed, width=print_size[0], height=print_size[1],
+                )
+                content_type = "image/png"
+            elif type_settings.should_autocrop:
                 processed = autocrop_whitespace(
                     processed, padding=20, threshold=248, target_size=(1024, 1024),
                 )
@@ -493,6 +501,9 @@ class AiImageService:
         idea: Optional[str],
         custom_prompt: Optional[str] = None,
         image_type: str = COLORING_IMAGE_TYPE,
+        image_size: str = "square",
+        page_width_inches: Optional[float] = None,
+        page_height_inches: Optional[float] = None,
         style: str = "random",
         line_weight: str = "medium",
         user_id: str,
@@ -503,6 +514,14 @@ class AiImageService:
             raise ValueError("idea is required when custom prompt is not provided")
 
         type_settings = resolve_image_type_settings(image_type)
+        aspect_ratio = "1:1"
+        print_size: tuple[int, int] | None = None
+        if image_size == FULL_PAGE_IMAGE_SIZE:
+            if not page_width_inches or not page_height_inches:
+                raise ValueError("page size is required for a full-page image")
+            aspect_ratio = f"{page_width_inches}:{page_height_inches}"
+            print_size = cover_print_pixel_dimensions(page_width_inches, page_height_inches)
+
         interior_system_instruction: str | None
         if cleaned_custom_prompt or image_type == NO_IMAGE_TYPE:
             interior_system_instruction = None
@@ -521,6 +540,8 @@ class AiImageService:
             [(display_idea, prompt_text)],
             system_instruction=interior_system_instruction,
             type_settings=type_settings,
+            aspect_ratio=aspect_ratio,
+            print_size=print_size,
         )
 
         images: list[dict[str, str]] = []

@@ -86,8 +86,36 @@ def test_every_supported_ratio_maps_to_a_size_openai_accepts() -> None:
         assert 655_360 <= width * height <= 8_294_400
 
 
-def test_unknown_ratio_lets_openai_choose_the_size() -> None:
-    assert provider._map_aspect_ratio_to_size("7:3") == "auto"
+def test_unparseable_or_extreme_ratio_lets_openai_choose_the_size() -> None:
+    assert provider._map_aspect_ratio_to_size("wide") == "auto"
+    assert provider._map_aspect_ratio_to_size("5:1") == "auto"
+
+
+@pytest.mark.parametrize(
+    "page", [(8.5, 11), (8.75, 11.25), (8.27, 11.69), (6, 9), (11, 8.5), (8.5, 8.5)]
+)
+def test_exact_page_ratio_maps_to_a_close_size_openai_accepts(page: tuple) -> None:
+    page_width, page_height = page
+    size = provider._map_aspect_ratio_to_size(f"{page_width}:{page_height}")
+    width, height = (int(edge) for edge in size.split("x"))
+    assert width % 16 == 0 and height % 16 == 0
+    assert 655_360 <= width * height <= 8_294_400
+    assert abs(width / height - page_width / page_height) < 0.01
+
+
+def test_fallback_maps_exact_page_ratio_to_a_supported_label(monkeypatch: pytest.MonkeyPatch) -> None:
+    _install_http(monkeypatch, [(400, "bad request")])
+    received: list = []
+
+    async def _fake_grsai(_prompt: str, *, aspect_ratio: str, **_kwargs: Any) -> bytes:
+        received.append(aspect_ratio)
+        return b"grsai-image"
+
+    monkeypatch.setattr(provider, "grsai_async_generate_raw", _fake_grsai)
+
+    provider.generate_raw_image_bytes("a cat", aspect_ratio="8.5:11")
+
+    assert received == ["3:4"]
 
 
 def test_sends_configured_model_and_joined_prompt(monkeypatch: pytest.MonkeyPatch) -> None:

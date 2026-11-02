@@ -5,8 +5,11 @@ Uses OpenCV LANCZOS4 interpolation for high-quality resize without external API 
 
 from __future__ import annotations
 
+import io
+
 import cv2
 import numpy as np
+from PIL import Image, ImageOps
 
 
 def resize_image_bytes_exact(image_bytes: bytes, *, width: int, height: int) -> bytes:
@@ -23,3 +26,15 @@ def resize_image_bytes_exact(image_bytes: bytes, *, width: int, height: int) -> 
     if not success:
         raise ValueError("Failed to encode resized image")
     return encoded.tobytes()
+
+
+def fit_image_bytes_to_size(image_bytes: bytes, *, width: int, height: int) -> bytes:
+    """Resize to exact width x height, center-cropping so the art is never stretched."""
+    if width < 1 or height < 1:
+        raise ValueError("width and height must be positive")
+
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    fitted = ImageOps.fit(image, (width, height), Image.LANCZOS)
+    output_buffer = io.BytesIO()
+    fitted.save(output_buffer, format="PNG")
+    return output_buffer.getvalue()
