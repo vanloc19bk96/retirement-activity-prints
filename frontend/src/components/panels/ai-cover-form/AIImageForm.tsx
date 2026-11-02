@@ -3,8 +3,11 @@ import { Loader2, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { getPlanLockedTooltip } from '@/constants/plan-lock-tooltips'
+import { cn } from '@/lib/utils'
 import { AI_IMAGE_TEXTAREA_CLASS_NAME } from '@/components/panels/ai-image-textarea-styles'
 import { ToggleField } from '@/components/panels/ai-cover-form/ToggleField'
+import { STUDIO_FIELD_INPUT_CLASS } from '@/components/panels/studio/fields/field-input-classes'
+import type { AiImageType } from '@/types/ai-images.types'
 import type {
   AuthorPosition,
   CoverDimensions,
@@ -23,6 +26,54 @@ const AUTHOR_POSITIONS: ReadonlyArray<{ value: AuthorPosition; label: string }> 
   { value: 'bottom', label: 'Bottom' },
 ]
 
+const AI_IMAGE_TYPE_GROUPS: ReadonlyArray<{
+  label: string
+  options: ReadonlyArray<{ value: AiImageType; label: string }>
+}> = [
+  {
+    label: 'Coloring & black and white',
+    options: [
+      { value: 'coloring', label: 'Coloring page' },
+      { value: 'mandala', label: 'Mandala coloring page' },
+      { value: 'ink', label: 'Ink drawing' },
+      { value: 'sketch', label: 'Pencil sketch' },
+      { value: 'silhouette', label: 'Silhouette' },
+    ],
+  },
+  {
+    label: 'Color illustration',
+    options: [
+      { value: 'illustration', label: 'Digital illustration' },
+      { value: 'cartoon', label: 'Cartoon' },
+      { value: 'storybook', label: 'Storybook' },
+      { value: 'vintage', label: 'Vintage retro' },
+      { value: 'clipart', label: 'Clip art' },
+    ],
+  },
+  {
+    label: 'Painting',
+    options: [
+      { value: 'watercolor', label: 'Watercolor' },
+      { value: 'oil_painting', label: 'Oil painting' },
+    ],
+  },
+  {
+    label: 'Realistic',
+    options: [
+      { value: 'photo', label: 'Photo' },
+      { value: 'render_3d', label: '3D render' },
+    ],
+  },
+  {
+    label: 'Page decoration',
+    options: [
+      { value: 'pattern', label: 'Seamless pattern' },
+      { value: 'page_border', label: 'Page border' },
+      { value: 'background', label: 'Page background' },
+    ],
+  },
+]
+
 export type AICoverFormState = {
   description: string
   title: GenerateCoverPayload['title']
@@ -32,6 +83,7 @@ export type AICoverFormState = {
 
 type AIImageFormProps = {
   idea: string
+  imageType: AiImageType
   isBookCoverMode: boolean
   coverState: AICoverFormState
   coverDimensions: CoverDimensions
@@ -39,6 +91,7 @@ type AIImageFormProps = {
   error: string | null
   isBookCoverLocked: boolean
   onIdeaChange: (idea: string) => void
+  onImageTypeChange: (imageType: AiImageType) => void
   onBookCoverModeChange: (enabled: boolean) => void
   onCoverStateChange: (next: AICoverFormState) => void
   onGenerateInterior: (idea: string) => void
@@ -66,6 +119,7 @@ function buildCoverPayload(
 
 export function AIImageForm({
   idea,
+  imageType,
   isBookCoverMode,
   coverState,
   coverDimensions,
@@ -73,6 +127,7 @@ export function AIImageForm({
   error,
   isBookCoverLocked,
   onIdeaChange,
+  onImageTypeChange,
   onBookCoverModeChange,
   onCoverStateChange,
   onGenerateInterior,
@@ -153,20 +208,49 @@ export function AIImageForm({
       </div>
 
       {!isBookCoverMode ? (
-        <div className="space-y-2">
-          <label htmlFor="ai-idea-input" className="flex items-center justify-between text-xs">
-            <span className="font-medium text-foreground">Idea</span>
-            <span className="text-[11px] text-muted-foreground">Any image for your page</span>
-          </label>
-          <textarea
-            id="ai-idea-input"
-            disabled={isFormDisabled}
-            className={AI_IMAGE_TEXTAREA_CLASS_NAME}
-            placeholder="e.g. A detective's desk with magnifying glass in black-and-white coloring-book style"
-            aria-label="Idea for the image to generate"
-            value={idea}
-            onChange={(event) => onIdeaChange(event.target.value)}
-          />
+        <div className="space-y-3">
+          <div className="space-y-2">
+            <label htmlFor="ai-idea-input" className="flex items-center justify-between text-xs">
+              <span className="font-medium text-foreground">Prompt</span>
+              <span className="text-[11px] text-muted-foreground">Describe the image you want</span>
+            </label>
+            <textarea
+              id="ai-idea-input"
+              disabled={isFormDisabled}
+              className={cn(AI_IMAGE_TEXTAREA_CLASS_NAME, 'block')}
+              placeholder="e.g. A retired couple gardening with their cat"
+              aria-label="Prompt for the image to generate"
+              value={idea}
+              onChange={(event) => onIdeaChange(event.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <label
+              htmlFor="ai-image-type-select"
+              className="flex items-center justify-between text-xs"
+            >
+              <span className="font-medium text-foreground">Image type</span>
+              <span className="text-[11px] text-muted-foreground">Optional</span>
+            </label>
+            <select
+              id="ai-image-type-select"
+              disabled={isFormDisabled}
+              className={STUDIO_FIELD_INPUT_CLASS}
+              value={imageType}
+              onChange={(event) => onImageTypeChange(event.target.value as AiImageType)}
+            >
+              <option value="none">None (follow my prompt)</option>
+              {AI_IMAGE_TYPE_GROUPS.map((group) => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.options.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
         </div>
       ) : (
         <div className="space-y-3">

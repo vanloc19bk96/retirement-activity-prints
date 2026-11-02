@@ -17,7 +17,7 @@ import {
   isUserOnStandardTierPlan,
 } from '@/utils/user-plan'
 import { setImageDragData } from '@/utils/image-dnd'
-import type { GeneratedImage } from '@/types/ai-images.types'
+import type { AiImageType, GeneratedImage } from '@/types/ai-images.types'
 import type { CoverDimensions, GenerateCoverPayload } from '@/types/cover.types'
 
 type ImagePanelTab = 'upload' | 'ai'
@@ -46,6 +46,7 @@ export function ImagePanel(): JSX.Element {
   const [uploadBatchError, setUploadBatchError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [interiorIdeaInput, setInteriorIdeaInput] = useState<string>('')
+  const [interiorImageType, setInteriorImageType] = useState<AiImageType>('none')
   const [aiCoverFormState, setAiCoverFormState] = useState<AICoverFormState>(
     DEFAULT_AI_COVER_FORM_STATE,
   )
@@ -166,7 +167,7 @@ export function ImagePanel(): JSX.Element {
     resetGenerateError()
     resetCoverGenerateError()
     try {
-      const result = await generateInteriorImages({ idea })
+      const result = await generateInteriorImages({ idea, imageType: interiorImageType })
       setGeneratedInteriorImage(result.images[0] ?? null)
       setGeneratedBookCoverImageUrl(null)
     } catch {
@@ -304,6 +305,7 @@ export function ImagePanel(): JSX.Element {
           <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto">
             <AIImageForm
               idea={interiorIdeaInput}
+              imageType={interiorImageType}
               isBookCoverMode={isBookCoverMode}
               coverState={aiCoverFormState}
               coverDimensions={coverDimensions}
@@ -311,6 +313,7 @@ export function ImagePanel(): JSX.Element {
               error={aiGenerateError}
               isBookCoverLocked={isBookCoverModeLocked}
               onIdeaChange={setInteriorIdeaInput}
+              onImageTypeChange={setInteriorImageType}
               onBookCoverModeChange={handleBookCoverModeChange}
               onCoverStateChange={setAiCoverFormState}
               onGenerateInterior={handleGenerateInteriorImages}

@@ -4,9 +4,39 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+ImageType = Literal[
+    "none",
+    "coloring",
+    "mandala",
+    "ink",
+    "sketch",
+    "silhouette",
+    "illustration",
+    "cartoon",
+    "storybook",
+    "vintage",
+    "clipart",
+    "watercolor",
+    "oil_painting",
+    "photo",
+    "render_3d",
+    "pattern",
+    "page_border",
+    "background",
+]
+
+
 class GenerateInteriorImagesRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
-    idea: Optional[str] = Field(default=None, description="Subject or scene for one interior coloring page")
+    idea: Optional[str] = Field(default=None, description="Subject or scene for one interior image")
+    image_type: ImageType = Field(
+        default="coloring",
+        alias="imageType",
+        description=(
+            "Kind of image to generate; none sends idea to the model as is. "
+            "style and lineWeight apply to coloring only"
+        ),
+    )
     custom_prompt: Optional[str] = Field(
         default=None,
         alias="customPrompt",

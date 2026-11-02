@@ -33,6 +33,13 @@ class Settings(BaseSettings):
     GEMINI_GENERATION_MAX_ATTEMPTS: int = 3
     GEMINI_GENERATION_BACKOFF_BASE_SECONDS: float = 1.0
 
+    # Image generation (OpenAI). Key stays server-side only. When unset or when
+    # OpenAI fails, images fall back to GrsAI (Supabase ai_runtime_settings).
+    OPENAI_API_KEY: Optional[str] = None
+    OPENAI_IMAGE_MODEL: str = "gpt-image-2.5-flare"
+    OPENAI_IMAGE_QUALITY: str = "low"
+    OPENAI_IMAGE_TIMEOUT_SECONDS: int = 180
+
     # Studio AI templates (Gemini). Key stays server-side only.
     GEMINI_API_KEY: Optional[str] = None
     STUDIO_GEMINI_MODEL: str = "gemini-flash-lite-latest"

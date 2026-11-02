@@ -1,0 +1,24 @@
+{
+  "_comment": "Image types offered by the AI image form. Keys must match ImageType in app/schemas/ai_images.py and AI_IMAGE_TYPE_GROUPS in the frontend. none sends the user's prompt as is; coloring keeps its prompts in ../coloring-page; every other type has a system prompt in <type>.md. stripFrame removes a drawn border and autocrop trims whitespace and pads to a square: only safe for art on a white background. aspectRatio defaults to 1:1.",
+  "interiorTemplate": "SUBJECT: {idea}",
+  "types": {
+    "none": { "stripFrame": false, "autocrop": false },
+    "coloring": { "stripFrame": true, "autocrop": true },
+    "mandala": { "stripFrame": true, "autocrop": true },
+    "ink": { "stripFrame": false, "autocrop": false },
+    "sketch": { "stripFrame": false, "autocrop": false },
+    "silhouette": { "stripFrame": true, "autocrop": true },
+    "illustration": { "stripFrame": false, "autocrop": false },
+    "cartoon": { "stripFrame": false, "autocrop": false },
+    "storybook": { "stripFrame": false, "autocrop": false },
+    "vintage": { "stripFrame": false, "autocrop": false },
+    "clipart": { "stripFrame": true, "autocrop": true },
+    "watercolor": { "stripFrame": false, "autocrop": false },
+    "oil_painting": { "stripFrame": false, "autocrop": false },
+    "photo": { "stripFrame": false, "autocrop": false },
+    "render_3d": { "stripFrame": false, "autocrop": false },
+    "pattern": { "stripFrame": false, "autocrop": false },
+    "page_border": { "stripFrame": false, "autocrop": false, "aspectRatio": "2:3" },
+    "background": { "stripFrame": false, "autocrop": false, "aspectRatio": "2:3" }
+  }
+}

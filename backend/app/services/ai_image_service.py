@@ -11,15 +11,23 @@ import requests
 from PIL import Image
 
 from app.core.config import settings
+from app.services.ai_image_types import (
+    COLORING_IMAGE_TYPE,
+    NO_IMAGE_TYPE,
+    ImageTypeSettings,
+    build_image_type_prompt,
+    image_type_system_instruction,
+    resolve_image_type_settings,
+)
 from app.services.book_cover_aspect_ratio_mapper import (
     aspect_ratio_pixel_dimensions,
     cover_print_pixel_dimensions,
     map_cover_ratio_to_aspect_ratio,
 )
 from app.services.book_cover_image_resizer import resize_image_bytes_exact
-from app.services.grsaiapi_image_provider import (
-    generate_batch_raw_image_bytes as grsai_generate_batch,
-    generate_raw_image_bytes as grsai_generate_raw,
+from app.services.openai_image_provider import (
+    generate_batch_raw_image_bytes,
+    generate_raw_image_bytes,
 )
 from app.services.prompt_data import (
     PROMPT_ROOT,
@@ -423,7 +431,7 @@ class AiImageService:
             1,
             max_attempts if max_attempts is not None else self.generation_max_attempts,
         )
-        best_bytes = grsai_generate_raw(
+        best_bytes = generate_raw_image_bytes(
             prompt,
             aspect_ratio=aspect_ratio,
             system_instruction=system_instruction,
@@ -447,14 +455,16 @@ class AiImageService:
         self,
         prompts: list[tuple[str, str]],
         *,
-        system_instruction: str | None = COLORING_PAGE_SYSTEM_INSTRUCTION,
+        system_instruction: str | None,
+        type_settings: ImageTypeSettings,
     ) -> list[tuple[str, bytes, str]]:
         total_attempts = max(1, self.generation_max_attempts)
         prompt_texts = [prompt for _idea, prompt in prompts]
         max_concurrent = min(len(prompts), 10)
 
-        batch_bytes = grsai_generate_batch(
+        batch_bytes = generate_batch_raw_image_bytes(
             prompt_texts,
+            aspect_ratio=type_settings.aspect_ratio,
             system_instruction=system_instruction,
             max_attempts=total_attempts,
             backoff_base_seconds=self.generation_backoff_base_seconds,
@@ -463,11 +473,18 @@ class AiImageService:
 
         results: list[tuple[str, bytes, str]] = []
         for (idea, _prompt), raw_bytes in zip(prompts, batch_bytes):
-            processed = strip_border_frame(raw_bytes)
-            processed = autocrop_whitespace(
-                processed, padding=20, threshold=248, target_size=(1024, 1024),
-            )
-            results.append((idea, processed, "image/png"))
+            processed = raw_bytes
+            if type_settings.should_strip_frame:
+                processed = strip_border_frame(processed)
+            if type_settings.should_autocrop:
+                processed = autocrop_whitespace(
+                    processed, padding=20, threshold=248, target_size=(1024, 1024),
+                )
+                content_type = "image/png"
+            else:
+                # Untouched bytes keep the provider's format (the GrsAI fallback may not return PNG).
+                content_type = _sniff_image_content_type(processed) or "image/png"
+            results.append((idea, processed, content_type))
         return results
 
     def generate_interior_images(
@@ -475,6 +492,7 @@ class AiImageService:
         *,
         idea: Optional[str],
         custom_prompt: Optional[str] = None,
+        image_type: str = COLORING_IMAGE_TYPE,
         style: str = "random",
         line_weight: str = "medium",
         user_id: str,
@@ -484,20 +502,25 @@ class AiImageService:
         if not cleaned_custom_prompt and not cleaned_idea:
             raise ValueError("idea is required when custom prompt is not provided")
 
-        use_default_system_prompt = not bool(cleaned_custom_prompt)
-        interior_system_instruction = (
-            COLORING_PAGE_SYSTEM_INSTRUCTION if use_default_system_prompt else None
-        )
+        type_settings = resolve_image_type_settings(image_type)
+        interior_system_instruction: str | None
+        if cleaned_custom_prompt or image_type == NO_IMAGE_TYPE:
+            interior_system_instruction = None
+            prompt_text = build_custom_interior_prompt(
+                custom_prompt=cleaned_custom_prompt or cleaned_idea,
+            )
+        elif image_type == COLORING_IMAGE_TYPE:
+            interior_system_instruction = COLORING_PAGE_SYSTEM_INSTRUCTION
+            prompt_text = build_interior_prompt(idea=cleaned_idea, style=style, line_weight=line_weight)
+        else:
+            interior_system_instruction = image_type_system_instruction(image_type)
+            prompt_text = build_image_type_prompt(idea=cleaned_idea)
 
         display_idea = cleaned_custom_prompt or cleaned_idea
-        prompt_text = (
-            build_custom_interior_prompt(custom_prompt=cleaned_custom_prompt)
-            if cleaned_custom_prompt
-            else build_interior_prompt(idea=cleaned_idea, style=style, line_weight=line_weight)
-        )
         generation_results = self._batch_generate(
             [(display_idea, prompt_text)],
             system_instruction=interior_system_instruction,
+            type_settings=type_settings,
         )
 
         images: list[dict[str, str]] = []

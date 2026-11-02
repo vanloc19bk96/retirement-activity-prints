@@ -17,6 +17,7 @@ def generate_interior_images_task(*, payload: dict[str, Any], user_id: str) -> d
     result = service.generate_interior_images(
         idea=payload.get("idea"),
         custom_prompt=payload.get("custom_prompt"),
+        image_type=payload.get("image_type", "coloring"),
         style=payload.get("style", "random"),
         line_weight=payload.get("line_weight", "medium"),
         user_id=user_id,

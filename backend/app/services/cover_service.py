@@ -12,7 +12,7 @@ from app.schemas.cover import CoverDimensions, GenerateCoverRequest
 from app.services.book_cover_aspect_ratio_mapper import map_cover_ratio_to_aspect_ratio
 from app.services.book_cover_image_resizer import resize_image_bytes_exact
 from app.services.cover_prompt import build_prompt
-from app.services.grsaiapi_image_provider import generate_raw_image_bytes as grsai_generate_raw
+from app.services.openai_image_provider import generate_raw_image_bytes
 from app.services.storage_service import upload_user_image_bytes
 
 logger = logging.getLogger(__name__)
@@ -64,7 +64,7 @@ class CoverService:
         )
 
         try:
-            raw_bytes = grsai_generate_raw(
+            raw_bytes = generate_raw_image_bytes(
                 prompt,
                 aspect_ratio=aspect_ratio,
                 system_instruction=_COVER_AI_SYSTEM_INSTRUCTION,

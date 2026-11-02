@@ -5,8 +5,29 @@ export type GeneratedImage = {
   path: string
 }
 
+export type AiImageType =
+  | 'none'
+  | 'coloring'
+  | 'mandala'
+  | 'ink'
+  | 'sketch'
+  | 'silhouette'
+  | 'illustration'
+  | 'cartoon'
+  | 'storybook'
+  | 'vintage'
+  | 'clipart'
+  | 'watercolor'
+  | 'oil_painting'
+  | 'photo'
+  | 'render_3d'
+  | 'pattern'
+  | 'page_border'
+  | 'background'
+
 export type GenerateInteriorImagesPayload = {
   idea: string
+  imageType: AiImageType
 }
 
 export type GenerateImagesApiResponse = {
