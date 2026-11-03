@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   BOOK_INTERIOR_TYPES_BY_BINDING,
   BOOK_PAPER_TYPES_BY_INTERIOR_TYPE,
@@ -12,11 +12,8 @@ import { AMAZON_KDP_PAGE_SIZES, type PageSizeLabel } from '@/types/canvas-settin
 import type { ProjectBookInfo } from '@/types/projects.types'
 import {
   clampBookCoverPageCount,
-  isCompleteBookCoverPageCount,
   projectBookInfoEquals,
 } from '@/utils/book-info'
-
-const AUTO_APPLY_DELAY_MS = 800
 
 function bookInfoFromState(
   bindingType: BookBindingType,
@@ -196,22 +193,6 @@ export function useBookInfoForm() {
     toast,
     trimBookSize,
   ])
-
-  // A page count typed and left, or followed by the sidebar's Save, must still be there on
-  // the next visit. A failed save is not retried until the form changes again.
-  const handleApplyRef = useRef(handleApply)
-  handleApplyRef.current = handleApply
-  const lastAutoApplyRef = useRef<ProjectBookInfo | null>(null)
-  useEffect(() => {
-    if (!isProjectSettingsLoaded || !hasChanges || isSaving) return
-    if (!isCompleteBookCoverPageCount(pageCountInput)) return
-    if (lastAutoApplyRef.current && projectBookInfoEquals(lastAutoApplyRef.current, currentFormInfo)) return
-    const timer = window.setTimeout(() => {
-      lastAutoApplyRef.current = currentFormInfo
-      void handleApplyRef.current()
-    }, AUTO_APPLY_DELAY_MS)
-    return () => window.clearTimeout(timer)
-  }, [currentFormInfo, hasChanges, isProjectSettingsLoaded, isSaving, pageCountInput])
 
   return {
     bindingType,
