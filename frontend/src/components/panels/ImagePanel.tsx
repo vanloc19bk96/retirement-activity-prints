@@ -7,6 +7,8 @@ import {
 } from '@/components/panels/ai-cover-form/AIImageForm'
 import { useAuthContext } from '@/context/AuthContext'
 import { useCanvasSettings } from '@/context/CanvasSettingsContext'
+import { useEditorMode } from '@/context/EditorModeContext'
+import { useAiImageDraft } from '@/hooks/use-ai-image-draft'
 import { useAiImageGeneration } from '@/hooks/use-ai-image-generation'
 import { useGenerateCover } from '@/hooks/use-generate-cover'
 import { useUploadImage } from '@/hooks/use-upload-image'
@@ -19,14 +21,17 @@ import {
 import { setImageDragData } from '@/utils/image-dnd'
 import type { AiImageSize, AiImageType, GeneratedImage } from '@/types/ai-images.types'
 import type { CoverDimensions, GenerateCoverPayload } from '@/types/cover.types'
+import type { AiImageDraft } from '@/types/projects.types'
 
 type ImagePanelTab = 'upload' | 'ai'
+type GeneratedInteriorPreview = Pick<GeneratedImage, 'publicUrl' | 'idea'>
 
 const COVER_PRINT_DPI = 300
 const COVER_BLEED_INCHES = 0.125
 
 const DEFAULT_AI_COVER_FORM_STATE: AICoverFormState = {
   description: '',
+  imageType: 'none',
   title: { enabled: false, text: '', position: 'top' },
   subtitle: { enabled: false, text: '', position: 'top' },
   author: { enabled: false, text: '', position: 'bottom' },
@@ -51,9 +56,10 @@ export function ImagePanel(): JSX.Element {
   const [aiCoverFormState, setAiCoverFormState] = useState<AICoverFormState>(
     DEFAULT_AI_COVER_FORM_STATE,
   )
-  const [generatedInteriorImage, setGeneratedInteriorImage] = useState<GeneratedImage | null>(null)
+  const [generatedInteriorImage, setGeneratedInteriorImage] = useState<GeneratedInteriorPreview | null>(null)
   const [generatedBookCoverImageUrl, setGeneratedBookCoverImageUrl] = useState<string | null>(null)
 
+  const { isBookCoverMode: isEditingCover } = useEditorMode()
   const { bookCoverDimensions, pageDimensions } = useCanvasSettings()
   // One front/back panel including bleed: the back panel (bleed + trim) and the
   // front panel (trim + bleed) are the same size, so one image fits either side exactly.
@@ -86,6 +92,51 @@ export function ImagePanel(): JSX.Element {
   const isStandardTierPlan = isUserOnStandardTierPlan(user)
   const isAiTabLocked = user !== null && !isStandardTierPlan
   const isBookCoverModeLocked = isUserBookCoverAiLocked(user)
+
+  const aiImageDraft = useMemo<AiImageDraft>(
+    () => ({
+      isBookCoverMode,
+      idea: interiorIdeaInput,
+      imageType: interiorImageType,
+      imageSize: interiorImageSize,
+      cover: aiCoverFormState,
+      generatedImageUrl: generatedInteriorImage?.publicUrl ?? null,
+      generatedImageIdea: generatedInteriorImage?.idea ?? null,
+      generatedCoverImageUrl: generatedBookCoverImageUrl,
+    }),
+    [
+      aiCoverFormState,
+      generatedBookCoverImageUrl,
+      generatedInteriorImage,
+      interiorIdeaInput,
+      interiorImageSize,
+      interiorImageType,
+      isBookCoverMode,
+    ],
+  )
+
+  useAiImageDraft(aiImageDraft, isStandardTierPlan, (stored) => {
+    setActiveTab('ai')
+    setIsBookCoverMode(stored.isBookCoverMode)
+    setInteriorIdeaInput(stored.idea)
+    setInteriorImageType(stored.imageType)
+    setInteriorImageSize(stored.imageSize)
+    setAiCoverFormState(stored.cover)
+    setGeneratedInteriorImage(
+      stored.generatedImageUrl
+        ? { publicUrl: stored.generatedImageUrl, idea: stored.generatedImageIdea }
+        : null,
+    )
+    setGeneratedBookCoverImageUrl(stored.generatedCoverImageUrl)
+  })
+
+  // Working on the cover means the form makes covers; the switch still overrides it.
+  const wasEditingCoverRef = useRef(isEditingCover)
+  useEffect(() => {
+    if (wasEditingCoverRef.current === isEditingCover) return
+    wasEditingCoverRef.current = isEditingCover
+    setIsBookCoverMode(isEditingCover)
+  }, [isEditingCover])
 
   useEffect(() => {
     if (!isBookCoverModeLocked) return
@@ -368,6 +419,10 @@ export function ImagePanel(): JSX.Element {
             {generatedBookCoverImageUrl && (
               <div className="space-y-2">
                 <p className="text-xs font-medium text-foreground">Generated cover background</p>
+                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                  Drag it onto the cover. You can add or change the title, subtitle and author at
+                  any time from Front in the bar on the right of the Book Cover view.
+                </p>
                 <div className="overflow-hidden rounded-md border border-border bg-muted">
                   <button
                     type="button"

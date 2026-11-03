@@ -20,6 +20,8 @@ DEFAULT_PROJECT_SETTINGS = {
 
 SOLUTIONS_PER_PAGE_OPTIONS = (1, 2, 4)
 
+AI_IMAGE_DRAFT_URL_KEYS = ("generatedImageUrl", "generatedCoverImageUrl")
+
 
 def _normalize_book_info(raw_book_info: object) -> dict[str, object] | None:
     if not isinstance(raw_book_info, dict):
@@ -230,3 +232,48 @@ def get_project_settings(*, project_id: UUID) -> dict[str, object]:
     )
     row = (response.data or [{}])[0] or {}
     return _normalize_project_settings(row.get("settings"))
+
+
+def get_ai_image_draft(*, project_id: UUID) -> dict[str, object] | None:
+    response = (
+        _get_projects_postgrest_client()
+        .table(PROJECTS_TABLE_NAME)
+        .select("ai_image_draft")
+        .eq("id", str(project_id))
+        .limit(1)
+        .execute()
+    )
+    row = (response.data or [{}])[0] or {}
+    draft = row.get("ai_image_draft")
+    return draft if isinstance(draft, dict) else None
+
+
+def save_ai_image_draft(*, draft: dict[str, object], project_id: UUID) -> None:
+    (
+        _get_projects_postgrest_client()
+        .table(PROJECTS_TABLE_NAME)
+        .update({"ai_image_draft": draft})
+        .eq("id", str(project_id))
+        .execute()
+    )
+
+
+def list_user_ai_image_draft_urls(*, user_id: UUID) -> set[str]:
+    """Generated images the AI forms of the user's projects still show (not on any canvas yet)."""
+    response = (
+        _get_projects_postgrest_client()
+        .table(PROJECTS_TABLE_NAME)
+        .select("ai_image_draft")
+        .eq("user_id", str(user_id))
+        .execute()
+    )
+    urls: set[str] = set()
+    for row in response.data or []:
+        draft = row.get("ai_image_draft")
+        if not isinstance(draft, dict):
+            continue
+        for key in AI_IMAGE_DRAFT_URL_KEYS:
+            url = draft.get(key)
+            if isinstance(url, str) and url.strip():
+                urls.add(url.strip().split("?", 1)[0])
+    return urls

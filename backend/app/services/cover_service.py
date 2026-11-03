@@ -61,6 +61,7 @@ class CoverService:
             request.title,
             request.subtitle,
             request.author,
+            image_type=request.image_type,
         )
 
         try:

@@ -6,6 +6,23 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 CoverTextPosition = Literal["top", "center", "bottom"]
 AuthorPosition = Literal["top", "bottom"]
+# The image types that can fill a whole cover; keys of coverStyles in prompts/cover-art/prompt.json.
+CoverImageType = Literal[
+    "none",
+    "coloring",
+    "mandala",
+    "ink",
+    "sketch",
+    "silhouette",
+    "illustration",
+    "cartoon",
+    "storybook",
+    "vintage",
+    "watercolor",
+    "oil_painting",
+    "photo",
+    "render_3d",
+]
 
 
 class CoverTextField(BaseModel):
@@ -47,6 +64,7 @@ class GenerateCoverRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     description: str = Field(..., min_length=5, max_length=2000)
+    image_type: CoverImageType = Field(default="none", alias="imageType")
     title: CoverTextField = Field(default_factory=CoverTextField)
     subtitle: CoverTextField = Field(default_factory=CoverTextField)
     author: AuthorTextField = Field(default_factory=AuthorTextField)

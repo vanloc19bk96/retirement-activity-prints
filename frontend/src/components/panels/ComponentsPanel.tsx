@@ -229,7 +229,12 @@ export function ComponentsPanel(): JSX.Element {
           </div>
         ) : null}
 
-        {view !== 'elements' ? (
+        {/* Stays mounted: leaving the view must not lose a prompt, a running generation or its result. */}
+        <div className={view === 'image' ? 'flex min-h-0 flex-1 flex-col overflow-y-auto' : 'hidden'}>
+          <ImagePanel />
+        </div>
+
+        {view !== 'elements' && view !== 'image' ? (
           <div
             className={
               view === 'icon' || view === 'emoji'
@@ -237,7 +242,6 @@ export function ComponentsPanel(): JSX.Element {
                 : 'flex min-h-0 flex-1 flex-col overflow-y-auto'
             }
           >
-            {view === 'image' ? <ImagePanel /> : null}
             {view === 'text' ? <TextPanel /> : null}
             {view === 'shape' ? <ShapePanel /> : null}
             {view === 'icon' ? <IconPanel /> : null}

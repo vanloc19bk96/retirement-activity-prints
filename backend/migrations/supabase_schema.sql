@@ -118,6 +118,7 @@ create table if not exists retirement_activity_prints.projects (
   user_id uuid not null
     references retirement_activity_prints.users (id) on delete cascade,
   settings jsonb not null default '{}'::jsonb,
+  ai_image_draft jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

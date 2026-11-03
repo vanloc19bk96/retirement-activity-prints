@@ -10,7 +10,65 @@
     "subtitle": "- SUBTITLE (exact text): \"{text}\", place in the {position}",
     "author": "- AUTHOR (exact text): \"{text}\", place in the {position}"
   },
-  "typographyBlock": "\nCOVER TYPOGRAPHY (render only the exact text listed below; do not invent or substitute other words):\n{cover_text_section}\n\nTypography rules:\n- Use the EXACT spelling shown above. Do not paraphrase, abbreviate, or use placeholder words.\n- Title: largest and boldest text on the cover; legible at Amazon thumbnail size.\n- Subtitle: clearly smaller than the title.\n- Author: smallest of the three, clean byline style.\n- High contrast between text and background; balance text within each zone.\n",
+  "coverStyles": {
+    "none": {
+      "style": "- Style: BOLD FLAT GRAPHIC DESIGN, retail-oriented, high contrast, vibrant colors.\n- NOT watercolor, NOT cozy illustrated landscape, NOT photorealistic, NOT painterly, NOT novel cover, NOT 3D book mockup.",
+      "background": "- Full-canvas bold solid-color OR simple two-tone gradient background from the user concept below."
+    },
+    "coloring": {
+      "style": "- Style: coloring book cover art with bold, clean black outlines on white, simple shapes, no shading.",
+      "background": "- Line art scene from the user concept below, filling the canvas edge to edge."
+    },
+    "mandala": {
+      "style": "- Style: intricate radially symmetrical mandala line art in black on white, with no shading.",
+      "background": "- One large mandala built around the user concept below, filling the canvas edge to edge."
+    },
+    "ink": {
+      "style": "- Style: hand-drawn ink drawing with confident black pen lines and hatching.",
+      "background": "- Ink scene from the user concept below, filling the canvas edge to edge."
+    },
+    "sketch": {
+      "style": "- Style: detailed graphite pencil sketch with soft shading and visible pencil strokes.",
+      "background": "- Pencil scene from the user concept below, filling the canvas edge to edge."
+    },
+    "silhouette": {
+      "style": "- Style: solid black silhouettes with crisp edges and an instantly recognizable outline.",
+      "background": "- Solid or softly graded background from the user concept below, filling the canvas edge to edge, with the silhouette against it."
+    },
+    "illustration": {
+      "style": "- Style: polished full-color digital illustration with clean shapes and rich lighting.",
+      "background": "- Illustrated scene from the user concept below, filling the canvas edge to edge."
+    },
+    "cartoon": {
+      "style": "- Style: cheerful full-color cartoon with bold outlines and bright, flat colors.",
+      "background": "- Cartoon scene from the user concept below, filling the canvas edge to edge."
+    },
+    "storybook": {
+      "style": "- Style: warm storybook illustration with soft textures, gentle colors and a hand-painted feel.",
+      "background": "- Storybook scene from the user concept below, filling the canvas edge to edge."
+    },
+    "vintage": {
+      "style": "- Style: vintage retro poster art with a limited muted palette and a light printed grain.",
+      "background": "- Retro scene from the user concept below, filling the canvas edge to edge."
+    },
+    "watercolor": {
+      "style": "- Style: traditional watercolor painting with soft washes, gentle color bleeds and visible paper texture.",
+      "background": "- Painted scene from the user concept below, filling the canvas edge to edge."
+    },
+    "oil_painting": {
+      "style": "- Style: classic oil painting with rich colors and visible brushstrokes.",
+      "background": "- Painted scene from the user concept below, filling the canvas edge to edge."
+    },
+    "photo": {
+      "style": "- Style: realistic, natural-looking photograph with soft lighting and true-to-life colors.",
+      "background": "- Photographic scene from the user concept below, filling the canvas edge to edge."
+    },
+    "render_3d": {
+      "style": "- Style: polished 3D render with soft studio lighting and smooth materials. Render the scene, not a 3D model of a book.",
+      "background": "- 3D scene from the user concept below, filling the canvas edge to edge."
+    }
+  },
+  "typographyBlock":"\nCOVER TYPOGRAPHY (render only the exact text listed below; do not invent or substitute other words):\n{cover_text_section}\n\nTypography rules:\n- Use the EXACT spelling shown above. Do not paraphrase, abbreviate, or use placeholder words.\n- Title: largest and boldest text on the cover; legible at Amazon thumbnail size.\n- Subtitle: clearly smaller than the title.\n- Author: smallest of the three, clean byline style.\n- High contrast between text and background; balance text within each zone.\n",
   "textRules": {
     "withText": "1. Render only the cover typography listed above. Do not add any other words, slogans, or labels beyond what the user specified.",
     "withoutText": "1. NO title text, subtitle, author name, slogans, or decorative phrases in the image: artwork only."

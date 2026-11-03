@@ -1,4 +1,5 @@
 import type {
+  AiImageDraft,
   CurrentProject,
   ListPageSizeOptionsResponse,
   ProjectSettings,
@@ -68,6 +69,27 @@ export const projectsApi = {
     }
 
     return (await response.json()) as SaveProjectSettingsResponse
+  },
+
+  getAiImageDraft: async (): Promise<AiImageDraft | null> => {
+    const response = await launchFetch('/api/projects/ai-image-draft', { method: 'GET' })
+    if (!response.ok) {
+      throw await parseError(response)
+    }
+    const body = (await response.json()) as { draft: AiImageDraft | null }
+    return body.draft
+  },
+
+  saveAiImageDraft: async (draft: AiImageDraft, options?: { keepalive?: boolean }): Promise<void> => {
+    const response = await launchFetch('/api/projects/ai-image-draft', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(draft),
+      keepalive: options?.keepalive,
+    })
+    if (!response.ok) {
+      throw await parseError(response)
+    }
   },
 
   getCurrentProject: async (): Promise<CurrentProject> => {

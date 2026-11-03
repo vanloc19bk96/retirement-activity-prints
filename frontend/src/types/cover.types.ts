@@ -1,3 +1,5 @@
+import type { AiImageType } from '@/types/ai-images.types'
+
 export type CoverTextPosition = 'top' | 'center' | 'bottom'
 export type AuthorPosition = 'top' | 'bottom'
 
@@ -13,6 +15,12 @@ export type AuthorTextField = {
   position: AuthorPosition
 }
 
+/** The image types that can fill a whole cover; matches CoverImageType in the backend. */
+export type CoverImageType = Exclude<
+  AiImageType,
+  'clipart' | 'pattern' | 'page_border' | 'background'
+>
+
 export type CoverDimensions = {
   widthPx: number
   heightPx: number
@@ -22,6 +30,7 @@ export type CoverDimensions = {
 
 export type GenerateCoverPayload = {
   description: string
+  imageType: CoverImageType
   title: CoverTextField
   subtitle: CoverTextField
   author: AuthorTextField

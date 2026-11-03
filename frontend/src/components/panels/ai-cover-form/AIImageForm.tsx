@@ -74,6 +74,18 @@ const AI_IMAGE_TYPE_GROUPS: ReadonlyArray<{
   },
 ]
 
+const COVER_IMAGE_TYPES_EXCLUDED: ReadonlySet<AiImageType> = new Set([
+  'clipart',
+  'pattern',
+  'page_border',
+  'background',
+])
+
+const COVER_IMAGE_TYPE_GROUPS = AI_IMAGE_TYPE_GROUPS.map((group) => ({
+  label: group.label,
+  options: group.options.filter((option) => !COVER_IMAGE_TYPES_EXCLUDED.has(option.value)),
+})).filter((group) => group.options.length > 0)
+
 // These only make sense covering a whole page, so picking one switches the size too.
 const FULL_PAGE_IMAGE_TYPES: ReadonlySet<AiImageType> = new Set(['page_border', 'background'])
 
@@ -83,6 +95,7 @@ function formatInches(inches: number): string {
 
 export type AICoverFormState = {
   description: string
+  imageType: GenerateCoverPayload['imageType']
   title: GenerateCoverPayload['title']
   subtitle: GenerateCoverPayload['subtitle']
   author: GenerateCoverPayload['author']
@@ -115,6 +128,7 @@ function buildCoverPayload(
 ): GenerateCoverPayload {
   return {
     description: state.description.trim(),
+    imageType: state.imageType,
     title: state.title.enabled
       ? state.title
       : { enabled: false, text: '', position: 'top' },
@@ -317,6 +331,38 @@ export function AIImageForm({
               value={coverState.description}
               onChange={(event) => updateCoverState({ description: event.target.value })}
             />
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="cover-image-type-select"
+              className="flex items-center justify-between text-xs"
+            >
+              <span className="font-medium text-foreground">Image type</span>
+              <span className="text-[11px] text-muted-foreground">Optional</span>
+            </label>
+            <select
+              id="cover-image-type-select"
+              disabled={isFormDisabled}
+              className={STUDIO_FIELD_INPUT_CLASS}
+              value={coverState.imageType}
+              onChange={(event) =>
+                updateCoverState({
+                  imageType: event.target.value as GenerateCoverPayload['imageType'],
+                })
+              }
+            >
+              <option value="none">Bold graphic (default)</option>
+              {COVER_IMAGE_TYPE_GROUPS.map((group) => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.options.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           </div>
 
           <ToggleField

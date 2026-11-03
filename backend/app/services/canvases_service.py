@@ -7,6 +7,7 @@ from uuid import UUID
 from app.core.supabase import create_supabase_admin_client
 from app.services.projects_service import (
     PROJECT_SCHEMA_NAME,
+    list_user_ai_image_draft_urls,
     list_user_project_ids,
 )
 from app.services.storage_service import (
@@ -291,6 +292,8 @@ def get_canvases(*, user_id: UUID, project_id: UUID) -> dict[str, object]:
             supabase=supabase,
             project_ids=_other_project_ids(user_id=user_id, project_id=project_id),
         )
+        # A generated image waits in the AI form until the user drags it onto a canvas.
+        referenced_public_urls_set |= list_user_ai_image_draft_urls(user_id=user_id)
     except Exception as exc:  # noqa: BLE001 - without every project's images, delete nothing
         logger.warning("image_cleanup_skipped user=%s err=%s", user_id, exc)
         return {"project_id": project_id, "canvases": canvases}

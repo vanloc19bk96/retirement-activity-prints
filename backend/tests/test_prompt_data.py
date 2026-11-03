@@ -113,3 +113,24 @@ def test_cover_prompt_uses_data_file_wording() -> None:
     )
     assert "COVER TYPOGRAPHY" not in art_only
     assert "artwork only" in art_only
+    assert "BOLD FLAT GRAPHIC DESIGN" in art_only
+
+    watercolor = cover_prompt.build_prompt(
+        "calm blue",
+        _Field(True, "Big Print Puzzles", "top"),
+        _Field(False, "", "center"),
+        _Field(True, "A. Author", "bottom"),
+        image_type="watercolor",
+    )
+    assert "traditional watercolor painting" in watercolor
+    assert "NOT watercolor" not in watercolor
+    assert "Big Print Puzzles" in watercolor and "A. Author" in watercolor
+
+
+def test_every_cover_image_type_has_a_style() -> None:
+    from typing import get_args
+
+    from app.schemas.cover import CoverImageType
+    from app.services import cover_prompt
+
+    assert set(cover_prompt._config()["coverStyles"]) == set(get_args(CoverImageType))

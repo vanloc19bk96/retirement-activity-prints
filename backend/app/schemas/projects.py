@@ -5,6 +5,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.schemas.ai_images import ImageType
+from app.schemas.cover import CoverImageType
+
 
 class ProjectBookInfo(BaseModel):
     bindingType: str = Field(default="paperback")
@@ -39,6 +42,39 @@ class ProjectSettings(BaseModel):
 class SaveProjectSettingsResponse(BaseModel):
     user_id: UUID
     settings: ProjectSettings
+
+
+class AiImageDraftCoverText(BaseModel):
+    enabled: bool = False
+    text: str = Field(default="", max_length=200)
+    position: Literal["top", "center", "bottom"] = "top"
+
+
+class AiImageDraftCover(BaseModel):
+    description: str = Field(default="", max_length=2000)
+    imageType: CoverImageType = "none"
+    title: AiImageDraftCoverText = Field(default_factory=AiImageDraftCoverText)
+    subtitle: AiImageDraftCoverText = Field(default_factory=AiImageDraftCoverText)
+    author: AiImageDraftCoverText = Field(
+        default_factory=lambda: AiImageDraftCoverText(position="bottom")
+    )
+
+
+class AiImageDraft(BaseModel):
+    """What the AI image form holds for a project, kept so it survives closing the editor."""
+
+    isBookCoverMode: bool = False
+    idea: str = Field(default="", max_length=4000)
+    imageType: ImageType = "none"
+    imageSize: Literal["square", "full_page"] = "square"
+    cover: AiImageDraftCover = Field(default_factory=AiImageDraftCover)
+    generatedImageUrl: str | None = Field(default=None, max_length=2000)
+    generatedImageIdea: str | None = Field(default=None, max_length=4000)
+    generatedCoverImageUrl: str | None = Field(default=None, max_length=2000)
+
+
+class AiImageDraftResponse(BaseModel):
+    draft: AiImageDraft | None = None
 
 
 class PageSizeOption(BaseModel):

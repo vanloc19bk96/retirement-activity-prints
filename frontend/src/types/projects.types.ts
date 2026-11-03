@@ -1,3 +1,5 @@
+import type { AiImageSize, AiImageType } from '@/types/ai-images.types'
+import type { GenerateCoverPayload } from '@/types/cover.types'
 import type { PageSizeLabel, SolutionsPerPage } from '@/types/canvas-settings.types'
 import type {
   BookBindingType,
@@ -23,6 +25,18 @@ export interface ProjectSettings {
   /** Solutions per page once they sit at the end of the book (1, 2 or 4). */
   solutionsPerPage: SolutionsPerPage
   bookInfo?: ProjectBookInfo
+}
+
+/** What the AI image form holds for a project, kept so it survives closing the editor. */
+export interface AiImageDraft {
+  isBookCoverMode: boolean
+  idea: string
+  imageType: AiImageType
+  imageSize: AiImageSize
+  cover: Pick<GenerateCoverPayload, 'description' | 'imageType' | 'title' | 'subtitle' | 'author'>
+  generatedImageUrl: string | null
+  generatedImageIdea: string | null
+  generatedCoverImageUrl: string | null
 }
 
 export interface SaveProjectSettingsResponse {

@@ -5,6 +5,8 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 from app.core.dependencies import ProjectContext, get_current_project, get_current_user_id
 
 from app.schemas.projects import (
+    AiImageDraft,
+    AiImageDraftResponse,
     CurrentProjectResponse,
     ListPageSizeOptionsResponse,
     PageSizeOption,
@@ -14,7 +16,12 @@ from app.schemas.projects import (
 )
 from app.services import hub_projects_client
 from app.services.page_size_service import list_page_size_options
-from app.services.projects_service import get_project_settings, save_project_settings
+from app.services.projects_service import (
+    get_ai_image_draft,
+    get_project_settings,
+    save_ai_image_draft,
+    save_project_settings,
+)
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -46,6 +53,28 @@ async def save_settings(
 async def get_settings(project: ProjectContext = Depends(get_current_project)) -> SaveProjectSettingsResponse:
     saved_settings = get_project_settings(project_id=project.project_id)
     return SaveProjectSettingsResponse(user_id=project.user_id, settings=saved_settings)
+
+
+@router.get(
+    "/ai-image-draft",
+    response_model=AiImageDraftResponse,
+    summary="Get what the AI image form holds for this project",
+)
+async def get_image_draft(project: ProjectContext = Depends(get_current_project)) -> AiImageDraftResponse:
+    return AiImageDraftResponse(draft=get_ai_image_draft(project_id=project.project_id))
+
+
+@router.put(
+    "/ai-image-draft",
+    response_model=AiImageDraftResponse,
+    summary="Save what the AI image form holds for this project",
+)
+async def save_image_draft(
+    payload: AiImageDraft = Body(...),
+    project: ProjectContext = Depends(get_current_project),
+) -> AiImageDraftResponse:
+    save_ai_image_draft(draft=payload.model_dump(), project_id=project.project_id)
+    return AiImageDraftResponse(draft=payload)
 
 
 @router.get(

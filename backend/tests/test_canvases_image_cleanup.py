@@ -84,6 +84,7 @@ def storage(monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest):
         "list_user_project_ids",
         lambda *, user_id: sorted({UUID(row["project_id"]) for row in canvases} | {OPEN_PROJECT}, key=str),
     )
+    monkeypatch.setattr(canvases_service, "list_user_ai_image_draft_urls", lambda *, user_id: set())
     monkeypatch.setattr(
         canvases_service,
         "collect_referenced_supabase_image_public_urls_from_canvas_json",
@@ -111,6 +112,29 @@ def test_loading_a_project_keeps_the_images_of_the_users_other_projects(storage)
 
     assert storage["uploads"] == ["https://s/open.png", "https://s/other.png"]
     assert storage["processed"] == ["https://s/open.png", "https://s/other.png"]
+
+
+@pytest.mark.parametrize("storage", [[_canvas(OPEN_PROJECT, 0, "https://s/open.png")]], indirect=True)
+def test_loading_a_project_keeps_generated_images_waiting_in_the_ai_form(storage, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(
+        canvases_service, "list_user_ai_image_draft_urls", lambda *, user_id: {"https://s/generated.png"}
+    )
+
+    canvases_service.get_canvases(user_id=USER, project_id=OPEN_PROJECT)
+
+    assert storage["uploads"] == ["https://s/generated.png", "https://s/open.png"]
+
+
+@pytest.mark.parametrize("storage", [[_canvas(OPEN_PROJECT, 0, "https://s/open.png")]], indirect=True)
+def test_nothing_is_deleted_when_ai_form_images_cannot_be_read(storage, monkeypatch: pytest.MonkeyPatch):
+    def fail(*, user_id: UUID) -> set[str]:
+        raise RuntimeError("column missing")
+
+    monkeypatch.setattr(canvases_service, "list_user_ai_image_draft_urls", fail)
+
+    canvases_service.get_canvases(user_id=USER, project_id=OPEN_PROJECT)
+
+    assert storage == {}
 
 
 @pytest.mark.parametrize(

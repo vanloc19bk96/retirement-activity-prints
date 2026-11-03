@@ -68,10 +68,13 @@ def build_prompt(
     title: _TextField,
     subtitle: _TextField,
     author: _TextField,
+    *,
+    image_type: str = "none",
 ) -> str:
     config = _config()
     cover_text_section = _build_cover_text_section(title, subtitle, author)
     text_rules = section(config, "textRules")
+    cover_style = section(config, "coverStyles")[image_type]
 
     if cover_text_section:
         typography_block = render_template(
@@ -85,6 +88,8 @@ def build_prompt(
     return (
         render_template(
             load_template(GAME, root=PROMPT_ROOT),
+            cover_style=str(cover_style["style"]),
+            cover_background=str(cover_style["background"]),
             description=description,
             typography_block=typography_block,
             text_rule=text_rule,
