@@ -23,7 +23,7 @@ import {
   prepareCanvasJsonForPersistence,
 } from '@/utils/canvas-state-store'
 import { ensureFontFamilyLoaded } from '@/utils/font-loader'
-import { CANVAS_LIVE_EVENT } from '@/utils/canvas-events'
+import { CANVAS_LIVE_EVENT, COVER_CANVAS_RESIZED_EVENT } from '@/utils/canvas-events'
 import { useCanvasSave } from '@/context/CanvasSaveContext'
 import { useCanvasPenTool } from '@/context/CanvasPenToolContext'
 import { useCanvasExport } from '@/context/CanvasExportContext'
@@ -800,6 +800,18 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
     canvasStateStore.resumeSave()
     shouldResumeStoreSaveRef.current = false
   }, [canvasStateStore, settings.pageCount, saveResumeToken])
+
+  // Like a trim/bleed Apply: Book Info is already saved, so the cover laid out for it must be
+  // too. A reload does not lay it out again, and would show the old layout on the new size.
+  useEffect(() => {
+    const persistResizedCover = (): void => {
+      void saveCanvases({ quiet: true }).catch(() => {
+        // Error toast already shown by saveCanvases
+      })
+    }
+    window.addEventListener(COVER_CANVAS_RESIZED_EVENT, persistResizedCover)
+    return () => window.removeEventListener(COVER_CANVAS_RESIZED_EVENT, persistResizedCover)
+  }, [saveCanvases])
 
   useEffect(() => {
     const el = scrollRef.current

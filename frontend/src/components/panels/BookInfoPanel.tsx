@@ -170,6 +170,7 @@ export function BookInfoPanel(): JSX.Element {
     paperOptions,
     hasChanges,
     isSaving,
+    isProjectSettingsLoaded,
     handlePageCountBlur,
     handleApply,
   } = useBookInfoForm()
@@ -270,7 +271,7 @@ export function BookInfoPanel(): JSX.Element {
         <Button
           type="button"
           className="w-full gap-2"
-          disabled={!hasChanges || isSaving}
+          disabled={!hasChanges || isSaving || !isProjectSettingsLoaded}
           onClick={() => void handleApply()}
         >
           <Check className="size-4" aria-hidden />

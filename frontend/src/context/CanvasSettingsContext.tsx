@@ -21,6 +21,7 @@ import {
 } from '@/types/book-cover.types'
 import type { ProjectBookInfo, ProjectSettings } from '@/types/projects.types'
 import { useProjectSettingsSync } from '@/hooks/use-project-settings-sync'
+import { toast } from '@/hooks/use-toast'
 import { KDP_MIN_PAGE_COUNT } from '@/constants/book-information.constants'
 import { DEFAULT_PROJECT_BOOK_INFO, createDefaultProjectBookInfo, normalizeProjectBookInfo } from '@/utils/book-info'
 
@@ -34,6 +35,8 @@ interface ApplySettingsOptions {
 
 interface CanvasSettingsContextValue {
   isProjectSettingsLoading: boolean
+  /** The project's stored settings are in; until then `settings` are only defaults. */
+  isProjectSettingsLoaded: boolean
   settings: CanvasSettings
   applySettings: (options: ApplySettingsOptions) => void
   setPageCount: (count: number) => void
@@ -97,9 +100,15 @@ export function CanvasSettingsProvider({ children }: CanvasSettingsProviderProps
 
   useEffect(() => {
     if (!projectSettingsError) return
-    // Non-blocking: app still works with local default settings.
+    // Non-blocking: app still works with local default settings, but saving them is blocked
+    // (isProjectSettingsLoaded) because they would replace what the project really has.
     // eslint-disable-next-line no-console
     console.error('project_settings_load_failed', projectSettingsError)
+    toast({
+      title: "Could not load this project's settings",
+      description: 'Your saved page count and page size are safe. Please reload the page.',
+      variant: 'destructive',
+    })
   }, [projectSettingsError])
 
   const applySettings = useCallback(
@@ -158,9 +167,12 @@ export function CanvasSettingsProvider({ children }: CanvasSettingsProviderProps
     [bookCoverDimensions],
   )
 
+  const isProjectSettingsLoaded = projectSettings !== null
+
   const value = useMemo<CanvasSettingsContextValue>(
     () => ({
       isProjectSettingsLoading,
+      isProjectSettingsLoaded,
       settings,
       applySettings,
       setPageCount,
@@ -173,6 +185,7 @@ export function CanvasSettingsProvider({ children }: CanvasSettingsProviderProps
     }),
     [
       isProjectSettingsLoading,
+      isProjectSettingsLoaded,
       settings,
       applySettings,
       setPageCount,

@@ -28,7 +28,7 @@ export function SettingPanel(): JSX.Element {
   const { user } = useAuthContext()
   const isStarterPlan = isUserOnStarterPlan(user)
 
-  const { settings, applySettings, projectBookInfo } = useCanvasSettings()
+  const { settings, applySettings, projectBookInfo, isProjectSettingsLoaded } = useCanvasSettings()
   const { toast } = useToast()
   const { isSaving, saveSettings } = useProjectSettings()
 
@@ -367,7 +367,7 @@ export function SettingPanel(): JSX.Element {
           type="button"
           className="w-full disabled:opacity-100 disabled:bg-muted disabled:text-muted-foreground"
           onClick={handleApplySettings}
-          disabled={!hasPendingChanges || isSaving}
+          disabled={!hasPendingChanges || isSaving || !isProjectSettingsLoaded}
         >
           {isSaving ? 'Saving...' : 'Apply'}
         </Button>

@@ -9,7 +9,7 @@ import type { CanvasStateStore } from '@/utils/canvas-state-store'
 import { createFabricCanvasHistoryManager } from '@/utils/fabric-canvas-history'
 import { scaleAndClampCanvasObjects } from '@/utils/fabric-canvas-resize'
 import { resolveInteriorPageSafeArea } from '@/utils/canvas-template'
-import { dispatchCanvasLive } from '@/utils/canvas-events'
+import { dispatchCanvasLive, dispatchCoverCanvasResized } from '@/utils/canvas-events'
 import { attachEraserAutoBakeListener } from '@/utils/fabric-eraser-bake'
 import {
   getPasteboardCanvasDimensions,
@@ -320,6 +320,7 @@ export function useFabricCanvasLifecycle({
           setIsRestorePending(false)
           history.start()
           notifyCanvasLive()
+          if (isBookCover && shouldRescaleForResize) dispatchCoverCanvasResized()
         } else {
           setIsRestorePending(false)
           history.start()

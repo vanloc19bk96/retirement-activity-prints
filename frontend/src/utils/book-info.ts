@@ -20,6 +20,17 @@ export function clampBookCoverPageCount(value: number): number {
   return Math.min(KDP_MAX_PAGE_COUNT, Math.max(KDP_MIN_PAGE_COUNT, Math.round(value)))
 }
 
+/** False while a page count is still being typed ("1", "12" on the way to "120"). */
+export function isCompleteBookCoverPageCount(input: string): boolean {
+  const value = Number(input)
+  return (
+    input.trim() !== '' &&
+    Number.isInteger(value) &&
+    value >= KDP_MIN_PAGE_COUNT &&
+    value <= KDP_MAX_PAGE_COUNT
+  )
+}
+
 function resolveTrimBookSize(rawValue: string | undefined, fallback: PageSizeLabel): PageSizeLabel {
   if (rawValue && (AMAZON_KDP_PAGE_SIZES as readonly string[]).includes(rawValue)) {
     return rawValue as PageSizeLabel
