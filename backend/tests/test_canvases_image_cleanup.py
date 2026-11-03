@@ -7,13 +7,15 @@ opening one project would delete the images another project uses.
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from typing import Any
 from uuid import UUID, uuid4
 
 import pytest
 
-from app.services import canvases_service
+from app.core.config import settings
+from app.services import canvases_service, storage_service
 
 USER = UUID("11111111-1111-1111-1111-111111111111")
 OPEN_PROJECT = uuid4()
@@ -163,28 +165,106 @@ def test_nothing_is_deleted_when_other_projects_cannot_be_read(storage, monkeypa
 
 @pytest.mark.parametrize("storage", [[_canvas(OTHER_PROJECT, 0, "https://s/other.png")]], indirect=True)
 def test_saving_with_other_projects_leaves_cleanup_to_the_next_load(storage):
-    canvases_service.save_canvases(
-        canvases=[],
-        interior_page_count=1,
-        user_id=USER,
-        project_id=OPEN_PROJECT,
-        referenced_supabase_image_public_urls=["https://s/open.png"],
-    )
+    canvases_service.save_canvases(canvases=[], interior_page_count=1, user_id=USER, project_id=OPEN_PROJECT)
 
     assert storage == {}
 
 
 @pytest.mark.parametrize("storage", [[]], indirect=True)
-def test_saving_the_only_project_cleans_up_with_the_clients_list(storage, monkeypatch: pytest.MonkeyPatch):
+def test_saving_the_only_project_leaves_cleanup_to_the_next_load(storage, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(canvases_service, "list_user_project_ids", lambda *, user_id: [OPEN_PROJECT])
     monkeypatch.setattr(canvases_service, "_delete_obsolete_interior_canvases_with_page_index_ge", lambda **_kw: None)
 
-    canvases_service.save_canvases(
-        canvases=[],
-        interior_page_count=1,
-        user_id=USER,
-        project_id=OPEN_PROJECT,
-        referenced_supabase_image_public_urls=["https://s/open.png"],
-    )
+    canvases_service.save_canvases(canvases=[], interior_page_count=1, user_id=USER, project_id=OPEN_PROJECT)
 
-    assert storage["processed"] == ["https://s/open.png"]
+    assert storage == {}
+
+
+def _iso_days_ago(days: float) -> str:
+    moment = datetime.now(timezone.utc) - timedelta(days=days)
+    return moment.isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+class _Storage:
+    """A bucket holding `rows` per folder; records what cleanup removes."""
+
+    def __init__(self, rows_by_prefix: dict[str, list[dict[str, Any]]]) -> None:
+        self.rows_by_prefix = rows_by_prefix
+        self.removed: list[str] = []
+
+    def from_(self, _bucket: str) -> "_Storage":
+        return self
+
+    def list(self, prefix: str, options: dict[str, int]) -> list[dict[str, Any]]:
+        offset = options["offset"]
+        return self.rows_by_prefix.get(prefix, [])[offset : offset + options["limit"]]
+
+    def remove(self, paths: list[str]) -> None:
+        self.removed.extend(paths)
+
+
+def _file(name: str, **fields: Any) -> dict[str, Any]:
+    return {"name": name, "metadata": {"size": 1}, **fields}
+
+
+def _public_url(path: str) -> str:
+    return f"https://s/storage/v1/object/public/{settings.SUPABASE_STORAGE_BUCKET}/{path}"
+
+
+CLEANUPS = [
+    pytest.param(storage_service.delete_user_image_objects_not_referenced_by_public_urls, "upload", id="upload"),
+    pytest.param(storage_service.delete_user_processed_objects_not_referenced_by_public_urls, "processed", id="processed"),
+]
+
+
+def _run_cleanup(
+    monkeypatch: pytest.MonkeyPatch,
+    cleanup: Any,
+    folder: str,
+    rows: list[dict[str, Any]],
+    keep: tuple[str, ...] = (),
+) -> list[str]:
+    prefix = f"images/{USER}/{folder}"
+    bucket = _Storage({prefix: rows})
+    monkeypatch.setattr(storage_service, "create_supabase_admin_client", lambda: SimpleNamespace(storage=bucket))
+    cleanup(
+        user_id=str(USER),
+        referenced_public_urls=[_public_url(f"{prefix}/{name}") for name in keep],
+        fail_safe_when_no_keep_paths=False,
+    )
+    return [path.rsplit("/", 1)[1] for path in bucket.removed]
+
+
+@pytest.mark.parametrize("cleanup, folder", CLEANUPS)
+def test_cleanup_keeps_unreferenced_images_younger_than_the_minimum_age(monkeypatch, cleanup, folder):
+    rows = [_file("new.png", created_at=_iso_days_ago(0)), _file("six.png", created_at=_iso_days_ago(6.9))]
+
+    assert _run_cleanup(monkeypatch, cleanup, folder, rows) == []
+
+
+@pytest.mark.parametrize("cleanup, folder", CLEANUPS)
+def test_cleanup_deletes_only_old_unreferenced_images(monkeypatch, cleanup, folder):
+    rows = [
+        _file("old.png", created_at=_iso_days_ago(7.1)),
+        _file("old-in-use.png", created_at=_iso_days_ago(30)),
+        _file("new.png", created_at=_iso_days_ago(1)),
+    ]
+
+    assert _run_cleanup(monkeypatch, cleanup, folder, rows, keep=("old-in-use.png",)) == ["old.png"]
+
+
+@pytest.mark.parametrize("cleanup, folder", CLEANUPS)
+@pytest.mark.parametrize(
+    "fields",
+    [{}, {"created_at": None}, {"created_at": ""}, {"created_at": "not a date"}, {"created_at": 1700000000}],
+    ids=["absent", "null", "empty", "garbage", "number"],
+)
+def test_cleanup_keeps_a_file_whose_age_cannot_be_read(monkeypatch, cleanup, folder, fields):
+    assert _run_cleanup(monkeypatch, cleanup, folder, [_file("unknown.png", **fields)]) == []
+
+
+def test_age_is_read_from_every_timestamp_form_storage_uses():
+    for raw in ("2020-01-02T03:04:05.678Z", "2020-01-02T03:04:05+00:00", "2020-01-02T03:04:05.678901+07:00"):
+        assert storage_service._storage_row_created_at({"created_at": raw}).tzinfo is not None
+    # No offset: read as UTC rather than failing a comparison with an aware datetime.
+    assert storage_service._storage_row_created_at({"created_at": "2020-01-02T03:04:05"}).utcoffset() == timedelta(0)

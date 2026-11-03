@@ -1,6 +1,7 @@
 import type { Canvas } from 'fabric'
 
 import type { CanvasLogicalSize } from '@/types/fabric-canvas-item.types'
+import { loadCanvasJsonRecoveringImages } from '@/utils/canvas-image-recovery'
 import {
   getCanvasLogicalSize,
   normalizeFabricCanvasJsonToLogicalSize,
@@ -215,6 +216,9 @@ export function mergeReferencedSupabaseImagePublicUrlsFromManyCanvases(
   return Array.from(into)
 }
 
+/** `images-removed`: the page loaded without images whose files are gone. `failed`: nothing changed. */
+export type CanvasRestoreOutcome = 'restored' | 'images-removed' | 'failed'
+
 export class CanvasStateStore {
   private store = new Map<number, object>()
   // Snapshot dùng để so sánh "dirty" so với dữ liệu đã preload từ backend (lúc load project)
@@ -229,6 +233,11 @@ export class CanvasStateStore {
    * live export can differ from the stored snapshot; reconcile once on first trust.
    */
   private pendingFabricBaselineReconcile = new Set<number>()
+  /**
+   * Pages that lost images whose files are gone. Their baseline keeps the old snapshot so they
+   * read as dirty until saved; hydration settle and reconcile must not re-baseline them as clean.
+   */
+  private imageRemovalsAwaitingSave = new Set<number>()
 
   private serializeForComparison(value: unknown): string {
     const normalize = (v: unknown): unknown => {
@@ -256,6 +265,7 @@ export class CanvasStateStore {
     this.fabricLiveTrusted.clear()
     this.authoringLogicalSizeByIndex.clear()
     this.pendingFabricBaselineReconcile.clear()
+    this.imageRemovalsAwaitingSave.clear()
   }
 
   getAuthoringLogicalSize(index: number): CanvasLogicalSize | null {
@@ -289,6 +299,7 @@ export class CanvasStateStore {
     if (!this.pendingFabricBaselineReconcile.has(index)) return false
 
     this.pendingFabricBaselineReconcile.delete(index)
+    if (this.imageRemovalsAwaitingSave.has(index)) return false
     try {
       const liveJson = exportLiveFabricCanvasJson(canvas)
       const prepared = prepareCanvasJsonForPersistence(liveJson)
@@ -346,6 +357,7 @@ export class CanvasStateStore {
 
   // Called after a successful save so the store becomes "clean" again.
   markSaved(index: number, canvasJson: object): void {
+    this.imageRemovalsAwaitingSave.delete(index)
     const prepared = prepareCanvasJsonForPersistence(canvasJson)
     const authoringSize = this.getAuthoringLogicalSize(index)
     const normalized =
@@ -372,6 +384,12 @@ export class CanvasStateStore {
     if (!this.isFabricLiveTrusted(index)) {
       this.markPendingFabricBaselineReconcile(index)
     }
+  }
+
+  /** Post-load hydration settle: what the page shows now counts as saved, unless it lost images. */
+  markHydrated(index: number, canvasJson: object): void {
+    if (this.imageRemovalsAwaitingSave.has(index)) return
+    this.markSavedAndTrackFabricReconcile(index, canvasJson)
   }
 
   /**
@@ -413,21 +431,33 @@ export class CanvasStateStore {
     }
   }
 
-  async restore(index: number, canvas: Canvas): Promise<boolean> {
+  async restore(index: number, canvas: Canvas): Promise<CanvasRestoreOutcome> {
     const json = this.store.get(index)
-    if (!json) return false
+    if (!json) return 'failed'
+    // A failed loadFromJSON leaves this off, and the next attempt would keep it off for good.
+    const renderOnAddRemove = canvas.renderOnAddRemove
     try {
       const referencedFontFamilies = collectReferencedFontFamiliesFromFabricCanvasJson(json)
       await Promise.all(referencedFontFamilies.map((fontFamily) => ensureFontFamilyLoaded(fontFamily)))
-      // Fabric 7 loadFromJSON does `this.set(serialized)`, so JSON width/height overwrite the
-      // live zoom-scaled surface (display = page * zoom) and break safe-area alignment.
-      // Persist logical size in the store for exports; never apply it onto a live editor canvas.
-      await canvas.loadFromJSON(omitFabricCanvasJsonSurfaceFields(json as Record<string, unknown>))
+      const { json: loadedJson, removedImageUrls } = await loadCanvasJsonRecoveringImages(json, async (attempt) => {
+        if ((canvas as Canvas & { disposed?: boolean }).disposed) throw new Error('Canvas was disposed')
+        canvas.renderOnAddRemove = renderOnAddRemove
+        // Fabric 7 loadFromJSON does `this.set(serialized)`, so JSON width/height overwrite the
+        // live zoom-scaled surface (display = page * zoom) and break safe-area alignment.
+        // Persist logical size in the store for exports; never apply it onto a live editor canvas.
+        await canvas.loadFromJSON(omitFabricCanvasJsonSurfaceFields(attempt as Record<string, unknown>))
+      })
       await upgradeInteractiveTextToTextbox(canvas)
       remeasureAllFabricEditableTextOnCanvas(canvas)
-      return true
-    } catch {
-      return false
+      if (removedImageUrls.length === 0) return 'restored'
+      // Probing takes a while: a snapshot written or moved meanwhile is newer than this one.
+      if (this.store.get(index) === json) this.store.set(index, loadedJson)
+      this.imageRemovalsAwaitingSave.add(index)
+      return 'images-removed'
+    } catch (error) {
+      canvas.renderOnAddRemove = renderOnAddRemove
+      console.error('canvas restore failed', error)
+      return 'failed'
     }
   }
 
@@ -455,6 +485,7 @@ export class CanvasStateStore {
     this.fabricLiveTrusted.delete(index)
     this.authoringLogicalSizeByIndex.delete(index)
     this.pendingFabricBaselineReconcile.delete(index)
+    this.imageRemovalsAwaitingSave.delete(index)
   }
 
   markAllInteriorFabricLiveUntrusted(pageCount: number): void {

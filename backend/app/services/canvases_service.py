@@ -145,25 +145,15 @@ def _image_urls_used_by_projects(*, supabase: Any, project_ids: list[str]) -> se
         start += OTHER_PROJECTS_CANVAS_PAGE_SIZE
 
 
-def _cleanup_processed_images_after_save(*, user_id: UUID, project_id: UUID, referenced: list[str]) -> None:
-    # The client only knows this project's images. With other projects in the same storage
-    # folder, cleanup waits for the next editor load, which reads every project (get_canvases).
-    if _other_project_ids(user_id=user_id, project_id=project_id):
-        return
-    delete_user_processed_objects_not_referenced_by_public_urls(
-        user_id=str(user_id),
-        referenced_public_urls=referenced,
-    )
-
-
 def save_canvases(
     *,
     canvases: list[dict],
     interior_page_count: int,
     user_id: UUID,
     project_id: UUID,
-    referenced_supabase_image_public_urls: list[str] | None = None,
 ) -> dict[str, object]:
+    # Saving deletes no images: a client only knows what its own tab holds, which can lag behind
+    # the database. Orphans wait for the next editor load, which reads every project (get_canvases).
     supabase = _get_projects_postgrest_client()
 
     _delete_obsolete_interior_canvases_with_page_index_ge(
@@ -173,11 +163,6 @@ def save_canvases(
     )
 
     if not canvases:
-        _cleanup_processed_images_after_save(
-            user_id=user_id,
-            project_id=project_id,
-            referenced=referenced_supabase_image_public_urls or [],
-        )
         return {"project_id": project_id, "saved": []}
 
     saved_items: list[dict[str, object]] = []
@@ -237,12 +222,6 @@ def save_canvases(
             raise RuntimeError(f"Failed to insert canvas (page_index={page_index})")
 
         saved_items.append({"page_index": page_index})
-
-    _cleanup_processed_images_after_save(
-        user_id=user_id,
-        project_id=project_id,
-        referenced=referenced_supabase_image_public_urls or [],
-    )
 
     return {"project_id": project_id, "saved": saved_items}
 

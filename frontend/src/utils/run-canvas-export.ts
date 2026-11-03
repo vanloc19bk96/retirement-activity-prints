@@ -7,7 +7,8 @@ import {
   isIndependentDownloadFormat,
   prepareIndependentFileExport,
 } from '@/utils/canvas-export-streaming-independent'
-import type { CanvasExportSource } from '@/types/canvas-export-plan.types'
+import { describeExportImageFailure } from '@/utils/canvas-image-recovery'
+import type { CanvasExportPageSlot, CanvasExportSource } from '@/types/canvas-export-plan.types'
 import { DOCUMENT_CHUNK_PAGE_SIZE } from '@/types/canvas-export-plan.types'
 import type { BookCoverDimensions } from '@/types/book-cover.types'
 import type { MarginGuide, PageDimensions } from '@/types/canvas-settings.types'
@@ -32,6 +33,25 @@ export type RunCanvasExportParams = {
 }
 
 export async function runCanvasExport(params: RunCanvasExportParams): Promise<RunCanvasExportResult> {
+  // Pages render one at a time, so a failure belongs to the slot resolved last.
+  let currentSlot = null as CanvasExportPageSlot | null
+  const trackedSource: CanvasExportSource = {
+    slots: params.source.slots,
+    resolveItem: (slot) => {
+      currentSlot = slot
+      return params.source.resolveItem(slot)
+    },
+  }
+
+  try {
+    return await runCanvasExportForFormat({ ...params, source: trackedSource })
+  } catch (caught) {
+    const imageFailure = currentSlot ? await describeExportImageFailure(caught, currentSlot) : null
+    throw imageFailure ?? caught
+  }
+}
+
+async function runCanvasExportForFormat(params: RunCanvasExportParams): Promise<RunCanvasExportResult> {
   const {
     format,
     source,

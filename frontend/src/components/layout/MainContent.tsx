@@ -23,7 +23,14 @@ import {
   prepareCanvasJsonForPersistence,
 } from '@/utils/canvas-state-store'
 import { ensureFontFamilyLoaded } from '@/utils/font-loader'
-import { CANVAS_LIVE_EVENT, COVER_CANVAS_RESIZED_EVENT } from '@/utils/canvas-events'
+import {
+  CANVAS_LIVE_EVENT,
+  CANVAS_LOAD_PROBLEM_EVENT,
+  COVER_CANVAS_RESIZED_EVENT,
+  dispatchCanvasLoadProblem,
+  type CanvasLoadProblemEventDetail,
+} from '@/utils/canvas-events'
+import { CANVAS_IMAGE_PROBLEM_TOAST_MS, describeCanvasLoadProblems } from '@/utils/canvas-image-recovery'
 import { CanvasPayloadUnavailableError, useCanvasSave } from '@/context/CanvasSaveContext'
 import { getFabricCanvasHistoryManager } from '@/utils/fabric-canvas-history'
 import type { SaveCanvasesRequest } from '@/types/canvases.types'
@@ -94,6 +101,7 @@ const THUMBNAIL_CACHE_LIMIT = 160
 const THUMBNAIL_REQUEST_CONCURRENCY = 2
 const THUMBNAIL_LIVE_EVENTS = ['object:added', 'object:modified', 'object:removed', 'text:changed'] as const
 const CANVAS_HYDRATION_SETTLE_MS = 600
+const CANVAS_LOAD_PROBLEM_TOAST_DEBOUNCE_MS = 400
 
 function createInteriorPageSlotKey(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -822,6 +830,34 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
     return () => window.removeEventListener(COVER_CANVAS_RESIZED_EVENT, persistResizedCover)
   }, [saveCanvases])
 
+  // Pages load side by side and only one toast shows at a time, so a burst of problems shares one.
+  useEffect(() => {
+    const removed = new Set<number>()
+    const failed = new Set<number>()
+    let timer: number | null = null
+
+    const showProblems = (): void => {
+      timer = null
+      toast({ ...describeCanvasLoadProblems({ removed, failed }), duration: CANVAS_IMAGE_PROBLEM_TOAST_MS })
+      removed.clear()
+      failed.clear()
+    }
+
+    const handleLoadProblem = (event: Event): void => {
+      const { canvasIndex, problem } = (event as CustomEvent<CanvasLoadProblemEventDetail>).detail
+      ;(problem === 'failed' ? failed : removed).add(canvasIndex)
+      if (timer == null) timer = window.setTimeout(showProblems, CANVAS_LOAD_PROBLEM_TOAST_DEBOUNCE_MS)
+      // The cover sends no live event, and a removal is an unsaved change.
+      refreshHasUnsavedChanges()
+    }
+
+    window.addEventListener(CANVAS_LOAD_PROBLEM_EVENT, handleLoadProblem)
+    return () => {
+      window.removeEventListener(CANVAS_LOAD_PROBLEM_EVENT, handleLoadProblem)
+      if (timer != null) window.clearTimeout(timer)
+    }
+  }, [refreshHasUnsavedChanges, toast])
+
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
@@ -1007,13 +1043,13 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
       for (let pageIndex = 0; pageIndex < pageCountAtHydration; pageIndex += 1) {
         const canvasData = getCanvasJsonForPersistence(pageIndex)
         if (canvasData) {
-          canvasStateStore.markSavedAndTrackFabricReconcile(pageIndex, canvasData)
+          canvasStateStore.markHydrated(pageIndex, canvasData)
         }
       }
 
       const coverData = getCanvasJsonForPersistence(-1)
       if (coverData) {
-        canvasStateStore.markSavedAndTrackFabricReconcile(-1, coverData)
+        canvasStateStore.markHydrated(-1, coverData)
       }
 
       setIsCanvasHydrationSettled(true)
@@ -1912,6 +1948,9 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
 
       const live = editor.getCanvasByIndex(pageIndex)
       if (!live) return
+      // The store already holds the merged page. Appending to a canvas that has not loaded and
+      // then trusting it would replace that page with only the new objects.
+      if (mode !== 'replace' && !canvasStateStore.isFabricLiveTrusted(pageIndex)) return
 
       const generation = (studioWriteGenerationRef.current.get(pageIndex) ?? 0) + 1
       studioWriteGenerationRef.current.set(pageIndex, generation)
@@ -2000,13 +2039,19 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
           if (live && canvasStateStore.has(pageIndex)) {
             const generation = (studioWriteGenerationRef.current.get(pageIndex) ?? 0) + 1
             studioWriteGenerationRef.current.set(pageIndex, generation)
-            void canvasStateStore.restore(pageIndex, live).then((restored) => {
+            void canvasStateStore.restore(pageIndex, live).then((outcome) => {
               if (studioWriteGenerationRef.current.get(pageIndex) !== generation) return
               if (editor.getCanvasByIndex(pageIndex) !== live) return
-              if (restored) {
+              if (outcome === 'failed') {
+                // Remount so the page gets its failed-load notice instead of staying editable.
+                setInteriorPageSlotKeys((prev) => remountPageSlots(prev, new Set([pageIndex])))
+              } else {
                 canvasStateStore.markFabricLiveTrusted(pageIndex)
                 live.requestRenderAll()
                 scheduleLiveThumbnailUpdate(pageIndex, live, 0)
+                if (outcome === 'images-removed') {
+                  dispatchCanvasLoadProblem({ canvasIndex: pageIndex, problem: 'images-removed' })
+                }
               }
               dispatchCanvasThumbnailInvalidated(pageIndex)
             })

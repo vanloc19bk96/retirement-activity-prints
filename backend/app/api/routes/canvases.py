@@ -27,7 +27,6 @@ async def save_canvases_route(
             interior_page_count=payload.interior_page_count,
             user_id=project.user_id,
             project_id=project.project_id,
-            referenced_supabase_image_public_urls=payload.referenced_supabase_image_public_urls,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

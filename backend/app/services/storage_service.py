@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 import logging
 import uuid
 from typing import Any, Dict, cast
@@ -12,6 +13,10 @@ from app.core.config import settings
 from app.core.supabase import create_supabase_admin_client
 
 logger = logging.getLogger(__name__)
+
+# An upload is on a canvas before any save records it, so a file no saved canvas references may
+# still be in use in another tab. Orphan cleanup only deletes files older than this.
+ORPHAN_IMAGE_MIN_AGE = timedelta(days=7)
 
 
 def build_public_storage_object_url(*, object_path: str, bucket: str | None = None) -> str:
@@ -249,16 +254,16 @@ def _list_bucket_rows_paginated(*, storage: Any, prefix: str) -> list[dict[str, 
     return rows_out
 
 
-def _list_storage_object_paths_under_prefix(*, storage: Any, prefix: str) -> list[str]:
+def _list_storage_objects_under_prefix(*, storage: Any, prefix: str) -> list[tuple[str, dict[str, Any]]]:
     """
-    List file object paths under a bucket prefix (recursive when list returns folder rows).
+    List file objects under a bucket prefix as (path, list row), recursive when list returns folder rows.
 
     `prefix` must not start or end with `/` (normalized segments).
     Empty prefix means listing from bucket root.
     """
     normalized = prefix.strip().strip("/")
 
-    out: list[str] = []
+    out: list[tuple[str, dict[str, Any]]] = []
 
     def visit(current_prefix: str) -> None:
         rows = _list_bucket_rows_paginated(storage=storage, prefix=current_prefix)
@@ -272,14 +277,46 @@ def _list_storage_object_paths_under_prefix(*, storage: Any, prefix: str) -> lis
                 # Heuristic: Supabase may return `metadata=None` for some implementations.
                 # If the name looks like a file (contains a dot), treat it as a leaf object.
                 if "." in name:
-                    out.append(child)
+                    out.append((child, row))
                 else:
                     visit(child)
             else:
-                out.append(child)
+                out.append((child, row))
 
     visit(normalized)
     return out
+
+
+def _list_storage_object_paths_under_prefix(*, storage: Any, prefix: str) -> list[str]:
+    return [path for path, _row in _list_storage_objects_under_prefix(storage=storage, prefix=prefix)]
+
+
+def _storage_row_created_at(row: dict[str, Any]) -> datetime | None:
+    raw = row.get("created_at")
+    if not isinstance(raw, str):
+        return None
+    try:
+        created_at = datetime.fromisoformat(raw.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return created_at if created_at.tzinfo else created_at.replace(tzinfo=timezone.utc)
+
+
+def _orphan_paths_old_enough_to_delete(
+    *,
+    objects: list[tuple[str, dict[str, Any]]],
+    keep_paths: set[str],
+) -> list[str]:
+    cutoff = datetime.now(timezone.utc) - ORPHAN_IMAGE_MIN_AGE
+    to_remove: list[str] = []
+    for path, row in objects:
+        if path in keep_paths:
+            continue
+        created_at = _storage_row_created_at(row)
+        # A file whose age cannot be read might be brand new: keep it.
+        if created_at is not None and created_at < cutoff:
+            to_remove.append(path)
+    return to_remove
 
 
 def list_bucket_file_paths_under_prefix(*, prefix: str, bucket: str | None = None) -> list[str]:
@@ -389,10 +426,10 @@ def delete_user_processed_objects_not_referenced_by_public_urls(
     fail_safe_when_no_keep_paths: bool = True,
 ) -> None:
     """
-    Delete objects under images/{user_id}/processed/ that are not referenced by any URL in
-    `referenced_public_urls` (resolved via our public storage URL pattern).
+    Delete objects under images/{user_id}/processed/ that are older than ORPHAN_IMAGE_MIN_AGE and not
+    referenced by any URL in `referenced_public_urls` (resolved via our public storage URL pattern).
 
-    Best-effort: logs warnings and does not raise — save flow must not fail on cleanup.
+    Best-effort: logs warnings and does not raise — load flow must not fail on cleanup.
     """
     uid = (user_id or "").strip()
     if not uid:
@@ -431,12 +468,12 @@ def delete_user_processed_objects_not_referenced_by_public_urls(
     try:
         supabase = create_supabase_admin_client()
         storage = supabase.storage.from_(settings.SUPABASE_STORAGE_BUCKET)
-        existing_paths = _list_storage_object_paths_under_prefix(storage=storage, prefix=processed_prefix)
+        existing = _list_storage_objects_under_prefix(storage=storage, prefix=processed_prefix)
     except Exception as exc:  # noqa: BLE001
         logger.warning("delete_orphan_processed_list_failed user=%s err=%s", uid, exc)
         return
 
-    to_remove = [path for path in existing_paths if path not in keep_paths]
+    to_remove = _orphan_paths_old_enough_to_delete(objects=existing, keep_paths=keep_paths)
     if not to_remove:
         return
 
@@ -444,7 +481,7 @@ def delete_user_processed_objects_not_referenced_by_public_urls(
         "storage_cleanup_delete user=%s prefix=%s existing=%d keep=%d removed=%d",
         uid,
         processed_prefix,
-        len(existing_paths),
+        len(existing),
         len(keep_paths),
         len(to_remove),
     )
@@ -462,10 +499,10 @@ def delete_user_image_objects_not_referenced_by_public_urls(
     fail_safe_when_no_keep_paths: bool = True,
 ) -> None:
     """
-    Delete objects under images/{user_id}/upload/ that are not referenced by any URL in
-    `referenced_public_urls` (resolved via our public storage URL pattern).
+    Delete objects under images/{user_id}/upload/ that are older than ORPHAN_IMAGE_MIN_AGE and not
+    referenced by any URL in `referenced_public_urls` (resolved via our public storage URL pattern).
 
-    Best-effort: logs warnings and does not raise — save/load flow must not fail on cleanup.
+    Best-effort: logs warnings and does not raise — load flow must not fail on cleanup.
     """
     uid = (user_id or "").strip()
     if not uid:
@@ -504,12 +541,12 @@ def delete_user_image_objects_not_referenced_by_public_urls(
     try:
         supabase = create_supabase_admin_client()
         storage = supabase.storage.from_(settings.SUPABASE_STORAGE_BUCKET)
-        existing_paths = _list_storage_object_paths_under_prefix(storage=storage, prefix=images_prefix)
+        existing = _list_storage_objects_under_prefix(storage=storage, prefix=images_prefix)
     except Exception as exc:  # noqa: BLE001
         logger.warning("delete_orphan_images_list_failed user=%s err=%s", uid, exc)
         return
 
-    to_remove = [path for path in existing_paths if path not in keep_paths]
+    to_remove = _orphan_paths_old_enough_to_delete(objects=existing, keep_paths=keep_paths)
     if not to_remove:
         return
 
@@ -517,7 +554,7 @@ def delete_user_image_objects_not_referenced_by_public_urls(
         "storage_cleanup_delete user=%s prefix=%s existing=%d keep=%d removed=%d",
         uid,
         images_prefix,
-        len(existing_paths),
+        len(existing),
         len(keep_paths),
         len(to_remove),
     )

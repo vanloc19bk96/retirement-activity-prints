@@ -103,6 +103,8 @@ export function FabricCanvasItemActive({
   selectionContextMenuRef.current = selectionContextMenu
 
   const [isRestorePending, setIsRestorePending] = useState(false)
+  const [isRestoreFailed, setIsRestoreFailed] = useState(false)
+  const [restoreAttempt, setRestoreAttempt] = useState(0)
   const [fabricSurfaceEpoch, setFabricSurfaceEpoch] = useState(0)
 
   const toolbarState = useFabricCanvasSelectionToolbarState()
@@ -137,12 +139,19 @@ export function FabricCanvasItemActive({
   })
 
   useLayoutEffect(() => {
+    setIsRestoreFailed(false)
     if (canvasStateStore?.has(canvasIndex)) {
       setIsRestorePending(true)
     } else {
       setIsRestorePending(false)
     }
   }, [canvasIndex, canvasStateStore])
+
+  const handleRetryRestore = (): void => {
+    setIsRestoreFailed(false)
+    setIsRestorePending(true)
+    setRestoreAttempt((attempt) => attempt + 1)
+  }
 
   useFabricCanvasLifecycle({
     isActive: true,
@@ -174,6 +183,8 @@ export function FabricCanvasItemActive({
     coverFit,
     setFabricSurfaceEpoch,
     setIsRestorePending,
+    setIsRestoreFailed,
+    restoreAttempt,
   })
 
   useFabricCanvasPenTools({
@@ -249,7 +260,8 @@ export function FabricCanvasItemActive({
 
   useEffect(() => {
     const container = containerRef.current
-    if (!container) return
+    // A drop would land on a canvas Save ignores until its content has loaded.
+    if (!container || isRestoreFailed) return
 
     const onDragEnter = (event: DragEvent): void => {
       handleDragEnter(event as unknown as React.DragEvent<HTMLDivElement>)
@@ -275,7 +287,7 @@ export function FabricCanvasItemActive({
       container.removeEventListener('dragleave', onDragLeave, true)
       container.removeEventListener('drop', onDrop, true)
     }
-  }, [containerRef, handleDragEnter, handleDragOver, handleDragLeave, handleDrop])
+  }, [containerRef, handleDragEnter, handleDragOver, handleDragLeave, handleDrop, isRestoreFailed])
 
   return (
     <>
@@ -294,6 +306,8 @@ export function FabricCanvasItemActive({
         isDropTargetActive={isDropTargetActive}
         isLoading={isLoading}
         isRestorePending={isRestorePending}
+        isRestoreFailed={isRestoreFailed}
+        onRetryRestore={handleRetryRestore}
       />
       <FabricCanvasSelectionControls
         toolbarState={toolbarState.state}

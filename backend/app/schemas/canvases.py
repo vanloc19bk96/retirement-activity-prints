@@ -22,13 +22,6 @@ class SaveCanvasesRequest(BaseModel):
         description="Number of interior pages currently in the editor (0-based page indices)",
     )
     canvases: list[SaveCanvasItem] = Field(..., min_length=0)
-    referenced_supabase_image_public_urls: list[str] = Field(
-        default_factory=list,
-        description=(
-            "All Fabric image src values across every canvas in the editor; "
-            "used to remove orphan objects under the user's processed/ prefix in storage"
-        ),
-    )
 
 
 class SavedCanvas(BaseModel):

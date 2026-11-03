@@ -9,7 +9,11 @@ import type { CanvasStateStore } from '@/utils/canvas-state-store'
 import { createFabricCanvasHistoryManager } from '@/utils/fabric-canvas-history'
 import { scaleAndClampCanvasObjects } from '@/utils/fabric-canvas-resize'
 import { resolveInteriorPageSafeArea } from '@/utils/canvas-template'
-import { dispatchCanvasLive, dispatchCoverCanvasResized } from '@/utils/canvas-events'
+import {
+  dispatchCanvasLive,
+  dispatchCanvasLoadProblem,
+  dispatchCoverCanvasResized,
+} from '@/utils/canvas-events'
 import { attachEraserAutoBakeListener } from '@/utils/fabric-eraser-bake'
 import {
   getPasteboardCanvasDimensions,
@@ -68,6 +72,9 @@ type UseFabricCanvasLifecycleOptions = {
   /** Signal that a brand-new Fabric surface is mounted (for dependent effects to re-attach). */
   setFabricSurfaceEpoch: Dispatch<SetStateAction<number>>
   setIsRestorePending: Dispatch<SetStateAction<boolean>>
+  setIsRestoreFailed: Dispatch<SetStateAction<boolean>>
+  /** Bumped to load the canvas again after a failed restore. */
+  restoreAttempt: number
 }
 
 function attachCanvasEventListeners(
@@ -187,6 +194,8 @@ export function useFabricCanvasLifecycle({
   coverFit,
   setFabricSurfaceEpoch,
   setIsRestorePending,
+  setIsRestoreFailed,
+  restoreAttempt,
 }: UseFabricCanvasLifecycleOptions): void {
   const marginGuideRef = useRef(marginGuide)
   marginGuideRef.current = marginGuide
@@ -242,6 +251,7 @@ export function useFabricCanvasLifecycle({
     let restoreSettled = true
     let restoreCancelled = false
     let restoreSucceeded = false
+    let restoreRemovedImages = false
 
     const ensureCanvasBackground = (): void => {
       canvas.backgroundColor = resolveFabricCanvasBackgroundColor(
@@ -260,8 +270,9 @@ export function useFabricCanvasLifecycle({
     if (store?.has(canvasIndex)) {
       store.markFabricLiveUntrusted(canvasIndex)
       restoreSettled = false
-      void store.restore(canvasIndex, canvas).then((restored) => {
-        restoreSucceeded = restored
+      void store.restore(canvasIndex, canvas).then((outcome) => {
+        restoreSucceeded = outcome !== 'failed'
+        restoreRemovedImages = outcome === 'images-removed'
       }).finally(() => {
         if (restoreCancelled) return
 
@@ -320,8 +331,13 @@ export function useFabricCanvasLifecycle({
           setIsRestorePending(false)
           history.start()
           notifyCanvasLive()
+          if (restoreRemovedImages) dispatchCanvasLoadProblem({ canvasIndex, problem: 'images-removed' })
           if (isBookCover && shouldRescaleForResize) dispatchCoverCanvasResized()
         } else {
+          // Nothing was laid out: a retry still has to rescale from the old size.
+          previousLogicalSizeRef.current = previousLogicalSize
+          dispatchCanvasLoadProblem({ canvasIndex, problem: 'failed' })
+          setIsRestoreFailed(true)
           setIsRestorePending(false)
           history.start()
           notifyCanvasLive()
@@ -388,5 +404,5 @@ export function useFabricCanvasLifecycle({
     // dispose/recreate every interior canvas when only the guide object identity
     // changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActive, id, baseWidth, baseHeight, canvasIndex, isBookCover, bookCoverZones, bookCoverDimensions, isLeftPage])
+  }, [isActive, id, baseWidth, baseHeight, canvasIndex, isBookCover, bookCoverZones, bookCoverDimensions, isLeftPage, restoreAttempt])
 }

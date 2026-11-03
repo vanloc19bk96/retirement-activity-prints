@@ -15,6 +15,7 @@ import {
   type DownloadProgressStatus,
 } from '@/types/canvas-download.types'
 import { releaseExportChunkMemory } from '@/utils/canvas-export-memory'
+import { CANVAS_IMAGE_PROBLEM_TOAST_MS } from '@/utils/canvas-image-recovery'
 import { createZipStreamTarget, type ZipStreamTarget } from '@/utils/streaming-zip-download'
 import type { CanvasesExportRequest } from '@/context/CanvasExportContext'
 
@@ -32,7 +33,7 @@ const IMAGE_ZIP_FILE_NAME: Record<'png' | 'jpg' | 'svg', string> = {
   svg: 'book-editor_export_vector_svg.zip',
 }
 
-type NotifyFn = (message: { title: string; description: string }) => void
+type NotifyFn = (message: { title: string; description: string; duration?: number }) => void
 
 type UseCanvasDownloadOptions = {
   createExportSource: (request: CanvasesExportRequest) => Promise<import('@/types/canvas-export-plan.types').CanvasExportSource>
@@ -238,7 +239,11 @@ export function useCanvasDownload(options: UseCanvasDownloadOptions): UseCanvasD
           return
         }
         setStatus('failed')
-        options.notify({ title: 'Export failed', description: describeExportError(caught, request.format) })
+        options.notify({
+          title: 'Export failed',
+          description: describeExportError(caught, request.format),
+          duration: CANVAS_IMAGE_PROBLEM_TOAST_MS,
+        })
       } finally {
         setIsDownloading(false)
         isCancelRequestedRef.current = false

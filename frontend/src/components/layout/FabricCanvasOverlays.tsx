@@ -5,6 +5,7 @@ import type { ProjectBookInfo } from '@/types/projects.types'
 import { MarginGuideOverlay } from './MarginGuideOverlay'
 import { BookCoverGuideOverlay } from './BookCoverGuideOverlay'
 import { CanvasLoadingOverlay } from './CanvasLoadingOverlay'
+import { CanvasRestoreFailedOverlay } from './CanvasRestoreFailedOverlay'
 
 type FabricCanvasOverlaysProps = {
   isBookCover: boolean
@@ -20,11 +21,13 @@ type FabricCanvasOverlaysProps = {
   isDropTargetActive: boolean
   isLoading: boolean
   isRestorePending: boolean
+  isRestoreFailed: boolean
+  onRetryRestore: () => void
 }
 
 /**
- * Renders all non-interactive canvas overlays (margin guides, book-cover
- * zones, drop-target ring, loading spinner) in the correct stacking order.
+ * Renders the canvas overlays (margin guides, book-cover zones, drop-target
+ * ring, loading spinner, failed-load notice) in the correct stacking order.
  * Kept separate from the canvas container so selection controls can be composed independently.
  */
 export function FabricCanvasOverlays({
@@ -41,6 +44,8 @@ export function FabricCanvasOverlays({
   isDropTargetActive,
   isLoading,
   isRestorePending,
+  isRestoreFailed,
+  onRetryRestore,
 }: FabricCanvasOverlaysProps): JSX.Element {
   return (
     <>
@@ -63,6 +68,7 @@ export function FabricCanvasOverlays({
           aria-hidden
         />
       )}
+      {isRestoreFailed && <CanvasRestoreFailedOverlay onRetry={onRetryRestore} />}
       {(isLoading || isRestorePending) && <CanvasLoadingOverlay />}
     </>
   )

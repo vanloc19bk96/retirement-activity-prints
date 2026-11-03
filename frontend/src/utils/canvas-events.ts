@@ -10,3 +10,15 @@ export const COVER_CANVAS_RESIZED_EVENT = 'canvas:cover-resized'
 export function dispatchCoverCanvasResized(): void {
   window.dispatchEvent(new CustomEvent(COVER_CANVAS_RESIZED_EVENT))
 }
+
+/** Loading a canvas lost an image for good (`images-removed`) or could not finish (`failed`). */
+export const CANVAS_LOAD_PROBLEM_EVENT = 'canvas:load-problem'
+
+export type CanvasLoadProblemEventDetail = {
+  canvasIndex: number
+  problem: 'images-removed' | 'failed'
+}
+
+export function dispatchCanvasLoadProblem(detail: CanvasLoadProblemEventDetail): void {
+  window.dispatchEvent(new CustomEvent(CANVAS_LOAD_PROBLEM_EVENT, { detail }))
+}

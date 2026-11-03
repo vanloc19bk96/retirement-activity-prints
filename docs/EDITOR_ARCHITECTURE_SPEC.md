@@ -431,7 +431,7 @@ ImagePanel / drop on canvas
   → storage.api upload  POST /api/storage/images
   → storage_service.upload_user_image() → Supabase Storage
   → public URL added to Fabric image object
-  → URL tracked in referenced_supabase_image_public_urls on save
+  → editor load deletes files no project references, once older than ORPHAN_IMAGE_MIN_AGE (7 days)
 ```
 
 ---
