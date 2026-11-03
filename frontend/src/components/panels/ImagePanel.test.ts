@@ -224,12 +224,11 @@ describe('the AI image preview', () => {
 })
 
 describe('placing from the panel', () => {
-  it('offers Front, Back and Spine on the cover, and says the image is not on it yet', async () => {
+  it('offers Front, Back and Spine on the cover', async () => {
     mocks.isEditingCover = true
     await renderPanel({ generatedImages: [coverImage('a')] })
 
     for (const label of ['Front', 'Back', 'Spine']) expect(button(label)).toBeTruthy()
-    expect(container.textContent).toContain('not on your cover yet')
     expect(() => button('Place on current page')).toThrow()
   })
 
@@ -237,7 +236,7 @@ describe('placing from the panel', () => {
     await renderPanel({ generatedImages: [coverImage('a')] })
 
     expect(button('Place on current page')).toBeTruthy()
-    expect(container.textContent).toContain('not on your page yet')
+    expect(container.textContent).not.toContain('This image is in your book')
     expect(() => button('Front')).toThrow()
   })
 
@@ -270,7 +269,7 @@ describe('placing from the panel', () => {
     expect(button('Front').disabled).toBe(false)
   })
 
-  it('stops warning once the image is in the book', async () => {
+  it('says so once the image is in the book', async () => {
     mocks.placedUrls = new Set(['https://s/a.png'])
     await renderPanel({ generatedImages: [coverImage('a')] })
 
@@ -279,7 +278,6 @@ describe('placing from the panel', () => {
     })
 
     expect(container.textContent).toContain('This image is in your book')
-    expect(container.textContent).not.toContain('not on your page yet')
   })
 })
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CheckCircle2, CircleAlert, ImageOff, Loader2 } from 'lucide-react'
+import { CheckCircle2, ImageOff, Loader2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
@@ -225,7 +225,6 @@ export function GeneratedImagesSection({
   }
 
   const isSelectedPlaced = placedUrls != null && isImagePlaced(selectedImage, placedUrls)
-  const surface = isEditingCover ? 'cover' : 'page'
   const targets = isEditingCover ? COVER_TARGETS : [{ target: 'page' as const, label: 'Place on current page' }]
 
   return (
@@ -249,16 +248,10 @@ export function GeneratedImagesSection({
         )}
       </div>
 
-      {isSelectedPlaced ? (
+      {isSelectedPlaced && (
         <p className="flex items-start gap-1.5 text-[11px] leading-relaxed text-muted-foreground">
           <CheckCircle2 className="mt-px h-3.5 w-3.5 shrink-0 text-emerald-600" aria-hidden />
           This image is in your book. Place it again to use it somewhere else too.
-        </p>
-      ) : (
-        <p className="flex items-start gap-1.5 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-[11px] leading-relaxed text-foreground">
-          <CircleAlert className="mt-px h-3.5 w-3.5 shrink-0 text-amber-600" aria-hidden />
-          This image is not on your {surface} yet. It only becomes part of your design, and is saved
-          with it, after you place it.
         </p>
       )}
 
