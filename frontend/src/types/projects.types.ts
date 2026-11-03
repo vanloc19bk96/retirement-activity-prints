@@ -27,6 +27,14 @@ export interface ProjectSettings {
   bookInfo?: ProjectBookInfo
 }
 
+/** An image generated for the project. `url` is the print file; `previewUrl` is its light copy, when one exists. */
+export interface AiGeneratedImage {
+  url: string
+  previewUrl: string | null
+  idea: string | null
+  kind: 'interior' | 'cover'
+}
+
 /** What the AI image form holds for a project, kept so it survives closing the editor. */
 export interface AiImageDraft {
   isBookCoverMode: boolean
@@ -34,6 +42,9 @@ export interface AiImageDraft {
   imageType: AiImageType
   imageSize: AiImageSize
   cover: Pick<GenerateCoverPayload, 'description' | 'imageType' | 'title' | 'subtitle' | 'author'>
+  /** Every image generated for the project, newest first. */
+  generatedImages: AiGeneratedImage[]
+  /** The image the form shows; the next three fields are also read by older clients. */
   generatedImageUrl: string | null
   generatedImageIdea: string | null
   generatedCoverImageUrl: string | null

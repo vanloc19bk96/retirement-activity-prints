@@ -23,8 +23,6 @@ import {
 import { getFabricCanvasHistoryManager } from '@/utils/fabric-canvas-history'
 import { ensureFontFamilyLoaded } from '@/utils/font-loader'
 import { remeasureAllFabricEditableTextOnCanvas, upgradeInteractiveTextToTextbox } from '@/utils/canvas-text'
-import { addImageToFabricCanvasAtClientPoint } from '@/utils/canvas-image'
-import { resolveBookCoverImagePlacementZone } from '@/utils/book-cover-image-placement'
 import {
   fetchTemplateCanvasJson,
   getCanvasLogicalSize,
@@ -47,7 +45,6 @@ import { getCanvasPasteboardPadding } from '@/utils/fabric-canvas-pasteboard'
 import { alignSelectionAction, applyTextParagraphAlignAction } from './canvas-editor-actions'
 import type { AlignmentPanelTextContext } from './use-canvas-editor-page-row-bindings'
 
-const AUTO_ADD_GENERATED_IMAGE_EVENT = 'canvas:auto-add-generated-image'
 const CANVAS_ALIGNMENT_VALUES = [
   'left',
   'center',
@@ -101,17 +98,15 @@ export function useCanvasEditor(options?: UseCanvasEditorOptions): CanvasEditorB
   const defaultTextFontSize = options?.defaultTextFontSize ?? DEFAULT_TEXT_FONT_SIZE
 
   const bookCoverDropRef = useRef({
-    fitDroppedImagesToPage: true as boolean,
     zones: options?.bookCoverZones,
     dimensions: options?.bookCoverDimensions,
   })
   useLayoutEffect(() => {
     bookCoverDropRef.current = {
-      fitDroppedImagesToPage: options?.fitDroppedImagesToPage ?? true,
       zones: options?.bookCoverZones,
       dimensions: options?.bookCoverDimensions,
     }
-  }, [options?.fitDroppedImagesToPage, options?.bookCoverZones, options?.bookCoverDimensions])
+  }, [options?.bookCoverZones, options?.bookCoverDimensions])
 
   const [selectionByCanvas, setSelectionByCanvas] = useState<Record<number, boolean>>({})
   const [selectedObjectCount, setSelectedObjectCount] = useState(0)
@@ -385,54 +380,6 @@ export function useCanvasEditor(options?: UseCanvasEditorOptions): CanvasEditorB
       })()
     }
 
-    const handleAutoAddGeneratedImage = (event: Event): void => {
-      const customEvent = event as CustomEvent<{ imageUrl?: unknown }>
-      const imageUrl = customEvent.detail?.imageUrl
-      if (typeof imageUrl !== 'string' || imageUrl.trim().length === 0) return
-      const trimmedImageUrl = imageUrl.trim()
-
-      const activeCanvasIndex = activeCanvasIndexRef.current
-      const fallbackCanvasIndex =
-        activeCanvasIndex ??
-        (canvasByIndexRef.current[0] ? 0 : null) ??
-        (canvasByIndexRef.current[-1] ? -1 : null) ??
-        Number(Object.keys(canvasByIndexRef.current)[0] ?? NaN)
-      const targetCanvas = Number.isFinite(fallbackCanvasIndex)
-        ? canvasByIndexRef.current[fallbackCanvasIndex]
-        : null
-      if (!targetCanvas) return
-
-      const canvasRect = targetCanvas.upperCanvasEl?.getBoundingClientRect?.()
-      if (!canvasRect) return
-
-      const clientX = canvasRect.left + canvasRect.width / 2
-      const clientY = canvasRect.top + canvasRect.height / 2
-      const dropOpts = bookCoverDropRef.current
-      const zones = dropOpts.zones
-      const dimensions = dropOpts.dimensions
-      const useCoverFit =
-        fallbackCanvasIndex === -1 &&
-        dropOpts.fitDroppedImagesToPage &&
-        zones !== undefined &&
-        dimensions !== undefined
-      const scenePoint = targetCanvas.getScenePoint({ clientX, clientY } as MouseEvent)
-      const placementZone =
-        useCoverFit && zones && dimensions
-          ? resolveBookCoverImagePlacementZone(zones, dimensions, scenePoint.x)
-          : undefined
-
-      void addImageToFabricCanvasAtClientPoint({
-        canvas: targetCanvas,
-        src: trimmedImageUrl,
-        clientX,
-        clientY,
-        fitMode: useCoverFit ? 'cover' : 'default',
-        placementZone,
-      }).catch(() => {
-        // Best-effort auto add; keep generate flow uninterrupted.
-      })
-    }
-
     const handleRequestCanvasAlignment = (event: Event): void => {
       const customEvent = event as CustomEvent<RequestCanvasAlignmentEventDetail>
       const align = customEvent.detail?.align
@@ -456,12 +403,10 @@ export function useCanvasEditor(options?: UseCanvasEditorOptions): CanvasEditorB
     }
 
     window.addEventListener(APPLY_TEMPLATE_TO_CANVAS_EVENT, handleApplyTemplateToCanvas)
-    window.addEventListener(AUTO_ADD_GENERATED_IMAGE_EVENT, handleAutoAddGeneratedImage)
     window.addEventListener(REQUEST_CANVAS_ALIGNMENT_EVENT, handleRequestCanvasAlignment)
     window.addEventListener(REQUEST_CANVAS_TEXT_PARAGRAPH_ALIGN_EVENT, handleRequestTextParagraphAlign)
     return () => {
       window.removeEventListener(APPLY_TEMPLATE_TO_CANVAS_EVENT, handleApplyTemplateToCanvas)
-      window.removeEventListener(AUTO_ADD_GENERATED_IMAGE_EVENT, handleAutoAddGeneratedImage)
       window.removeEventListener(REQUEST_CANVAS_ALIGNMENT_EVENT, handleRequestCanvasAlignment)
       window.removeEventListener(REQUEST_CANVAS_TEXT_PARAGRAPH_ALIGN_EVENT, handleRequestTextParagraphAlign)
     }

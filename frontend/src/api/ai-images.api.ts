@@ -29,6 +29,7 @@ function mapGeneratedImages(body: GenerateImagesApiResponse): GeneratedImage[] {
   return body.images.map((item) => ({
     idea: item.idea ?? null,
     publicUrl: item.public_url,
+    previewUrl: item.preview_url ?? null,
     bucket: item.bucket,
     path: item.path,
   }))

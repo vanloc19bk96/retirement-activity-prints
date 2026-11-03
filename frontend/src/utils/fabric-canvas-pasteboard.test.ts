@@ -18,13 +18,26 @@ function createPasteboardCanvas(pageElement: HTMLElement): { canvas: Canvas; det
   const size = getPasteboardCanvasDimensions(400, 600, zoom, PADDING)
   const canvas = new Canvas(document.createElement('canvas'), size)
   canvas.setViewportTransform(getPasteboardViewportTransform(zoom, PADDING))
-  const detach = installCanvasPasteboard(canvas, pageElement, PADDING)
+  const detach = installCanvasPasteboard(canvas, pageElement, { width: 400, height: 600 }, PADDING)
   return { canvas, detach }
 }
 
 describe('fabric canvas pasteboard', () => {
   it('reports the page size without the pasteboard margin', () => {
     const { canvas, detach } = createPasteboardCanvas(document.createElement('div'))
+
+    expect(getCanvasPageLogicalSize(canvas)).toEqual({ width: 400, height: 600 })
+
+    detach()
+    canvas.dispose()
+  })
+
+  it('reports the same page size at a zoom whose surface size is rounded', () => {
+    const { canvas, detach } = createPasteboardCanvas(document.createElement('div'))
+
+    const zoom = 0.37
+    canvas.setDimensions(getPasteboardCanvasDimensions(401, 603, zoom, PADDING))
+    canvas.setViewportTransform(getPasteboardViewportTransform(zoom, PADDING))
 
     expect(getCanvasPageLogicalSize(canvas)).toEqual({ width: 400, height: 600 })
 

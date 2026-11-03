@@ -8,6 +8,8 @@ from pydantic import BaseModel, Field, field_validator
 from app.schemas.ai_images import ImageType
 from app.schemas.cover import CoverImageType
 
+AI_IMAGE_HISTORY_LIMIT = 50
+
 
 class ProjectBookInfo(BaseModel):
     bindingType: str = Field(default="paperback")
@@ -60,6 +62,13 @@ class AiImageDraftCover(BaseModel):
     )
 
 
+class AiImageDraftGeneratedImage(BaseModel):
+    url: str = Field(..., max_length=2000)
+    previewUrl: str | None = Field(default=None, max_length=2000)
+    idea: str | None = Field(default=None, max_length=4000)
+    kind: Literal["interior", "cover"] = "interior"
+
+
 class AiImageDraft(BaseModel):
     """What the AI image form holds for a project, kept so it survives closing the editor."""
 
@@ -68,6 +77,9 @@ class AiImageDraft(BaseModel):
     imageType: ImageType = "none"
     imageSize: Literal["square", "full_page"] = "square"
     cover: AiImageDraftCover = Field(default_factory=AiImageDraftCover)
+    # Every image generated for the project, newest first.
+    generatedImages: list[AiImageDraftGeneratedImage] = Field(default_factory=list, max_length=AI_IMAGE_HISTORY_LIMIT)
+    # The image the form shows, also read by clients from before generatedImages existed.
     generatedImageUrl: str | None = Field(default=None, max_length=2000)
     generatedImageIdea: str | None = Field(default=None, max_length=4000)
     generatedCoverImageUrl: str | None = Field(default=None, max_length=2000)

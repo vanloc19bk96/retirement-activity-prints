@@ -216,7 +216,7 @@ export function AIImageForm({
       <div className="space-y-1">
         <h3 className="text-sm font-semibold text-foreground">Generate image</h3>
         <p className="text-xs text-muted-foreground">
-          Drag the result onto the canvas when ready.
+          The result appears below. Place it on your {isBookCoverMode ? 'cover' : 'page'} to add it to your design.
         </p>
       </div>
 

@@ -109,6 +109,7 @@ class GenerateInteriorImagesRequest(BaseModel):
 class GeneratedImageItem(BaseModel):
     idea: Optional[str] = None
     public_url: str
+    preview_url: Optional[str] = None
     bucket: str
     path: str
 

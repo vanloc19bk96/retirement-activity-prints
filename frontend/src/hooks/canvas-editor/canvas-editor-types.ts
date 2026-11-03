@@ -7,8 +7,6 @@ import type { Canvas } from 'fabric'
 export type UseCanvasEditorOptions = {
   defaultTextFontFamily?: string
   defaultTextFontSize?: number
-  /** When true, images dropped on the book cover auto-fit to the front/back zone. */
-  fitDroppedImagesToPage?: boolean
   bookCoverZones?: BookCoverZones
   bookCoverDimensions?: BookCoverDimensions
 }

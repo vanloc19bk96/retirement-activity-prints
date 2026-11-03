@@ -18,7 +18,10 @@ type PasteboardCanvas = Canvas & {
   _renderObjects: (ctx: CanvasRenderingContext2D, objects: FabricObject[]) => void
 }
 
+type PageSize = { width: number; height: number }
+
 const paddingByCanvas = new WeakMap<StaticCanvas, number>()
+const pageSizeByCanvas = new WeakMap<StaticCanvas, PageSize>()
 
 export function getCanvasPasteboardPadding(canvas: StaticCanvas): number {
   return paddingByCanvas.get(canvas) ?? 0
@@ -44,8 +47,8 @@ export function getPasteboardViewportTransform(
   return [zoom, 0, 0, zoom, padding, padding]
 }
 
-/** Logical page size (scene units), excluding the pasteboard margin. */
-export function getCanvasPageLogicalSize(canvas: StaticCanvas): { width: number; height: number } {
+/** The part of the surface that shows the page, in scene units. Rounded to screen pixels, so it varies with zoom. */
+function getSurfacePageSize(canvas: StaticCanvas): PageSize {
   const padding = getCanvasPasteboardPadding(canvas)
   const vpt = canvas.viewportTransform
   const zoomX = Math.abs(vpt?.[0] ?? canvas.getZoom()) || 1
@@ -54,6 +57,15 @@ export function getCanvasPageLogicalSize(canvas: StaticCanvas): { width: number;
     width: (canvas.getWidth() - padding * 2) / zoomX,
     height: (canvas.getHeight() - padding * 2) / zoomY,
   }
+}
+
+/**
+ * Logical page size (scene units), excluding the pasteboard margin. Saved with the page, so an
+ * editor canvas reports the size it was installed with: one read from the surface would make a
+ * zoom look like an edit.
+ */
+export function getCanvasPageLogicalSize(canvas: StaticCanvas): PageSize {
+  return pageSizeByCanvas.get(canvas) ?? getSurfacePageSize(canvas)
 }
 
 function clipContextToRect(
@@ -75,7 +87,7 @@ function patchPageClippedRendering(canvas: PasteboardCanvas): void {
   // Background is painted before the viewport transform is applied.
   canvas._renderBackground = (ctx) => {
     const vpt = canvas.viewportTransform
-    const page = getCanvasPageLogicalSize(canvas)
+    const page = getSurfacePageSize(canvas)
     ctx.save()
     clipContextToRect(ctx, vpt[4], vpt[5], page.width * vpt[0], page.height * vpt[3])
     renderBackground(ctx)
@@ -84,7 +96,7 @@ function patchPageClippedRendering(canvas: PasteboardCanvas): void {
 
   // Objects are painted in scene space; controls are drawn afterwards, outside this clip.
   canvas._renderObjects = (ctx, objects) => {
-    const page = getCanvasPageLogicalSize(canvas)
+    const page = getSurfacePageSize(canvas)
     ctx.save()
     clipContextToRect(ctx, 0, 0, page.width, page.height)
     renderObjects(ctx, objects)
@@ -143,14 +155,17 @@ function resolvePasteboardInsets(canvas: Canvas, padding: number): [number, numb
 /**
  * Turns a freshly created editor canvas (already sized/transformed with the
  * pasteboard helpers above) into a pasteboard surface. `pageElement` is the page
- * box whose stacking order is raised while controls spill outside it.
+ * box whose stacking order is raised while controls spill outside it. `pageSize` is
+ * fixed for the canvas's lifetime: a page of another size gets a new canvas.
  */
 export function installCanvasPasteboard(
   canvas: Canvas,
   pageElement: HTMLElement | null,
+  pageSize: PageSize,
   padding = CANVAS_PASTEBOARD_PADDING_PX,
 ): () => void {
   paddingByCanvas.set(canvas, padding)
+  pageSizeByCanvas.set(canvas, pageSize)
   patchPageClippedRendering(canvas as PasteboardCanvas)
 
   const wrapper = canvas.wrapperEl

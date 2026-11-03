@@ -1,6 +1,7 @@
 export type GeneratedImage = {
   idea?: string | null
   publicUrl: string
+  previewUrl: string | null
   bucket: string
   path: string
 }
@@ -40,6 +41,7 @@ export type GenerateImagesApiResponse = {
   images: Array<{
     idea?: string | null
     public_url: string
+    preview_url?: string | null
     bucket: string
     path: string
   }>

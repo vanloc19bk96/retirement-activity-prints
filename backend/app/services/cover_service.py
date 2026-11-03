@@ -12,6 +12,7 @@ from app.schemas.cover import CoverDimensions, GenerateCoverRequest
 from app.services.book_cover_aspect_ratio_mapper import map_cover_ratio_to_aspect_ratio
 from app.services.book_cover_image_resizer import resize_image_bytes_exact
 from app.services.cover_prompt import build_prompt
+from app.services.generated_image_preview import upload_generated_image_preview
 from app.services.openai_image_provider import generate_raw_image_bytes
 from app.services.storage_service import upload_user_image_bytes
 
@@ -51,7 +52,7 @@ class CoverService:
         *,
         request: GenerateCoverRequest,
         user_id: str,
-    ) -> dict[str, str]:
+    ) -> dict[str, str | None]:
         dimensions = request.cover_dimensions
         aspect_ratio = map_cover_ratio_to_aspect_ratio(
             dimensions.width_px / dimensions.height_px,
@@ -104,6 +105,7 @@ class CoverService:
 
         return {
             "image_url": uploaded.public_url,
+            "preview_url": upload_generated_image_preview(image_bytes=final_bytes, user_id=user_id),
             "generation_id": generation_id,
         }
 

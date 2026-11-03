@@ -79,5 +79,6 @@ async def generate_cover(
 
     return GenerateCoverSuccessResponse(
         imageUrl=result["image_url"],
+        previewUrl=result.get("preview_url"),
         generationId=result["generation_id"],
     )

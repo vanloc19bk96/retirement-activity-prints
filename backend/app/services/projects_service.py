@@ -5,6 +5,7 @@ from uuid import UUID
 from postgrest.exceptions import APIError
 
 from app.core.supabase import create_supabase_admin_client
+from app.schemas.projects import AI_IMAGE_HISTORY_LIMIT
 
 PROJECT_SCHEMA_NAME = "retirement_activity_prints"
 PROJECTS_TABLE_NAME = "projects"
@@ -245,21 +246,50 @@ def get_ai_image_draft(*, project_id: UUID) -> dict[str, object] | None:
     )
     row = (response.data or [{}])[0] or {}
     draft = row.get("ai_image_draft")
-    return draft if isinstance(draft, dict) else None
+    if not isinstance(draft, dict):
+        return None
+    return {**draft, "generatedImages": _generated_images_of_draft(draft)[:AI_IMAGE_HISTORY_LIMIT]}
+
+
+def _generated_images_of_draft(draft: dict[str, object]) -> list[dict[str, object]]:
+    """The draft's image list, plus the shown image of a draft saved before the list existed."""
+    raw_images = draft.get("generatedImages")
+    images = [
+        image
+        for image in (raw_images if isinstance(raw_images, list) else [])
+        if isinstance(image, dict) and isinstance(image.get("url"), str) and image["url"]
+    ]
+    known_urls = {image["url"] for image in images}
+    shown_images = (
+        (draft.get("generatedImageUrl"), draft.get("generatedImageIdea"), "interior"),
+        (draft.get("generatedCoverImageUrl"), None, "cover"),
+    )
+    for url, idea, kind in shown_images:
+        if isinstance(url, str) and url and url not in known_urls:
+            known_urls.add(url)
+            images.append({"url": url, "previewUrl": None, "idea": idea, "kind": kind})
+    return images
 
 
 def save_ai_image_draft(*, draft: dict[str, object], project_id: UUID) -> None:
+    # A tab opened earlier, or an older client, sends a shorter list: its save must not forget images.
+    stored = get_ai_image_draft(project_id=project_id) or {}
+    merged: dict[str, dict[str, object]] = {}
+    for image in [*_generated_images_of_draft(draft), *_generated_images_of_draft(stored)]:
+        kept = merged.setdefault(str(image["url"]), image)
+        if not kept.get("previewUrl") and image.get("previewUrl"):
+            merged[str(image["url"])] = {**kept, "previewUrl": image["previewUrl"]}
     (
         _get_projects_postgrest_client()
         .table(PROJECTS_TABLE_NAME)
-        .update({"ai_image_draft": draft})
+        .update({"ai_image_draft": {**draft, "generatedImages": list(merged.values())[:AI_IMAGE_HISTORY_LIMIT]}})
         .eq("id", str(project_id))
         .execute()
     )
 
 
 def list_user_ai_image_draft_urls(*, user_id: UUID) -> set[str]:
-    """Generated images the AI forms of the user's projects still show (not on any canvas yet)."""
+    """Generated images and previews the AI forms of the user's projects still list, on a canvas or not."""
     response = (
         _get_projects_postgrest_client()
         .table(PROJECTS_TABLE_NAME)
@@ -272,8 +302,10 @@ def list_user_ai_image_draft_urls(*, user_id: UUID) -> set[str]:
         draft = row.get("ai_image_draft")
         if not isinstance(draft, dict):
             continue
-        for key in AI_IMAGE_DRAFT_URL_KEYS:
-            url = draft.get(key)
+        candidates = [draft.get(key) for key in AI_IMAGE_DRAFT_URL_KEYS]
+        for image in _generated_images_of_draft(draft):
+            candidates += [image.get("url"), image.get("previewUrl")]
+        for url in candidates:
             if isinstance(url, str) and url.strip():
                 urls.add(url.strip().split("?", 1)[0])
     return urls

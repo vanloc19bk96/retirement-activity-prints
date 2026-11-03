@@ -4,6 +4,8 @@ import type { ReactNode } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import { useCanvasSaves } from '@/hooks/use-canvas-saves'
 import type { SaveCanvasesRequest } from '@/types/canvases.types'
+import type { AiGeneratedImage } from '@/types/projects.types'
+import { describeNothingToSave, findUnplacedImages } from '@/utils/ai-image-history'
 import { CANVAS_LIVE_EVENT } from '@/utils/canvas-events'
 import { FABRIC_HISTORY_CHANGED_EVENT } from '@/utils/fabric-canvas-history'
 
@@ -13,6 +15,9 @@ type CanvasesPayloadGetter = () => SaveCanvasesRequest
 /** Gets the payload the server just stored, which may be older than what the editor now shows. */
 type AfterSaveCallback = (savedPayload: SaveCanvasesRequest) => void
 type HasUnsavedCheckGetter = () => boolean
+/** Images the canvases use; null while the project has not loaded. */
+type PlacedImageUrlsGetter = () => ReadonlySet<string> | null
+type GeneratedImagesGetter = () => readonly AiGeneratedImage[]
 
 const UNSAVED_REFRESH_DEBOUNCE_MS = 150
 /** An unsaved change is saved this long after it was made, even while the user keeps editing. */
@@ -46,6 +51,9 @@ interface CanvasSaveContextValue {
   registerCanvasesPayloadGetter: (getter: CanvasesPayloadGetter) => void
   registerAfterSaveCallback: (callback: AfterSaveCallback) => void
   registerHasUnsavedCheckGetter: (getter: HasUnsavedCheckGetter) => void
+  registerPlacedImageUrlsGetter: (getter: PlacedImageUrlsGetter) => void
+  registerGeneratedImagesGetter: (getter: GeneratedImagesGetter) => void
+  getPlacedImageUrls: PlacedImageUrlsGetter
   refreshHasUnsavedChanges: () => void
 }
 
@@ -64,6 +72,8 @@ export function CanvasSaveProvider({ children }: CanvasSaveProviderProps): JSX.E
   const payloadGetterRef = useRef<CanvasesPayloadGetter | null>(null)
   const afterSaveCallbackRef = useRef<AfterSaveCallback | null>(null)
   const hasUnsavedCheckGetterRef = useRef<HasUnsavedCheckGetter | null>(null)
+  const placedImageUrlsGetterRef = useRef<PlacedImageUrlsGetter | null>(null)
+  const generatedImagesGetterRef = useRef<GeneratedImagesGetter | null>(null)
   const unsavedRefreshTimerRef = useRef<number | null>(null)
 
   /** Saves run one at a time: two in flight could land on the server out of order. */
@@ -82,6 +92,23 @@ export function CanvasSaveProvider({ children }: CanvasSaveProviderProps): JSX.E
   const registerAfterSaveCallback = useCallback((callback: AfterSaveCallback) => {
     afterSaveCallbackRef.current = callback
   }, [])
+
+  const registerPlacedImageUrlsGetter = useCallback((getter: PlacedImageUrlsGetter) => {
+    placedImageUrlsGetterRef.current = getter
+  }, [])
+
+  const registerGeneratedImagesGetter = useCallback((getter: GeneratedImagesGetter) => {
+    generatedImagesGetterRef.current = getter
+  }, [])
+
+  const getPlacedImageUrls = useCallback((): ReadonlySet<string> | null => {
+    return placedImageUrlsGetterRef.current?.() ?? null
+  }, [])
+
+  const countUnplacedImages = useCallback((): number => {
+    const placedUrls = getPlacedImageUrls()
+    return placedUrls ? findUnplacedImages(generatedImagesGetterRef.current?.() ?? [], placedUrls).length : 0
+  }, [getPlacedImageUrls])
 
   /** Save on its own a little after the first unsaved change; later changes ride along. */
   const scheduleAutoSave = useCallback((delayMs: number = AUTO_SAVE_DELAY_MS) => {
@@ -209,10 +236,7 @@ export function CanvasSaveProvider({ children }: CanvasSaveProviderProps): JSX.E
       syncHasUnsavedChanges()
       // Manual save with nothing dirty previously returned silently — users saw no feedback.
       if (!options?.quiet && !options?.auto) {
-        toast({
-          title: 'Nothing to save',
-          description: 'All canvases are already up to date.',
-        })
+        toast(describeNothingToSave(countUnplacedImages()))
       }
       return
     }
@@ -240,7 +264,7 @@ export function CanvasSaveProvider({ children }: CanvasSaveProviderProps): JSX.E
       if (options?.auto) autoSaveFailureShownRef.current = true
       throw caught
     }
-  }, [saveCanvases, syncHasUnsavedChanges, toast])
+  }, [countUnplacedImages, saveCanvases, syncHasUnsavedChanges, toast])
 
   const saveAllCanvases = useCallback(
     (options?: SaveCanvasesOptions): Promise<void> => {
@@ -279,10 +303,14 @@ export function CanvasSaveProvider({ children }: CanvasSaveProviderProps): JSX.E
       registerCanvasesPayloadGetter,
       registerAfterSaveCallback,
       registerHasUnsavedCheckGetter,
+      registerPlacedImageUrlsGetter,
+      registerGeneratedImagesGetter,
+      getPlacedImageUrls,
       refreshHasUnsavedChanges,
     }),
     [
       error,
+      getPlacedImageUrls,
       hasUnsavedChanges,
       isSaving,
       lastSavedAt,
@@ -290,6 +318,8 @@ export function CanvasSaveProvider({ children }: CanvasSaveProviderProps): JSX.E
       registerAfterSaveCallback,
       registerCanvasesPayloadGetter,
       registerHasUnsavedCheckGetter,
+      registerGeneratedImagesGetter,
+      registerPlacedImageUrlsGetter,
       saveAllCanvases,
     ],
   )

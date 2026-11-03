@@ -100,6 +100,7 @@ class GenerateCoverSuccessResponse(BaseModel):
 
     success: Literal[True] = True
     image_url: str = Field(..., alias="imageUrl")
+    preview_url: Optional[str] = Field(default=None, alias="previewUrl")
     generation_id: str = Field(..., alias="generationId")
 
 

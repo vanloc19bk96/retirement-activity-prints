@@ -5,7 +5,9 @@ import {
   AIImageForm,
   type AICoverFormState,
 } from '@/components/panels/ai-cover-form/AIImageForm'
+import { GeneratedImagesSection } from '@/components/panels/GeneratedImagesSection'
 import { useAuthContext } from '@/context/AuthContext'
+import { useCanvasSave } from '@/context/CanvasSaveContext'
 import { useCanvasSettings } from '@/context/CanvasSettingsContext'
 import { useEditorMode } from '@/context/EditorModeContext'
 import { useAiImageDraft } from '@/hooks/use-ai-image-draft'
@@ -18,16 +20,19 @@ import {
   isUserOnProPlan,
   isUserOnStandardTierPlan,
 } from '@/utils/user-plan'
+import { addGeneratedImage, mergeGeneratedImages } from '@/utils/ai-image-history'
+import { CANVAS_LIVE_EVENT } from '@/utils/canvas-events'
+import { FABRIC_HISTORY_CHANGED_EVENT } from '@/utils/fabric-canvas-history'
 import { setImageDragData } from '@/utils/image-dnd'
-import type { AiImageSize, AiImageType, GeneratedImage } from '@/types/ai-images.types'
+import type { AiImageSize, AiImageType } from '@/types/ai-images.types'
 import type { CoverDimensions, GenerateCoverPayload } from '@/types/cover.types'
-import type { AiImageDraft } from '@/types/projects.types'
+import type { AiGeneratedImage, AiImageDraft } from '@/types/projects.types'
 
 type ImagePanelTab = 'upload' | 'ai'
-type GeneratedInteriorPreview = Pick<GeneratedImage, 'publicUrl' | 'idea'>
 
 const COVER_PRINT_DPI = 300
 const COVER_BLEED_INCHES = 0.125
+const PLACED_IMAGES_REFRESH_DEBOUNCE_MS = 400
 
 const DEFAULT_AI_COVER_FORM_STATE: AICoverFormState = {
   description: '',
@@ -56,8 +61,10 @@ export function ImagePanel(): JSX.Element {
   const [aiCoverFormState, setAiCoverFormState] = useState<AICoverFormState>(
     DEFAULT_AI_COVER_FORM_STATE,
   )
-  const [generatedInteriorImage, setGeneratedInteriorImage] = useState<GeneratedInteriorPreview | null>(null)
-  const [generatedBookCoverImageUrl, setGeneratedBookCoverImageUrl] = useState<string | null>(null)
+  const [generatedImages, setGeneratedImages] = useState<AiGeneratedImage[]>([])
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null)
+  const [placedImageUrls, setPlacedImageUrls] = useState<ReadonlySet<string> | null>(null)
+  const { getPlacedImageUrls, registerGeneratedImagesGetter } = useCanvasSave()
 
   const { isBookCoverMode: isEditingCover } = useEditorMode()
   const { bookCoverDimensions, pageDimensions } = useCanvasSettings()
@@ -93,6 +100,9 @@ export function ImagePanel(): JSX.Element {
   const isAiTabLocked = user !== null && !isStandardTierPlan
   const isBookCoverModeLocked = isUserBookCoverAiLocked(user)
 
+  const selectedImage =
+    generatedImages.find((image) => image.url === selectedImageUrl) ?? generatedImages[0] ?? null
+
   const aiImageDraft = useMemo<AiImageDraft>(
     () => ({
       isBookCoverMode,
@@ -100,18 +110,19 @@ export function ImagePanel(): JSX.Element {
       imageType: interiorImageType,
       imageSize: interiorImageSize,
       cover: aiCoverFormState,
-      generatedImageUrl: generatedInteriorImage?.publicUrl ?? null,
-      generatedImageIdea: generatedInteriorImage?.idea ?? null,
-      generatedCoverImageUrl: generatedBookCoverImageUrl,
+      generatedImages,
+      generatedImageUrl: selectedImage?.kind === 'interior' ? selectedImage.url : null,
+      generatedImageIdea: selectedImage?.kind === 'interior' ? selectedImage.idea : null,
+      generatedCoverImageUrl: selectedImage?.kind === 'cover' ? selectedImage.url : null,
     }),
     [
       aiCoverFormState,
-      generatedBookCoverImageUrl,
-      generatedInteriorImage,
+      generatedImages,
       interiorIdeaInput,
       interiorImageSize,
       interiorImageType,
       isBookCoverMode,
+      selectedImage,
     ],
   )
 
@@ -122,13 +133,34 @@ export function ImagePanel(): JSX.Element {
     setInteriorImageType(stored.imageType)
     setInteriorImageSize(stored.imageSize)
     setAiCoverFormState(stored.cover)
-    setGeneratedInteriorImage(
-      stored.generatedImageUrl
-        ? { publicUrl: stored.generatedImageUrl, idea: stored.generatedImageIdea }
-        : null,
-    )
-    setGeneratedBookCoverImageUrl(stored.generatedCoverImageUrl)
+    setGeneratedImages((current) => mergeGeneratedImages(current, stored.generatedImages))
+    setSelectedImageUrl((current) => current ?? stored.generatedCoverImageUrl ?? stored.generatedImageUrl)
   })
+
+  const generatedImagesRef = useRef(generatedImages)
+  generatedImagesRef.current = generatedImages
+  useEffect(() => {
+    registerGeneratedImagesGetter(() => generatedImagesRef.current)
+  }, [registerGeneratedImagesGetter])
+
+  // Which images are in the book changes with every edit, so this only runs while it is on screen.
+  const hasGeneratedImages = generatedImages.length > 0
+  useEffect(() => {
+    if (activeTab !== 'ai' || !hasGeneratedImages) return
+    let timer: number | null = null
+    const refresh = (): void => {
+      if (timer != null) window.clearTimeout(timer)
+      timer = window.setTimeout(() => setPlacedImageUrls(getPlacedImageUrls()), PLACED_IMAGES_REFRESH_DEBOUNCE_MS)
+    }
+    refresh()
+    window.addEventListener(CANVAS_LIVE_EVENT, refresh)
+    window.addEventListener(FABRIC_HISTORY_CHANGED_EVENT, refresh)
+    return () => {
+      if (timer != null) window.clearTimeout(timer)
+      window.removeEventListener(CANVAS_LIVE_EVENT, refresh)
+      window.removeEventListener(FABRIC_HISTORY_CHANGED_EVENT, refresh)
+    }
+  }, [activeTab, getPlacedImageUrls, hasGeneratedImages])
 
   // Working on the cover means the form makes covers; the switch still overrides it.
   const wasEditingCoverRef = useRef(isEditingCover)
@@ -159,17 +191,6 @@ export function ImagePanel(): JSX.Element {
     setImageDragData(event.dataTransfer, {
       publicUrl: image.publicUrl,
       fileName: image.fileName,
-    })
-  }
-
-  const handleGeneratedImageDragStart = (
-    event: React.DragEvent<HTMLElement>,
-    imageUrl: string,
-    fileName: string | null,
-  ): void => {
-    setImageDragData(event.dataTransfer, {
-      publicUrl: imageUrl,
-      fileName,
     })
   }
 
@@ -226,8 +247,17 @@ export function ImagePanel(): JSX.Element {
         pageWidthInches: pageDimensions.widthInches,
         pageHeightInches: pageDimensions.heightInches,
       })
-      setGeneratedInteriorImage(result.images[0] ?? null)
-      setGeneratedBookCoverImageUrl(null)
+      const image = result.images[0]
+      if (!image) return
+      setGeneratedImages((current) =>
+        addGeneratedImage(current, {
+          url: image.publicUrl,
+          previewUrl: image.previewUrl,
+          idea: image.idea ?? null,
+          kind: 'interior',
+        }),
+      )
+      setSelectedImageUrl(image.publicUrl)
     } catch {
       // hook already sets a human-readable error message
     }
@@ -240,15 +270,23 @@ export function ImagePanel(): JSX.Element {
     resetGenerateError()
     try {
       const result = await generateCover(payload)
-      setGeneratedBookCoverImageUrl(result.imageUrl)
-      setGeneratedInteriorImage(null)
+      setGeneratedImages((current) =>
+        addGeneratedImage(current, {
+          url: result.imageUrl,
+          previewUrl: result.previewUrl,
+          idea: payload.description,
+          kind: 'cover',
+        }),
+      )
+      setSelectedImageUrl(result.imageUrl)
     } catch {
       // hook already sets a human-readable error message
     }
   }
 
   const isAiGenerating = isGeneratingInterior || isGeneratingCover
-  const aiGenerateError = isBookCoverMode ? coverGenerateError : generateError
+  // A failure stays visible even if the form switched mode meanwhile (entering the cover does that).
+  const aiGenerateError = coverGenerateError ?? generateError
 
   return (
     <div className="flex h-full flex-col">
@@ -382,72 +420,14 @@ export function ImagePanel(): JSX.Element {
               onGenerateCover={handleGenerateBookCover}
             />
 
-            {generatedInteriorImage && (
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-foreground">Generated image</p>
-                <div className="overflow-hidden rounded-md border border-border bg-muted">
-                  <button
-                    type="button"
-                    draggable
-                    onDragStart={(event) =>
-                      handleGeneratedImageDragStart(
-                        event,
-                        generatedInteriorImage.publicUrl,
-                        generatedInteriorImage.idea ? `${generatedInteriorImage.idea}.png` : null,
-                      )
-                    }
-                    className="flex h-40 w-full cursor-grab items-center justify-center overflow-hidden bg-foreground/5 active:cursor-grabbing"
-                    title="Drag onto the canvas to place it"
-                    aria-label="Drag generated image onto the canvas"
-                  >
-                    <img
-                      src={generatedInteriorImage.publicUrl}
-                      alt={generatedInteriorImage.idea ?? 'Generated image'}
-                      className="max-h-full max-w-full pointer-events-none object-contain"
-                      draggable={false}
-                    />
-                  </button>
-                  {generatedInteriorImage.idea && (
-                    <p className="truncate px-2 py-1 text-center text-[11px] text-muted-foreground">
-                      {generatedInteriorImage.idea}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {generatedBookCoverImageUrl && (
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-foreground">Generated cover background</p>
-                <p className="text-[11px] leading-relaxed text-muted-foreground">
-                  Drag it onto the cover. You can add or change the title, subtitle and author at
-                  any time from Front in the bar on the right of the Book Cover view.
-                </p>
-                <div className="overflow-hidden rounded-md border border-border bg-muted">
-                  <button
-                    type="button"
-                    draggable
-                    onDragStart={(event) =>
-                      handleGeneratedImageDragStart(
-                        event,
-                        generatedBookCoverImageUrl,
-                        'book-cover-generated.png',
-                      )
-                    }
-                    className="flex h-56 w-full cursor-grab items-center justify-center overflow-hidden bg-foreground/5 active:cursor-grabbing"
-                    title="Drag onto the canvas to place it"
-                    aria-label="Drag generated book cover onto the canvas"
-                  >
-                    <img
-                      src={generatedBookCoverImageUrl}
-                      alt="Generated book cover background"
-                      className="max-h-full max-w-full pointer-events-none object-contain"
-                      draggable={false}
-                    />
-                  </button>
-                </div>
-              </div>
-            )}
+            <GeneratedImagesSection
+              images={generatedImages}
+              selectedImage={selectedImage}
+              placedUrls={placedImageUrls}
+              isEditingCover={isEditingCover}
+              isGenerating={isAiGenerating}
+              onSelectImage={setSelectedImageUrl}
+            />
           </div>
         )}
       </div>

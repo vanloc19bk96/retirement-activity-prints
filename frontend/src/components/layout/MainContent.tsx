@@ -11,6 +11,8 @@ import {
 } from './DeletePageDialogHost'
 import { ResetInteriorDialog } from './ResetInteriorDialog'
 import { useCanvasEditor } from '@/hooks/canvas-editor/use-canvas-editor'
+import { usePlaceGeneratedImage } from '@/hooks/canvas-editor/use-place-generated-image'
+import { collectPlacedImageUrls } from '@/utils/ai-image-history'
 import { useCanvasSettings } from '@/context/CanvasSettingsContext'
 import { EditorScrollRootProvider } from '@/context/EditorScrollContext'
 import { resizeStoredInteriorCanvasesForPageDimensions } from '@/utils/resize-stored-interior-canvases-for-page-dimensions'
@@ -324,7 +326,6 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
   const thumbnailRequestActiveCountRef = useRef(0)
   const thumbnailQueueGenerationRef = useRef(0)
   const editor = useCanvasEditor({
-    fitDroppedImagesToPage: settings.fitDroppedImagesToPage,
     bookCoverZones,
     bookCoverDimensions,
   })
@@ -349,6 +350,7 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
     registerCanvasesPayloadGetter,
     registerAfterSaveCallback,
     registerHasUnsavedCheckGetter,
+    registerPlacedImageUrlsGetter,
     refreshHasUnsavedChanges,
     saveCanvases,
   } = useCanvasSave()
@@ -1026,6 +1028,41 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
   useEffect(() => {
     registerHasUnsavedCheckGetter(checkHasUnsavedChanges)
   }, [checkHasUnsavedChanges, registerHasUnsavedCheckGetter])
+
+  const getPlacedImageUrls = useCallback((): ReadonlySet<string> | null => {
+    if (canvasesLoadStateRef.current !== 'loaded') return null
+    const urls = new Set<string>()
+    for (let canvasIndex = -1; canvasIndex < settings.pageCount; canvasIndex += 1) {
+      const live = canvasStateStore.isFabricLiveTrusted(canvasIndex)
+        ? editor.exportCanvasDataByIndex(canvasIndex)
+        : null
+      collectPlacedImageUrls(live ?? canvasStateStore.getSerialized(canvasIndex), urls)
+    }
+    return urls
+  }, [canvasStateStore, editor.exportCanvasDataByIndex, settings.pageCount])
+
+  useEffect(() => {
+    registerPlacedImageUrlsGetter(getPlacedImageUrls)
+  }, [getPlacedImageUrls, registerPlacedImageUrlsGetter])
+
+  const handleGeneratedImagePlaced = useCallback(
+    (canvasIndex: number): void => {
+      handleActiveCanvasChange(canvasIndex)
+      dispatchCanvasThumbnailInvalidated(canvasIndex)
+      refreshHasUnsavedChanges()
+    },
+    [handleActiveCanvasChange, refreshHasUnsavedChanges],
+  )
+
+  usePlaceGeneratedImage({
+    canvasStateStore,
+    getCanvas: editor.getCanvasByIndex,
+    isInteriorMode,
+    activePageIndex,
+    bookCoverZones,
+    bookCoverDimensions,
+    onPlaced: handleGeneratedImagePlaced,
+  })
 
   useEffect(() => {
     if (isCanvasesLoading || isProjectSettingsLoading) return

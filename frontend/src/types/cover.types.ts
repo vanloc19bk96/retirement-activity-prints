@@ -39,6 +39,7 @@ export type GenerateCoverPayload = {
 
 export type GenerateCoverResult = {
   imageUrl: string
+  previewUrl: string | null
   generationId: string
 }
 

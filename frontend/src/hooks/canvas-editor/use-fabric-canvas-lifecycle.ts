@@ -236,7 +236,10 @@ export function useFabricCanvasLifecycle({
       canvasBackgroundColor,
       currentZoom,
     )
-    const detachPasteboard = installCanvasPasteboard(canvas, mount.parentElement)
+    const detachPasteboard = installCanvasPasteboard(canvas, mount.parentElement, {
+      width: baseWidth,
+      height: baseHeight,
+    })
 
     fabricCanvasRef.current = canvas
     setFabricSurfaceEpoch((n) => n + 1)

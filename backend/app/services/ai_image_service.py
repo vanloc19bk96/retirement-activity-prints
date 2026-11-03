@@ -26,6 +26,7 @@ from app.services.book_cover_aspect_ratio_mapper import (
     map_cover_ratio_to_aspect_ratio,
 )
 from app.services.book_cover_image_resizer import fit_image_bytes_to_size, resize_image_bytes_exact
+from app.services.generated_image_preview import upload_generated_image_preview
 from app.services.openai_image_provider import (
     generate_batch_raw_image_bytes,
     generate_raw_image_bytes,
@@ -403,7 +404,7 @@ class AiImageService:
         image_bytes: bytes,
         content_type: str,
         user_id: str,
-    ) -> dict[str, str]:
+    ) -> dict[str, str | None]:
         ct = self._resolve_upload_content_type(image_bytes=image_bytes, content_type=content_type)
         uploaded = upload_user_image_bytes(
             image_bytes=image_bytes,
@@ -412,6 +413,7 @@ class AiImageService:
         )
         return {
             "public_url": uploaded.public_url,
+            "preview_url": upload_generated_image_preview(image_bytes=image_bytes, user_id=user_id),
             "bucket": uploaded.bucket,
             "path": uploaded.path,
         }
@@ -544,7 +546,7 @@ class AiImageService:
             print_size=print_size,
         )
 
-        images: list[dict[str, str]] = []
+        images: list[dict[str, str | None]] = []
         for idea_label, raw_bytes, content_type in generation_results:
             images.append(
                 {

@@ -43,6 +43,8 @@ export const coverApi = {
       success: boolean
       imageUrl?: string
       image_url?: string
+      previewUrl?: string | null
+      preview_url?: string | null
       generationId?: string
       generation_id?: string
     }
@@ -51,6 +53,6 @@ export const coverApi = {
     if (!imageUrl || !generationId) {
       throw new Error('Invalid cover generation response')
     }
-    return { imageUrl, generationId }
+    return { imageUrl, previewUrl: body.previewUrl ?? body.preview_url ?? null, generationId }
   },
 }

@@ -98,7 +98,7 @@ export function clampCoverImagePosition(target: unknown): void {
   if (minTop <= maxTop) obj.top = clamp(obj.top, minTop, maxTop)
 }
 
-async function loadImageOrSvgObject(src: string): Promise<FabricObject | null> {
+export async function loadImageOrSvgObject(src: string): Promise<FabricObject | null> {
   if (isSvgImageSrc(src)) {
     return loadSvgAsFabricObject(src)
   }
@@ -121,9 +121,61 @@ export async function addImageToFabricCanvasAtClientPoint(
   const img = await loadImageOrSvgObject(src)
   if (!img) return
 
+  addLoadedImageToCanvas(canvas, img, src, pointer, options.fitMode ?? 'default', options.placementZone)
+}
+
+function isTextObject(object: FabricObject): boolean {
+  return object.isType('text', 'i-text', 'textbox')
+}
+
+function overlapsZone(object: FabricObject, zone: ImagePlacementZone): boolean {
+  const box = object.getBoundingRect()
+  return (
+    box.left < zone.x + zone.width &&
+    box.left + box.width > zone.x &&
+    box.top < zone.y + zone.height &&
+    box.top + box.height > zone.y
+  )
+}
+
+/** Above the zone's art, so the new image shows, and below the text on top of it, so a title stays readable. */
+function moveImageBelowZoneText(canvas: Canvas, img: FabricObject, zone: ImagePlacementZone): void {
+  let index = 0
+  canvas.getObjects().forEach((object, objectIndex) => {
+    if (object !== img && !isTextObject(object) && overlapsZone(object, zone)) index = objectIndex + 1
+  })
+  canvas.moveObjectTo(img, index)
+}
+
+/**
+ * Put an already loaded image on `canvas` from the panel's Place buttons: filling `zone` on a cover,
+ * or at the centre of a page. Returns false when the image has no usable size.
+ */
+export function placeLoadedImageOnCanvas(
+  canvas: Canvas,
+  img: FabricObject,
+  src: string,
+  zone?: ImagePlacementZone,
+): boolean {
+  const page = getCanvasPageLogicalSize(canvas)
+  const center = zone
+    ? { x: zone.x + zone.width / 2, y: zone.y + zone.height / 2 }
+    : { x: page.width / 2, y: page.height / 2 }
+  if (!addLoadedImageToCanvas(canvas, img, src, center, zone ? 'cover' : 'default', zone)) return false
+  if (zone) moveImageBelowZoneText(canvas, img, zone)
+  canvas.requestRenderAll()
+  return true
+}
+
+function addLoadedImageToCanvas(
+  canvas: Canvas,
+  img: FabricObject,
+  src: string,
+  pointer: { x: number; y: number },
+  fitMode: ImageFitMode,
+  zone?: ImagePlacementZone,
+): boolean {
   const { width: baseWidth, height: baseHeight } = getCanvasPageLogicalSize(canvas)
-  const fitMode = options.fitMode ?? 'default'
-  const zone = options.placementZone
   const targetWidth = zone?.width ?? baseWidth
   const targetHeight = zone?.height ?? baseHeight
 
@@ -134,7 +186,7 @@ export async function addImageToFabricCanvasAtClientPoint(
     imageHeight: img.height ?? 0,
     fitMode,
   })
-  if (size.width <= 0 || size.height <= 0) return
+  if (size.width <= 0 || size.height <= 0) return false
 
   img.set({
     originX: 'center',
@@ -156,7 +208,7 @@ export async function addImageToFabricCanvasAtClientPoint(
     canvas.bringObjectToFront(img)
     canvas.setActiveObject(img)
     canvas.requestRenderAll()
-    return
+    return true
   }
 
   img.scaleToWidth(size.width)
@@ -198,5 +250,6 @@ export async function addImageToFabricCanvasAtClientPoint(
   canvas.bringObjectToFront(img)
   canvas.setActiveObject(img)
   canvas.requestRenderAll()
+  return true
 }
 

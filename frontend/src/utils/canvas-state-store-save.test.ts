@@ -2,11 +2,34 @@
  * @vitest-environment jsdom
  */
 import { describe, expect, it } from 'vitest'
-import { Rect, StaticCanvas, type Canvas } from 'fabric'
+import { Canvas as FabricCanvas, Rect, StaticCanvas, Textbox, type Canvas } from 'fabric'
 
 import { CanvasStateStore, exportLiveFabricCanvasJson, prepareCanvasJsonForPersistence } from './canvas-state-store'
+import {
+  CANVAS_PASTEBOARD_PADDING_PX,
+  getPasteboardCanvasDimensions,
+  getPasteboardViewportTransform,
+  installCanvasPasteboard,
+} from './fabric-canvas-pasteboard'
 
 const SIZE = { width: 600, height: 900 }
+const COVER_SIZE = { width: 3827, height: 2775 }
+
+function mountCover(zoom: number): Canvas {
+  const canvas = new FabricCanvas(
+    document.createElement('canvas'),
+    getPasteboardCanvasDimensions(COVER_SIZE.width, COVER_SIZE.height, zoom),
+  )
+  canvas.setViewportTransform(getPasteboardViewportTransform(zoom))
+  installCanvasPasteboard(canvas, null, COVER_SIZE)
+  return canvas
+}
+
+/** What the zoom control does to a mounted canvas. */
+function zoomTo(canvas: Canvas, zoom: number): void {
+  canvas.setDimensions(getPasteboardCanvasDimensions(COVER_SIZE.width, COVER_SIZE.height, zoom))
+  canvas.setViewportTransform(getPasteboardViewportTransform(zoom, CANVAS_PASTEBOARD_PADDING_PX))
+}
 
 function pageWithRectAt(left: number): object {
   const canvas = new StaticCanvas(document.createElement('canvas'), {
@@ -72,5 +95,46 @@ describe('canvas state store saving', () => {
     store.reorderPagesSerialized([1, 0])
     expect(isStoredPageDirty(store, 0)).toBe(true)
     expect(isStoredPageDirty(store, 1)).toBe(true)
+  })
+
+  it('keeps a loaded cover clean when only the zoom changes', async () => {
+    const source = new StaticCanvas(document.createElement('canvas'), {
+      ...COVER_SIZE,
+      renderOnAddRemove: false,
+    }) as unknown as Canvas
+    source.add(new Rect({ left: 20, top: 10, width: 50, height: 40, fill: '#123456' }))
+    source.add(new Textbox('Title', { left: 40, top: 80, width: 300, fontSize: 40 }))
+
+    const store = new CanvasStateStore()
+    store.preload(-1, exportLiveFabricCanvasJson(source))
+    store.markHydrated(-1, prepareCanvasJsonForPersistence(store.getSerialized(-1)!))
+
+    const cover = mountCover(0.37)
+    expect(await store.restore(-1, cover)).toBe('restored')
+    store.markFabricLiveTrusted(-1)
+    store.reconcileFabricBaselineIfPending(-1, cover)
+    expect(store.isDirty(-1, exportLiveFabricCanvasJson(cover))).toBe(false)
+
+    for (const zoom of [0.41, 0.53, 0.77, 1.13]) {
+      zoomTo(cover, zoom)
+      expect(store.isDirty(-1, exportLiveFabricCanvasJson(cover))).toBe(false)
+    }
+    cover.dispose()
+  })
+
+  it('still counts a real edit on a cover after zooming', async () => {
+    const store = new CanvasStateStore()
+    store.preload(-1, pageWithRectAt(20))
+    store.markHydrated(-1, prepareCanvasJsonForPersistence(store.getSerialized(-1)!))
+
+    const cover = mountCover(0.37)
+    await store.restore(-1, cover)
+    store.markFabricLiveTrusted(-1)
+    store.reconcileFabricBaselineIfPending(-1, cover)
+
+    zoomTo(cover, 0.53)
+    cover.add(new Rect({ left: 70, top: 10, width: 50, height: 40 }))
+    expect(store.isDirty(-1, exportLiveFabricCanvasJson(cover))).toBe(true)
+    cover.dispose()
   })
 })

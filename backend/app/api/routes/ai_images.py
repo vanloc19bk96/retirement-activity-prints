@@ -49,6 +49,7 @@ def _map_result_to_response(result: dict[str, Any]) -> GenerateImagesResponse:
             GeneratedImageItem(
                 idea=item.get("idea"),
                 public_url=item["public_url"],
+                preview_url=item.get("preview_url"),
                 bucket=item["bucket"],
                 path=item["path"],
             )
