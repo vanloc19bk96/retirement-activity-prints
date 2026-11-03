@@ -1,4 +1,5 @@
 import { beginDndDragCursor } from '@/utils/dnd-cursor'
+import { storageApi } from '@/api/storage.api'
 
 export type DroppedImagePayload = {
   publicUrl: string
@@ -63,7 +64,21 @@ export function getDroppedImageUrl(dataTransfer: DataTransfer): string | null {
   return null
 }
 
-/** Read a dropped local image/SVG into a URL Fabric can load (object URL or data-URI). */
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => (typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Unreadable file')))
+    reader.onerror = () => reject(reader.error ?? new Error('Unreadable file'))
+    reader.readAsDataURL(file)
+  })
+}
+
+/**
+ * Read a dropped local image/SVG into a URL Fabric can load that still works after a reload: the
+ * page saves the URL. A bitmap is uploaded like one added from the Images panel (a `blob:` URL
+ * dies with the tab and would leave the saved page with a broken picture); if the upload fails it
+ * is kept inline as a data URI.
+ */
 export async function readDroppedImageFileAsUrl(file: File): Promise<string> {
   if (file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg')) {
     const svgText = await file.text()
@@ -73,7 +88,13 @@ export async function readDroppedImageFileAsUrl(file: File): Promise<string> {
         : Buffer.from(svgText, 'utf8').toString('base64')
     return `data:image/svg+xml;charset=utf-8;base64,${encoded}`
   }
-  return URL.createObjectURL(file)
+  try {
+    const uploaded = await storageApi.uploadImage(file)
+    if (uploaded.publicUrl) return uploaded.publicUrl
+  } catch {
+    // Offline or refused: the picture still goes on the page.
+  }
+  return readFileAsDataUrl(file)
 }
 
 export function getDroppedImagePayload(dataTransfer: DataTransfer): DroppedImagePayload | null {

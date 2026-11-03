@@ -126,6 +126,8 @@ export function useFabricCanvasDropHandlers({
       resetDropTarget()
       const fabricCanvas = fabricCanvasRef.current
       if (!fabricCanvas) return
+      /** The page can scroll away (and its canvas be saved and disposed) while a drop uploads. */
+      const isCanvasStillMounted = (): boolean => fabricCanvasRef.current === fabricCanvas
 
       exitActiveFabricTextEditing(fabricCanvas)
 
@@ -229,7 +231,7 @@ export function useFabricCanvasDropHandlers({
       const url = droppedFile
         ? await readDroppedImageFileAsUrl(droppedFile)
         : getDroppedImageUrl(event.dataTransfer)
-      if (url) {
+      if (url && isCanvasStillMounted()) {
         try {
           const pointer = fabricCanvas.getScenePoint({
             clientX: event.clientX,

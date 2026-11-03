@@ -13,6 +13,7 @@ import { getHubUrl } from '@/services/auth.service'
 import { isProPlan, isStarterPlan, normalizeUserPlan } from '@/utils/user-plan'
 import { HeaderDialogActions } from './header-dialog-actions'
 import { HeaderProjectTitle } from './HeaderProjectTitle'
+import { HeaderSaveStatus } from './HeaderSaveStatus'
 import { UserMenu } from './UserMenu'
 
 const STARTER_URL = import.meta.env.VITE_STARTER_URL || DEFAULT_STARTER_URL
@@ -78,20 +79,23 @@ function HeaderComponent(): JSX.Element {
   return (
     <header className="app-header px-4 py-3 sm:px-6">
       <div className="flex min-h-10 flex-wrap items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <span
-            className="app-logo-mark flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-md ring-1 ring-white/25"
-            aria-hidden
-          >
-            <Shapes className="h-4 w-4 text-white" />
-          </span>
-          <HeaderProjectTitle
-            appName="Retirement Activity Prints"
-            project={project}
-            projectsUrl={project ? hubProjectsUrl() : null}
-            isBlueHeaderSurface={isBlueHeaderSurface}
-            onRename={rename}
-          />
+        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span
+              className="app-logo-mark flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-md ring-1 ring-white/25"
+              aria-hidden
+            >
+              <Shapes className="h-4 w-4 text-white" />
+            </span>
+            <HeaderProjectTitle
+              appName="Retirement Activity Prints"
+              project={project}
+              projectsUrl={project ? hubProjectsUrl() : null}
+              isBlueHeaderSurface={isBlueHeaderSurface}
+              onRename={rename}
+            />
+          </div>
+          <HeaderSaveStatus isOnBlueHeader={isBlueHeaderSurface} />
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">

@@ -24,7 +24,9 @@ import {
 } from '@/utils/canvas-state-store'
 import { ensureFontFamilyLoaded } from '@/utils/font-loader'
 import { CANVAS_LIVE_EVENT, COVER_CANVAS_RESIZED_EVENT } from '@/utils/canvas-events'
-import { useCanvasSave } from '@/context/CanvasSaveContext'
+import { CanvasPayloadUnavailableError, useCanvasSave } from '@/context/CanvasSaveContext'
+import { getFabricCanvasHistoryManager } from '@/utils/fabric-canvas-history'
+import type { SaveCanvasesRequest } from '@/types/canvases.types'
 import { useCanvasPenTool } from '@/context/CanvasPenToolContext'
 import { useCanvasExport } from '@/context/CanvasExportContext'
 import { createCanvasExportSource } from '@/utils/canvas-export-source'
@@ -347,6 +349,13 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
   const [isCanvasesLoading, setIsCanvasesLoading] = useState(true)
   const [isCanvasHydrationSettled, setIsCanvasHydrationSettled] = useState(false)
   const [canvasLoadCycle, setCanvasLoadCycle] = useState(0)
+  /** Interior page count the server holds; a different count is an unsaved change by itself. */
+  const savedInteriorPageCountRef = useRef<number | null>(null)
+  /**
+   * Whether the project's canvases came from the server. Until they have, the pages on screen are
+   * blank placeholders, and saving them would overwrite the book (and drop its other pages).
+   */
+  const canvasesLoadStateRef = useRef<'loading' | 'loaded' | 'failed'>('loading')
 
   const isStarterPlanLocked = isUserOnStarterPlan(user)
   const interiorPageWidth = pageDimensions.widthPixels
@@ -841,9 +850,28 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
     }
   }, [syncActiveCanvasToVisiblePage])
 
-  const exportCanvasesPayload = useCallback(() => {
+  const exportCanvasesPayload = useCallback((): SaveCanvasesRequest => {
+    if (canvasesLoadStateRef.current === 'loading') {
+      throw new CanvasPayloadUnavailableError('The project is still loading. Try again in a moment.')
+    }
+    if (canvasesLoadStateRef.current === 'failed') {
+      throw new CanvasPayloadUnavailableError(
+        'The project did not load, so saving now would overwrite it. Reload the page to load it again.',
+      )
+    }
     const pageCount = settings.pageCount
-    if (pageCount < 1) throw new Error('No pages to save')
+    if (pageCount < 1) throw new CanvasPayloadUnavailableError('No pages to save')
+
+    const readPageJson = (canvasIndex: number): object | null => {
+      // An undo is loading its step: the canvas holds part of the page.
+      if (
+        canvasStateStore.isFabricLiveTrusted(canvasIndex) &&
+        getFabricCanvasHistoryManager(editor.getCanvasByIndex(canvasIndex))?.isApplyingSnapshot()
+      ) {
+        throw new CanvasPayloadUnavailableError('An undo is still being applied. Try again in a moment.')
+      }
+      return getCanvasJsonForPersistence(canvasIndex)
+    }
 
     const canvases: Array<{
       page_index: number
@@ -854,7 +882,7 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
     const snapshotCanvasJsons: unknown[] = []
 
     for (let pageIndex = 0; pageIndex < pageCount; pageIndex += 1) {
-      const canvasData = getCanvasJsonForPersistence(pageIndex)
+      const canvasData = readPageJson(pageIndex)
 
       if (!canvasData) {
         throw new Error(`Interior canvas not ready (page_index=${pageIndex})`)
@@ -872,7 +900,7 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
     }
 
     // Book cover canvas: Fabric uses `canvasIndex=-1` and we store it as `page_index=0`.
-    const effectiveCoverCanvasData = getCanvasJsonForPersistence(-1)
+    const effectiveCoverCanvasData = readPageJson(-1)
 
     if (!effectiveCoverCanvasData) throw new Error('Book cover canvas not ready')
 
@@ -894,7 +922,7 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
       interior_page_count: settings.pageCount,
       referenced_supabase_image_public_urls,
     }
-  }, [canvasStateStore, getCanvasJsonForPersistence, settings.pageCount])
+  }, [canvasStateStore, editor.getCanvasByIndex, getCanvasJsonForPersistence, settings.pageCount])
 
   useEffect(() => {
     registerCanvasesPayloadGetter(exportCanvasesPayload)
@@ -915,8 +943,8 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
         })
       } catch {
         toast({
-          title: 'New project created (unsaved)',
-          description: 'Cover and all pages were cleared. Click Save in the sidebar to persist.',
+          title: 'New project created (not saved yet)',
+          description: 'Cover and all pages were cleared. Auto-save keeps trying, or click Save in the sidebar.',
         })
       }
     })()
@@ -938,17 +966,25 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
     if (isCanvasesLoading || isProjectSettingsLoading || !isCanvasHydrationSettled) {
       return false
     }
-
-    try {
-      return exportCanvasesPayload().canvases.length > 0
-    } catch {
-      return false
+    if (savedInteriorPageCountRef.current !== null && savedInteriorPageCountRef.current !== settings.pageCount) {
+      return true
     }
+
+    const isPageDirty = (canvasIndex: number): boolean => {
+      const canvasData = getCanvasJsonForPersistence(canvasIndex)
+      return canvasData !== null && canvasStateStore.isDirty(canvasIndex, canvasData)
+    }
+    for (let pageIndex = 0; pageIndex < settings.pageCount; pageIndex += 1) {
+      if (isPageDirty(pageIndex)) return true
+    }
+    return isPageDirty(-1)
   }, [
-    exportCanvasesPayload,
+    canvasStateStore,
+    getCanvasJsonForPersistence,
     isCanvasesLoading,
     isCanvasHydrationSettled,
     isProjectSettingsLoading,
+    settings.pageCount,
   ])
 
   useEffect(() => {
@@ -1059,17 +1095,13 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
   }, [getCanvasJsonForPersistence, registerExportSourceFactory, settings.pageCount])
 
   useEffect(() => {
-    const handleAfterSave = (): void => {
-      for (let pageIndex = 0; pageIndex < settings.pageCount; pageIndex += 1) {
-        const canvasData = getCanvasJsonForPersistence(pageIndex)
-        if (canvasData) {
-          canvasStateStore.markSavedAndTrackFabricReconcile(pageIndex, canvasData)
-        }
-      }
-
-      const coverData = getCanvasJsonForPersistence(-1)
-      if (coverData) {
-        canvasStateStore.markSavedAndTrackFabricReconcile(-1, coverData)
+    // Only what was sent is saved: edits made while the request was in flight stay unsaved.
+    const handleAfterSave = (savedPayload: SaveCanvasesRequest): void => {
+      savedInteriorPageCountRef.current = savedPayload.interior_page_count
+      for (const item of savedPayload.canvases) {
+        const canvasIndex = item.canvas_type === 'cover' ? -1 : item.page_index
+        if (canvasIndex >= settings.pageCount) continue
+        canvasStateStore.markSavedIfUnchanged(canvasIndex, item.canvas_data, getCanvasJsonForPersistence(canvasIndex))
       }
     }
 
@@ -1090,6 +1122,7 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
       setIsCanvasesLoading(true)
       setIsCanvasHydrationSettled(false)
       setCanvasLoadCycle((cycle) => cycle + 1)
+      canvasesLoadStateRef.current = 'loading'
 
       try {
         const result = await canvasesApi.getCanvases()
@@ -1110,18 +1143,27 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
           Array.from({ length: interiorPageCount }, () => createInteriorPageSlotKey()),
         )
 
+        const pageSize = { width: pageDimensions.widthPixels, height: pageDimensions.heightPixels }
         for (const canvas of interiorCanvases) {
-          canvasStateStore.preload(canvas.page_index, canvas.canvas_data, {
-            width: pageDimensions.widthPixels,
-            height: pageDimensions.heightPixels,
-          })
+          canvasStateStore.preload(canvas.page_index, canvas.canvas_data, pageSize)
         }
+        // A page index the server has no row for is blank; give it a snapshot so it can save
+        // before it is ever scrolled into view.
+        for (let pageIndex = 0; pageIndex < interiorPageCount; pageIndex += 1) {
+          if (!canvasStateStore.has(pageIndex)) {
+            canvasStateStore.preload(pageIndex, EMPTY_FABRIC_CANVAS_SNAPSHOT, pageSize)
+          }
+        }
+        savedInteriorPageCountRef.current = interiorPageCount
 
         const coverCanvas = result.canvases.find((c) => c.canvas_type === 'cover')
         if (coverCanvas) {
           canvasStateStore.preload(-1, coverCanvas.canvas_data)
         }
+        canvasesLoadStateRef.current = 'loaded'
       } catch (caught) {
+        if (cancelled) return
+        canvasesLoadStateRef.current = 'failed'
         const message = caught instanceof Error ? caught.message : 'Failed to load canvases'
         toast({
           title: 'Load failed',
@@ -1637,6 +1679,12 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
     }
   }, [canvasStateStore, syncEditorInteriorCanvasesToStore])
 
+  // Pages added, removed or moved are unsaved changes too: let the auto-save pick them up.
+  useEffect(() => {
+    if (isCanvasesLoading) return
+    refreshHasUnsavedChanges()
+  }, [interiorPageSlotKeys, isCanvasesLoading, refreshHasUnsavedChanges])
+
   const handleClearCoverCanvasOnly = useCallback((): void => {
     shouldResumeStoreSaveRef.current = true
     canvasStateStore.suspendSave()
@@ -1666,8 +1714,8 @@ export const MainContent = memo(function MainContent({ canvasStateStore }: MainC
     setPageCount(1)
 
     toast({
-      title: 'Removed Successfully (unsaved)',
-      description: 'Click Save in the sidebar to persist',
+      title: 'Removed Successfully',
+      description: 'Auto-save stores the change in a few seconds.',
     })
   }, [
     canvasStateStore,

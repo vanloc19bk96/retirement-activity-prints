@@ -374,6 +374,30 @@ export class CanvasStateStore {
     }
   }
 
+  /**
+   * After the server stored `savedJson` for `index`. A page that still holds it is clean again;
+   * a page edited while the save was in flight only has its baseline moved, so the edits stay
+   * unsaved and go with the next save.
+   */
+  markSavedIfUnchanged(index: number, savedJson: object, currentJson: object | null): void {
+    const savedKey = this.serializeForComparison(savedJson)
+    if (currentJson && this.serializeForComparison(currentJson) === savedKey) {
+      this.markSavedAndTrackFabricReconcile(index, currentJson)
+      return
+    }
+    if (this.isFabricLiveTrusted(index)) {
+      this.baselineSerialized.set(index, savedKey)
+      return
+    }
+    const authoringSize = this.getAuthoringLogicalSize(index)
+    const prepared = prepareCanvasJsonForPersistence(savedJson)
+    const normalized =
+      authoringSize != null
+        ? normalizeFabricCanvasJsonToLogicalSize(prepared, authoringSize)
+        : prepared
+    this.baselineSerialized.set(index, this.baselineFromStoredSnapshot(normalized))
+  }
+
   save(index: number, canvas: Canvas): void {
     if (this.saveSuspensionDepth > 0) return
     if (!this.isFabricLiveTrusted(index)) return

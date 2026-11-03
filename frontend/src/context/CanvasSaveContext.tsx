@@ -5,18 +5,34 @@ import { useToast } from '@/hooks/use-toast'
 import { useCanvasSaves } from '@/hooks/use-canvas-saves'
 import type { SaveCanvasesRequest } from '@/types/canvases.types'
 import { CANVAS_LIVE_EVENT } from '@/utils/canvas-events'
+import { FABRIC_HISTORY_CHANGED_EVENT } from '@/utils/fabric-canvas-history'
 
 const SKIP_UNSAVED_WARNING_ONCE_KEY = 'skip_unsaved_warning_once'
 
 type CanvasesPayloadGetter = () => SaveCanvasesRequest
-type AfterSaveCallback = () => void
+/** Gets the payload the server just stored, which may be older than what the editor now shows. */
+type AfterSaveCallback = (savedPayload: SaveCanvasesRequest) => void
 type HasUnsavedCheckGetter = () => boolean
 
 const UNSAVED_REFRESH_DEBOUNCE_MS = 150
+/** An unsaved change is saved this long after it was made, even while the user keeps editing. */
+const AUTO_SAVE_DELAY_MS = 4000
+/** After a failed auto-save, wait this long before trying again. */
+const AUTO_SAVE_RETRY_MS = 30000
+/** An auto-save that found nothing it may save yet (a project still loading, an undo landing) retries sooner. */
+const AUTO_SAVE_NOT_READY_RETRY_MS = AUTO_SAVE_DELAY_MS
+
+/** Thrown by a payload getter when there is nothing it may save (no pages, project not loaded). */
+export class CanvasPayloadUnavailableError extends Error {}
 
 interface SaveCanvasesOptions {
   /** Skip success toast (e.g. auto-save after settings apply). Errors still toast. */
   quiet?: boolean
+  /**
+   * An auto-save: quiet, silent while the project cannot be saved yet (still loading, a page
+   * mid-restore), and a failed save toasts once until a save succeeds again.
+   */
+  auto?: boolean
   /** POST even when no canvas is dirty (e.g. persist page-count prune after new project). */
   persistIfClean?: boolean
 }
@@ -50,8 +66,14 @@ export function CanvasSaveProvider({ children }: CanvasSaveProviderProps): JSX.E
   const hasUnsavedCheckGetterRef = useRef<HasUnsavedCheckGetter | null>(null)
   const unsavedRefreshTimerRef = useRef<number | null>(null)
 
-  const isSavingRef = useRef(isSaving)
-  isSavingRef.current = isSaving
+  /** Saves run one at a time: two in flight could land on the server out of order. */
+  const saveChainRef = useRef<Promise<void>>(Promise.resolve())
+  const pendingSaveCountRef = useRef(0)
+  const autoSaveTimerRef = useRef<number | null>(null)
+  /** The last auto-save failed and told the user; the next failures stay quiet until one succeeds. */
+  const autoSaveFailureShownRef = useRef(false)
+  /** Set once the save function exists; the timer calls it through this ref. */
+  const autoSaveRef = useRef<() => void>(() => undefined)
 
   const registerCanvasesPayloadGetter = useCallback((getter: CanvasesPayloadGetter) => {
     payloadGetterRef.current = getter
@@ -61,6 +83,15 @@ export function CanvasSaveProvider({ children }: CanvasSaveProviderProps): JSX.E
     afterSaveCallbackRef.current = callback
   }, [])
 
+  /** Save on its own a little after the first unsaved change; later changes ride along. */
+  const scheduleAutoSave = useCallback((delayMs: number = AUTO_SAVE_DELAY_MS) => {
+    if (autoSaveTimerRef.current != null) return
+    autoSaveTimerRef.current = window.setTimeout(() => {
+      autoSaveTimerRef.current = null
+      autoSaveRef.current()
+    }, delayMs)
+  }, [])
+
   const syncHasUnsavedChanges = useCallback(() => {
     const getter = hasUnsavedCheckGetterRef.current
     if (!getter) {
@@ -68,12 +99,15 @@ export function CanvasSaveProvider({ children }: CanvasSaveProviderProps): JSX.E
       return
     }
 
+    let hasChanges = false
     try {
-      setHasUnsavedChanges(getter())
+      hasChanges = getter()
     } catch {
-      setHasUnsavedChanges(false)
+      hasChanges = false
     }
-  }, [])
+    setHasUnsavedChanges(hasChanges)
+    if (hasChanges) scheduleAutoSave()
+  }, [scheduleAutoSave])
 
   const refreshHasUnsavedChanges = useCallback(() => {
     if (unsavedRefreshTimerRef.current != null) {
@@ -102,15 +136,19 @@ export function CanvasSaveProvider({ children }: CanvasSaveProviderProps): JSX.E
         return
       }
 
-      if (isSavingRef.current) return
-      if (!payloadGetterRef.current) return
+      // Leaving now would cancel a save still on its way to the server.
+      if (pendingSaveCountRef.current > 0) {
+        event.preventDefault()
+        event.returnValue = ''
+        return
+      }
+      const hasUnsavedCheck = hasUnsavedCheckGetterRef.current
+      if (!hasUnsavedCheck) return
 
       try {
-        const payload = payloadGetterRef.current()
-        if (payload.canvases.length === 0) return
-      } catch (caught) {
-        const error = caught instanceof Error ? caught : null
-        if (error?.message === 'No pages to save') return
+        // The unsaved check also counts a change to the page count; it builds no payload.
+        if (!hasUnsavedCheck()) return
+      } catch {
         // If we cannot compute dirty state, prefer warning the user.
         event.preventDefault()
         event.returnValue = ''
@@ -128,30 +166,49 @@ export function CanvasSaveProvider({ children }: CanvasSaveProviderProps): JSX.E
   }, [])
 
   useEffect(() => {
-    const handleCanvasLive = (): void => {
+    const handleCanvasChange = (): void => {
       refreshHasUnsavedChanges()
     }
 
-    window.addEventListener(CANVAS_LIVE_EVENT, handleCanvasLive)
+    window.addEventListener(CANVAS_LIVE_EVENT, handleCanvasChange)
+    // Toolbar changes (a color, a font) and a finished pen path fire no Fabric event, only an undo step.
+    window.addEventListener(FABRIC_HISTORY_CHANGED_EVENT, handleCanvasChange)
     return () => {
-      window.removeEventListener(CANVAS_LIVE_EVENT, handleCanvasLive)
+      window.removeEventListener(CANVAS_LIVE_EVENT, handleCanvasChange)
+      window.removeEventListener(FABRIC_HISTORY_CHANGED_EVENT, handleCanvasChange)
       if (unsavedRefreshTimerRef.current != null) {
         window.clearTimeout(unsavedRefreshTimerRef.current)
         unsavedRefreshTimerRef.current = null
       }
+      if (autoSaveTimerRef.current != null) {
+        window.clearTimeout(autoSaveTimerRef.current)
+        autoSaveTimerRef.current = null
+      }
     }
   }, [refreshHasUnsavedChanges])
 
-  const saveAllCanvases = useCallback(async (options?: SaveCanvasesOptions) => {
-    if (!payloadGetterRef.current) {
+  const runSave = useCallback(async (options?: SaveCanvasesOptions) => {
+    const payloadGetter = payloadGetterRef.current
+    if (!payloadGetter) {
       throw new Error('Canvas payload is not ready')
     }
 
-    const payload = payloadGetterRef.current()
-    if (payload.canvases.length === 0 && !options?.persistIfClean) {
+    let payload: SaveCanvasesRequest
+    try {
+      payload = payloadGetter()
+    } catch (caught) {
+      // Nothing may be saved right now (loading, a page mid-restore): the auto-save tries again later.
+      if (!options?.auto) {
+        const message = caught instanceof Error ? caught.message : 'Failed to save canvases'
+        toast({ title: 'Save failed', description: message })
+      }
+      throw caught
+    }
+
+    if (payload.canvases.length === 0 && !options?.persistIfClean && !hasUnsavedCheckGetterRef.current?.()) {
       syncHasUnsavedChanges()
       // Manual save with nothing dirty previously returned silently — users saw no feedback.
-      if (!options?.quiet) {
+      if (!options?.quiet && !options?.auto) {
         toast({
           title: 'Nothing to save',
           description: 'All canvases are already up to date.',
@@ -163,23 +220,54 @@ export function CanvasSaveProvider({ children }: CanvasSaveProviderProps): JSX.E
     try {
       await saveCanvases(payload)
       setLastSavedAt(new Date())
-      if (!options?.quiet) {
+      autoSaveFailureShownRef.current = false
+      if (!options?.quiet && !options?.auto) {
         toast({
           title: 'Canvases saved',
         })
       }
 
-      afterSaveCallbackRef.current?.()
+      afterSaveCallbackRef.current?.(payload)
       syncHasUnsavedChanges()
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : 'Failed to save canvases'
-      toast({
-        title: 'Save failed',
-        description: message,
-      })
+      if (!options?.auto || !autoSaveFailureShownRef.current) {
+        toast({
+          title: options?.auto ? 'Auto-save failed' : 'Save failed',
+          description: options?.auto ? `Your changes are kept; it tries again shortly. (${message})` : message,
+        })
+      }
+      if (options?.auto) autoSaveFailureShownRef.current = true
       throw caught
     }
   }, [saveCanvases, syncHasUnsavedChanges, toast])
+
+  const saveAllCanvases = useCallback(
+    (options?: SaveCanvasesOptions): Promise<void> => {
+      pendingSaveCountRef.current += 1
+      // The payload is built when this save's turn comes, so it holds every edit made meanwhile.
+      const run = saveChainRef.current.then(() => runSave(options))
+      saveChainRef.current = run.catch(() => undefined)
+      return run.finally(() => {
+        pendingSaveCountRef.current -= 1
+      })
+    },
+    [runSave],
+  )
+
+  useEffect(() => {
+    autoSaveRef.current = () => {
+      // A save already queued will carry these changes.
+      if (pendingSaveCountRef.current > 0) {
+        scheduleAutoSave()
+        return
+      }
+      if (!hasUnsavedCheckGetterRef.current?.()) return
+      saveAllCanvases({ auto: true }).catch((caught) => {
+        scheduleAutoSave(caught instanceof CanvasPayloadUnavailableError ? AUTO_SAVE_NOT_READY_RETRY_MS : AUTO_SAVE_RETRY_MS)
+      })
+    }
+  }, [saveAllCanvases, scheduleAutoSave])
 
   const value = useMemo<CanvasSaveContextValue>(
     () => ({

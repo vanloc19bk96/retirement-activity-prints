@@ -63,10 +63,6 @@ export function attachFabricEraserTool(
   const prevSelection = canvas.selection
   const prevCursor = canvas.defaultCursor
   const history = getFabricCanvasHistoryManager(canvas)
-  const objectInteractionState = new Map<
-    FabricObject,
-    { selectable: boolean; evented: boolean }
-  >()
 
   const brush = new PencilBrush(canvas)
   brush.color = ERASER_BRUSH_PREVIEW_FILL
@@ -89,29 +85,10 @@ export function attachFabricEraserTool(
   canvas.defaultCursor = 'default'
   canvas.skipTargetFind = true
   canvas.selection = false
+  // Drawing mode with target finding off already keeps objects from being picked. Objects are
+  // left alone: `selectable`/`evented` are saved with the page, so turning them off here would
+  // reach auto-saves and undo steps taken while the eraser is on.
   canvas.discardActiveObject()
-
-  const disableObjectInteraction = (target: FabricObject): void => {
-    if (!objectInteractionState.has(target)) {
-      objectInteractionState.set(target, {
-        selectable: target.selectable ?? true,
-        evented: target.evented ?? true,
-      })
-    }
-    target.selectable = false
-    target.evented = false
-  }
-
-  for (const obj of canvas.getObjects()) {
-    disableObjectInteraction(obj)
-  }
-
-  const onObjectAdded = (event: { target?: FabricObject }): void => {
-    if (!options.getIsActive()) return
-    const target = event.target
-    if (!target) return
-    disableObjectInteraction(target)
-  }
 
   const onMouseDown = (): void => {
     if (!options.getIsActive()) return
@@ -157,7 +134,6 @@ export function attachFabricEraserTool(
   canvas.on('mouse:move', onMouseMove)
   canvas.on('path:created', onPathCreated)
   canvas.on('after:render', onAfterRender)
-  canvas.on('object:added', onObjectAdded)
   canvas.requestRenderAll()
 
   return () => {
@@ -165,7 +141,6 @@ export function attachFabricEraserTool(
     canvas.off('mouse:move', onMouseMove)
     canvas.off('path:created', onPathCreated)
     canvas.off('after:render', onAfterRender)
-    canvas.off('object:added', onObjectAdded)
     history?.resume()
     canvas.isDrawingMode = prevDrawingMode
     canvas.freeDrawingBrush = prevBrush
@@ -173,10 +148,6 @@ export function attachFabricEraserTool(
     canvas.skipTargetFind = prevSkipTargetFind
     canvas.selection = prevSelection
     canvas.defaultCursor = prevCursor
-    for (const [obj, state] of objectInteractionState.entries()) {
-      obj.selectable = state.selectable
-      obj.evented = state.evented
-    }
     canvas.requestRenderAll()
   }
 }

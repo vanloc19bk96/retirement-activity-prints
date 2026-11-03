@@ -10,6 +10,7 @@ import {
   ungroupActiveSelection,
 } from '@/utils/canvas-selection'
 import { toggleLockActive } from '@/utils/canvas-lock'
+import { getFabricCanvasHistoryManager } from '@/utils/fabric-canvas-history'
 import {
   getCanvasSelectionFloatingToolbarPosition,
   getCanvasSelectionGroupingCapabilities,
@@ -148,6 +149,8 @@ export function useFabricCanvasSelectionToolbarActions({
     if (!snapshot.hasSelection) return
 
     toggleLockActive(canvas)
+    // Fabric doesn't broadcast a lock change; tell history explicitly.
+    getFabricCanvasHistoryManager(canvas)?.recordSnapshot()
 
     const nextSnapshot = getCanvasSelectionSnapshot(canvas)
     if (nextSnapshot.hasSelection) {

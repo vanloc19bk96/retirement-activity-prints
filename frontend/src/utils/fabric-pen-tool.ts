@@ -28,6 +28,8 @@ const PEN_DRAFT_STYLE = {
   evented: false,
   objectCaching: false,
   opacity: 0.88,
+  // A path in progress is not part of the page: saves, undo steps and exports leave it out.
+  excludeFromExport: true,
 } as const
 
 const PEN_DONE_STYLE = {
@@ -39,6 +41,7 @@ const PEN_DONE_STYLE = {
   evented: true,
   objectCaching: false,
   opacity: 1,
+  excludeFromExport: false,
 } as const
 
 function fmt(n: number): string {
@@ -154,6 +157,7 @@ export function attachFabricPenTool(canvas: Canvas, options: AttachFabricPenTool
         selectable: false,
         evented: false,
         objectCaching: false,
+        excludeFromExport: true,
       })
       canvas.add(circle)
       gripObjects.push(circle)

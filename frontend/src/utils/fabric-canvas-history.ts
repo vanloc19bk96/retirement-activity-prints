@@ -22,6 +22,13 @@ const HISTORY_RECORD_EVENTS: readonly HistoryEventName[] = [
   'text:editing:exited',
 ]
 
+/** A canvas took an undo step, or an undo or redo landed: what it shows has changed. */
+export const FABRIC_HISTORY_CHANGED_EVENT = 'canvas:history-changed'
+
+function dispatchHistoryChanged(): void {
+  window.dispatchEvent(new CustomEvent(FABRIC_HISTORY_CHANGED_EVENT))
+}
+
 export type RecordSnapshotOptions = {
   /**
    * When set, coalesce rapid calls and only snapshot once the stream has been
@@ -40,6 +47,8 @@ export interface FabricCanvasHistoryManager {
   suspend: () => void
   /** Decrement suspension counter and optionally record a snapshot when fully resumed. */
   resume: () => void
+  /** An undo or redo is loading its step: the canvas holds part of a page, not the page. */
+  isApplyingSnapshot: () => boolean
   undo: () => Promise<boolean>
   redo: () => Promise<boolean>
   canUndo: () => boolean
@@ -71,6 +80,7 @@ export function createFabricCanvasHistoryManager(canvas: Canvas): FabricCanvasHi
 
   let currentSnapshot: CanvasSnapshot | null = null
   let suspendDepth = 0
+  let applyingSnapshotCount = 0
   let isListening = false
   let isDisposed = false
   let isRecordScheduled = false
@@ -87,6 +97,7 @@ export function createFabricCanvasHistoryManager(canvas: Canvas): FabricCanvasHi
     }
     currentSnapshot = next
     if (redoStack.length > 0) redoStack.length = 0
+    dispatchHistoryChanged()
   }
 
   const clearDebounceTimer = (): void => {
@@ -133,6 +144,7 @@ export function createFabricCanvasHistoryManager(canvas: Canvas): FabricCanvasHi
 
   const applySnapshot = async (snapshot: CanvasSnapshot): Promise<void> => {
     suspendDepth += 1
+    applyingSnapshotCount += 1
     try {
       canvas.discardActiveObject()
       await canvas.loadFromJSON(JSON.parse(snapshot))
@@ -140,6 +152,7 @@ export function createFabricCanvasHistoryManager(canvas: Canvas): FabricCanvasHi
       currentSnapshot = serializeCanvas(canvas) ?? snapshot
     } finally {
       suspendDepth = Math.max(0, suspendDepth - 1)
+      applyingSnapshotCount -= 1
     }
   }
 
@@ -185,6 +198,10 @@ export function createFabricCanvasHistoryManager(canvas: Canvas): FabricCanvasHi
       suspendDepth = Math.max(0, suspendDepth - 1)
     },
 
+    isApplyingSnapshot() {
+      return applyingSnapshotCount > 0
+    },
+
     async undo() {
       if (isDisposed) return false
       flushPendingSnapshot()
@@ -195,6 +212,7 @@ export function createFabricCanvasHistoryManager(canvas: Canvas): FabricCanvasHi
         if (redoStack.length > HISTORY_MAX_ENTRIES) redoStack.shift()
       }
       await applySnapshot(previous)
+      dispatchHistoryChanged()
       return true
     },
 
@@ -208,6 +226,7 @@ export function createFabricCanvasHistoryManager(canvas: Canvas): FabricCanvasHi
         if (undoStack.length > HISTORY_MAX_ENTRIES) undoStack.shift()
       }
       await applySnapshot(next)
+      dispatchHistoryChanged()
       return true
     },
 
