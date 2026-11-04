@@ -6,7 +6,7 @@ import type {
   StudioTemplateDefinition,
 } from '@/types/studio-template.types'
 import { STUDIO_BODY_SIZE, STUDIO_DEFAULT_FONT } from '@/constants/studio.constants'
-import { createRng } from '../studio-rng'
+import { studioPuzzleRng } from '../_shared/uniqueness'
 import { boxCenterX, drawHeader } from '../studio-layout'
 import { buildText, type StudioTag } from '../studio-fabric-builders'
 import { MAZE_CONFIG_SCHEMA } from './config'
@@ -107,7 +107,8 @@ function generate(config: StudioConfig, ctx: StudioGenerateContext): StudioPageO
     rows: plan.rows,
     cols: plan.cols,
     profile: level.profile,
-    rng: createRng(ctx.seed),
+    // Salted per account: two sellers who draw the same seed still print different mazes.
+    rng: studioPuzzleRng({ templateKey: tag.templateKey, config, ctx }),
   })
 
   const preflight = runMazeKdpPreflight({ puzzle, plan, level })

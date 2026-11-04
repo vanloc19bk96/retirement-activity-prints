@@ -409,6 +409,16 @@ describe('maze quality', () => {
     expect(seen.size).toBe(24)
   })
 
+  it('gives two sellers different mazes on the same settings and seed', () => {
+    const walls = (ownerSalt: string) =>
+      wallBars(mazeGroup(page(titled, { ...kdpCtx(6, 9), ownerSalt }).objects))
+        .map((bar) => `${bar.left},${bar.top},${bar.width},${bar.height}`)
+        .join('|')
+    expect(walls('a'.repeat(32))).not.toBe(walls('b'.repeat(32)))
+    // The same seller on the same seed reprints the same maze.
+    expect(walls('a'.repeat(32))).toBe(walls('a'.repeat(32)))
+  })
+
   it('clears KDP preflight on every trim, level and seed a book would use', () => {
     for (const [wIn, hIn] of KDP_TRIMS) {
       for (const level of MAZE_LEVELS) {
